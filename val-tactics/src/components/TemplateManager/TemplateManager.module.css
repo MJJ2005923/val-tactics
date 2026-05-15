@@ -1,0 +1,93 @@
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+.modal {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  width: 520px; max-width: 90vw; max-height: 80vh;
+  display: flex; flex-direction: column;
+}
+
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+.header h3 { font-size: 16px; font-weight: 600; color: var(--color-text-primary); }
+
+.closeBtn {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; color: var(--color-text-muted); font-size: 14px;
+  cursor: pointer; border-radius: var(--radius-sm); transition: all var(--transition-fast);
+}
+.closeBtn:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+
+.body { padding: 16px 20px 20px; overflow-y: auto; flex: 1; }
+
+.section { margin-bottom: 20px; }
+.section:last-child { margin-bottom: 0; }
+
+.sectionTitle {
+  font-size: 12px; font-weight: 600; color: var(--color-text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+}
+
+.saveRow { display: flex; gap: 8px; }
+
+.input {
+  flex: 1; padding: 6px 10px; font-size: 13px;
+  background: var(--color-bg-primary); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); color: var(--color-text-primary); outline: none;
+}
+.input:focus { border-color: var(--color-border-light); }
+
+.actionRow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn, .btnPrimary, .btnDanger, .btnSm, .btnSmDanger {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 6px 14px; font-size: 13px; font-weight: 500;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all var(--transition-fast); white-space: nowrap;
+  background: var(--color-bg-tertiary); color: var(--color-text-primary);
+}
+.btn:hover, .btnSm:hover { background: var(--color-bg-hover); border-color: var(--color-border-light); }
+
+.btnPrimary { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+.btnPrimary:hover { background: var(--color-accent-hover); }
+
+.btnDanger { background: transparent; border-color: rgba(255,70,85,0.3); color: var(--color-accent); }
+.btnDanger:hover { background: rgba(255,70,85,0.1); border-color: var(--color-accent); }
+
+.btnSm, .btnSmDanger { padding: 3px 10px; font-size: 12px; }
+.btnSmDanger { background: transparent; border-color: transparent; color: var(--color-text-muted); }
+.btnSmDanger:hover { background: rgba(255,70,85,0.1); color: var(--color-accent); }
+
+.btn:disabled, .btnDanger:disabled { opacity: 0.4; cursor: default; }
+.btn:disabled:hover, .btnDanger:disabled:hover { background: var(--color-bg-tertiary); border-color: var(--color-border); }
+
+.successMsg { color: #50e890; font-size: 12px; display: block; margin-top: 4px; }
+.errorMsg { color: var(--color-accent); font-size: 12px; display: block; margin-top: 4px; }
+
+.emptyText { font-size: 13px; color: var(--color-text-muted); text-align: center; padding: 16px 0; }
+
+.templateList { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
+
+.templateItem {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; background: var(--color-bg-tertiary); border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+.templateItem:hover { border-color: var(--color-border-light); }
+
+.templateInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.templateName { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.templateMeta { font-size: 11px; color: var(--color-text-muted); }
+
+.templateActions { display: flex; gap: 6px; flex-shrink: 0; }

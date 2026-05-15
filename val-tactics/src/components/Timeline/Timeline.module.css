@@ -1,0 +1,232 @@
+.wrapper {
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.empty {
+  height: 32px;
+}
+
+.header {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  user-select: none;
+}
+
+.header:hover {
+  color: var(--color-text-primary);
+}
+
+.count {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  letter-spacing: 0;
+}
+
+.tip {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 400;
+}
+
+.collapseIcon {
+  margin-left: auto;
+  font-size: 10px;
+}
+
+.track {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-items: flex-start;
+  min-height: 88px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid #888;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+  user-select: none;
+  min-width: 200px;
+}
+
+.item:hover {
+  background: var(--color-bg-hover);
+}
+
+.itemSelected {
+  border-color: var(--color-border-light) !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.08);
+}
+
+.stepBadge {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--color-accent);
+  color: #fff;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.itemInfo {
+  min-width: 80px;
+}
+
+.agentLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.abilityLabel {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.keyTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  font-size: 9px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.timeControl {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.timeBtn {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.timeBtn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-light);
+}
+
+.timeValue {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  min-width: 26px;
+  text-align: center;
+}
+
+.orderBtns {
+  display: flex;
+  gap: 1px;
+}
+
+.orderBtn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.orderBtn:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-light);
+}
+
+.orderBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.removeBtn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all var(--transition-fast);
+}
+
+.removeBtn:hover {
+  background: rgba(255, 70, 85, 0.15);
+  color: var(--color-accent);
+}
+
+.scrollHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  align-self: stretch;
+}
