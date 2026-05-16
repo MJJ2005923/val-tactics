@@ -176,3 +176,43 @@
 .btn--ghost:hover {
   background: var(--color-bg-hover);
 }
+
+.btn--attack {
+  background: rgba(255, 70, 85, 0.15);
+  border-color: rgba(255, 70, 85, 0.3);
+  color: #ff4655;
+}
+
+.btn--attack:hover {
+  background: rgba(255, 70, 85, 0.25);
+}
+
+.btn--defense {
+  background: rgba(80, 180, 240, 0.15);
+  border-color: rgba(80, 180, 240, 0.3);
+  color: #50b4f0;
+}
+
+.btn--defense:hover {
+  background: rgba(80, 180, 240, 0.25);
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0; top: var(--navbar-height); bottom: var(--timeline-height);
+    z-index: 50;
+    width: 240px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .canvas-area {
+    width: 100%;
+  }
+}

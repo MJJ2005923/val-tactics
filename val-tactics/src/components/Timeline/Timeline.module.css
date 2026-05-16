@@ -230,3 +230,69 @@
   flex-shrink: 0;
   align-self: stretch;
 }
+
+/* 播放控制 */
+.playbackControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 12px;
+}
+
+.playBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent-dim);
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  color: var(--color-accent);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.playBtn:hover {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.speedSelect {
+  font-size: 10px;
+  padding: 2px 4px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+/* 时间标尺 */
+.ruler {
+  display: flex;
+  gap: 0;
+  position: absolute;
+  top: 2px;
+  left: 16px;
+  right: 16px;
+  height: 14px;
+  overflow: hidden;
+}
+
+.rulerTick {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  min-width: 50px;
+  border-left: 1px solid var(--color-border);
+  padding-left: 2px;
+}
+
+/* 播放高亮 */
+.itemPlaying {
+  border-color: #fff !important;
+  box-shadow: 0 0 16px rgba(255, 70, 85, 0.4);
+  background: var(--color-bg-active);
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useTactics } from '../../store/TacticsContext'
 import agents from '../../data/agents'
 import styles from './Timeline.module.css'
@@ -11,17 +11,13 @@ const typeColors: Record<string, string> = {
 function getInfo(abilityId: string, agentId: string) {
   const agent = agents.find(a => a.id === agentId)
   const ability = agent?.abilities.find(a => a.id === abilityId)
-  return {
-    agentName: agent?.name || '?',
-    abilityName: ability?.name || '?',
-    abilityKey: ability?.key || '?',
-    color: ability ? typeColors[ability.type] || '#888' : '#888'
-  }
+  return { agentName: agent?.name || '?', abilityName: ability?.name || '?', abilityKey: ability?.key || '?', color: ability ? typeColors[ability.type] || '#888' : '#888' }
 }
 
 export default function Timeline() {
-  const { markers, updateMarker, removeMarker, selectMarker, selectedId } = useTactics()
+  const { markers, selectedId, selectedType, playing, playSpeed, playStep, dispatch } = useTactics()
   const [collapsed, setCollapsed] = useState(false)
+  const timerRef = useRef<number | null>(null)
 
   const sorted = [...markers].sort((a, b) => a.step - b.step)
 
@@ -30,19 +26,42 @@ export default function Timeline() {
     if (idx === -1) return
     const target = sorted[idx + direction]
     if (!target) return
-
     const current = markers.find(m => m.id === id)!
     const swap = markers.find(m => m.id === target.id)!
-    updateMarker(id, { step: swap.step, time: swap.time })
-    updateMarker(target.id, { step: current.step, time: current.time })
+    dispatch({ type: 'UPDATE_MARKER', id, updates: { step: swap.step, time: swap.time } })
+    dispatch({ type: 'UPDATE_MARKER', id: target.id, updates: { step: current.step, time: current.time } })
   }
 
   const adjustTime = (id: string, delta: number) => {
     const marker = markers.find(m => m.id === id)
     if (!marker) return
-    updateMarker(id, { time: Math.max(0, marker.time + delta) })
+    dispatch({ type: 'UPDATE_MARKER', id, updates: { time: Math.max(0, marker.time + delta) } })
   }
 
+  // 播放逻辑
+  useEffect(() => {
+    if (!playing) { if (timerRef.current) clearInterval(timerRef.current); return }
+    const sorted2 = [...markers].sort((a, b) => a.step - b.step)
+    const totalSteps = sorted2.length
+    if (totalSteps === 0) { dispatch({ type: 'PLAY_STOP' }); return }
+
+    timerRef.current = window.setInterval(() => {
+      dispatch({ type: 'PLAY_STEP', step: (playStep + 1) })
+    }, 1000 / playSpeed)
+
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [playing, playSpeed, playStep, markers, dispatch])
+
+  // 播放完自动停止
+  useEffect(() => {
+    if (playing && playStep >= sorted.length) {
+      dispatch({ type: 'PLAY_STOP' })
+    }
+  }, [playStep, sorted.length, playing, dispatch])
+
+  const totalDuration = sorted.reduce((sum, m) => Math.max(sum, m.time), 0)
+
+  // 空状态
   if (markers.length === 0) {
     return (
       <div className={`${styles.wrapper} ${styles.empty}`}>
@@ -58,20 +77,38 @@ export default function Timeline() {
     <div className={styles.wrapper}>
       <div className={styles.header} onClick={() => setCollapsed(!collapsed)}>
         <span>时间轴</span>
-        <span className={styles.count}>{markers.length} 个步骤</span>
+        <span className={styles.count}>{markers.length} 个步骤 · {totalDuration}s</span>
+        <div className={styles.playbackControls} onClick={e => e.stopPropagation()}>
+          <button className={styles.playBtn} onClick={() => dispatch({ type: playing ? 'PLAY_STOP' : 'PLAY_START' })}>
+            {playing ? '⏸' : '▶'}
+          </button>
+          {playing && (
+            <select className={styles.speedSelect} value={playSpeed} onChange={e => dispatch({ type: 'PLAY_SPEED', speed: Number(e.target.value) })}>
+              <option value={0.5}>0.5x</option>
+              <option value={1}>1x</option>
+              <option value={2}>2x</option>
+            </select>
+          )}
+        </div>
         <span className={styles.collapseIcon}>{collapsed ? '▲' : '▼'}</span>
       </div>
       {!collapsed && (
         <div className={styles.track}>
+          {/* 时间标尺 */}
+          <div className={styles.ruler}>
+            {Array.from({ length: Math.max(totalDuration, 1) + 1 }, (_, i) => (
+              <span key={i} className={styles.rulerTick}>{i}s</span>
+            ))}
+          </div>
           {sorted.map((marker, idx) => {
             const info = getInfo(marker.abilityId, marker.agentId)
-            const isSelected = marker.id === selectedId
+            const isSelected = marker.id === selectedId && selectedType === 'marker'
+            const isPlaying = playing && playStep === idx
             return (
-              <div
-                key={marker.id}
-                className={`${styles.item} ${isSelected ? styles.itemSelected : ''}`}
+              <div key={marker.id}
+                className={`${styles.item} ${isSelected ? styles.itemSelected : ''} ${isPlaying ? styles.itemPlaying : ''}`}
                 style={{ borderLeftColor: info.color }}
-                onClick={() => selectMarker(marker.id)}
+                onClick={() => dispatch({ type: 'SELECT', id: marker.id, selType: 'marker' })}
               >
                 <div className={styles.stepBadge}>{marker.step}</div>
                 <div className={styles.itemInfo}>
@@ -83,24 +120,22 @@ export default function Timeline() {
                 </div>
                 <div className={styles.itemActions}>
                   <div className={styles.timeControl}>
-                    <button className={styles.timeBtn} onClick={(e) => { e.stopPropagation(); adjustTime(marker.id, -1) }}>−</button>
+                    <button className={styles.timeBtn} onClick={e => { e.stopPropagation(); adjustTime(marker.id, -1) }}>−</button>
                     <span className={styles.timeValue}>{marker.time}s</span>
-                    <button className={styles.timeBtn} onClick={(e) => { e.stopPropagation(); adjustTime(marker.id, 1) }}>+</button>
+                    <button className={styles.timeBtn} onClick={e => { e.stopPropagation(); adjustTime(marker.id, 1) }}>+</button>
                   </div>
                   <div className={styles.orderBtns}>
                     <button className={styles.orderBtn} disabled={idx === 0}
-                      onClick={(e) => { e.stopPropagation(); moveStep(marker.id, -1) }}>←</button>
+                      onClick={e => { e.stopPropagation(); moveStep(marker.id, -1) }}>←</button>
                     <button className={styles.orderBtn} disabled={idx === sorted.length - 1}
-                      onClick={(e) => { e.stopPropagation(); moveStep(marker.id, 1) }}>→</button>
+                      onClick={e => { e.stopPropagation(); moveStep(marker.id, 1) }}>→</button>
                   </div>
-                  <button className={styles.removeBtn} onClick={(e) => { e.stopPropagation(); removeMarker(marker.id) }}
-                    title="删除">✕</button>
+                  <button className={styles.removeBtn}
+                    onClick={e => { e.stopPropagation(); dispatch({ type: 'REMOVE_MARKER', id: marker.id }) }}>✕</button>
                 </div>
               </div>
             )
           })}
-          {/* 横向滚动提示 */}
-          <div className={styles.scrollHint}>← 拖拽滚动查看更多 →</div>
         </div>
       )}
     </div>

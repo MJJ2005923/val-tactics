@@ -1,7 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { Template } from '../types'
 
-const db = new Dexie('val-tactics-db') as Dexie & {
+const db = new Dexie('val-tactics-db-v2') as Dexie & {
   templates: EntityTable<Template, 'id'>
 }
 

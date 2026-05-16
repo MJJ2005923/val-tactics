@@ -19,26 +19,32 @@ const typeColors: Record<string, string> = {
 function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `drag-${ability.id}`,
-    data: { ability, agent }
+    data: { ability, agent, type: 'ability' }
   })
-
   return (
-    <button
-      ref={setNodeRef}
-      className={`${styles.abilityBtn} ${isDragging ? styles.abilityBtnDragging : ''}`}
-      style={transform ? {
-        transform: `translate(${transform.x}px, ${transform.y}px)`,
-        zIndex: isDragging ? 999 : undefined,
-      } : undefined}
-      {...listeners}
-      {...attributes}
-    >
+    <button ref={setNodeRef} className={`${styles.abilityBtn} ${isDragging ? styles.abilityBtnDragging : ''}`}
+      style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: isDragging ? 999 : undefined } : undefined}
+      {...listeners} {...attributes}>
       <span className={styles.abilityKey}>{ability.key}</span>
       <span className={styles.abilityName}>{ability.name}</span>
-      <span className={styles.abilityType} style={{ color: typeColors[ability.type] }}>
-        {typeLabels[ability.type]}
-      </span>
+      <span className={styles.abilityType} style={{ color: typeColors[ability.type] }}>{typeLabels[ability.type]}</span>
     </button>
+  )
+}
+
+function DraggableAgent({ agent }: { agent: Agent }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `drag-agent-${agent.id}`,
+    data: { agent, type: 'agent' }
+  })
+  return (
+    <div ref={setNodeRef} className={`${styles.agentDragBtn} ${isDragging ? styles.agentDragBtnDragging : ''}`}
+      style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: isDragging ? 999 : undefined } : undefined}
+      {...listeners} {...attributes}>
+      <span className={styles.agentDragDot} style={{ background: typeColors[agent.abilities[0]?.type] || '#888' }} />
+      <span className={styles.agentDragName}>{agent.name}</span>
+      <span className={styles.agentDragHint}>拖拽到地图放置位置</span>
+    </div>
   )
 }
 
@@ -56,12 +62,7 @@ function AgentPanel() {
       <div className={styles.panel}>
         <div className={styles.header}>特工列表</div>
         <div className={styles.searchBox}>
-          <input
-            className={styles.searchInput}
-            type="text" placeholder="搜索特工..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+          <input className={styles.searchInput} type="text" placeholder="搜索特工..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <div className={styles.list}>
           {filtered.map(agent => {
@@ -69,27 +70,19 @@ function AgentPanel() {
             const sorted = [...agent.abilities].sort((a, b) => abilityKeyOrder[a.key] - abilityKeyOrder[b.key])
             return (
               <div key={agent.id} className={styles.agentItem}>
-                <button
-                  className={`${styles.agentBtn} ${isExpanded ? styles.agentBtnActive : ''}`}
-                  onClick={() => setExpandedId(isExpanded ? null : agent.id)}
-                >
-                  <span className={styles.agentRole} style={{ color: typeColors[agent.abilities[0]?.type] || '#888' }}>
-                    {agent.role}
-                  </span>
+                <button className={`${styles.agentBtn} ${isExpanded ? styles.agentBtnActive : ''}`}
+                  onClick={() => setExpandedId(isExpanded ? null : agent.id)}>
+                  <span className={styles.agentRole} style={{ color: typeColors[agent.abilities[0]?.type] || '#888' }}>{agent.role}</span>
                   <span className={styles.agentName}>{agent.name}</span>
-                  <span className={styles.agentEn}>{agent.nameEn}</span>
-                  <span className={`${styles.arrow} ${isExpanded ? styles.arrowDown : ''}`}>▸</span>
+                  <span className={styles.arrow} style={{ transform: isExpanded ? 'rotate(90deg)' : undefined }}>▸</span>
                 </button>
                 {isExpanded && (
                   <div className={styles.abilities}>
+                    <DraggableAgent agent={agent} />
                     {sorted.map(ab => (
                       <div key={ab.id} style={{ display: 'flex' }}>
                         <DraggableAbility ability={ab} agent={agent} />
-                        <button
-                          className={styles.infoBtn}
-                          onClick={() => setSelectedAbility({ ability: ab, agent })}
-                          title="查看详情"
-                        >?</button>
+                        <button className={styles.infoBtn} onClick={() => setSelectedAbility({ ability: ab, agent })} title="查看详情">?</button>
                       </div>
                     ))}
                   </div>
@@ -99,14 +92,7 @@ function AgentPanel() {
           })}
         </div>
       </div>
-      {selectedAbility && (
-        <SkillDetail
-          ability={selectedAbility.ability}
-          agentName={selectedAbility.agent.name}
-          agentRole={selectedAbility.agent.role}
-          onClose={() => setSelectedAbility(null)}
-        />
-      )}
+      {selectedAbility && <SkillDetail ability={selectedAbility.ability} agentName={selectedAbility.agent.name} agentRole={selectedAbility.agent.role} onClose={() => setSelectedAbility(null)} />}
     </>
   )
 }

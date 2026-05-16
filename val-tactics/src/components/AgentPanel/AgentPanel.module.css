@@ -172,3 +172,46 @@
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
 }
+
+/* 特工拖拽按钮 */
+.agentDragBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 24px;
+  background: var(--color-bg-primary);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  transition: all var(--transition-fast);
+  margin-bottom: 4px;
+}
+
+.agentDragBtn:hover {
+  border-color: var(--color-border-light);
+  background: var(--color-bg-hover);
+}
+
+.agentDragBtnDragging {
+  opacity: 0.6;
+  border-color: var(--color-accent);
+}
+
+.agentDragDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.agentDragName {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.agentDragHint {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}

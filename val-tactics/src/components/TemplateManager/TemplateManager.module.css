@@ -88,6 +88,7 @@
 
 .templateInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .templateName { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.templateDesc { font-size: 11px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .templateMeta { font-size: 11px; color: var(--color-text-muted); }
 
 .templateActions { display: flex; gap: 6px; flex-shrink: 0; }
