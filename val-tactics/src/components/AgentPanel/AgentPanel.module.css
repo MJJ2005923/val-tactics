@@ -47,12 +47,53 @@
   padding: 4px 0;
 }
 
+.agentItem {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.agentRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* 英雄头像（可拖拽） */
+.agentDragArea {
+  flex-shrink: 0;
+  padding: 4px 0 4px 8px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+}
+
+.agentDragArea:active {
+  cursor: grabbing;
+}
+
+.agentDragging {
+  opacity: 0.5;
+}
+
+.agentAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  object-fit: cover;
+  transition: border-color var(--transition-fast);
+}
+
+.agentDragArea:hover .agentAvatar {
+  border-color: var(--color-border-light);
+}
+
+/* 英雄信息按钮 */
 .agentBtn {
-  width: 100%;
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 8px 12px 8px 8px;
   background: transparent;
   border: none;
   color: var(--color-text-primary);
@@ -60,6 +101,7 @@
   cursor: pointer;
   transition: background var(--transition-fast);
   text-align: left;
+  min-width: 0;
 }
 
 .agentBtn:hover {
@@ -76,6 +118,7 @@
   border-radius: 2px;
   background: var(--color-bg-primary);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .agentName {
@@ -83,31 +126,34 @@
   flex: 1;
 }
 
-.agentEn {
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
-
 .arrow {
   color: var(--color-text-muted);
   font-size: 10px;
   transition: transform var(--transition-fast);
-}
-
-.arrowDown {
-  transform: rotate(90deg);
+  flex-shrink: 0;
 }
 
 .abilities {
-  padding: 0 0 8px 0;
+  padding: 0 0 8px;
+}
+
+.dragHint {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  padding: 2px 16px 6px 48px;
+}
+
+.abilityRow {
+  display: flex;
+  align-items: center;
 }
 
 .abilityBtn {
-  width: 100%;
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 16px 6px 32px;
+  padding: 5px 4px 5px 48px;
   background: transparent;
   border: none;
   color: var(--color-text-secondary);
@@ -120,6 +166,15 @@
 .abilityBtn:hover {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
+}
+
+.abilityBtn:active {
+  cursor: grabbing;
+}
+
+.abilityBtnDragging {
+  opacity: 0.5;
+  background: var(--color-bg-active);
 }
 
 .abilityKey {
@@ -144,26 +199,23 @@
 
 .abilityType {
   font-size: 11px;
-}
-
-.abilityBtnDragging {
-  opacity: 0.5;
-  background: var(--color-bg-active);
+  flex-shrink: 0;
 }
 
 .infoBtn {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: none;
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
-  margin: 6px 8px 6px 0;
-  border-radius: 3px;
+  margin-right: 8px;
+  border-radius: 50%;
   flex-shrink: 0;
   transition: all var(--transition-fast);
 }
@@ -171,47 +223,4 @@
 .infoBtn:hover {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
-}
-
-/* 特工拖拽按钮 */
-.agentDragBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 16px 6px 24px;
-  background: var(--color-bg-primary);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: grab;
-  transition: all var(--transition-fast);
-  margin-bottom: 4px;
-}
-
-.agentDragBtn:hover {
-  border-color: var(--color-border-light);
-  background: var(--color-bg-hover);
-}
-
-.agentDragBtnDragging {
-  opacity: 0.6;
-  border-color: var(--color-accent);
-}
-
-.agentDragDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.agentDragName {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.agentDragHint {
-  font-size: 10px;
-  color: var(--color-text-muted);
-  margin-left: auto;
 }

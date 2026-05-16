@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import agents, { type Agent, type Ability } from '../../data/agents'
+import agents, { agentImages, type Agent, type Ability } from '../../data/agents'
 import SkillDetail from '../SkillDetail/SkillDetail'
 import styles from './AgentPanel.module.css'
 
@@ -16,35 +16,43 @@ const typeColors: Record<string, string> = {
   recon: '#50b4f0', control: '#a070d8', heal: '#50e890', mobility: '#ff8c42'
 }
 
+function getAgentImage(agent: Agent): string {
+  const devName = agentImages[agent.id] || agent.id
+  return `/images/agents/${devName}.png`
+}
+
+function DraggableAgentHeader({ agent }: { agent: Agent }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `drag-agent-${agent.id}`,
+    data: { agent, type: 'agent' }
+  })
+  return (
+    <div
+      ref={setNodeRef}
+      className={`${styles.agentDragArea} ${isDragging ? styles.agentDragging : ''}`}
+      style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: isDragging ? 999 : undefined } : undefined}
+      {...listeners} {...attributes}
+    >
+      <img src={getAgentImage(agent)} alt={agent.name} className={styles.agentAvatar}
+        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+    </div>
+  )
+}
+
 function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `drag-${ability.id}`,
     data: { ability, agent, type: 'ability' }
   })
   return (
-    <button ref={setNodeRef} className={`${styles.abilityBtn} ${isDragging ? styles.abilityBtnDragging : ''}`}
+    <button ref={setNodeRef}
+      className={`${styles.abilityBtn} ${isDragging ? styles.abilityBtnDragging : ''}`}
       style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: isDragging ? 999 : undefined } : undefined}
       {...listeners} {...attributes}>
       <span className={styles.abilityKey}>{ability.key}</span>
       <span className={styles.abilityName}>{ability.name}</span>
       <span className={styles.abilityType} style={{ color: typeColors[ability.type] }}>{typeLabels[ability.type]}</span>
     </button>
-  )
-}
-
-function DraggableAgent({ agent }: { agent: Agent }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `drag-agent-${agent.id}`,
-    data: { agent, type: 'agent' }
-  })
-  return (
-    <div ref={setNodeRef} className={`${styles.agentDragBtn} ${isDragging ? styles.agentDragBtnDragging : ''}`}
-      style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: isDragging ? 999 : undefined } : undefined}
-      {...listeners} {...attributes}>
-      <span className={styles.agentDragDot} style={{ background: typeColors[agent.abilities[0]?.type] || '#888' }} />
-      <span className={styles.agentDragName}>{agent.name}</span>
-      <span className={styles.agentDragHint}>拖拽到地图放置位置</span>
-    </div>
   )
 }
 
@@ -70,19 +78,24 @@ function AgentPanel() {
             const sorted = [...agent.abilities].sort((a, b) => abilityKeyOrder[a.key] - abilityKeyOrder[b.key])
             return (
               <div key={agent.id} className={styles.agentItem}>
-                <button className={`${styles.agentBtn} ${isExpanded ? styles.agentBtnActive : ''}`}
-                  onClick={() => setExpandedId(isExpanded ? null : agent.id)}>
-                  <span className={styles.agentRole} style={{ color: typeColors[agent.abilities[0]?.type] || '#888' }}>{agent.role}</span>
-                  <span className={styles.agentName}>{agent.name}</span>
-                  <span className={styles.arrow} style={{ transform: isExpanded ? 'rotate(90deg)' : undefined }}>▸</span>
-                </button>
+                <div className={styles.agentRow}>
+                  <DraggableAgentHeader agent={agent} />
+                  <button
+                    className={`${styles.agentBtn} ${isExpanded ? styles.agentBtnActive : ''}`}
+                    onClick={() => setExpandedId(isExpanded ? null : agent.id)}
+                  >
+                    <span className={styles.agentRole} style={{ color: typeColors[agent.abilities[0]?.type] || '#888' }}>{agent.role}</span>
+                    <span className={styles.agentName}>{agent.name}</span>
+                    <span className={styles.arrow} style={{ transform: isExpanded ? 'rotate(90deg)' : undefined }}>▸</span>
+                  </button>
+                </div>
                 {isExpanded && (
                   <div className={styles.abilities}>
-                    <DraggableAgent agent={agent} />
+                    <div className={styles.dragHint}>拖拽头像放位置 · 拖拽技能放技能</div>
                     {sorted.map(ab => (
-                      <div key={ab.id} style={{ display: 'flex' }}>
+                      <div key={ab.id} className={styles.abilityRow}>
                         <DraggableAbility ability={ab} agent={agent} />
-                        <button className={styles.infoBtn} onClick={() => setSelectedAbility({ ability: ab, agent })} title="查看详情">?</button>
+                        <button className={styles.infoBtn} onClick={() => setSelectedAbility({ ability: ab, agent })} title="详情">?</button>
                       </div>
                     ))}
                   </div>
@@ -92,7 +105,9 @@ function AgentPanel() {
           })}
         </div>
       </div>
-      {selectedAbility && <SkillDetail ability={selectedAbility.ability} agentName={selectedAbility.agent.name} agentRole={selectedAbility.agent.role} onClose={() => setSelectedAbility(null)} />}
+      {selectedAbility && (
+        <SkillDetail ability={selectedAbility.ability} agentName={selectedAbility.agent.name} agentRole={selectedAbility.agent.role} onClose={() => setSelectedAbility(null)} />
+      )}
     </>
   )
 }

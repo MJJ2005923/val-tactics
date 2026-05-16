@@ -18,6 +18,17 @@ export interface Agent {
   abilities: Ability[]
 }
 
+// 英雄头像图片映射（developerName -> filename）
+export const agentImages: Record<string, string> = {
+  sage: 'thorne', jett: 'wushu', phoenix: 'phoenix', raze: 'clay',
+  reyna: 'vampire', yoru: 'stealth', neon: 'sprinter', iso: 'sequoia',
+  viper: 'pandemic', brimstone: 'sarge', omen: 'wraith', astra: 'rift',
+  harbor: 'mage', clove: 'smonk', sova: 'hunter', breach: 'breach',
+  fade: 'bountyhunter', gekko: 'aggrobot', skye: 'guide', kayo: 'grenadier',
+  killjoy: 'killjoy', cypher: 'gumshoe', chamber: 'deadeye', deadlock: 'cable',
+  vyse: 'cashew'
+}
+
 const agents: Agent[] = [
   {
     id: 'sage', name: '贤者', nameEn: 'Sage', role: '哨卫',

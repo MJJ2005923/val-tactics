@@ -17,7 +17,7 @@ interface MapCanvasProps {
   }>
 }
 
-// ====== 地图布局绘制函数 ======
+// ====== 地图布局绘制 ======
 function drawBuilding(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, angle = 0) {
   ctx.save()
   if (angle) { ctx.translate(x + w / 2, y + h / 2); ctx.rotate((angle * Math.PI) / 180); ctx.translate(-(x + w / 2), -(y + h / 2)) }
@@ -122,7 +122,7 @@ function drawPlaceholderMap(ctx: CanvasRenderingContext2D, mapId: string, w: num
   if (layout) layout(ctx, w, h)
 }
 
-// ====== 技能信息获取 ======
+// ====== 辅助函数 ======
 const typeColors: Record<string, string> = {
   smoke: '#7ec868', flash: '#f0c850', damage: '#ff4655',
   recon: '#50b4f0', control: '#a070d8', heal: '#50e890', mobility: '#ff8c42'
@@ -134,27 +134,30 @@ function getAbilityInfo(abilityId: string, agentId: string) {
   return { agentName: agent?.name || '', abilityName: ability?.name || '', abilityKey: ability?.key || '' }
 }
 
-// ====== MapCanvas 组件 ======
+// ====== MapCanvas ======
 export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
   const [scale, setScale] = useState(1)
-  const isDragging = useRef(false)
-  const dragStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
-  const [canvasSize, setCanvasSize] = useState({ w: 800, h: 600 })
   const { markers, textAnnotations, agentPositions, selectedId, selectedType, dispatch, side } = useTactics()
-
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: 'map-canvas' })
 
   const mapW = 1800
   const mapH = 1200
 
+  // 计算使地图填充容器的基准缩放
+  const fitScale = Math.min(containerSize.w / mapW, containerSize.h / mapH)
+  const displayScale = scale * fitScale
+  const offsetX = (containerSize.w - mapW * displayScale) / 2
+  const offsetY = (containerSize.h - mapH * displayScale) / 2
+
+  // 容器尺寸监听
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
         const { clientWidth, clientHeight } = containerRef.current
-        setCanvasSize({ w: clientWidth, h: clientHeight })
+        setContainerSize({ w: clientWidth, h: clientHeight })
       }
     }
     updateSize()
@@ -162,78 +165,78 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     return () => window.removeEventListener('resize', updateSize)
   }, [])
 
+  // 暴露给外部用于坐标转换
   useEffect(() => {
-    transformRef.current = { offset, scale, mapW, mapH, container: containerRef.current }
+    transformRef.current = {
+      offset: { x: offsetX, y: offsetY },
+      scale: displayScale,
+      mapW, mapH,
+      container: containerRef.current
+    }
   })
 
-  // 渲染地图
+  // 渲染地图 Canvas
   const render = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    const { w, h } = canvasSize
     const dpr = window.devicePixelRatio
-    canvas.width = w * dpr; canvas.height = h * dpr
-    canvas.style.width = w + 'px'; canvas.style.height = h + 'px'
+    canvas.width = containerSize.w * dpr; canvas.height = containerSize.h * dpr
+    canvas.style.width = containerSize.w + 'px'; canvas.style.height = containerSize.h + 'px'
+    ctx.scale(dpr, dpr)
+    ctx.clearRect(0, 0, containerSize.w, containerSize.h)
 
-    const draw = (useImage: HTMLImageElement | null) => {
-      ctx.save(); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, w, h)
+    // 背景
+    ctx.fillStyle = '#0a0a0a'
+    ctx.fillRect(0, 0, containerSize.w, containerSize.h)
+
+    const img = new Image()
+    const drawImg = () => {
       ctx.save()
-      // 攻防切换时翻转
+      // 攻防翻转
       if (side === 'defense') {
-        ctx.translate(w / 2, h / 2); ctx.rotate(Math.PI); ctx.translate(-w / 2, -h / 2)
+        ctx.translate(containerSize.w / 2, containerSize.h / 2)
+        ctx.rotate(Math.PI)
+        ctx.translate(-containerSize.w / 2, -containerSize.h / 2)
       }
-      ctx.translate(offset.x, offset.y); ctx.scale(scale, scale)
-      if (useImage) { ctx.drawImage(useImage, 0, 0, mapW, mapH) }
-      else { drawPlaceholderMap(ctx, mapId, mapW, mapH) }
-      ctx.restore()
+      ctx.translate(offsetX, offsetY)
+      ctx.scale(displayScale, displayScale)
+      ctx.drawImage(img, 0, 0, mapW, mapH)
       ctx.restore()
     }
-    draw(null)
-    const img = new Image()
-    img.onload = () => draw(img)
+    const drawFallback = () => {
+      ctx.save()
+      if (side === 'defense') {
+        ctx.translate(containerSize.w / 2, containerSize.h / 2)
+        ctx.rotate(Math.PI)
+        ctx.translate(-containerSize.w / 2, -containerSize.h / 2)
+      }
+      ctx.translate(offsetX, offsetY)
+      ctx.scale(displayScale, displayScale)
+      drawPlaceholderMap(ctx, mapId, mapW, mapH)
+      ctx.restore()
+    }
+    drawFallback()
+    img.onload = () => { ctx.clearRect(0, 0, containerSize.w, containerSize.h); drawImg() }
     img.onerror = () => {}
     img.src = `/images/maps/${mapId}.png`
-  }, [canvasSize, offset, scale, mapId, mapName, side])
+  }, [containerSize, displayScale, offsetX, offsetY, mapId, mapName, side])
 
   useEffect(() => { render() }, [render])
 
-  // 缩放
+  // 缩放（滚轮）
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault()
-    const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return
-    const mx = e.clientX - rect.left; const my = e.clientY - rect.top
     const factor = e.deltaY > 0 ? 0.9 : 1.1
-    setScale(prev => Math.max(0.3, Math.min(3, prev * factor)))
-    setOffset(prev => ({ x: mx - factor * (mx - prev.x), y: my - factor * (my - prev.y) }))
-  }, [])
-
-  // 平移
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return
-    isDragging.current = true
-    dragStart.current = { x: e.clientX, y: e.clientY, ox: offset.x, oy: offset.y }
-    dispatch({ type: 'SELECT', id: null, selType: null })
-    e.preventDefault()
-  }, [offset, dispatch])
-
-  useEffect(() => {
-    const move = (e: MouseEvent) => {
-      if (!isDragging.current) return
-      setOffset({ x: dragStart.current.ox + e.clientX - dragStart.current.x, y: dragStart.current.oy + e.clientY - dragStart.current.y })
-    }
-    const up = () => { isDragging.current = false }
-    window.addEventListener('mousemove', move)
-    window.addEventListener('mouseup', up)
-    return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }
+    setScale(prev => Math.max(0.5, Math.min(3, prev * factor)))
   }, [])
 
   // 键盘快捷键
   useEffect(() => {
     const keydown = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+        e.preventDefault()
         if (selectedType === 'marker') dispatch({ type: 'REMOVE_MARKER', id: selectedId })
         else if (selectedType === 'drawing') dispatch({ type: 'REMOVE_DRAWING', id: selectedId })
         else if (selectedType === 'text') dispatch({ type: 'REMOVE_TEXT', id: selectedId })
@@ -241,12 +244,10 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault()
-        if (e.shiftKey) dispatch({ type: 'REDO' })
-        else dispatch({ type: 'UNDO' })
+        dispatch({ type: e.shiftKey ? 'REDO' : 'UNDO' })
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
-        e.preventDefault()
-        dispatch({ type: 'REDO' })
+        e.preventDefault(); dispatch({ type: 'REDO' })
       }
     }
     window.addEventListener('keydown', keydown)
@@ -257,7 +258,7 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
   const markerDragRef = useRef<{ id: string; type: string; sx: number; sy: number; ox: number; oy: number } | null>(null)
 
   const handleMarkerMouseDown = useCallback((e: React.MouseEvent, id: string, type: 'marker' | 'text' | 'agent') => {
-    e.stopPropagation()
+    e.stopPropagation(); e.preventDefault()
     dispatch({ type: 'SELECT', id, selType: type })
     let ox = 0, oy = 0
     if (type === 'marker') { const m = markers.find(x => x.id === id); if (m) { ox = m.x; oy = m.y } }
@@ -270,8 +271,8 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     const move = (e: MouseEvent) => {
       if (!markerDragRef.current) return
       const d = markerDragRef.current
-      const dx = (e.clientX - d.sx) / scale / mapW
-      const dy = (e.clientY - d.sy) / scale / mapH
+      const dx = (e.clientX - d.sx) / displayScale / mapW
+      const dy = (e.clientY - d.sy) / displayScale / mapH
       const nx = Math.max(0, Math.min(1, d.ox + dx))
       const ny = Math.max(0, Math.min(1, d.oy + dy))
       if (d.type === 'marker') dispatch({ type: 'UPDATE_MARKER', id: d.id, updates: { x: nx, y: ny } })
@@ -282,35 +283,36 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     window.addEventListener('mousemove', move)
     window.addEventListener('mouseup', up)
     return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }
-  }, [scale, dispatch])
+  }, [displayScale, dispatch])
 
   return (
     <div
-      ref={(node) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; setDroppableRef(node) }}
+      ref={(node) => {
+        containerRef.current = node
+        setDroppableRef(node)
+      }}
       className={`${styles.container} ${isOver ? styles.containerOver : ''}`}
+      onWheel={handleWheel}
     >
-      <canvas ref={canvasRef} className={styles.canvas} onWheel={handleWheel} onMouseDown={handleMouseDown} />
+      <canvas ref={canvasRef} className={styles.canvas} />
 
-      {/* SVG 绘图层 */}
-      <DrawingLayer offset={offset} scale={scale} mapW={mapW} mapH={mapH} containerRef={containerRef} />
+      <DrawingLayer offset={{ x: offsetX, y: offsetY }} scale={displayScale} mapW={mapW} mapH={mapH} containerRef={containerRef} />
 
-      {/* 拖放提示 */}
       {isOver && <div className={styles.dropHint}>释放以放置技能</div>}
 
-      {/* 标记层 — 技能标记 */}
+      {/* 技能标记 */}
       {markers.map(marker => {
         const info = getAbilityInfo(marker.abilityId, marker.agentId)
         const agent = agents.find(a => a.id === marker.agentId)
         const ab = agent?.abilities.find(a => a.id === marker.abilityId)
         const color = ab ? typeColors[ab.type] || '#888' : '#888'
         const isSelected = marker.id === selectedId && selectedType === 'marker'
-        const pulse = false // will be set from playback in future
         return (
           <div key={marker.id}
-            className={`${styles.marker} ${isSelected ? styles.markerSelected : ''} ${pulse ? styles.markerPulse : ''}`}
+            className={`${styles.marker} ${isSelected ? styles.markerSelected : ''}`}
             style={{
-              left: `${(marker.x * mapW * scale + offset.x).toFixed(1)}px`,
-              top: `${(marker.y * mapH * scale + offset.y).toFixed(1)}px`,
+              left: offsetX + marker.x * mapW * displayScale,
+              top: offsetY + marker.y * mapH * displayScale,
               borderColor: isSelected ? '#fff' : color,
               background: isSelected ? color + '30' : 'rgba(0,0,0,0.85)'
             }}
@@ -324,17 +326,17 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
         )
       })}
 
-      {/* 文字标注层 */}
+      {/* 文字标注 */}
       {textAnnotations.map(tx => {
         const isSelected = tx.id === selectedId && selectedType === 'text'
         return (
           <div key={tx.id}
             className={`${styles.textAnno} ${isSelected ? styles.textAnnoSelected : ''}`}
             style={{
-              left: `${(tx.x * mapW * scale + offset.x).toFixed(1)}px`,
-              top: `${(tx.y * mapH * scale + offset.y).toFixed(1)}px`,
+              left: offsetX + tx.x * mapW * displayScale,
+              top: offsetY + tx.y * mapH * displayScale,
               color: tx.color,
-              fontSize: tx.fontSize * scale + 'px'
+              fontSize: Math.max(10, tx.fontSize * displayScale) + 'px'
             }}
             onMouseDown={(e) => handleMarkerMouseDown(e, tx.id, 'text')}
           >
@@ -343,7 +345,7 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
         )
       })}
 
-      {/* 特工位置标记 */}
+      {/* 特工位置 */}
       {agentPositions.map(ap => {
         const agent = agents.find(a => a.id === ap.agentId)
         const isSelected = ap.id === selectedId && selectedType === 'agent'
@@ -352,8 +354,8 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
           <div key={ap.id}
             className={`${styles.agentPos} ${isSelected ? styles.agentPosSelected : ''}`}
             style={{
-              left: `${(ap.x * mapW * scale + offset.x).toFixed(1)}px`,
-              top: `${(ap.y * mapH * scale + offset.y).toFixed(1)}px`,
+              left: offsetX + ap.x * mapW * displayScale,
+              top: offsetY + ap.y * mapH * displayScale,
               borderColor: teamColor
             }}
             onMouseDown={(e) => handleMarkerMouseDown(e, ap.id, 'agent')}
@@ -368,8 +370,8 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
       <div className={styles.controls}>
         <button className={styles.zoomBtn} onClick={() => setScale(s => Math.min(3, s * 1.25))}>+</button>
         <span className={styles.zoomLabel}>{Math.round(scale * 100)}%</span>
-        <button className={styles.zoomBtn} onClick={() => setScale(s => Math.max(0.3, s * 0.8))}>-</button>
-        <button className={styles.zoomBtn} onClick={() => { setScale(1); setOffset({ x: 0, y: 0 }) }}>重置</button>
+        <button className={styles.zoomBtn} onClick={() => setScale(s => Math.max(0.5, s * 0.8))}>-</button>
+        <button className={styles.zoomBtn} onClick={() => setScale(1)}>重置</button>
       </div>
     </div>
   )
