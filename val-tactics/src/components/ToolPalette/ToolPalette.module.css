@@ -12,6 +12,41 @@
   padding: 6px;
 }
 
+.paletteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 4px;
+}
+
+.paletteTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.collapseBtn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.collapseBtn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+}
+
 .group {
   display: flex;
   flex-direction: column;
@@ -125,4 +160,60 @@
   background: currentColor;
   border-radius: 50%;
   display: block;
+}
+
+/* 移动端: 横向排列，固定在底部 */
+@media (max-width: 768px) {
+  .palette {
+    top: auto;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 20px;
+  }
+
+  .group {
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .groupLabel {
+    display: none;
+  }
+
+  .toolLabel {
+    display: none;
+  }
+
+  .toolBtn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .divider {
+    width: 1px;
+    height: 24px;
+    margin: 0 2px;
+    align-self: center;
+  }
+
+  .colorRow {
+    gap: 3px;
+  }
+
+  .colorBtn {
+    width: 16px;
+    height: 16px;
+  }
+
+  .widthBtn {
+    width: 24px;
+    height: 20px;
+  }
 }

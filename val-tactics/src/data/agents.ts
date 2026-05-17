@@ -1,3 +1,5 @@
+import type { AbilityShapeConfig } from '../types'
+
 export type AbilityType = 'smoke' | 'flash' | 'damage' | 'recon' | 'control' | 'heal' | 'mobility'
 
 export interface Ability {
@@ -27,6 +29,122 @@ export const agentImages: Record<string, string> = {
   fade: 'bountyhunter', gekko: 'aggrobot', skye: 'guide', kayo: 'grenadier',
   killjoy: 'killjoy', cypher: 'gumshoe', chamber: 'deadeye', deadlock: 'cable',
   vyse: 'cashew'
+}
+
+// 游戏内技能范围 (地图 1800x1200 ≈ 60m x 40m, 1m ≈ 30px/0.0167 norm)
+const M = 30 / 1800 // 1米对应的标准化坐标
+
+const typeDefaults: Record<AbilityType, AbilityShapeConfig> = {
+  smoke:   { shape: 'circle', radius: 4.15 * M },    // Brim烟 ~4.15m
+  flash:   { shape: 'cone', angle: 60, length: 15 * M }, // 闪光 15m
+  damage:  { shape: 'circle', radius: 3.5 * M },     // 燃烧弹 ~3.5m
+  recon:   { shape: 'cone', angle: 50, length: 18 * M },  // 侦查 18m
+  control: { shape: 'circle', radius: 4.5 * M },     // 减速球 ~4.5m
+  heal:    { shape: 'circle', radius: 4 * M },       // 治疗 ~4m
+  mobility:{ shape: 'line', length: 8 * M, thickness: 0.008 },  // 位移 8m
+}
+
+// 每个技能根据游戏内实际数据的精确覆盖
+const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
+  // === 烟雾 (半径单位: 米) ===
+  'brimstone-sky-smoke':      { radius: 4.15 * M },   // 4.15m
+  'omen-dark-cover':          { radius: 4.1 * M },    // 4.1m
+  'astra-nebula':             { radius: 4.75 * M },   // 4.75m 最大
+  'viper-poison-cloud':       { radius: 4.5 * M },    // 4.5m
+  'jett-cloudburst':          { radius: 3.5 * M },    // 3.5m 瞬发烟
+  'harbor-cove':              { radius: 3.5 * M },    // 3.5m 护盾
+  'clove-ruse':               { radius: 4.1 * M },    // 4.1m
+  'cypher-cyber-cage':        { radius: 3.5 * M },    // 3.5m 网牢
+
+  // === 燃烧弹/伤害 ===
+  'brimstone-incendiary':     { radius: 3.5 * M },
+  'phoenix-hot-hands':        { radius: 3.0 * M },
+  'viper-snake-bite':         { radius: 3.0 * M },
+  'killjoy-nanoswarm':        { radius: 3.5 * M },
+  'raze-paint-shells':        { radius: 2.5 * M },
+  'gekko-mosh-pit':           { radius: 5.0 * M },
+  'kayo-frag':                { radius: 3.0 * M },
+  'sova-shock-bolt':          { radius: 2.0 * M },
+  'vyse-razorvine':           { radius: 3.0 * M },
+
+  // === 终极技能 ===
+  'brimstone-orbital-strike': { radius: 8.0 * M },
+  'viper-pit':                { radius: 10.0 * M },
+  'raze-showstopper':         { radius: 12.0 * M },
+  'kayo-null-cmd':             { radius: 9.0 * M },
+  'killjoy-lockdown':          { radius: 9.0 * M },
+  'deadlock-annihilation':     { radius: 7.0 * M },
+  'breach-rolling-thunder':    { shape: 'cone', angle: 90, length: 35 * M },
+  'sova-hunters-fury':         { shape: 'line', length: 40 * M, thickness: 0.016 },
+  'fade-nightfall':            { shape: 'cone', angle: 70, length: 25 * M },
+
+  // === 墙体 ===
+  'viper-toxic-screen':       { shape: 'line', length: 30 * M, thickness: 0.012 },
+  'sage-barrier-orb':         { shape: 'rect', length: 5 * M, width: 0.8 * M },
+  'phoenix-blaze':            { shape: 'line', length: 8 * M, thickness: 0.012 },
+  'harbor-high-tide':         { shape: 'line', length: 25 * M, thickness: 0.012 },
+  'harbor-cascade':           { shape: 'rect', length: 4 * M, width: 2 * M },
+  'deadlock-barrier-mesh':    { shape: 'line', length: 6 * M, thickness: 0.01 },
+  'neon-relay-bolt':          { shape: 'line', length: 6 * M, thickness: 0.01 },
+
+  // === 侦查 ===
+  'sova-recon-bolt':           { angle: 60, length: 20 * M },
+  'sova-owl-drone':            { angle: 40, length: 15 * M },
+  'fade-haunt':                { angle: 60, length: 18 * M },
+  'killjoy-turret':            { shape: 'cone', angle: 100, length: 12 * M },
+  'killjoy-alarmbot':          { angle: 60, length: 10 * M },
+  'cypher-spycam':             { shape: 'cone', angle: 40, length: 15 * M },
+  'gekko-thrash':              { angle: 50, length: 18 * M },
+  'gekko-wingman':             { angle: 30, length: 12 * M },
+  'skye-trailblazer':          { angle: 30, length: 15 * M },
+  'skye-seekers':              { angle: 60, length: 20 * M },
+
+  // === 闪光 ===
+  'breach-flashpoint':         { angle: 70, length: 18 * M },
+  'skye-guiding-light':        { angle: 60, length: 20 * M },
+  'phoenix-curveball':         { angle: 45, length: 12 * M },
+  'kayo-flash':                { angle: 60, length: 15 * M },
+  'yoru-blindside':            { angle: 50, length: 12 * M },
+  'gekko-dizzy':               { angle: 50, length: 14 * M },
+  'reyna-leer':                { angle: 40, length: 10 * M },
+
+  // === 减速/控制 ===
+  'sage-slow-orb':             { radius: 4.5 * M },
+  'astra-gravity-well':        { radius: 3.5 * M },
+  'astra-nova-pulse':          { radius: 4.0 * M },
+  'fade-seize':                { radius: 3.5 * M },
+  'breach-aftershock':         { shape: 'rect', length: 4 * M, width: 1.5 * M },
+  'breach-fault-line':         { shape: 'cone', angle: 40, length: 20 * M },
+  'iso-contingency':           { shape: 'line', length: 4 * M, thickness: 0.012 },
+  'iso-undercut':              { angle: 30, length: 10 * M },
+
+  // === 治疗 ===
+  'sage-healing-orb':          { radius: 3 * M },
+  'sage-resurrection':         { radius: 2 * M },
+  'skye-regrowth':             { radius: 6 * M },
+  'reyna-devour':              { radius: 1 * M },
+  'clove-pick-me-up':          { radius: 3 * M },
+
+  // === 位移 ===
+  'jett-tailwind':             { length: 6 * M, thickness: 0.008 },
+  'jett-updraft':              { length: 4 * M, thickness: 0.008 },
+  'raze-blast-pack':           { length: 10 * M, thickness: 0.008 },
+  'yoru-gatecrash':            { shape: 'line', length: 20 * M, thickness: 0.006 },
+  'omen-shrouded-step':        { shape: 'line', length: 8 * M, thickness: 0.006 },
+  'omen-from-the-shadows':     { radius: 10 * M },
+  'chamber-rendezvous':        { shape: 'line', length: 12 * M, thickness: 0.006 },
+  'chamber-trademark':         { radius: 3 * M },
+}
+
+export function getAbilityShapeConfig(abilityId: string): AbilityShapeConfig | null {
+  const agent = agents.find(a => a.abilities.some(ab => ab.id === abilityId))
+  if (!agent) return null
+  const ability = agent.abilities.find(a => a.id === abilityId)
+  if (!ability) return null
+  const typeDefault = typeDefaults[ability.type]
+  if (!typeDefault) return null
+  const overrides = abilityOverrides[abilityId] || {}
+  return { ...typeDefault, ...overrides }
 }
 
 const agents: Agent[] = [

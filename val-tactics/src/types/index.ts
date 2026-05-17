@@ -42,6 +42,31 @@ export interface AgentPosition {
   team: 'attack' | 'defense'
 }
 
+// ====== 技能形状配置（每个技能的外观定义） ======
+export interface AbilityShapeConfig {
+  shape: 'circle' | 'cone' | 'rect' | 'line'
+  radius?: number       // 圆形半径 0-1
+  angle?: number        // 锥形角度（度）
+  length?: number       // 锥形边长 / 矩形长 / 直线长
+  width?: number        // 矩形高
+  thickness?: number    // 线宽
+}
+
+// ====== 放置在地图上的技能形状实例 ======
+export interface AbilityShape {
+  id: string
+  abilityId: string
+  agentId: string
+  x: number; y: number           // 中心点 0-1
+  rotation: number               // 旋转角度（度, 0=上）
+  shape: 'circle' | 'cone' | 'rect' | 'line'
+  radius: number                 // 圆半径
+  angle: number                  // 锥形角度
+  length: number                 // 锥形边长 / 矩形长 / 直线长
+  width: number                  // 矩形高
+  thickness: number              // 线宽
+}
+
 // ====== 工具模式 ======
 export type ToolMode = 'select' | 'freehand' | 'line' | 'arrow' | 'rect' | 'circle' | 'text' | 'agent' | 'eraser'
 
@@ -51,6 +76,7 @@ export interface Snapshot {
   drawings: DrawPath[]
   textAnnotations: TextAnnotation[]
   agentPositions: AgentPosition[]
+  abilityShapes: AbilityShape[]
 }
 
 // ====== 战术模板 ======
@@ -65,4 +91,5 @@ export interface Template {
   drawings: DrawPath[]
   textAnnotations: TextAnnotation[]
   agentPositions: AgentPosition[]
+  abilityShapes: AbilityShape[]
 }

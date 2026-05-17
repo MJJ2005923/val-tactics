@@ -1,5 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
-import { DndContext, type DragEndEvent } from '@dnd-kit/core'
+import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import maps, { type MapData } from './data/maps'
 import MapCanvas from './components/MapCanvas/MapCanvas'
@@ -12,33 +11,11 @@ import { TacticsProvider, useTactics } from './store/TacticsContext'
 function AppInner() {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
-  const { markers, dispatch, side } = useTactics()
+  const { dispatch, side } = useTactics()
 
   const transformRef = useRef<{ offset: { x: number; y: number }; scale: number; mapW: number; mapH: number; container: HTMLDivElement | null }>({
     offset: { x: 0, y: 0 }, scale: 1, mapW: 1800, mapH: 1200, container: null
   })
-
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event
-    if (over?.id !== 'map-canvas' || !active.data.current) return
-    const data = active.data.current as { ability?: { id: string }; agent?: { id: string }; type?: string }
-    const me = event.activatorEvent as MouseEvent
-    const t = transformRef.current
-    if (!t.container) return
-
-    const rect = t.container.getBoundingClientRect()
-    const sx = me.clientX - rect.left; const sy = me.clientY - rect.top
-    const x = (sx - t.offset.x) / t.scale / t.mapW
-    const y = (sy - t.offset.y) / t.scale / t.mapH
-    if (x < 0 || x > 1 || y < 0 || y > 1) return
-
-    if (data.type === 'agent' && data.agent) {
-      dispatch({ type: 'ADD_AGENT_POS', pos: { id: '', agentId: data.agent.id, x, y, team: side } })
-    } else if (data.ability && data.agent) {
-      const maxStep = markers.reduce((max, m) => Math.max(max, m.step), 0)
-      dispatch({ type: 'ADD_MARKER', marker: { id: '', abilityId: data.ability.id, agentId: data.agent.id, x, y, step: maxStep + 1, time: maxStep * 5, note: '' } })
-    }
-  }, [dispatch, markers, side])
 
   // 快捷键
   useEffect(() => {
@@ -72,17 +49,15 @@ function AppInner() {
         </div>
       </nav>
 
-      <DndContext onDragEnd={handleDragEnd}>
-        <div className="main-area">
-          <aside className="sidebar">
-            <AgentPanel />
-          </aside>
-          <div className="canvas-area">
-            <ToolPalette />
-            <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
-          </div>
+      <div className="main-area">
+        <aside className="sidebar">
+          <AgentPanel />
+        </aside>
+        <div className="canvas-area">
+          <ToolPalette />
+          <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
-      </DndContext>
+      </div>
 
       <Timeline />
       {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} />}

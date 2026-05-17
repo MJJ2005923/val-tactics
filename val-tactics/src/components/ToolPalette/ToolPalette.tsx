@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTactics } from '../../store/TacticsContext'
 import type { ToolMode } from '../../types'
 import styles from './ToolPalette.module.css'
@@ -14,14 +15,31 @@ const tools: { mode: ToolMode; label: string; icon: string }[] = [
   { mode: 'eraser',   label: '橡皮',    icon: '⌫' },
 ]
 
-const colors = ['#ff4655', '#f0c850', '#7ec868', '#50b4f0', '#a070d8', '#ff8c42', '#ffffff']
-const widths = [1, 3, 5, 8]
+const drawColors = ['#ff4655', '#f0c850', '#7ec868', '#50b4f0', '#a070d8', '#ff8c42', '#ffffff']
+const lineWidths = [1, 3, 5, 8]
+const fontSizes = [14, 18, 24, 32, 48]
 
 export default function ToolPalette() {
-  const { toolMode, drawColor, drawWidth, dispatch } = useTactics()
+  const { toolMode, drawColor, drawWidth, fontSize, dispatch } = useTactics()
+  const [collapsed, setCollapsed] = useState(false)
+
+  if (collapsed) {
+    return (
+      <div className={styles.palette}>
+        <button className={`${styles.toolBtn} ${styles.toolBtnActive}`} onClick={() => setCollapsed(false)} title="展开工具栏">
+          <span className={styles.toolIcon}>{tools.find(t => t.mode === toolMode)?.icon || '⊹'}</span>
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.palette}>
+      <div className={styles.paletteHeader}>
+        <span className={styles.paletteTitle}>工具</span>
+        <button className={styles.collapseBtn} onClick={() => setCollapsed(true)} title="收起">×</button>
+      </div>
+
       <div className={styles.group}>
         {tools.map(t => (
           <button
@@ -42,7 +60,7 @@ export default function ToolPalette() {
           <div className={styles.group}>
             <span className={styles.groupLabel}>颜色</span>
             <div className={styles.colorRow}>
-              {colors.map(c => (
+              {drawColors.map(c => (
                 <button
                   key={c}
                   className={`${styles.colorBtn} ${drawColor === c ? styles.colorBtnActive : ''}`}
@@ -55,13 +73,46 @@ export default function ToolPalette() {
           <div className={styles.group}>
             <span className={styles.groupLabel}>粗细</span>
             <div className={styles.widthRow}>
-              {widths.map(w => (
+              {lineWidths.map(w => (
                 <button
                   key={w}
                   className={`${styles.widthBtn} ${drawWidth === w ? styles.widthBtnActive : ''}`}
                   onClick={() => dispatch({ type: 'SET_DRAW_WIDTH', width: w })}
                 >
                   <span className={styles.widthDot} style={{ width: w * 3, height: w * 3 }} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {toolMode === 'text' && (
+        <>
+          <div className={styles.divider} />
+          <div className={styles.group}>
+            <span className={styles.groupLabel}>颜色</span>
+            <div className={styles.colorRow}>
+              {drawColors.map(c => (
+                <button
+                  key={c}
+                  className={`${styles.colorBtn} ${drawColor === c ? styles.colorBtnActive : ''}`}
+                  style={{ background: c }}
+                  onClick={() => dispatch({ type: 'SET_DRAW_COLOR', color: c })}
+                />
+              ))}
+            </div>
+          </div>
+          <div className={styles.group}>
+            <span className={styles.groupLabel}>字号</span>
+            <div className={styles.widthRow}>
+              {fontSizes.map(s => (
+                <button
+                  key={s}
+                  className={`${styles.widthBtn} ${fontSize === s ? styles.widthBtnActive : ''}`}
+                  onClick={() => dispatch({ type: 'SET_FONT_SIZE', size: s })}
+                >
+                  {s}
                 </button>
               ))}
             </div>

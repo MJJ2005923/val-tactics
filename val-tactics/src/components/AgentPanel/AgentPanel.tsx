@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useDraggable } from '@dnd-kit/core'
 import agents, { agentImages, type Agent, type Ability } from '../../data/agents'
 import SkillDetail from '../SkillDetail/SkillDetail'
 import styles from './AgentPanel.module.css'
@@ -22,16 +21,14 @@ function getAgentImage(agent: Agent): string {
 }
 
 function DraggableAgentHeader({ agent }: { agent: Agent }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `drag-agent-${agent.id}`,
-    data: { agent, type: 'agent' }
-  })
   return (
     <div
-      ref={setNodeRef}
-      className={`${styles.agentDragArea} ${isDragging ? styles.agentDragging : ''}`}
-      style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: isDragging ? 999 : undefined } : undefined}
-      {...listeners} {...attributes}
+      className={styles.agentDragArea}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('application/json', JSON.stringify({ type: 'agent', agentId: agent.id }))
+        e.dataTransfer.effectAllowed = 'copy'
+      }}
     >
       <img src={getAgentImage(agent)} alt={agent.name} className={styles.agentAvatar}
         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
@@ -40,19 +37,19 @@ function DraggableAgentHeader({ agent }: { agent: Agent }) {
 }
 
 function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `drag-${ability.id}`,
-    data: { ability, agent, type: 'ability' }
-  })
   return (
-    <button ref={setNodeRef}
-      className={`${styles.abilityBtn} ${isDragging ? styles.abilityBtnDragging : ''}`}
-      style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: isDragging ? 999 : undefined } : undefined}
-      {...listeners} {...attributes}>
+    <div
+      className={styles.abilityBtn}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('application/json', JSON.stringify({ type: 'ability', abilityId: ability.id, agentId: agent.id }))
+        e.dataTransfer.effectAllowed = 'copy'
+      }}
+    >
       <span className={styles.abilityKey}>{ability.key}</span>
       <span className={styles.abilityName}>{ability.name}</span>
       <span className={styles.abilityType} style={{ color: typeColors[ability.type] }}>{typeLabels[ability.type]}</span>
-    </button>
+    </div>
   )
 }
 

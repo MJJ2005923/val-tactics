@@ -1,8 +1,9 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
-import { useDroppable } from '@dnd-kit/core'
 import { useTactics } from '../../store/TacticsContext'
-import agents from '../../data/agents'
+import agents, { getAbilityShapeConfig } from '../../data/agents'
 import DrawingLayer from '../DrawingLayer/DrawingLayer'
+import AbilityShapeLayer from '../AbilityShapeLayer/AbilityShapeLayer'
+import TextInputModal from '../TextInputModal/TextInputModal'
 import styles from './MapCanvas.module.css'
 
 interface MapCanvasProps {
@@ -140,8 +141,10 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
   const [scale, setScale] = useState(1)
-  const { markers, textAnnotations, agentPositions, selectedId, selectedType, dispatch, side } = useTactics()
-  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: 'map-canvas' })
+  const { markers, textAnnotations, agentPositions, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side } = useTactics()
+  const [isOver, setIsOver] = useState(false)
+  const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
+  const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
 
   const mapW = 1800
   const mapH = 1200
@@ -232,6 +235,69 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     setScale(prev => Math.max(0.5, Math.min(3, prev * factor)))
   }, [])
 
+  // 原生拖放 — 接收从侧边栏拖来的技能/头像
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+    setIsOver(true)
+  }, [])
+
+  const handleDragLeave = useCallback(() => {
+    setIsOver(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsOver(false)
+    const raw = e.dataTransfer.getData('application/json')
+    if (!raw) return
+    let data: { type: string; agentId: string; abilityId?: string }
+    try { data = JSON.parse(raw) } catch { return }
+    const t = transformRef.current
+    if (!t.container) return
+    const rect = t.container.getBoundingClientRect()
+    const sx = e.clientX - rect.left
+    const sy = e.clientY - rect.top
+    const x = (sx - offsetX) / (displayScale * mapW)
+    const y = (sy - offsetY) / (displayScale * mapH)
+    if (x < 0 || x > 1 || y < 0 || y > 1) return
+
+    if (data.type === 'agent') {
+      dispatch({ type: 'ADD_AGENT_POS', pos: { id: '', agentId: data.agentId, x, y, team: side } })
+    } else if (data.type === 'ability' && data.abilityId) {
+      const shapeConfig = getAbilityShapeConfig(data.abilityId)
+      if (shapeConfig) {
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: data.abilityId, agentId: data.agentId,
+          x, y, rotation: 0,
+          shape: shapeConfig.shape,
+          radius: shapeConfig.radius ?? 0.08,
+          angle: shapeConfig.angle ?? 60,
+          length: shapeConfig.length ?? 0.10,
+          width: shapeConfig.width ?? 0.02,
+          thickness: shapeConfig.thickness ?? 0.008,
+        }})
+      } else {
+        const maxStep = markers.reduce((max, m) => Math.max(max, m.step), 0)
+        dispatch({ type: 'ADD_MARKER', marker: { id: '', abilityId: data.abilityId!, agentId: data.agentId, x, y, step: maxStep + 1, time: maxStep * 5, note: '' } })
+      }
+    }
+  }, [offsetX, offsetY, displayScale, mapW, mapH, transformRef, markers, side, dispatch])
+
+  // 地图点击 — 文字工具创建标注
+  const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    if (toolMode !== 'text') return
+    const t = transformRef.current
+    if (!t.container) return
+    const rect = t.container.getBoundingClientRect()
+    const sx = e.clientX - rect.left
+    const sy = e.clientY - rect.top
+    const x = (sx - offsetX) / (displayScale * mapW)
+    const y = (sy - offsetY) / (displayScale * mapH)
+    if (x < 0 || x > 1 || y < 0 || y > 1) return
+    setPendingTextPos({ x, y })
+  }, [toolMode, offsetX, offsetY, displayScale, mapW, mapH, transformRef])
+
   // 键盘快捷键
   useEffect(() => {
     const keydown = (e: KeyboardEvent) => {
@@ -241,6 +307,7 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
         else if (selectedType === 'drawing') dispatch({ type: 'REMOVE_DRAWING', id: selectedId })
         else if (selectedType === 'text') dispatch({ type: 'REMOVE_TEXT', id: selectedId })
         else if (selectedType === 'agent') dispatch({ type: 'REMOVE_AGENT_POS', id: selectedId })
+        else if (selectedType === 'abilityShape') dispatch({ type: 'REMOVE_ABILITY_SHAPE', id: selectedId })
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault()
@@ -287,16 +354,19 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
 
   return (
     <div
-      ref={(node) => {
-        containerRef.current = node
-        setDroppableRef(node)
-      }}
-      className={`${styles.container} ${isOver ? styles.containerOver : ''}`}
+      ref={(node) => { containerRef.current = node }}
+      className={`${styles.container} ${isOver ? styles.containerOver : ''} ${toolMode === 'text' ? styles.containerText : ''}`}
       onWheel={handleWheel}
+      onClick={handleCanvasClick}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <canvas ref={canvasRef} className={styles.canvas} />
 
       <DrawingLayer offset={{ x: offsetX, y: offsetY }} scale={displayScale} mapW={mapW} mapH={mapH} containerRef={containerRef} />
+
+      <AbilityShapeLayer offset={{ x: offsetX, y: offsetY }} scale={displayScale} mapW={mapW} mapH={mapH} containerRef={containerRef} />
 
       {isOver && <div className={styles.dropHint}>释放以放置技能</div>}
 
@@ -339,6 +409,10 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
               fontSize: Math.max(10, tx.fontSize * displayScale) + 'px'
             }}
             onMouseDown={(e) => handleMarkerMouseDown(e, tx.id, 'text')}
+            onDoubleClick={(e) => {
+              e.stopPropagation()
+              setEditingText({ id: tx.id, text: tx.text, color: tx.color, fontSize: tx.fontSize })
+            }}
           >
             {tx.text}
           </div>
@@ -365,6 +439,40 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
           </div>
         )
       })}
+
+      {/* 文字输入弹窗 — 新建 */}
+      {pendingTextPos && (
+        <TextInputModal
+          x={pendingTextPos.x}
+          y={pendingTextPos.y}
+          color={drawColor}
+          fontSize={fontSize}
+          onConfirm={(text, color, fz) => {
+            dispatch({ type: 'ADD_TEXT', text: { id: '', x: pendingTextPos.x, y: pendingTextPos.y, text, color, fontSize: fz } })
+            setPendingTextPos(null)
+          }}
+          onCancel={() => setPendingTextPos(null)}
+        />
+      )}
+
+      {/* 文字输入弹窗 — 编辑 */}
+      {editingText && (
+        <TextInputModal
+          x={0} y={0}
+          color={editingText.color}
+          fontSize={editingText.fontSize}
+          initialText={editingText.text}
+          onConfirm={(text, color, fz) => {
+            dispatch({ type: 'UPDATE_TEXT', id: editingText.id, updates: { text, color, fontSize: fz } })
+            setEditingText(null)
+          }}
+          onCancel={() => setEditingText(null)}
+          onDelete={() => {
+            dispatch({ type: 'REMOVE_TEXT', id: editingText.id })
+            setEditingText(null)
+          }}
+        />
+      )}
 
       {/* 缩放控件 */}
       <div className={styles.controls}>

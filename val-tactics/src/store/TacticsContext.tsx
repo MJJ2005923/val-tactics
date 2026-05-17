@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, type ReactNode } from 'react'
-import type { Marker, DrawPath, TextAnnotation, AgentPosition, ToolMode } from '../types'
+import type { Marker, DrawPath, TextAnnotation, AgentPosition, AbilityShape, ToolMode } from '../types'
 
 // ====== 完整状态 ======
 export interface TacticsState {
@@ -7,12 +7,14 @@ export interface TacticsState {
   drawings: DrawPath[]
   textAnnotations: TextAnnotation[]
   agentPositions: AgentPosition[]
-  selectedId: string | null        // 选中的对象 ID（标记/绘图/文字/特工位置）
-  selectedType: 'marker' | 'drawing' | 'text' | 'agent' | null
+  abilityShapes: AbilityShape[]
+  selectedId: string | null        // 选中的对象 ID
+  selectedType: 'marker' | 'drawing' | 'text' | 'agent' | 'abilityShape' | null
   toolMode: ToolMode
   side: 'attack' | 'defense'
   drawColor: string
   drawWidth: number
+  fontSize: number
   // 动画播放
   playing: boolean
   playSpeed: number                // 0.5, 1, 2
@@ -28,6 +30,7 @@ interface Snapshot {
   drawings: DrawPath[]
   textAnnotations: TextAnnotation[]
   agentPositions: AgentPosition[]
+  abilityShapes: AbilityShape[]
 }
 
 interface History {
@@ -42,7 +45,8 @@ function takeSnapshot(state: TacticsState): Snapshot {
     markers: state.markers.map(m => ({ ...m })),
     drawings: state.drawings.map(d => ({ ...d, points: d.points.map(p => ({ ...p })) })),
     textAnnotations: state.textAnnotations.map(t => ({ ...t })),
-    agentPositions: state.agentPositions.map(a => ({ ...a }))
+    agentPositions: state.agentPositions.map(a => ({ ...a })),
+    abilityShapes: state.abilityShapes.map(s => ({ ...s }))
   }
 }
 
@@ -51,6 +55,7 @@ type Action =
   | { type: 'SET_TOOL_MODE'; mode: ToolMode }
   | { type: 'SET_DRAW_COLOR'; color: string }
   | { type: 'SET_DRAW_WIDTH'; width: number }
+  | { type: 'SET_FONT_SIZE'; size: number }
   | { type: 'SET_SIDE'; side: 'attack' | 'defense' }
   | { type: 'SET_STRATEGY_NAME'; name: string }
   | { type: 'SET_STRATEGY_DESCRIPTION'; desc: string }
@@ -66,9 +71,12 @@ type Action =
   | { type: 'ADD_AGENT_POS'; pos: AgentPosition }
   | { type: 'UPDATE_AGENT_POS'; id: string; updates: Partial<AgentPosition> }
   | { type: 'REMOVE_AGENT_POS'; id: string }
+  | { type: 'ADD_ABILITY_SHAPE'; shape: AbilityShape }
+  | { type: 'UPDATE_ABILITY_SHAPE'; id: string; updates: Partial<AbilityShape> }
+  | { type: 'REMOVE_ABILITY_SHAPE'; id: string }
   | { type: 'SELECT'; id: string | null; selType: TacticsState['selectedType'] }
   | { type: 'CLEAR_ALL' }
-  | { type: 'LOAD_ALL'; markers: Marker[]; drawings: DrawPath[]; texts: TextAnnotation[]; agents: AgentPosition[]; name: string; desc: string }
+  | { type: 'LOAD_ALL'; markers: Marker[]; drawings: DrawPath[]; texts: TextAnnotation[]; agents: AgentPosition[]; shapes: AbilityShape[]; name: string; desc: string }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'PLAY_START' }
@@ -82,12 +90,14 @@ const initialState: TacticsState = {
   drawings: [],
   textAnnotations: [],
   agentPositions: [],
+  abilityShapes: [],
   selectedId: null,
   selectedType: null,
   toolMode: 'select',
   side: 'attack',
   drawColor: '#ff4655',
   drawWidth: 3,
+  fontSize: 24,
   playing: false,
   playSpeed: 1,
   playStep: -1,
@@ -108,6 +118,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     'ADD_DRAWING', 'UPDATE_DRAWING', 'REMOVE_DRAWING',
     'ADD_TEXT', 'UPDATE_TEXT', 'REMOVE_TEXT',
     'ADD_AGENT_POS', 'UPDATE_AGENT_POS', 'REMOVE_AGENT_POS',
+    'ADD_ABILITY_SHAPE', 'UPDATE_ABILITY_SHAPE', 'REMOVE_ABILITY_SHAPE',
     'CLEAR_ALL', 'LOAD_ALL'
   ])
 
@@ -128,6 +139,8 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       return { state: { ...state, drawColor: action.color }, history: newHistory }
     case 'SET_DRAW_WIDTH':
       return { state: { ...state, drawWidth: action.width }, history: newHistory }
+    case 'SET_FONT_SIZE':
+      return { state: { ...state, fontSize: action.size }, history: newHistory }
     case 'SET_SIDE':
       return { state: { ...state, side: action.side }, history: newHistory }
     case 'SET_STRATEGY_NAME':
@@ -167,6 +180,14 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     case 'REMOVE_AGENT_POS':
       return { state: { ...state, agentPositions: state.agentPositions.filter(a => a.id !== action.id), selectedId: state.selectedId === action.id ? null : state.selectedId, selectedType: state.selectedId === action.id ? null : state.selectedType }, history: newHistory }
 
+    // Ability shapes
+    case 'ADD_ABILITY_SHAPE':
+      return { state: { ...state, abilityShapes: [...state.abilityShapes, { ...action.shape, id: action.shape.id || genId('as') }] }, history: newHistory }
+    case 'UPDATE_ABILITY_SHAPE':
+      return { state: { ...state, abilityShapes: state.abilityShapes.map(s => s.id === action.id ? { ...s, ...action.updates } : s) }, history: newHistory }
+    case 'REMOVE_ABILITY_SHAPE':
+      return { state: { ...state, abilityShapes: state.abilityShapes.filter(s => s.id !== action.id), selectedId: state.selectedId === action.id ? null : state.selectedId, selectedType: state.selectedId === action.id ? null : state.selectedType }, history: newHistory }
+
     // Selection
     case 'SELECT':
       return { state: { ...state, selectedId: action.id, selectedType: action.selType }, history: newHistory }
@@ -175,7 +196,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     case 'CLEAR_ALL':
       return { state: { ...initialState, toolMode: state.toolMode, drawColor: state.drawColor, drawWidth: state.drawWidth, side: state.side }, history: newHistory }
     case 'LOAD_ALL':
-      return { state: { ...state, markers: action.markers, drawings: action.drawings, textAnnotations: action.texts, agentPositions: action.agents, strategyName: action.name, strategyDescription: action.desc, selectedId: null, selectedType: null }, history: newHistory }
+      return { state: { ...state, markers: action.markers, drawings: action.drawings, textAnnotations: action.texts, agentPositions: action.agents, abilityShapes: action.shapes, strategyName: action.name, strategyDescription: action.desc, selectedId: null, selectedType: null }, history: newHistory }
 
     // Undo / Redo
     case 'UNDO': {
@@ -183,7 +204,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       const prev = newHistory.past[newHistory.past.length - 1]
       const s = takeSnapshot(state)
       return {
-        state: { ...state, markers: prev.markers, drawings: prev.drawings, textAnnotations: prev.textAnnotations, agentPositions: prev.agentPositions, selectedId: null, selectedType: null },
+        state: { ...state, markers: prev.markers, drawings: prev.drawings, textAnnotations: prev.textAnnotations, agentPositions: prev.agentPositions, abilityShapes: prev.abilityShapes, selectedId: null, selectedType: null },
         history: { past: newHistory.past.slice(0, -1), future: [s, ...newHistory.future].slice(0, MAX_HISTORY) }
       }
     }
@@ -192,7 +213,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       const next = newHistory.future[0]
       const s = takeSnapshot(state)
       return {
-        state: { ...state, markers: next.markers, drawings: next.drawings, textAnnotations: next.textAnnotations, agentPositions: next.agentPositions, selectedId: null, selectedType: null },
+        state: { ...state, markers: next.markers, drawings: next.drawings, textAnnotations: next.textAnnotations, agentPositions: next.agentPositions, abilityShapes: next.abilityShapes, selectedId: null, selectedType: null },
         history: { past: [...newHistory.past, s].slice(-MAX_HISTORY), future: newHistory.future.slice(1) }
       }
     }
