@@ -53,7 +53,7 @@ const typeStyles: Record<string, {
   },
 }
 
-interface AbilityInfo { color: string; key: string; name: string; type: string; icon: string; gradient: string }
+interface AbilityInfo { color: string; key: string; name: string; type: string; gradient: string }
 
 function getAbilityInfo(shape: AbilityShape): AbilityInfo {
   const agent = agents.find(a => a.id === shape.agentId)
@@ -65,7 +65,6 @@ function getAbilityInfo(shape: AbilityShape): AbilityInfo {
     key: ab?.key || '',
     name: ab?.name || '',
     type,
-    icon: ab?.icon || ts?.icon || '',
     gradient: ts?.gradient || '',
   }
 }
@@ -164,7 +163,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
       {abilityShapes.map(s => {
         const isSelected = s.id === selectedId && selectedType === 'abilityShape'
         const info = getAbilityInfo(s)
-        const { color, key, name, gradient } = info
+        const { color, key, gradient } = info
         const cx = offset.x + s.x * mapW * scale
         const cy = offset.y + s.y * mapH * scale
         const selectedGlow = isSelected ? `0 0 16px ${color}80, 0 0 4px ${color}` : ''
@@ -192,12 +191,16 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               />
               {/* 图标 + 键位标签 */}
               <div style={{
-                position: 'absolute', left: cx - 24, top: cy - 12, width: 48,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                position: 'absolute', left: cx - 14, top: cy - 14,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 pointerEvents: 'none',
               }}>
-                <span style={{ fontSize: r > 30 ? 16 : 12, lineHeight: 1, filter: 'drop-shadow(0 1px 2px black)' }}>{info.icon}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: color, padding: '0 4px', borderRadius: 2, lineHeight: '14px', textShadow: '0 1px 2px black' }}>{key} {name}</span>
+                <span style={{
+                  width: 28, height: 28, borderRadius: '50%', background: color,
+                  color: '#fff', fontSize: 14, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  textShadow: '0 1px 2px black',
+                }}>{key}</span>
               </div>
               {/* 旋转手柄 */}
               {isSelected && (
@@ -228,12 +231,16 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                 onMouseDown={(e) => handleMouseDown(e, s)}
               />
               <div style={{
-                position: 'absolute', left: cx - 30, top: cy - 11, width: 60,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
-                pointerEvents: 'none', transform: `rotate(${s.rotation}deg)`,
+                position: 'absolute', left: cx - 14, top: cy - 14,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                pointerEvents: 'none',
               }}>
-                <span style={{ fontSize: 12 }}>{info.icon}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: color, padding: '0 4px', borderRadius: 2, lineHeight: '14px', textShadow: '0 1px 2px black' }}>{key} {name}</span>
+                <span style={{
+                  width: 28, height: 28, borderRadius: '50%', background: color,
+                  color: '#fff', fontSize: 14, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  textShadow: '0 1px 2px black',
+                }}>{key}</span>
               </div>
               {isSelected && (
                 <div style={{ position: 'absolute', left: cx - 6, top: cy - hh - 26, width: 12, height: 12, borderRadius: '50%', background: '#fff', border: '2px solid #333', cursor: 'grab', boxShadow: '0 0 6px black' }}
@@ -285,12 +292,11 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     )
                   })}
                   {/* 标签 */}
-                  <text x={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90))} y={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90)) + 4}
-                    textAnchor="middle" fill="#fff" fontSize={14} fontWeight="bold"
-                    style={{ pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px black)' }}>{info.icon}</text>
-                  <text x={scx + len * 0.55 * Math.cos(degToRad(s.rotation - 90))} y={scy + len * 0.55 * Math.sin(degToRad(s.rotation - 90)) + 4}
-                    textAnchor="middle" fill="#fff" fontSize={10} fontWeight="bold"
-                    style={{ pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px black)' }}>{key} {name}</text>
+                  <circle cx={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90))} cy={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90))} r={14} fill={color} stroke="#fff" strokeWidth={1}
+                    style={{ pointerEvents: 'none' }} />
+                  <text x={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90))} y={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90)) + 5}
+                    textAnchor="middle" fill="#fff" fontSize={12} fontWeight="bold"
+                    style={{ pointerEvents: 'none' }}>{key}</text>
                   {/* 角度弧线标记 */}
                   <path d={`M ${leftX} ${leftY} A ${len * 0.2} ${len * 0.2} 0 0 1 ${rightX} ${rightY}`}
                     fill="none" stroke={color} strokeWidth={1} opacity={0.5} style={{ pointerEvents: 'none' }} />
@@ -326,10 +332,10 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       style={{ pointerEvents: 'none' }} />
                   )}
                   {/* 标签 */}
-                  <text x={svgW / 2} y={svgH / 2 - 6} textAnchor="middle" fill="#fff" fontSize={14} fontWeight="bold"
-                    style={{ pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px black)' }}>{info.icon}</text>
-                  <text x={svgW / 2} y={svgH / 2 + 10} textAnchor="middle" fill="#fff" fontSize={10} fontWeight="bold"
-                    style={{ pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px black)' }}>{key} {name}</text>
+                  <circle cx={svgW / 2} cy={svgH / 2} r={14} fill={color} stroke="#fff" strokeWidth={1}
+                    style={{ pointerEvents: 'none' }} />
+                  <text x={svgW / 2} y={svgH / 2 + 5} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="bold"
+                    style={{ pointerEvents: 'none' }}>{key}</text>
                   {/* 旋转手柄 */}
                   {isSelected && (
                     <circle cx={svgW / 2} cy={svgH / 2 - halfLen - 14} r={6} fill="#fff" stroke="#333" strokeWidth={2}
