@@ -177,6 +177,11 @@
   background: var(--color-bg-active);
 }
 
+.abilityBtnDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .abilityKeyBadge {
   width: 22px;
   height: 22px;

@@ -6,6 +6,7 @@ import AgentPanel from './components/AgentPanel/AgentPanel'
 import Timeline from './components/Timeline/Timeline'
 import TemplateManager from './components/TemplateManager/TemplateManager'
 import ToolPalette from './components/ToolPalette/ToolPalette'
+import SplashScreen from './components/SplashScreen/SplashScreen'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 
 function AppInner() {
@@ -66,8 +67,19 @@ function AppInner() {
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') setShowSplash(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
     <TacticsProvider>
+      {showSplash && <SplashScreen onEnter={() => setShowSplash(false)} />}
       <AppInner />
     </TacticsProvider>
   )

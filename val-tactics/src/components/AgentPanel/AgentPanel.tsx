@@ -36,15 +36,19 @@ function DraggableAgentHeader({ agent }: { agent: Agent }) {
   )
 }
 
+// 不可拖拽的技能（治疗/复活等单体技能，不需要战术布置）
+const nonDraggable = new Set(['sage-healing-orb', 'sage-resurrection', 'reyna-devour', 'reyna-dismiss', 'reyna-empress', 'clove-pick-me-up', 'clove-not-dead-yet', 'jett-blade-storm'])
+
 function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }) {
+  const isDraggable = !nonDraggable.has(ability.id)
   return (
     <div
-      className={styles.abilityBtn}
-      draggable
-      onDragStart={(e) => {
+      className={`${styles.abilityBtn} ${!isDraggable ? styles.abilityBtnDisabled : ''}`}
+      draggable={isDraggable}
+      onDragStart={isDraggable ? (e) => {
         e.dataTransfer.setData('application/json', JSON.stringify({ type: 'ability', abilityId: ability.id, agentId: agent.id }))
         e.dataTransfer.effectAllowed = 'copy'
-      }}
+      } : undefined}
     >
       <span className={styles.abilityKeyBadge} style={{ background: typeColors[ability.type] }}>{ability.key}</span>
       <span className={styles.abilityName}>{ability.name}</span>

@@ -276,6 +276,7 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
           length: shapeConfig.length ?? 0.10,
           width: shapeConfig.width ?? 0.02,
           thickness: shapeConfig.thickness ?? 0.008,
+          iconOnly: shapeConfig.iconOnly ?? false,
         }})
       } else {
         const maxStep = markers.reduce((max, m) => Math.max(max, m.step), 0)

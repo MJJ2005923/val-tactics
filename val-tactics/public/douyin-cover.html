@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>抖音封面</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; height: 1440px;
+  overflow: hidden;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  background: #000;
+}
+.cover {
+  width: 100%; height: 100%;
+  position: relative;
+  display: flex; flex-direction: column;
+  background: radial-gradient(ellipse at 50% 35%, #1a1025 0%, #0a0a0f 40%, #000 70%);
+}
+/* 顶部光效 */
+.cover::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,70,85,0.15) 0%, transparent 40%),
+    radial-gradient(circle at 70% 30%, rgba(80,180,240,0.1) 0%, transparent 35%),
+    radial-gradient(circle at 50% 60%, rgba(160,112,216,0.08) 0%, transparent 45%);
+}
+/* 网格线 */
+.grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+/* 顶部标签 */
+.badge {
+  position: relative; z-index: 2;
+  margin: 80px auto 0;
+  padding: 10px 32px;
+  border: 1px solid rgba(255,70,85,0.4);
+  border-radius: 30px;
+  color: #ff4655;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 6px;
+  background: rgba(255,70,85,0.08);
+}
+/* 主标题 */
+.main-title {
+  position: relative; z-index: 2;
+  margin-top: 60px;
+  text-align: center;
+}
+.main-title .line1 {
+  font-size: 96px; font-weight: 900; color: #fff;
+  letter-spacing: 8px; line-height: 1.1;
+}
+.main-title .line1 span { color: #ff4655; }
+.main-title .line2 {
+  font-size: 72px; font-weight: 900; color: #fff;
+  letter-spacing: 6px; margin-top: 16px;
+}
+/* 红色分割线 */
+.divider {
+  position: relative; z-index: 2;
+  width: 280px; height: 4px;
+  background: linear-gradient(90deg, transparent, #ff4655, transparent);
+  margin: 40px auto;
+}
+/* 卖点列表 */
+.selling-points {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 28px;
+  margin-top: 20px;
+}
+.point {
+  display: flex; align-items: center; gap: 16px;
+  font-size: 36px; color: rgba(255,255,255,0.75);
+  font-weight: 500;
+}
+.point .icon {
+  width: 56px; height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  font-size: 30px;
+}
+/* AI标签 */
+.ai-badge {
+  position: relative; z-index: 2;
+  margin: 50px auto 0;
+  padding: 16px 48px;
+  background: linear-gradient(135deg, rgba(255,70,85,0.2), rgba(160,112,216,0.2));
+  border: 1px solid rgba(255,70,85,0.3);
+  border-radius: 12px;
+  text-align: center;
+}
+.ai-badge .ai-title {
+  font-size: 44px; font-weight: 800;
+  background: linear-gradient(135deg, #ff4655, #a070d8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: 4px;
+}
+.ai-badge .ai-sub {
+  font-size: 22px; color: rgba(255,255,255,0.5);
+  margin-top: 8px; letter-spacing: 2px;
+}
+/* 底部CTA */
+.cta {
+  position: relative; z-index: 2;
+  margin: 50px auto 0;
+  padding: 24px 80px;
+  background: linear-gradient(135deg, #ff4655, #e03a4a);
+  border-radius: 16px;
+  font-size: 40px; font-weight: 800; color: #fff;
+  letter-spacing: 4px;
+  box-shadow: 0 12px 40px rgba(255,70,85,0.4);
+}
+/* 底部信息 */
+.footer {
+  position: absolute; bottom: 60px; left: 0; right: 0;
+  z-index: 2; text-align: center;
+  font-size: 24px; color: rgba(255,255,255,0.25);
+  letter-spacing: 3px;
+}
+/* 装饰元素 */
+.corner-deco {
+  position: absolute; z-index: 1;
+  width: 300px; height: 300px;
+  border: 1px solid rgba(255,70,85,0.08);
+  border-radius: 50%;
+}
+.corner-deco.tl { top: -100px; left: -80px; }
+.corner-deco.br { bottom: -100px; right: -80px; }
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="grid"></div>
+  <div class="corner-deco tl"></div>
+  <div class="corner-deco br"></div>
+
+  <div class="badge">🎯 无畏契约战术板</div>
+
+  <div class="main-title">
+    <div class="line1">用<span>AI</span>打战术</div>
+    <div class="line2">你也能当指挥</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="selling-points">
+    <div class="point"><span class="icon">🎮</span> 26位特工 · 100项技能全覆盖</div>
+    <div class="point"><span class="icon">📐</span> 技能范围精准可视化</div>
+    <div class="point"><span class="icon">🖱</span> 拖拽布置 一键导出</div>
+  </div>
+
+  <div class="ai-badge">
+    <div class="ai-title">国内首个 AI 开发战术网站</div>
+    <div class="ai-sub">Claude AI · 全栈自动构建</div>
+  </div>
+
+  <div class="cta">👇 评论区拿链接</div>
+
+  <div class="footer">val-tactics.pages.dev</div>
+</div>
+</body>
+</html>

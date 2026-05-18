@@ -42,7 +42,15 @@ const typeStyles: Record<string, { gradient: string }> = {
   },
 }
 
-interface AbilityInfo { color: string; key: string; name: string; type: string; gradient: string; iconUrl: string }
+interface AbilityInfo { color: string; key: string; name: string; type: string; gradient: string; iconUrl: string; iconFilter?: string }
+
+// 特定技能图标染色
+const iconTints: Record<string, string> = {
+  'reyna-leer': 'sepia(1) saturate(3) hue-rotate(240deg) brightness(1.1)', // 紫色
+  'yoru-fakeout': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'yoru-gatecrash': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'yoru-dimensional-drift': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+}
 
 function getAbilityInfo(shape: AbilityShape): AbilityInfo {
   const agent = agents.find(a => a.id === shape.agentId)
@@ -57,6 +65,7 @@ function getAbilityInfo(shape: AbilityShape): AbilityInfo {
     type,
     gradient: ts?.gradient || '',
     iconUrl: ab?.iconUrl || '',
+    iconFilter: iconTints[shape.abilityId],
   }
 }
 
@@ -154,49 +163,112 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
       {abilityShapes.map(s => {
         const isSelected = s.id === selectedId && selectedType === 'abilityShape'
         const info = getAbilityInfo(s)
-        const { color, key, gradient } = info
+        const { color } = info
         const cx = offset.x + s.x * mapW * scale
         const cy = offset.y + s.y * mapH * scale
-        const selectedGlow = isSelected ? `0 0 16px ${color}80, 0 0 4px ${color}` : ''
 
-        if (s.shape === 'circle') {
-          const r = Math.max(s.radius * mapW * scale, 8)
-          const patternFill = info.type === 'recon' ? 'url(#recon-scan)' : info.type === 'smoke' ? 'url(#smoke-swirl)' : info.type === 'heal' ? 'url(#heal-cross)' : info.type === 'control' ? 'url(#control-grid)' : 'none'
+        // 仅图标模式：不渲染形状，只显示图标
+        if (s.iconOnly) {
           return (
             <div key={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
-              {/* 外发光 */}
-              {isSelected && <div style={{
-                position: 'absolute', left: cx - r - 8, top: cy - r - 8, width: (r + 8) * 2, height: (r + 8) * 2,
-                borderRadius: '50%', background: `${color}10`, boxShadow: `0 0 20px ${color}30`,
-              }} />}
-              {/* 形状主体 */}
+              <div style={{ position: 'absolute', left: cx - 14, top: cy - 14, pointerEvents: 'none' }}>
+                <img src={info.iconUrl} style={{ width: 28, height: 28,
+                  filter: info.iconFilter
+                    ? `drop-shadow(0 1px 3px rgba(0,0,0,0.6)) ${info.iconFilter}`
+                    : 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              </div>
+              <div style={{ position: 'absolute', left: cx - 4, top: cy - 4, width: 8, height: 8, borderRadius: '50%', background: color, cursor: 'move' }}
+                onMouseDown={(e) => handleMouseDown(e, s)} />
+              {isSelected && (
+                <div style={{ position: 'absolute', left: cx - 4, top: cy - 16, width: 8, height: 8, borderRadius: '50%', background: '#fff', border: '1px solid #333', cursor: 'grab' }}
+                  onMouseDown={(e) => handleRotMouseDown(e, s)} />
+              )}
+            </div>
+          )
+        }
+
+        if (s.shape === 'circle') {
+          const r = Math.max(s.radius * mapW * scale, 6)
+          const t = info.type
+          return (
+            <div key={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+              {t === 'smoke' && (
+                <>
+                  <div style={{ position: 'absolute', left: cx - r*1.3, top: cy - r*1.3, width: r*2.6, height: r*2.6,
+                    borderRadius: '50%', background: 'radial-gradient(circle, rgba(180,200,180,0.15) 0%, rgba(160,180,160,0.06) 40%, transparent 70%)',
+                    filter: 'blur(12px)', pointerEvents: 'none' }} />
+                  <div style={{ position: 'absolute', left: cx - r*0.8, top: cy - r*0.6, width: r*1.6, height: r*1.6,
+                    borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,220,200,0.2) 0%, rgba(180,200,180,0.08) 50%, transparent 75%)',
+                    filter: 'blur(6px)', pointerEvents: 'none' }} />
+                </>
+              )}
+              {t === 'damage' && (
+                <>
+                  <div style={{ position: 'absolute', left: cx - r*0.45, top: cy - r*0.45, width: r*0.9, height: r*0.9,
+                    borderRadius: '50%', background: `radial-gradient(circle, ${color}80 0%, ${color}40 30%, transparent 65%)`,
+                    filter: 'blur(3px)', pointerEvents: 'none' }} />
+                  <div style={{ position: 'absolute', left: cx - r*0.25, top: cy - r*0.3, width: r*0.5, height: r*0.5,
+                    borderRadius: '50%', background: `radial-gradient(circle, #fff8 0%, ${color}60 50%, transparent 100%)`,
+                    filter: 'blur(1px)', pointerEvents: 'none' }} />
+                </>
+              )}
+              {t === 'heal' && (
+                <>
+                  <div style={{ position: 'absolute', left: cx - r*0.1, top: cy - r*0.55, width: r*0.2, height: r*1.1,
+                    background: `linear-gradient(0deg, transparent, ${color}40 30%, ${color}60 50%, ${color}40 70%, transparent)`,
+                    borderRadius: r*0.1, pointerEvents: 'none' }} />
+                  <div style={{ position: 'absolute', left: cx - r*0.55, top: cy - r*0.1, width: r*1.1, height: r*0.2,
+                    background: `linear-gradient(90deg, transparent, ${color}40 30%, ${color}60 50%, ${color}40 70%, transparent)`,
+                    borderRadius: r*0.1, pointerEvents: 'none' }} />
+                </>
+              )}
+              {t === 'control' && (
+                <div style={{ position: 'absolute', left: cx - r, top: cy - r, width: r*2, height: r*2,
+                  borderRadius: '50%',
+                  background: `conic-gradient(from 0deg, ${color}15 0deg, ${color}05 45deg, ${color}12 90deg, ${color}03 135deg, ${color}10 180deg, ${color}05 225deg, ${color}08 270deg, ${color}04 315deg, ${color}15 360deg)`,
+                  pointerEvents: 'none' }} />
+              )}
               <div style={{
                 position: 'absolute', left: cx - r, top: cy - r, width: r * 2, height: r * 2,
-                borderRadius: '50%', border: `2px solid ${isSelected ? '#fff' : color}`,
-                background: `${gradient}, ${patternFill}`,
-                cursor: 'move',
-                boxShadow: selectedGlow || `0 0 4px ${color}20`,
-                transition: 'box-shadow 0.15s, border-color 0.15s',
+                borderRadius: '50%', cursor: 'move',
+                border: `2px solid ${isSelected ? '#fff' : color}${t === 'smoke' ? '40' : '80'}`,
+                background: t === 'smoke'
+                  ? `radial-gradient(circle at 35% 35%, rgba(210,220,210,0.3) 0%, rgba(180,200,180,0.12) 40%, rgba(150,170,160,0.04) 70%, transparent 100%)`
+                  : t === 'damage'
+                  ? `radial-gradient(circle, ${color}35 0%, ${color}15 40%, ${color}05 70%, transparent 100%)`
+                  : t === 'heal'
+                  ? `radial-gradient(circle, ${color}25 0%, ${color}10 50%, ${color}03 80%, transparent 100%)`
+                  : `radial-gradient(circle, ${color}20, ${color}08 60%, ${color}02 100%)`,
+                boxShadow: isSelected ? `0 0 14px ${color}, 0 0 4px #fff`
+                  : t === 'damage' ? `0 0 10px ${color}50, inset 0 0 6px ${color}20`
+                  : `0 0 3px ${color}20`,
               }}
                 onMouseDown={(e) => handleMouseDown(e, s)}
               />
-              {/* 图标 + 键位标签 */}
-              <div style={{
-                position: 'absolute', left: cx - 18, top: cy - 26,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                pointerEvents: 'none',
-              }}>
-                <img src={info.iconUrl}
-                  style={{ width: 36, height: 36, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }}
+              <div style={{ position: 'absolute', left: cx - 14, top: cy - 14, pointerEvents: 'none' }}>
+                <img src={info.iconUrl} style={{ width: 28, height: 28,
+                  filter: info.iconFilter
+                    ? `drop-shadow(0 1px 3px rgba(0,0,0,0.6)) ${info.iconFilter}`
+                    : 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                <span style={{
-                  width: 20, height: 20, borderRadius: '50%', background: color,
-                  color: '#fff', fontSize: 11, fontWeight: 700,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                }}>{key}</span>
               </div>
-              {/* 旋转手柄 */}
+              {/* 夜露C技能方向箭头（圆形外围） */}
+              {s.abilityId === 'yoru-fakeout' && (
+                <div style={{
+                  position: 'absolute', left: cx - 5, top: cy - r - 14, width: 10, height: 18,
+                  pointerEvents: 'none', transformOrigin: `5px ${r + 14}px`,
+                  transform: `rotate(${s.rotation}deg)`,
+                }}>
+                  <div style={{
+                    width: 0, height: 0,
+                    borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                    borderBottom: `12px solid ${color}`,
+                    margin: '0 auto',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
+                  }} />
+                </div>
+              )}
               {isSelected && (
                 <>
                   <div style={{ position: 'absolute', left: cx - 1, top: cy - r - 8, width: 2, height: 16, background: '#fff' }} />
@@ -211,33 +283,26 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
         if (s.shape === 'rect') {
           const hw = (s.length * mapW * scale) / 2
           const hh = (s.width * mapH * scale) / 2
-          const patternFill = info.type === 'control' ? 'url(#control-grid)' : info.type === 'smoke' ? 'url(#smoke-swirl)' : 'none'
           return (
             <div key={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
               <div style={{
                 position: 'absolute', left: cx - hw, top: cy - hh, width: hw * 2, height: hh * 2,
-                border: `2px solid ${isSelected ? '#fff' : color}`, borderRadius: 3,
-                background: `${gradient}, ${patternFill}`,
+                border: `2px solid ${isSelected ? '#fff' : color}90`, borderRadius: 2,
+                background: `repeating-linear-gradient(0deg, ${color}10 0px, ${color}10 2px, ${color}05 2px, ${color}05 4px),
+                            repeating-linear-gradient(90deg, ${color}08 0px, ${color}08 2px, ${color}03 2px, ${color}03 4px)`,
                 cursor: 'move', transform: `rotate(${s.rotation}deg)`,
-                boxShadow: selectedGlow || `0 0 3px ${color}30`,
+                boxShadow: isSelected ? `0 0 16px ${color}80, 0 0 4px ${color}` : `0 0 4px ${color}20`,
                 transition: 'box-shadow 0.15s, border-color 0.15s',
               }}
                 onMouseDown={(e) => handleMouseDown(e, s)}
               />
               <div style={{
-                position: 'absolute', left: cx - 18, top: cy - 26,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                position: 'absolute', left: cx - 16, top: cy - 16,
                 pointerEvents: 'none',
               }}>
                 <img src={info.iconUrl}
-                  style={{ width: 36, height: 36, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }}
+                  style={{ width: 28, height: 28, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                <span style={{
-                  width: 20, height: 20, borderRadius: '50%', background: color,
-                  color: '#fff', fontSize: 11, fontWeight: 700,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                }}>{key}</span>
               </div>
               {isSelected && (
                 <div style={{ position: 'absolute', left: cx - 6, top: cy - hh - 26, width: 12, height: 12, borderRadius: '50%', background: '#fff', border: '2px solid #333', cursor: 'grab', boxShadow: '0 0 6px black' }}
@@ -255,7 +320,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
             style={{
               position: 'absolute', left: cx - svgW / 2, top: cy - svgH / 2,
               width: svgW, height: svgH, pointerEvents: 'auto', overflow: 'visible',
-              filter: selectedGlow ? `drop-shadow(0 0 6px ${color}80) drop-shadow(0 0 2px ${color})` : undefined,
+              filter: isSelected ? `drop-shadow(0 0 6px ${color}80) drop-shadow(0 0 2px ${color})` : undefined,
             }}
           >
             {s.shape === 'cone' && (() => {
@@ -289,11 +354,10 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     )
                   })}
                   {/* 标签 */}
-                  <circle cx={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90))} cy={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90))} r={14} fill={color} stroke="#fff" strokeWidth={1.5}
-                    style={{ pointerEvents: 'none' }} />
-                  <text x={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90))} y={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90)) + 5}
-                    textAnchor="middle" fill="#fff" fontSize={11} fontWeight="bold"
-                    style={{ pointerEvents: 'none' }}>{key}</text>
+                  <image href={'/images/abilities/' + s.abilityId + '.png'}
+                    x={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90)) - 14}
+                    y={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90)) - 14}
+                    width={28} height={28} style={{ pointerEvents: 'none' }} />
                   {/* 角度弧线标记 */}
                   <path d={`M ${leftX} ${leftY} A ${len * 0.2} ${len * 0.2} 0 0 1 ${rightX} ${rightY}`}
                     fill="none" stroke={color} strokeWidth={1} opacity={0.5} style={{ pointerEvents: 'none' }} />
@@ -312,7 +376,11 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const sx1 = svgW / 2 + halfLen * Math.cos(a1), sy1 = svgH / 2 + halfLen * Math.sin(a1)
               const sx2 = svgW / 2 + halfLen * Math.cos(a2), sy2 = svgH / 2 + halfLen * Math.sin(a2)
               const sw = Math.max(s.thickness * mapW * scale, 3)
-              const dashArray = info.type === 'mobility' ? '8 4' : 'none'
+              const dashArray = info.type === 'mobility' ? '8 5' : 'none'
+              const arrowSize = 8
+              const arrowAngle = degToRad(s.rotation - 90)
+              const ax1 = sx2 - arrowSize * Math.cos(arrowAngle - 0.5), ay1 = sy2 - arrowSize * Math.sin(arrowAngle - 0.5)
+              const ax2 = sx2 - arrowSize * Math.cos(arrowAngle + 0.5), ay2 = sy2 - arrowSize * Math.sin(arrowAngle + 0.5)
               return (
                 <>
                   {/* 虚线 / 实线 */}
@@ -324,18 +392,16 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                   />
                   {/* 箭头 (位移类型) */}
                   {info.type === 'mobility' && (
-                    <line x1={svgW / 2} y1={svgH / 2} x2={sx2} y2={sy2}
-                      stroke={color} strokeWidth={sw} markerEnd="url(#arrowhead)" opacity={0}
-                      style={{ pointerEvents: 'none' }} />
+                    <polygon points={`${sx2},${sy2} ${ax1},${ay1} ${ax2},${ay2}`}
+                      fill={color} opacity={0.85} style={{ pointerEvents: 'none' }} />
                   )}
                   {/* 标签 */}
-                  <circle cx={svgW / 2} cy={svgH / 2} r={14} fill={color} stroke="#fff" strokeWidth={1}
-                    style={{ pointerEvents: 'none' }} />
-                  <text x={svgW / 2} y={svgH / 2 + 5} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="bold"
-                    style={{ pointerEvents: 'none' }}>{key}</text>
+                  <image href={'/images/abilities/' + s.abilityId + '.png'}
+                    x={svgW / 2 - 14} y={svgH / 2 - 14}
+                    width={28} height={28} style={{ pointerEvents: 'none' }} />
                   {/* 旋转手柄 */}
                   {isSelected && (
-                    <circle cx={svgW / 2} cy={svgH / 2 - halfLen - 14} r={6} fill="#fff" stroke="#333" strokeWidth={2}
+                    <circle cx={svgW / 2} cy={svgH / 2 - halfLen - 18} r={6} fill="#fff" stroke="#333" strokeWidth={2}
                       style={{ cursor: 'grab', filter: 'drop-shadow(0 0 4px black)' }}
                       onMouseDown={(e) => { e.stopPropagation(); handleRotMouseDown(e as unknown as React.MouseEvent, s) }} />
                   )}

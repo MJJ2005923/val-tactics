@@ -32,17 +32,17 @@ export const agentImages: Record<string, string> = {
   vyse: 'cashew'
 }
 
-// 游戏内技能范围 (地图 1800x1200 ≈ 60m x 40m, 1m ≈ 30px/0.0167 norm)
-const M = 30 / 1800 // 1米对应的标准化坐标
+// 游戏内技能范围 (地图 1800x1200, 1m=7px, norm=0.0039)
+const M = 7 / 1800 // 1米对应的标准化坐标
 
 const typeDefaults: Record<AbilityType, AbilityShapeConfig> = {
-  smoke:   { shape: 'circle', radius: 4.15 * M },    // Brim烟 ~4.15m
-  flash:   { shape: 'cone', angle: 60, length: 15 * M }, // 闪光 15m
-  damage:  { shape: 'circle', radius: 3.5 * M },     // 燃烧弹 ~3.5m
+  smoke:   { shape: 'circle', radius: 4.5 * M },     // 烟雾 ~4-5m
+  flash:   { shape: 'cone', angle: 60, length: 15 * M },  // 闪光 15m
+  damage:  { shape: 'circle', radius: 3.5 * M },     // 伤害 ~3-4m
   recon:   { shape: 'cone', angle: 50, length: 18 * M },  // 侦查 18m
-  control: { shape: 'circle', radius: 4.5 * M },     // 减速球 ~4.5m
-  heal:    { shape: 'circle', radius: 4 * M },       // 治疗 ~4m
-  mobility:{ shape: 'line', length: 8 * M, thickness: 0.008 },  // 位移 8m
+  control: { shape: 'circle', radius: 5 * M },       // 控制 ~4-5m
+  heal:    { shape: 'circle', radius: 4 * M },       // 治疗 ~3-6m
+  mobility:{ shape: 'line', length: 8 * M, thickness: 0.008 }, // 位移 8m
 }
 
 // 每个技能根据游戏内实际数据的精确覆盖
@@ -64,6 +64,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'killjoy-nanoswarm':        { radius: 3.5 * M },
   'raze-paint-shells':        { radius: 2.5 * M },
   'gekko-mosh-pit':           { radius: 5.0 * M },
+  'raze-boom-bot':            { radius: 2.0 * M },
   'kayo-frag':                { radius: 3.0 * M },
   'sova-shock-bolt':          { radius: 2.0 * M },
   'vyse-razorvine':           { radius: 3.0 * M },
@@ -71,7 +72,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 终极技能 ===
   'brimstone-orbital-strike': { radius: 8.0 * M },
   'viper-pit':                { radius: 10.0 * M },
-  'raze-showstopper':         { radius: 12.0 * M },
+  'raze-showstopper':         { radius: 3.5 * M },
   'kayo-null-cmd':             { radius: 9.0 * M },
   'killjoy-lockdown':          { radius: 9.0 * M },
   'deadlock-annihilation':     { radius: 7.0 * M },
@@ -81,8 +82,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
 
   // === 墙体 ===
   'viper-toxic-screen':       { shape: 'line', length: 30 * M, thickness: 0.012 },
-  'sage-barrier-orb':         { shape: 'rect', length: 5 * M, width: 0.8 * M },
-  'phoenix-blaze':            { shape: 'line', length: 8 * M, thickness: 0.012 },
+  'sage-barrier-orb':         { shape: 'rect', length: 10 * M, width: 2.5 * M },
+  'phoenix-blaze':            { shape: 'line', length: 12 * M, thickness: 0.003 },
   'harbor-high-tide':         { shape: 'line', length: 25 * M, thickness: 0.012 },
   'harbor-cascade':           { shape: 'rect', length: 4 * M, width: 2 * M },
   'deadlock-barrier-mesh':    { shape: 'line', length: 6 * M, thickness: 0.01 },
@@ -103,11 +104,11 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 闪光 ===
   'breach-flashpoint':         { angle: 70, length: 18 * M },
   'skye-guiding-light':        { angle: 60, length: 20 * M },
-  'phoenix-curveball':         { angle: 45, length: 12 * M },
+  'phoenix-curveball':         { shape: 'circle', radius: 4 * M },
   'kayo-flash':                { angle: 60, length: 15 * M },
   'yoru-blindside':            { angle: 50, length: 12 * M },
   'gekko-dizzy':               { angle: 50, length: 14 * M },
-  'reyna-leer':                { angle: 40, length: 10 * M },
+  'reyna-leer':                { shape: 'circle', radius: 2 * M },
 
   // === 减速/控制 ===
   'sage-slow-orb':             { radius: 4.5 * M },
@@ -127,10 +128,12 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'clove-pick-me-up':          { radius: 3 * M },
 
   // === 位移 ===
-  'jett-tailwind':             { length: 6 * M, thickness: 0.008 },
-  'jett-updraft':              { length: 4 * M, thickness: 0.008 },
-  'raze-blast-pack':           { length: 10 * M, thickness: 0.008 },
-  'yoru-gatecrash':            { shape: 'line', length: 20 * M, thickness: 0.006 },
+  'jett-tailwind':             { length: 18 * M, thickness: 0.003 },
+  'jett-updraft':              { length: 4 * M, thickness: 0.008, iconOnly: true },
+  'raze-blast-pack':           { length: 14 * M, thickness: 0.003 },
+  'yoru-fakeout':              { shape: 'circle', radius: 2.5 * M },
+  'yoru-gatecrash':            { shape: 'circle', radius: 2.5 * M },
+  'yoru-dimensional-drift':    { shape: 'circle', radius: 2.5 * M },
   'omen-shrouded-step':        { shape: 'line', length: 8 * M, thickness: 0.006 },
   'omen-from-the-shadows':     { radius: 10 * M },
   'chamber-rendezvous':        { shape: 'line', length: 12 * M, thickness: 0.006 },
@@ -170,7 +173,7 @@ const agents: Agent[] = [
   {
     id: 'phoenix', name: '不死鸟', nameEn: 'Phoenix', role: '决斗者',
     abilities: [
-      { id: 'phoenix-blaze', name: '燃烧弹', nameEn: 'Blaze', key: 'C', type: 'damage', iconUrl: '/images/abilities/phoenix-blaze.png', description: '装备一颗燃烧弹。按射击键投掷，落地后形成火墙，对穿过的敌人造成伤害，同时治疗自己。', usage: '按C装备，左键投掷形成火墙，可弯曲轨迹。' },
+      { id: 'phoenix-blaze', name: '火墙', nameEn: 'Blaze', key: 'C', type: 'damage', iconUrl: '/images/abilities/phoenix-blaze.png', description: '装备一面火焰墙壁。按射击键在面前生成一道火墙，阻挡视野并对穿过的敌人造成伤害，同时可治疗自己。', usage: '按C装备，左键放置火墙，移动鼠标可弯曲墙体轨迹。' },
       { id: 'phoenix-curveball', name: '闪光弹', nameEn: 'Curveball', key: 'Q', type: 'flash', iconUrl: '/images/abilities/phoenix-curveball.png', description: '装备一颗弯曲闪光弹。左键向左弯曲，右键向右弯曲。爆炸后致盲范围内所有玩家。', usage: '按Q装备，左键向左弯曲投掷，右键向右弯。' },
       { id: 'phoenix-hot-hands', name: '烈焰之手', nameEn: 'Hot Hands', key: 'E', type: 'damage', iconUrl: '/images/abilities/phoenix-hot-hands.png', description: '在面前投掷一颗火焰灵球，落地形成燃烧区域，对敌人造成伤害并治疗自己。', usage: '按E装备，左键投掷，落地形成燃烧区。' },
       { id: 'phoenix-run-it-back', name: '归来', nameEn: 'Run it Back', key: 'X', type: 'damage', iconUrl: '/images/abilities/phoenix-run-it-back.png', description: '标记当前位置。技能持续期间若阵亡或倒计时结束，将自动回到标记位置并满血复活。', usage: '按X标记位置，持续时间内可冲锋，结束后回到标记点。' }
@@ -188,7 +191,7 @@ const agents: Agent[] = [
   {
     id: 'reyna', name: '蕾娜', nameEn: 'Reyna', role: '决斗者',
     abilities: [
-      { id: 'reyna-leer', name: '浮空之眼', nameEn: 'Leer', key: 'C', type: 'flash', iconUrl: '/images/abilities/reyna-leer.png', description: '投掷一颗浮空眼球，在一定距离内悬停。注视眼球的敌人视野会变窄。眼球可被摧毁。', usage: '按C投掷浮空眼球，敌人视野变窄，可被射爆。' },
+      { id: 'reyna-leer', name: '浮空之眼', nameEn: 'Leer', key: 'C', type: 'control', iconUrl: '/images/abilities/reyna-leer.png', description: '投掷一颗浮空眼球，在一定距离内悬停。注视眼球的敌人视野会变窄。眼球可被摧毁。', usage: '按C投掷浮空眼球，敌人视野变窄，可被射爆。' },
       { id: 'reyna-devour', name: '噬魂', nameEn: 'Devour', key: 'Q', type: 'heal', iconUrl: '/images/abilities/reyna-devour.png', description: '消耗一颗灵魂球，立即回复大量生命值。持续时间内过量治疗会转变为护盾。', usage: '按Q消耗灵魂球回血，超出血量变护盾。' },
       { id: 'reyna-dismiss', name: '消散', nameEn: 'Dismiss', key: 'E', type: 'mobility', iconUrl: '/images/abilities/reyna-dismiss.png', description: '消耗一颗灵魂球，短暂进入虚无状态，无法被瞄准，移动速度提升。', usage: '按E消耗灵魂球进入虚无，高速移动。' },
       { id: 'reyna-empress', name: '女皇之力', nameEn: 'Empress', key: 'X', type: 'damage', iconUrl: '/images/abilities/reyna-empress.png', description: '进入狂暴状态，射速和换弹速度大幅提升。击杀敌人自动回复生命值。', usage: '按X进入狂暴状态，大幅提升战斗能力。' }
@@ -199,8 +202,8 @@ const agents: Agent[] = [
     abilities: [
       { id: 'yoru-fakeout', name: '假脚步声', nameEn: 'Fakeout', key: 'C', type: 'recon', iconUrl: '/images/abilities/yoru-fakeout.png', description: '发射一个可模拟脚步声的装置，迷惑敌人判断你的位置。', usage: '按C发射脚步声模拟器，迷惑敌人。' },
       { id: 'yoru-blindside', name: '致盲弹', nameEn: 'Blindside', key: 'Q', type: 'flash', iconUrl: '/images/abilities/yoru-blindside.png', description: '投掷一颗可在表面反弹的闪光弹，每弹一次缩短引爆时间。', usage: '按Q投掷，撞击表面反弹后引爆致盲。' },
-      { id: 'yoru-gatecrash', name: '传送锚', nameEn: 'Gatecrash', key: 'E', type: 'mobility', iconUrl: '/images/abilities/yoru-gatecrash.png', description: '放置一个传送信标，再次按E传送到信标处。信标对敌人不可见。', usage: '按E放置传送锚，再按E传送到锚点。' },
-      { id: 'yoru-dimensional-drift', name: '空间漂移', nameEn: 'Dimensional Drift', key: 'X', type: 'mobility', iconUrl: '/images/abilities/yoru-dimensional-drift.png', description: '进入异次元空间，对敌人不可见且无敌。可以自由移动到任何位置后退出。', usage: '按X进入隐身无敌状态，自由移动后退出。' }
+      { id: 'yoru-gatecrash', name: '传送锚', nameEn: 'Gatecrash', key: 'E', type: 'recon', iconUrl: '/images/abilities/yoru-gatecrash.png', description: '放置一个传送信标，再次按E传送到信标处。信标对敌人不可见。', usage: '按E放置传送锚，再按E传送到锚点。' },
+      { id: 'yoru-dimensional-drift', name: '空间漂移', nameEn: 'Dimensional Drift', key: 'X', type: 'recon', iconUrl: '/images/abilities/yoru-dimensional-drift.png', description: '进入异次元空间，对敌人不可见且无敌。可以自由移动到任何位置后退出。', usage: '按X进入隐身无敌状态，自由移动后退出。' }
     ]
   },
   {

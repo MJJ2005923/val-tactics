@@ -50,6 +50,7 @@ export interface AbilityShapeConfig {
   length?: number       // 锥形边长 / 矩形长 / 直线长
   width?: number        // 矩形高
   thickness?: number    // 线宽
+  iconOnly?: boolean    // 仅显示图标，不渲染形状范围
 }
 
 // ====== 放置在地图上的技能形状实例 ======
@@ -65,6 +66,7 @@ export interface AbilityShape {
   length: number                 // 锥形边长 / 矩形长 / 直线长
   width: number                  // 矩形高
   thickness: number              // 线宽
+  iconOnly?: boolean             // 仅显示图标
 }
 
 // ====== 工具模式 ======
