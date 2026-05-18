@@ -17,17 +17,6 @@ const typeColors: Record<string, string> = {
 }
 
 // 每种技能类型的独特视觉效果
-// 每个技能类型的 SVG 内联图标
-const typeIconSvgs: Record<string, (color: string) => string> = {
-  smoke: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="13" r="7" fill="none" stroke="${c}" stroke-width="2"/><circle cx="10" cy="11" r="3" fill="${c}" opacity="0.4"/><circle cx="14" cy="13" r="2.5" fill="${c}" opacity="0.3"/><ellipse cx="8" cy="16" rx="4" ry="2" fill="none" stroke="${c}" stroke-width="1" opacity="0.5"/></svg>`,
-  flash: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><polygon points="14,2 6,13 11,13 9,22 18,10 12,10" fill="${c}" opacity="0.8"/><circle cx="12" cy="12" r="10" fill="none" stroke="${c}" stroke-width="1" stroke-dasharray="3 2"/></svg>`,
-  damage: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><polygon points="12,2 15,9 22,11 16,16 18,23 12,19 6,23 8,16 2,11 9,9" fill="${c}" opacity="0.7"/><circle cx="12" cy="12" r="3" fill="${c}"/></svg>`,
-  recon: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8" fill="none" stroke="${c}" stroke-width="1.5"/><circle cx="12" cy="12" r="4" fill="none" stroke="${c}" stroke-width="1"/><circle cx="12" cy="12" r="1.5" fill="${c}"/><line x1="12" y1="4" x2="12" y2="8" stroke="${c}" stroke-width="2"/></svg>`,
-  control: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="${c}" stroke-width="1.5"/><rect x="8" y="8" width="8" height="8" rx="2" fill="none" stroke="${c}" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="${c}" opacity="0.5"/></svg>`,
-  heal: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><rect x="9" y="4" width="6" height="16" rx="3" fill="${c}" opacity="0.6"/><rect x="4" y="9" width="16" height="6" rx="3" fill="${c}" opacity="0.6"/></svg>`,
-  mobility: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><polygon points="20,12 12,4 12,9 4,9 4,15 12,15 12,20" fill="${c}" opacity="0.7"/><line x1="2" y1="12" x2="22" y2="12" stroke="${c}" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"/></svg>`,
-}
-
 const typeStyles: Record<string, { gradient: string }> = {
   smoke: {
     gradient: 'radial-gradient(circle at 40% 40%, rgba(126,200,104,0.35), rgba(126,200,104,0.12) 50%, rgba(126,200,104,0.04) 80%, rgba(126,200,104,0.01) 100%)',
@@ -53,14 +42,13 @@ const typeStyles: Record<string, { gradient: string }> = {
   },
 }
 
-interface AbilityInfo { color: string; key: string; name: string; type: string; gradient: string; iconSvg: string }
+interface AbilityInfo { color: string; key: string; name: string; type: string; gradient: string; iconUrl: string }
 
 function getAbilityInfo(shape: AbilityShape): AbilityInfo {
   const agent = agents.find(a => a.id === shape.agentId)
   const ab = agent?.abilities.find(a => a.id === shape.abilityId)
   const type = ab?.type || 'smoke'
   const ts = typeStyles[type]
-  const iconFn = typeIconSvgs[type]
   const svgColor = typeColors[type] || '#888'
   return {
     color: svgColor,
@@ -68,7 +56,7 @@ function getAbilityInfo(shape: AbilityShape): AbilityInfo {
     name: ab?.name || '',
     type,
     gradient: ts?.gradient || '',
-    iconSvg: iconFn ? iconFn(svgColor) : '',
+    iconUrl: ab?.iconUrl || '',
   }
 }
 
@@ -198,8 +186,9 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                 pointerEvents: 'none',
               }}>
-                <div dangerouslySetInnerHTML={{ __html: info.iconSvg }}
-                  style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }} />
+                <img src={info.iconUrl}
+                  style={{ width: 36, height: 36, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                 <span style={{
                   width: 20, height: 20, borderRadius: '50%', background: color,
                   color: '#fff', fontSize: 11, fontWeight: 700,
@@ -240,8 +229,9 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                 pointerEvents: 'none',
               }}>
-                <div dangerouslySetInnerHTML={{ __html: info.iconSvg }}
-                  style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }} />
+                <img src={info.iconUrl}
+                  style={{ width: 36, height: 36, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                 <span style={{
                   width: 20, height: 20, borderRadius: '50%', background: color,
                   color: '#fff', fontSize: 11, fontWeight: 700,
