@@ -17,55 +17,58 @@ const typeColors: Record<string, string> = {
 }
 
 // 每种技能类型的独特视觉效果
-const typeStyles: Record<string, {
-  icon: string        // SVG path for icon
-  gradient: string    // CSS gradient
-  pattern?: string    // SVG pattern id
-}> = {
+// 每个技能类型的 SVG 内联图标
+const typeIconSvgs: Record<string, (color: string) => string> = {
+  smoke: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="13" r="7" fill="none" stroke="${c}" stroke-width="2"/><circle cx="10" cy="11" r="3" fill="${c}" opacity="0.4"/><circle cx="14" cy="13" r="2.5" fill="${c}" opacity="0.3"/><ellipse cx="8" cy="16" rx="4" ry="2" fill="none" stroke="${c}" stroke-width="1" opacity="0.5"/></svg>`,
+  flash: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><polygon points="14,2 6,13 11,13 9,22 18,10 12,10" fill="${c}" opacity="0.8"/><circle cx="12" cy="12" r="10" fill="none" stroke="${c}" stroke-width="1" stroke-dasharray="3 2"/></svg>`,
+  damage: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><polygon points="12,2 15,9 22,11 16,16 18,23 12,19 6,23 8,16 2,11 9,9" fill="${c}" opacity="0.7"/><circle cx="12" cy="12" r="3" fill="${c}"/></svg>`,
+  recon: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8" fill="none" stroke="${c}" stroke-width="1.5"/><circle cx="12" cy="12" r="4" fill="none" stroke="${c}" stroke-width="1"/><circle cx="12" cy="12" r="1.5" fill="${c}"/><line x1="12" y1="4" x2="12" y2="8" stroke="${c}" stroke-width="2"/></svg>`,
+  control: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="${c}" stroke-width="1.5"/><rect x="8" y="8" width="8" height="8" rx="2" fill="none" stroke="${c}" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="${c}" opacity="0.5"/></svg>`,
+  heal: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><rect x="9" y="4" width="6" height="16" rx="3" fill="${c}" opacity="0.6"/><rect x="4" y="9" width="16" height="6" rx="3" fill="${c}" opacity="0.6"/></svg>`,
+  mobility: (c) => `<svg viewBox="0 0 24 24" width="24" height="24"><polygon points="20,12 12,4 12,9 4,9 4,15 12,15 12,20" fill="${c}" opacity="0.7"/><line x1="2" y1="12" x2="22" y2="12" stroke="${c}" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"/></svg>`,
+}
+
+const typeStyles: Record<string, { gradient: string }> = {
   smoke: {
-    icon: '◌',
     gradient: 'radial-gradient(circle at 40% 40%, rgba(126,200,104,0.35), rgba(126,200,104,0.12) 50%, rgba(126,200,104,0.04) 80%, rgba(126,200,104,0.01) 100%)',
   },
   flash: {
-    icon: '☀',
     gradient: 'conic-gradient(from 0deg, rgba(240,200,80,0.3), rgba(240,200,80,0.05) 30deg, rgba(240,200,80,0.3) 60deg, rgba(240,200,80,0.05) 90deg, rgba(240,200,80,0.3) 120deg)',
   },
   damage: {
-    icon: '◆',
     gradient: 'radial-gradient(circle, rgba(255,70,85,0.45), rgba(255,70,85,0.18) 40%, rgba(255,70,85,0.04) 75%, transparent)',
   },
   recon: {
-    icon: '⊙',
     gradient: 'radial-gradient(circle at 30% 30%, rgba(80,180,240,0.3), rgba(80,180,240,0.1) 60%, rgba(80,180,240,0.02) 100%)',
   },
   control: {
-    icon: '⊡',
     gradient: `repeating-linear-gradient(0deg, rgba(160,112,216,0.15) 0px, rgba(160,112,216,0.15) 2px, transparent 2px, transparent 4px),
                repeating-linear-gradient(90deg, rgba(160,112,216,0.15) 0px, rgba(160,112,216,0.15) 2px, transparent 2px, transparent 4px)`,
   },
   heal: {
-    icon: '+',
     gradient: 'radial-gradient(circle, rgba(80,232,144,0.4), rgba(80,232,144,0.15) 50%, rgba(80,232,144,0.03) 100%)',
   },
   mobility: {
-    icon: '→',
     gradient: 'repeating-linear-gradient(90deg, rgba(255,140,66,0.3) 0px, rgba(255,140,66,0.3) 6px, transparent 6px, transparent 10px)',
   },
 }
 
-interface AbilityInfo { color: string; key: string; name: string; type: string; gradient: string }
+interface AbilityInfo { color: string; key: string; name: string; type: string; gradient: string; iconSvg: string }
 
 function getAbilityInfo(shape: AbilityShape): AbilityInfo {
   const agent = agents.find(a => a.id === shape.agentId)
   const ab = agent?.abilities.find(a => a.id === shape.abilityId)
   const type = ab?.type || 'smoke'
   const ts = typeStyles[type]
+  const iconFn = typeIconSvgs[type]
+  const svgColor = typeColors[type] || '#888'
   return {
-    color: typeColors[type] || '#888',
+    color: svgColor,
     key: ab?.key || '',
     name: ab?.name || '',
     type,
     gradient: ts?.gradient || '',
+    iconSvg: iconFn ? iconFn(svgColor) : '',
   }
 }
 
@@ -191,15 +194,17 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               />
               {/* 图标 + 键位标签 */}
               <div style={{
-                position: 'absolute', left: cx - 14, top: cy - 14,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                position: 'absolute', left: cx - 18, top: cy - 26,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                 pointerEvents: 'none',
               }}>
+                <div dangerouslySetInnerHTML={{ __html: info.iconSvg }}
+                  style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }} />
                 <span style={{
-                  width: 28, height: 28, borderRadius: '50%', background: color,
-                  color: '#fff', fontSize: 14, fontWeight: 700,
+                  width: 20, height: 20, borderRadius: '50%', background: color,
+                  color: '#fff', fontSize: 11, fontWeight: 700,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  textShadow: '0 1px 2px black',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
                 }}>{key}</span>
               </div>
               {/* 旋转手柄 */}
@@ -231,15 +236,17 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                 onMouseDown={(e) => handleMouseDown(e, s)}
               />
               <div style={{
-                position: 'absolute', left: cx - 14, top: cy - 14,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                position: 'absolute', left: cx - 18, top: cy - 26,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                 pointerEvents: 'none',
               }}>
+                <div dangerouslySetInnerHTML={{ __html: info.iconSvg }}
+                  style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }} />
                 <span style={{
-                  width: 28, height: 28, borderRadius: '50%', background: color,
-                  color: '#fff', fontSize: 14, fontWeight: 700,
+                  width: 20, height: 20, borderRadius: '50%', background: color,
+                  color: '#fff', fontSize: 11, fontWeight: 700,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  textShadow: '0 1px 2px black',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
                 }}>{key}</span>
               </div>
               {isSelected && (
@@ -292,10 +299,10 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     )
                   })}
                   {/* 标签 */}
-                  <circle cx={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90))} cy={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90))} r={14} fill={color} stroke="#fff" strokeWidth={1}
+                  <circle cx={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90))} cy={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90))} r={14} fill={color} stroke="#fff" strokeWidth={1.5}
                     style={{ pointerEvents: 'none' }} />
                   <text x={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90))} y={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90)) + 5}
-                    textAnchor="middle" fill="#fff" fontSize={12} fontWeight="bold"
+                    textAnchor="middle" fill="#fff" fontSize={11} fontWeight="bold"
                     style={{ pointerEvents: 'none' }}>{key}</text>
                   {/* 角度弧线标记 */}
                   <path d={`M ${leftX} ${leftY} A ${len * 0.2} ${len * 0.2} 0 0 1 ${rightX} ${rightY}`}
