@@ -23,19 +23,19 @@ const typeStyles: Record<string, {
   pattern?: string    // SVG pattern id
 }> = {
   smoke: {
-    icon: '☁',
+    icon: '◌',
     gradient: 'radial-gradient(circle at 40% 40%, rgba(126,200,104,0.35), rgba(126,200,104,0.12) 50%, rgba(126,200,104,0.04) 80%, rgba(126,200,104,0.01) 100%)',
   },
   flash: {
-    icon: '⚡',
+    icon: '☀',
     gradient: 'conic-gradient(from 0deg, rgba(240,200,80,0.3), rgba(240,200,80,0.05) 30deg, rgba(240,200,80,0.3) 60deg, rgba(240,200,80,0.05) 90deg, rgba(240,200,80,0.3) 120deg)',
   },
   damage: {
-    icon: '💥',
+    icon: '◆',
     gradient: 'radial-gradient(circle, rgba(255,70,85,0.45), rgba(255,70,85,0.18) 40%, rgba(255,70,85,0.04) 75%, transparent)',
   },
   recon: {
-    icon: '👁',
+    icon: '⊙',
     gradient: 'radial-gradient(circle at 30% 30%, rgba(80,180,240,0.3), rgba(80,180,240,0.1) 60%, rgba(80,180,240,0.02) 100%)',
   },
   control: {
@@ -44,11 +44,11 @@ const typeStyles: Record<string, {
                repeating-linear-gradient(90deg, rgba(160,112,216,0.15) 0px, rgba(160,112,216,0.15) 2px, transparent 2px, transparent 4px)`,
   },
   heal: {
-    icon: '✚',
+    icon: '+',
     gradient: 'radial-gradient(circle, rgba(80,232,144,0.4), rgba(80,232,144,0.15) 50%, rgba(80,232,144,0.03) 100%)',
   },
   mobility: {
-    icon: '➤',
+    icon: '→',
     gradient: 'repeating-linear-gradient(90deg, rgba(255,140,66,0.3) 0px, rgba(255,140,66,0.3) 6px, transparent 6px, transparent 10px)',
   },
 }
