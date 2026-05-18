@@ -46,6 +46,7 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
         e.dataTransfer.effectAllowed = 'copy'
       }}
     >
+      <span className={styles.abilityIcon}>{ability.icon}</span>
       <span className={styles.abilityKey}>{ability.key}</span>
       <span className={styles.abilityName}>{ability.name}</span>
       <span className={styles.abilityType} style={{ color: typeColors[ability.type] }}>{typeLabels[ability.type]}</span>

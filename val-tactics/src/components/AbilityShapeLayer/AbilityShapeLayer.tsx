@@ -65,7 +65,7 @@ function getAbilityInfo(shape: AbilityShape): AbilityInfo {
     key: ab?.key || '',
     name: ab?.name || '',
     type,
-    icon: ts?.icon || '',
+    icon: ab?.icon || ts?.icon || '',
     gradient: ts?.gradient || '',
   }
 }
