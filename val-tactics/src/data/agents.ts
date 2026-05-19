@@ -58,9 +58,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'cypher-cyber-cage':        { radius: 3.5 * M },    // 3.5m 网牢
 
   // === 燃烧弹/伤害 ===
-  'brimstone-incendiary':     { radius: 3.5 * M },
+  'brimstone-incendiary':     { radius: 4.0 * M },
   'phoenix-hot-hands':        { radius: 3.0 * M },
-  'viper-snake-bite':         { radius: 3.0 * M },
   'killjoy-nanoswarm':        { radius: 3.5 * M },
   'raze-paint-shells':        { radius: 2.5 * M },
   'gekko-mosh-pit':           { radius: 5.0 * M },
@@ -70,8 +69,9 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'vyse-razorvine':           { radius: 3.0 * M },
 
   // === 终极技能 ===
-  'brimstone-orbital-strike': { radius: 8.0 * M },
-  'viper-pit':                { radius: 10.0 * M },
+  'brimstone-orbital-strike': { radius: 12.0 * M },
+  'viper-snake-bite':         { radius: 4.0 * M },
+  'viper-pit':                { radius: 12.0 * M },
   'raze-showstopper':         { radius: 3.5 * M },
   'kayo-null-cmd':             { radius: 9.0 * M },
   'killjoy-lockdown':          { radius: 9.0 * M },
@@ -81,13 +81,15 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'fade-nightfall':            { shape: 'cone', angle: 70, length: 25 * M },
 
   // === 墙体 ===
-  'viper-toxic-screen':       { shape: 'line', length: 30 * M, thickness: 0.012 },
+  'viper-toxic-screen':       { shape: 'line', length: 65 * M, thickness: 0.003 },
   'sage-barrier-orb':         { shape: 'rect', length: 10 * M, width: 2.5 * M },
   'phoenix-blaze':            { shape: 'line', length: 12 * M, thickness: 0.003 },
   'harbor-high-tide':         { shape: 'line', length: 25 * M, thickness: 0.012 },
   'harbor-cascade':           { shape: 'rect', length: 4 * M, width: 2 * M },
   'deadlock-barrier-mesh':    { shape: 'line', length: 6 * M, thickness: 0.01 },
-  'neon-relay-bolt':          { shape: 'line', length: 6 * M, thickness: 0.01 },
+  'neon-relay-bolt':          { shape: 'circle', radius: 2 * M },
+  'neon-fast-lane':           { shape: 'line', length: 40 * M, thickness: 0.003 },
+  'neon-high-gear':           { shape: 'line', length: 6 * M, thickness: 0.003 },
 
   // === 侦查 ===
   'sova-recon-bolt':           { angle: 60, length: 20 * M },
@@ -117,8 +119,9 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'fade-seize':                { radius: 3.5 * M },
   'breach-aftershock':         { shape: 'rect', length: 4 * M, width: 1.5 * M },
   'breach-fault-line':         { shape: 'cone', angle: 40, length: 20 * M },
-  'iso-contingency':           { shape: 'line', length: 4 * M, thickness: 0.012 },
-  'iso-undercut':              { angle: 30, length: 10 * M },
+  'iso-contingency':           { shape: 'line', length: 12 * M, thickness: 0.003 },
+  'iso-undercut':              { shape: 'rect', length: 28 * M, width: 8 * M },
+  'iso-kill-contract':         { shape: 'rect', length: 56 * M, width: 24 * M },
 
   // === 治疗 ===
   'sage-healing-orb':          { radius: 3 * M },
@@ -134,8 +137,9 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'yoru-fakeout':              { shape: 'circle', radius: 2.5 * M },
   'yoru-gatecrash':            { shape: 'circle', radius: 2.5 * M },
   'yoru-dimensional-drift':    { shape: 'circle', radius: 2.5 * M },
-  'omen-shrouded-step':        { shape: 'line', length: 8 * M, thickness: 0.006 },
-  'omen-from-the-shadows':     { radius: 10 * M },
+  'omen-shrouded-step':        { shape: 'line', length: 8 * M, thickness: 0.003 },
+  'omen-paranoia':             { shape: 'rect', length: 60 * M, width: 10 * M },
+  'omen-from-the-shadows':     { shape: 'circle', radius: 2 * M },
   'chamber-rendezvous':        { shape: 'line', length: 12 * M, thickness: 0.006 },
   'chamber-trademark':         { radius: 3 * M },
 }
@@ -209,46 +213,46 @@ const agents: Agent[] = [
   {
     id: 'neon', name: '霓虹', nameEn: 'Neon', role: '决斗者',
     abilities: [
-      { id: 'neon-relay-bolt', name: '闪电球', nameEn: 'Relay Bolt', key: 'C', type: 'control', iconUrl: '/images/abilities/neon-relay-bolt.png', description: '投掷一颗能量弹，撞击地面后释放两道闪电，麻痹范围内的敌人。', usage: '按C投掷，撞击后麻痹敌人。' },
-      { id: 'neon-high-gear', name: '高速冲刺', nameEn: 'High Gear', key: 'Q', type: 'mobility', iconUrl: '/images/abilities/neon-high-gear.png', description: '以电力加速，大幅提升移动速度。消耗能量条，停止后逐渐恢复。', usage: '按Q加速奔跑，消耗能量。' },
-      { id: 'neon-overdrive', name: '滑铲', nameEn: 'Overdrive', key: 'E', type: 'mobility', description: '在高速奔跑中按E可滑铲一段距离，射击精准度不受影响。', usage: '奔跑中按E滑铲，可同时射击。' },
-      { id: 'neon-overdrive-ult', name: '电光炮', nameEn: 'Overdrive', key: 'X', type: 'damage', iconUrl: '/images/abilities/neon-overdrive-ult.png', description: '从手臂发射一道持续的强力闪电光束，对敌人造成持续伤害。', usage: '按X发射持续闪电光束，追踪敌人。' }
+      { id: 'neon-fast-lane', name: '高速通道', nameEn: 'Fast Lane', key: 'C', type: 'control', iconUrl: '/images/abilities/neon-fast-lane.png', description: '向前发射两条能量线，它们随后会变成两道阻挡视线的静电墙。能量线只能向前延伸一小段距离，且会被墙面阻挡。', usage: '按C发射两条能量线，形成阻挡视线的静电墙。' },
+      { id: 'neon-relay-bolt', name: '闪电弹球', nameEn: 'Relay Bolt', key: 'Q', type: 'control', iconUrl: '/images/abilities/neon-relay-bolt.png', description: '立即掷出一个能量箭，可反弹一次。每次击中表面时，能量箭都会造成震荡冲击，同时使其下方的地面通电。', usage: '按Q掷出能量箭，反弹后造成震荡冲击并通电地面。' },
+      { id: 'neon-high-gear', name: '充能疾驰', nameEn: 'High Gear', key: 'E', type: 'control', iconUrl: '/images/abilities/neon-high-gear.png', description: '引导霓虹的力量，立即提升移动速度。充能完毕时，按辅助射击即可发动闪电滑行。每击败两名敌人，可重置滑行的充能。击败敌人可补充燃料。', usage: '按E充能加速，充能完毕按右键闪电滑行，击败两名敌人重置充能。' },
+      { id: 'neon-overdrive', name: '超限暴走', nameEn: 'Overdrive', key: 'X', type: 'damage', iconUrl: '/images/abilities/neon-overdrive.png', description: '短时间内释放霓虹的全部力量与速度，补满燃料并获得一次滑行充能。按射击即可引导她的力量，发射一道高速且精准的闪电光束。击败敌人可重置效果持续时间。', usage: '按X进入超限暴走，补满燃料获得滑行充能，左键发射闪电光束，击败敌人刷新持续时间。' }
     ]
   },
   {
     id: 'iso', name: '壹决', nameEn: 'Iso', role: '决斗者',
     abilities: [
-      { id: 'iso-contingency', name: '防壁', nameEn: 'Contingency', key: 'C', type: 'control', iconUrl: '/images/abilities/iso-contingency.png', description: '部署一道能量墙，可阻挡子弹。墙后的队友和敌人都无法穿过。', usage: '按C部署防壁，阻挡子弹。' },
-      { id: 'iso-undercut', name: '削弱弹', nameEn: 'Undercut', key: 'Q', type: 'control', iconUrl: '/images/abilities/iso-undercut.png', description: '发射一颗削弱弹，击中敌人使其短时间内无法使用技能。', usage: '按Q发射，被击中者无法使用技能。' },
-      { id: 'iso-double-tap', name: '双重击发', nameEn: 'Double Tap', key: 'E', type: 'damage', iconUrl: '/images/abilities/iso-double-tap.png', description: '激活后下一发子弹命中敌人可持续获得额外伤害加成。', usage: '按E激活，命中后连锁伤害加成。' },
-      { id: 'iso-kill-contract', name: '终极对决', nameEn: 'Kill Contract', key: 'X', type: 'damage', iconUrl: '/images/abilities/iso-kill-contract.png', description: '创造一个独立空间，将一名敌人拉入1v1对决。胜者获得额外护盾。', usage: '按X选择目标，进入1v1对决空间。' }
+      { id: 'iso-contingency', name: '绝对屏障', nameEn: 'Contingency', key: 'C', type: 'control', iconUrl: '/images/abilities/iso-contingency.png', description: '将能量聚合为棱晶形态。按射击向前推出一道可阻挡子弹的能量墙。按辅助射击可以较慢速度推出能量墙。', usage: '按C装备，左键快速推出能量墙，右键较慢速度推出。' },
+      { id: 'iso-undercut', name: '稳态剥离', nameEn: 'Undercut', key: 'Q', type: 'control', iconUrl: '/images/abilities/iso-undercut.png', description: '装备扰乱分子结构的能量箭。按射击将其向前掷出，对触碰到的所有玩家施加短暂的易伤与压制效果。此能量箭可穿透墙壁等固体障碍。', usage: '按Q装备能量箭，左键掷出穿透墙壁，触碰敌人施加易伤与压制。' },
+      { id: 'iso-double-tap', name: '战斗心流', nameEn: 'Double Tap', key: 'E', type: 'damage', iconUrl: '/images/abilities/iso-double-tap.png', description: '集中意念获得一道护盾，可吸收一次任意来源的伤害，加快换弹速度，并进入心流状态。在此状态期间，受到你伤害的敌人会在被击败时生成一颗能量球。射击此球体可刷新当前存在的护盾和心流状态，或生成一道新护盾。', usage: '按E获得护盾和心流，击败受伤害敌人产生能量球，射击球体刷新护盾。' },
+      { id: 'iso-kill-contract', name: '决斗通牒', nameEn: 'Kill Contract', key: 'X', type: 'damage', iconUrl: '/images/abilities/iso-kill-contract.png', description: '构筑一座异次元竞技场。按射击发出一道穿越战场的能量矩阵，将命中的首名敌人拉进竞技场，双方同时获得治疗，并展开一对一决斗。', usage: '按X发出能量矩阵，命中首名敌人拉入1v1竞技场决斗。' }
     ]
   },
   {
     id: 'viper', name: '蝰蛇', nameEn: 'Viper', role: '控场者',
     abilities: [
-      { id: 'viper-snake-bite', name: '蛇咬', nameEn: 'Snake Bite', key: 'C', type: 'damage', iconUrl: '/images/abilities/viper-snake-bite.png', description: '发射一颗酸液弹，落地形成持续伤害区域。对踏入的敌人造成伤害和易伤效果。', usage: '按C发射酸液弹，形成持续伤害区。' },
-      { id: 'viper-poison-cloud', name: '毒雾灵球', nameEn: 'Poison Cloud', key: 'Q', type: 'smoke', iconUrl: '/images/abilities/viper-poison-cloud.png', description: '投掷一颗毒雾发生器。再次按Q激活，形成持续消耗毒液的烟雾。可回收后重新部署。', usage: '按Q投掷，再按Q激活毒雾，可回收。' },
-      { id: 'viper-toxic-screen', name: '毒幕', nameEn: 'Toxic Screen', key: 'E', type: 'smoke', iconUrl: '/images/abilities/viper-toxic-screen.png', description: '部署一排毒气发射器，激活后形成一堵长长的毒墙，穿过者受伤并受易伤效果。', usage: '按E部署毒气发射器，形成毒墙。' },
-      { id: 'viper-pit', name: '蝰蛇之巢', nameEn: "Viper's Pit", key: 'X', type: 'control', iconUrl: '/images/abilities/viper-pit.png', description: '在自身周围生成一片巨大的毒雾区域，内部敌人视野受限且持续受伤。蝰蛇在内部持续恢复毒素。', usage: '按X生成巨大毒雾区，敌人持续受伤。' }
+      { id: 'viper-snake-bite', name: '蛇吻', nameEn: 'Snake Bite', key: 'C', type: 'damage', iconUrl: '/images/abilities/viper-snake-bite.png', description: '装备化学品发射器，按射击即可射出一个触地即碎的化学容器，碎裂后会留下一滩化学溶液，对范围内的目标造成伤害并施加易伤。', usage: '按C装备发射器，左键射出化学容器，碎裂后形成化学溶液造成伤害和易伤。' },
+      { id: 'viper-poison-cloud', name: '瘴云', nameEn: 'Poison Cloud', key: 'Q', type: 'smoke', iconUrl: '/images/abilities/viper-poison-cloud.png', description: '装备气雾喷射器，按射击将其掷出，该装置会一直存在至回合结束。按辅助射击可轻抛。再次按技能键可消耗燃料生成一团化学烟雾，消耗燃料对其中的敌人造成腐坏。回合开始前，可拾取喷射器将其重新部署。在回合中，此技能可以多次重复使用。', usage: '按Q装备喷射器，左键掷出右键轻抛，再按Q生成毒雾消耗燃料造成腐坏，可回收重新部署多次使用。' },
+      { id: 'viper-toxic-screen', name: '毒幕', nameEn: 'Toxic Screen', key: 'E', type: 'smoke', iconUrl: '/images/abilities/viper-toxic-screen.png', description: '装备可穿越地形的气雾喷射器，按射击沿一条直线部署气雾喷射器阵列。再次按技能键可产生一道气雾幕墙，消耗燃料对穿过幕墙的敌人造成腐坏。此技能可以多次重复使用。', usage: '按E部署喷射器阵列，再按E激活毒幕消耗燃料造成腐坏，可多次使用。' },
+      { id: 'viper-pit', name: '蝰腹', nameEn: "Viper's Pit", key: 'X', type: 'control', iconUrl: '/images/abilities/viper-pit.png', description: '装备化学喷雾器，按射击即可朝蝰蛇的四周喷射化学气雾，产生大片云雾，使范围内的玩家视野收缩并使敌人受到腐坏效果。按住技能键可使气雾提前消散。', usage: '按X装备喷雾器，左键喷射化学气雾产生大片云雾，敌人视野收缩并受腐坏，按住技能键提前消散。' }
     ]
   },
   {
     id: 'brimstone', name: '炼狱', nameEn: 'Brimstone', role: '控场者',
     abilities: [
-      { id: 'brimstone-stim-beacon', name: '振奋信标', nameEn: 'Stim Beacon', key: 'C', type: 'control', iconUrl: '/images/abilities/brimstone-stim-beacon.png', description: '部署一个信标，范围内所有队友获得射速和移速加成。', usage: '按C部署，范围友方获得增益。' },
-      { id: 'brimstone-incendiary', name: '燃烧弹', nameEn: 'Incendiary', key: 'Q', type: 'damage', iconUrl: '/images/abilities/brimstone-incendiary.png', description: '发射一颗燃烧弹，落地形成持续火焰区域，对敌人造成伤害。', usage: '按Q发射，落地形成持续燃烧区。' },
-      { id: 'brimstone-sky-smoke', name: '空投烟雾', nameEn: 'Sky Smoke', key: 'E', type: 'smoke', iconUrl: '/images/abilities/brimstone-sky-smoke.png', description: '打开战术地图，在地图上选择位置投放烟雾弹，最多三颗。', usage: '按E打开地图，点击投放烟雾。' },
-      { id: 'brimstone-orbital-strike', name: '轨道打击', nameEn: 'Orbital Strike', key: 'X', type: 'damage', iconUrl: '/images/abilities/brimstone-orbital-strike.png', description: '打开战术地图，选择区域发动轨道激光打击，对区域内敌人造成巨额伤害。', usage: '按X打开地图，选择区域发射激光。' }
+      { id: 'brimstone-stim-beacon', name: '振奋信标', nameEn: 'Stim Beacon', key: 'C', type: 'control', iconUrl: '/images/abilities/brimstone-stim-beacon.png', description: '立即向前方投掷振奋信标，它在落地后会生成一片增益区域，给予其中的玩家作战强化和加速效果。', usage: '按C投掷信标，生成增益区域提供作战强化和加速。' },
+      { id: 'brimstone-incendiary', name: '燃烧榴弹', nameEn: 'Incendiary', key: 'Q', type: 'damage', iconUrl: '/images/abilities/brimstone-incendiary.png', description: '装备燃烧弹发射器。按射击发射一枚榴弹，在落地停稳后引爆，生成一片持续燃烧的区域，对进入其中的玩家造成伤害。', usage: '按Q装备发射器，左键发射榴弹，引爆后形成持续燃烧区。' },
+      { id: 'brimstone-sky-smoke', name: '空投烟幕', nameEn: 'Sky Smoke', key: 'E', type: 'smoke', iconUrl: '/images/abilities/brimstone-sky-smoke.png', description: '装备战术地图。按射击设定烟幕落地的位置。按辅助射击以确认，呼叫历久不散的烟云来阻碍该选定区域的视野。', usage: '按E打开战术地图，左键设定位置，右键确认呼叫烟幕。' },
+      { id: 'brimstone-orbital-strike', name: '天基光束', nameEn: 'Orbital Strike', key: 'X', type: 'damage', iconUrl: '/images/abilities/brimstone-orbital-strike.png', description: '装备战术地图。按射击向选定位置发射轨道激光炮，对区域内的玩家造成高额持续伤害。', usage: '按X打开地图，左键选定位置发射轨道激光炮造成高额伤害。' }
     ]
   },
   {
     id: 'omen', name: '欧门', nameEn: 'Omen', role: '控场者',
     abilities: [
-      { id: 'omen-shrouded-step', name: '暗影步', nameEn: 'Shrouded Step', key: 'C', type: 'mobility', iconUrl: '/images/abilities/omen-shrouded-step.png', description: '传送到准星指向的位置。传送过程中可被击杀打断。', usage: '按C瞄准目标位置，短距离传送。' },
-      { id: 'omen-paranoia', name: '偏执', nameEn: 'Paranoia', key: 'Q', type: 'flash', iconUrl: '/images/abilities/omen-paranoia.png', description: '发射一颗暗影弹，击中敌人后使其视野缩小并短暂失明。', usage: '按Q发射，击中后致盲并缩小视野。' },
-      { id: 'omen-dark-cover', name: '黑暗遮蔽', nameEn: 'Dark Cover', key: 'E', type: 'smoke', iconUrl: '/images/abilities/omen-dark-cover.png', description: '发射一颗暗影灵球，在目标点生成空心球形烟雾，持续遮挡视野。', usage: '按E发射，在目标点形成空心烟雾。' },
-      { id: 'omen-from-the-shadows', name: '暗影降临', nameEn: 'From the Shadows', key: 'X', type: 'mobility', iconUrl: '/images/abilities/omen-from-the-shadows.png', description: '打开战术地图，选择任意位置进行远程传送。引导期间可被击杀打断。', usage: '按X打开地图，选择位置远程传送。' }
+      { id: 'omen-shrouded-step', name: '践影', nameEn: 'Shrouded Step', key: 'C', type: 'mobility', iconUrl: '/images/abilities/omen-shrouded-step.png', description: '装备践影技能，查看其范围指示器。按射击开始引导，然后传送至标记位置。', usage: '按C查看范围指示器，左键引导传送至标记位置。' },
+      { id: 'omen-paranoia', name: '暗魇', nameEn: 'Paranoia', key: 'Q', type: 'flash', iconUrl: '/images/abilities/omen-paranoia.png', description: '装备致盲法球。按射击将其向前掷出，可使接触到的玩家短暂致聋和视野收缩。此投掷物可穿透墙体。', usage: '按Q装备致盲法球，左键掷出穿透墙体，致聋并收缩视野。' },
+      { id: 'omen-dark-cover', name: '黑瘴', nameEn: 'Dark Cover', key: 'E', type: 'smoke', iconUrl: '/images/abilities/omen-dark-cover.png', description: '装备暗影法球，然后进入相位空间为法球选择目标。按技能键即可朝标记位置投掷暗影法球，创造一个长时间持续的暗影球体来遮挡视线。瞄准期间，按住射击可将标记移远，按住辅助射击可将标记移近。按装填即可切换至普通瞄准视野。', usage: '按E进入相位空间，左键投掷暗影法球形成遮挡球体，瞄准时左右键调整距离，装填键切换视野。' },
+      { id: 'omen-from-the-shadows', name: '离魂', nameEn: 'From the Shadows', key: 'X', type: 'mobility', iconUrl: '/images/abilities/omen-from-the-shadows.png', description: '装备战术地图。按射击传送至选定位置，传送期间幽影会变为一团阴影，敌人可通过摧毁阴影来强制取消传送，幽影也能按装备来取消传送。', usage: '按X打开地图左键传送，传送期间化为阴影可被摧毁取消，按X取消传送。' }
     ]
   },
   {

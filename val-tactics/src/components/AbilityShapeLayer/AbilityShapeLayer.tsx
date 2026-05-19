@@ -50,6 +50,14 @@ const iconTints: Record<string, string> = {
   'yoru-fakeout': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'yoru-gatecrash': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'yoru-dimensional-drift': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'viper-snake-bite': 'sepia(1) saturate(3) hue-rotate(80deg) brightness(1.1)', // 绿色
+  'viper-poison-cloud': 'sepia(1) saturate(3) hue-rotate(80deg) brightness(1.1)', // 绿色
+  'viper-toxic-screen': 'sepia(1) saturate(3) hue-rotate(80deg) brightness(1.1)', // 绿色
+  'viper-pit': 'sepia(1) saturate(3) hue-rotate(80deg) brightness(1.1)', // 绿色
+  'omen-shrouded-step': 'sepia(1) saturate(3) hue-rotate(240deg) brightness(1.1)', // 紫色
+  'omen-paranoia': 'sepia(1) saturate(3) hue-rotate(240deg) brightness(1.1)', // 紫色
+  'omen-dark-cover': 'sepia(1) saturate(3) hue-rotate(240deg) brightness(1.1)', // 紫色
+  'omen-from-the-shadows': 'sepia(1) saturate(3) hue-rotate(240deg) brightness(1.1)', // 紫色
 }
 
 function getAbilityInfo(shape: AbilityShape): AbilityInfo {
@@ -375,23 +383,37 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const a1 = degToRad(s.rotation - 90), a2 = degToRad(s.rotation + 90)
               const sx1 = svgW / 2 + halfLen * Math.cos(a1), sy1 = svgH / 2 + halfLen * Math.sin(a1)
               const sx2 = svgW / 2 + halfLen * Math.cos(a2), sy2 = svgH / 2 + halfLen * Math.sin(a2)
+              const isOmenC = s.abilityId === 'omen-shrouded-step'
               const sw = Math.max(s.thickness * mapW * scale, 3)
-              const dashArray = info.type === 'mobility' ? '8 5' : 'none'
+              const dashArray = (info.type === 'mobility' || s.abilityId === 'iso-contingency') ? '8 5' : 'none'
               const arrowSize = 8
               const arrowAngle = degToRad(s.rotation - 90)
               const ax1 = sx2 - arrowSize * Math.cos(arrowAngle - 0.5), ay1 = sy2 - arrowSize * Math.sin(arrowAngle - 0.5)
               const ax2 = sx2 - arrowSize * Math.cos(arrowAngle + 0.5), ay2 = sy2 - arrowSize * Math.sin(arrowAngle + 0.5)
+              // 双线偏移（霓虹 C 闪电墙）
+              const isDualLine = s.abilityId === 'neon-fast-lane'
+              const offsetX = isDualLine ? 5 * Math.cos(degToRad(s.rotation)) : 0
+              const offsetY = isDualLine ? 5 * Math.sin(degToRad(s.rotation)) : 0
+              const renderLine = (ox: number, oy: number, key: string) => (
+                <line key={key} x1={sx1 + ox} y1={sy1 + oy} x2={sx2 + ox} y2={sy2 + oy}
+                  stroke={color} strokeWidth={sw} strokeLinecap="round" opacity={isOmenC ? 0 : 0.85}
+                  strokeDasharray={dashArray}
+                  style={{ cursor: 'move', filter: isSelected ? `drop-shadow(0 0 4px ${color})` : `drop-shadow(0 0 2px ${color}40)`, transition: 'filter 0.15s' }}
+                  onMouseDown={isDualLine ? undefined : (e) => handleMouseDown(e, s)}
+                />
+              )
               return (
                 <>
-                  {/* 虚线 / 实线 */}
-                  <line x1={sx1} y1={sy1} x2={sx2} y2={sy2}
-                    stroke={color} strokeWidth={sw} strokeLinecap="round" opacity={0.85}
-                    strokeDasharray={dashArray}
-                    style={{ cursor: 'move', filter: isSelected ? `drop-shadow(0 0 4px ${color})` : `drop-shadow(0 0 2px ${color}40)`, transition: 'filter 0.15s' }}
-                    onMouseDown={(e) => handleMouseDown(e, s)}
-                  />
-                  {/* 箭头 (位移类型) */}
-                  {info.type === 'mobility' && (
+                  {isDualLine ? (
+                    <g onMouseDown={(e) => handleMouseDown(e, s)} style={{ cursor: 'move' }}>
+                      {renderLine(-offsetX, -offsetY, 'l1')}
+                      {renderLine(offsetX, offsetY, 'l2')}
+                    </g>
+                  ) : (
+                    renderLine(0, 0, 'l')
+                  )}
+                  {/* 箭头 (位移类型或特定技能) */}
+                  {(info.type === 'mobility' || s.abilityId === 'iso-contingency') && (
                     <polygon points={`${sx2},${sy2} ${ax1},${ay1} ${ax2},${ay2}`}
                       fill={color} opacity={0.85} style={{ pointerEvents: 'none' }} />
                   )}
@@ -405,8 +427,17 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       style={{ cursor: 'grab', filter: 'drop-shadow(0 0 4px black)' }}
                       onMouseDown={(e) => { e.stopPropagation(); handleRotMouseDown(e as unknown as React.MouseEvent, s) }} />
                   )}
+                  {/* 幽影C：线段两端圆形 */}
+                  {s.abilityId === 'omen-shrouded-step' && (
+                    <>
+                      <circle cx={sx1} cy={sy1} r={6} fill={color} opacity={0.6} style={{ pointerEvents: 'none' }} />
+                      <circle cx={sx2} cy={sy2} r={6} fill={color} opacity={0.6} style={{ pointerEvents: 'none' }} />
+                    </>
+                  )}
                 </>
               )
+            })()}
+            {s.shape === 'line' && (() => {
             })()}
           </svg>
         )
