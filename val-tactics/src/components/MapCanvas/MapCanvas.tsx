@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { useTactics } from '../../store/TacticsContext'
 import agents, { getAbilityShapeConfig } from '../../data/agents'
+import type { AbilityShapeConfig } from '../../types'
 import DrawingLayer from '../DrawingLayer/DrawingLayer'
 import AbilityShapeLayer from '../AbilityShapeLayer/AbilityShapeLayer'
 import TextInputModal from '../TextInputModal/TextInputModal'
@@ -145,6 +146,16 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
   const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
+  // 画线模式：线型技能拖放后进入画线（直线/自由绘制）
+  const [lineDrawing, setLineDrawing] = useState<{
+    mode: 'line' | 'freehand'       // line=两点直线, freehand=拖拽自由绘制
+    startX: number; startY: number
+    currentX: number; currentY: number
+    abilityId: string; agentId: string
+    config: AbilityShapeConfig
+    path?: { x: number; y: number }[]  // freehand 路径点
+    drawing?: boolean                  // freehand 正在绘制中
+  } | null>(null)
 
   const mapW = 1800
   const mapH = 1200
@@ -267,17 +278,28 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     } else if (data.type === 'ability' && data.abilityId) {
       const shapeConfig = getAbilityShapeConfig(data.abilityId)
       if (shapeConfig) {
-        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
-          id: '', abilityId: data.abilityId, agentId: data.agentId,
-          x, y, rotation: 0,
-          shape: shapeConfig.shape,
-          radius: shapeConfig.radius ?? 0.08,
-          angle: shapeConfig.angle ?? 60,
-          length: shapeConfig.length ?? 0.10,
-          width: shapeConfig.width ?? 0.02,
-          thickness: shapeConfig.thickness ?? 0.008,
-          iconOnly: shapeConfig.iconOnly ?? false,
-        }})
+        // 线型技能进入画线模式：先放起点，再拖终点
+        if (shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning') {
+          setLineDrawing({
+            mode: (data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze') ? 'freehand' : 'line',
+            startX: x, startY: y,
+            currentX: x, currentY: y,
+            abilityId: data.abilityId, agentId: data.agentId,
+            config: shapeConfig,
+          })
+        } else {
+          dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+            id: '', abilityId: data.abilityId, agentId: data.agentId,
+            x, y, rotation: 0,
+            shape: shapeConfig.shape,
+            radius: shapeConfig.radius ?? 0.08,
+            angle: shapeConfig.angle ?? 60,
+            length: shapeConfig.length ?? 0.10,
+            width: shapeConfig.width ?? 0.02,
+            thickness: shapeConfig.thickness ?? 0.008,
+            iconOnly: shapeConfig.iconOnly ?? false,
+          }})
+        }
       } else {
         const maxStep = markers.reduce((max, m) => Math.max(max, m.step), 0)
         dispatch({ type: 'ADD_MARKER', marker: { id: '', abilityId: data.abilityId!, agentId: data.agentId, x, y, step: maxStep + 1, time: maxStep * 5, note: '' } })
@@ -285,8 +307,143 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     }
   }, [offsetX, offsetY, displayScale, mapW, mapH, transformRef, markers, side, dispatch])
 
-  // 地图点击 — 文字工具创建标注
+  // 自由绘制：用原生事件绑定到容器元素（绕过 React 合成事件限制）
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const toWorld = (sx: number, sy: number) => ({
+      x: (sx - offsetX) / (displayScale * mapW),
+      y: (sy - offsetY) / (displayScale * mapH),
+    })
+
+    const getPos = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect()
+      return toWorld(e.clientX - rect.left, e.clientY - rect.top)
+    }
+
+    const pathLen = (pts: { x: number; y: number }[]) => {
+      let total = 0
+      for (let i = 1; i < pts.length; i++) {
+        const dx = pts[i].x - pts[i - 1].x
+        const dy = pts[i].y - pts[i - 1].y
+        total += Math.sqrt(dx * dx + dy * dy)
+      }
+      return total
+    }
+
+    const maxLen = lineDrawing?.config.length ?? 0.50
+
+    const down = (e: MouseEvent) => {
+      if (!lineDrawing || lineDrawing.mode !== 'freehand') return
+      e.preventDefault(); e.stopPropagation()
+      const w = getPos(e)
+      freehandRef.current = { drawing: true, path: [{ x: w.x, y: w.y }] }
+      setLineDrawing(prev => prev ? { ...prev, drawing: true, path: [{ x: w.x, y: w.y }], currentX: w.x, currentY: w.y } : null)
+    }
+
+    const move = (e: MouseEvent) => {
+      if (!freehandRef.current.drawing) return
+      e.preventDefault()
+      const w = getPos(e)
+      freehandRef.current.path.push(w)
+      // 限制最大长度
+      if (pathLen(freehandRef.current.path) > maxLen) {
+        freehandRef.current.drawing = false
+        // 触发保存
+        const pts = [...freehandRef.current.path]
+        setLineDrawing(prev => {
+          if (!prev) return null
+          let sumX = 0, sumY = 0
+          for (const p of pts) { sumX += p.x; sumY += p.y }
+          dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+            id: '', abilityId: prev.abilityId, agentId: prev.agentId,
+            x: sumX / pts.length, y: sumY / pts.length, rotation: 0,
+            shape: 'line',
+            radius: 0.08, angle: 60,
+            length: pathLen(pts),
+            width: 0.02,
+            thickness: prev.config.thickness ?? 0.008,
+            iconOnly: false,
+            path: pts,
+          }})
+          return null
+        })
+        return
+      }
+      setLineDrawing(prev => prev ? { ...prev, currentX: w.x, currentY: w.y, path: [...freehandRef.current.path] } : null)
+    }
+
+    const up = () => {
+      if (!freehandRef.current.drawing) return
+      freehandRef.current.drawing = false
+      const pts = freehandRef.current.path
+      setLineDrawing(prev => {
+        if (!prev) return null
+        if (pts.length > 1) {
+          let sumX = 0, sumY = 0
+          for (const p of pts) { sumX += p.x; sumY += p.y }
+          const cx = sumX / pts.length
+          const cy = sumY / pts.length
+          dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+            id: '', abilityId: prev.abilityId, agentId: prev.agentId,
+            x: cx, y: cy, rotation: 0,
+            shape: 'line',
+            radius: 0.08, angle: 60,
+            length: pathLen(pts),
+            width: 0.02,
+            thickness: prev.config.thickness ?? 0.008,
+            iconOnly: false,
+            path: pts,
+          }})
+          return null
+        }
+        return null
+      })
+    }
+
+    el.addEventListener('mousedown', down)
+    el.addEventListener('mousemove', move)
+    el.addEventListener('mouseup', up)
+    return () => {
+      el.removeEventListener('mousedown', down)
+      el.removeEventListener('mousemove', move)
+      el.removeEventListener('mouseup', up)
+    }
+  }, [!!lineDrawing, offsetX, offsetY, displayScale, mapW, mapH, transformRef, dispatch])
+
+
+  // 地图点击 — 画线确认 / 文字工具创建标注
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    // 画线模式：点击确认终点（freehand 模式由 mouseup 处理，此处跳过）
+    if (lineDrawing && lineDrawing.mode !== 'freehand') {
+      const t = transformRef.current
+      if (!t.container) return
+      const rect = t.container.getBoundingClientRect()
+      const sx = e.clientX - rect.left
+      const sy = e.clientY - rect.top
+      const ex = (sx - offsetX) / (displayScale * mapW)
+      const ey = (sy - offsetY) / (displayScale * mapH)
+      const cx = (lineDrawing.startX + ex) / 2
+      const cy = (lineDrawing.startY + ey) / 2
+      const dx = ex - lineDrawing.startX
+      const dy = ey - lineDrawing.startY
+      const len = Math.sqrt(dx * dx + dy * dy)
+      const rot = Math.atan2(dx, -dy) * 180 / Math.PI
+      dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+        id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+        x: cx, y: cy, rotation: rot,
+        shape: 'line',
+        radius: 0.08,
+        angle: 60,
+        length: Math.max(len, 0.02),
+        width: 0.02,
+        thickness: lineDrawing.config.thickness ?? 0.008,
+        iconOnly: false,
+      }})
+      setLineDrawing(null)
+      return
+    }
     if (toolMode !== 'text') return
     const t = transformRef.current
     if (!t.container) return
@@ -297,7 +454,32 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     const y = (sy - offsetY) / (displayScale * mapH)
     if (x < 0 || x > 1 || y < 0 || y > 1) return
     setPendingTextPos({ x, y })
-  }, [toolMode, offsetX, offsetY, displayScale, mapW, mapH, transformRef])
+  }, [toolMode, offsetX, offsetY, displayScale, mapW, mapH, transformRef, lineDrawing, dispatch])
+
+  // 画线模式：ESC 取消 + 直线模式鼠标追踪
+  useEffect(() => {
+    if (!lineDrawing) return
+    const move = (e: MouseEvent) => {
+      const t = transformRef.current
+      if (!t.container) return
+      const rect = t.container.getBoundingClientRect()
+      const ex = (e.clientX - rect.left - offsetX) / (displayScale * mapW)
+      const ey = (e.clientY - rect.top - offsetY) / (displayScale * mapH)
+      setLineDrawing(prev => prev ? { ...prev, currentX: ex, currentY: ey } : null)
+    }
+    const keydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); freehandRef.current.drawing = false; setLineDrawing(null) }
+    }
+    // 直线模式跟踪鼠标位置
+    if (lineDrawing.mode !== 'freehand') {
+      window.addEventListener('mousemove', move)
+    }
+    window.addEventListener('keydown', keydown)
+    return () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('keydown', keydown)
+    }
+  }, [!!lineDrawing, offsetX, offsetY, displayScale, mapW, mapH, transformRef])
 
   // 键盘快捷键
   useEffect(() => {
@@ -324,6 +506,8 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
 
   // 标记拖拽
   const markerDragRef = useRef<{ id: string; type: string; sx: number; sy: number; ox: number; oy: number } | null>(null)
+  // 自由绘制状态（用 ref 避免 effect 重注册打断绘制）
+  const freehandRef = useRef<{ drawing: boolean; path: { x: number; y: number }[] }>({ drawing: false, path: [] })
 
   const handleMarkerMouseDown = useCallback((e: React.MouseEvent, id: string, type: 'marker' | 'text' | 'agent') => {
     e.stopPropagation(); e.preventDefault()
@@ -369,7 +553,60 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
 
       <AbilityShapeLayer offset={{ x: offsetX, y: offsetY }} scale={displayScale} mapW={mapW} mapH={mapH} containerRef={containerRef} />
 
-      {isOver && <div className={styles.dropHint}>释放以放置技能</div>}
+            {/* 画线模式预览 */}
+      {lineDrawing && (() => {
+        const sx = offsetX + lineDrawing.startX * mapW * displayScale
+        const sy = offsetY + lineDrawing.startY * mapH * displayScale
+        const ex = offsetX + lineDrawing.currentX * mapW * displayScale
+        const ey = offsetY + lineDrawing.currentY * mapH * displayScale
+        const agent = agents.find(a => a.id === lineDrawing.agentId)
+        const ab = agent?.abilities.find(a => a.id === lineDrawing.abilityId)
+        const color = ab ? typeColors[ab.type] || '#888' : '#888'
+        const sw = Math.max((lineDrawing.config.thickness ?? 0.008) * mapW * displayScale, 3)
+        const isFreehand = lineDrawing.mode === 'freehand'
+        const hintText = isFreehand
+          ? (lineDrawing.drawing ? '拖动鼠标绘制线形 / 松手确认' : '按住鼠标开始绘制 / ESC 取消')
+          : '点击放置终点 / ESC 取消'
+        return (
+          <svg style={{ position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none', overflow: 'visible' }}>
+            {/* 自由绘制路径预览 */}
+            {isFreehand && lineDrawing.path && lineDrawing.path.length > 1 && (
+              <polyline
+                points={lineDrawing.path.map(p => {
+                  const px = offsetX + p.x * mapW * displayScale
+                  const py = offsetY + p.y * mapH * displayScale
+                  return px + ',' + py
+                }).join(' ')}
+                fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+                opacity={0.6}
+              />
+            )}
+            {/* 直线模式预览 */}
+            {!isFreehand && (
+              <>
+                <circle cx={sx} cy={sy} r={5} fill={color} opacity={0.8} />
+                <line x1={sx} y1={sy} x2={ex} y2={ey}
+                  stroke={color} strokeWidth={sw} strokeLinecap="round" opacity={0.5}
+                  strokeDasharray="10 6" />
+                <circle cx={ex} cy={ey} r={5} fill="#fff" stroke={color} strokeWidth={2} opacity={0.8} />
+              </>
+            )}
+            {/* 起点标记（所有模式） */}
+            <circle cx={sx} cy={sy} r={5} fill="#fff" stroke={color} strokeWidth={2} opacity={0.9} />
+            {/* 当前鼠标位置（freehand 模式绘制中） */}
+            {isFreehand && lineDrawing.drawing && (
+              <circle cx={ex} cy={ey} r={4} fill={color} opacity={0.7} />
+            )}
+            {/* 提示文字 */}
+            <text x={sx + 12} y={sy - 14} fill="#fff" fontSize={12}
+              style={{ textShadow: '0 1px 3px black', pointerEvents: 'none' }}>
+              {hintText}
+            </text>
+          </svg>
+        )
+      })()}
+
+      {isOver && !lineDrawing && <div className={styles.dropHint}>释放以放置技能</div>}
 
       {/* 技能标记 */}
       {markers.map(marker => {

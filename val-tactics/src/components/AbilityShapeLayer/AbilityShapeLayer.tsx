@@ -58,6 +58,10 @@ const iconTints: Record<string, string> = {
   'omen-paranoia': 'sepia(1) saturate(3) hue-rotate(240deg) brightness(1.1)', // 紫色
   'omen-dark-cover': 'sepia(1) saturate(3) hue-rotate(240deg) brightness(1.1)', // 紫色
   'omen-from-the-shadows': 'sepia(1) saturate(3) hue-rotate(240deg) brightness(1.1)', // 紫色
+  'harbor-cascade': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'harbor-high-tide': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'harbor-cove': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'harbor-reckoning': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
 }
 
 function getAbilityInfo(shape: AbilityShape): AbilityInfo {
@@ -379,6 +383,27 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               )
             })()}
             {s.shape === 'line' && (() => {
+              // 自由路径渲染（harbor-cascade 等弯曲水墙）
+              const hasPath = s.path && s.path.length > 1
+              if (hasPath) {
+                const pts = s.path!.map(p => {
+                  const px = svgW / 2 + (p.x - s.x) * mapW * scale
+                  const py = svgH / 2 + (p.y - s.y) * mapH * scale
+                  return px + ',' + py
+                }).join(' ')
+                const sw = Math.max(s.thickness * mapW * scale, 3)
+                return (
+                  <>
+                    <polyline points={pts} fill="none" stroke={color} strokeWidth={sw}
+                      strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
+                      style={{ cursor: 'move', filter: isSelected ? `drop-shadow(0 0 4px ${color})` : undefined }}
+                      onMouseDown={(e) => handleMouseDown(e, s)} />
+                    <image href={'/images/abilities/' + s.abilityId + '.png'}
+                      x={svgW / 2 - 14} y={svgH / 2 - 14}
+                      width={28} height={28} style={{ pointerEvents: 'none' }} />
+                  </>
+                )
+              }
               const halfLen = (s.length * mapW * scale) / 2
               const a1 = degToRad(s.rotation - 90), a2 = degToRad(s.rotation + 90)
               const sx1 = svgW / 2 + halfLen * Math.cos(a1), sy1 = svgH / 2 + halfLen * Math.sin(a1)

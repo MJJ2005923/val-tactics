@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import agents, { agentImages, type Agent, type Ability } from '../../data/agents'
 import SkillDetail from '../SkillDetail/SkillDetail'
 import styles from './AgentPanel.module.css'
@@ -61,23 +61,23 @@ function AgentPanel() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [selectedAbility, setSelectedAbility] = useState<{ ability: Ability; agent: Agent } | null>(null)
   const [search, setSearch] = useState('')
+  const listRef = useRef<HTMLDivElement>(null)
 
-  const filtered = search
+  useEffect(() => {
+    if (!listRef.current) return
+    listRef.current.style.overflowY = selectedAbility ? 'hidden' : 'auto'
+  }, [selectedAbility])
+
+  const filtered = useMemo(() => search
     ? agents.filter(a => a.name.includes(search) || a.nameEn.toLowerCase().includes(search.toLowerCase()))
-    : agents
+    : agents, [search])
 
-  return (
-    <>
-      <div className={styles.panel}>
-        <div className={styles.header}>特工列表</div>
-        <div className={styles.searchBox}>
-          <input className={styles.searchInput} type="text" placeholder="搜索特工..." value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-        <div className={styles.list}>
-          {filtered.map(agent => {
-            const isExpanded = expandedId === agent.id
-            const sorted = [...agent.abilities].sort((a, b) => abilityKeyOrder[a.key] - abilityKeyOrder[b.key])
-            return (
+  const agentList = useMemo(() => (
+    <div className={styles.list} ref={listRef}>
+      {filtered.map(agent => {
+        const isExpanded = expandedId === agent.id
+        const sorted = [...agent.abilities].sort((a, b) => abilityKeyOrder[a.key] - abilityKeyOrder[b.key])
+        return (
               <div key={agent.id} className={styles.agentItem}>
                 <div className={styles.agentRow}>
                   <DraggableAgentHeader agent={agent} />
@@ -104,7 +104,17 @@ function AgentPanel() {
               </div>
             )
           })}
+    </div>
+  ), [filtered, expandedId])
+
+  return (
+    <>
+      <div className={styles.panel}>
+        <div className={styles.header}>特工列表</div>
+        <div className={styles.searchBox}>
+          <input className={styles.searchInput} type="text" placeholder="搜索特工..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+        {agentList}
       </div>
       {selectedAbility && (
         <SkillDetail ability={selectedAbility.ability} agentName={selectedAbility.agent.name} agentRole={selectedAbility.agent.role} onClose={() => setSelectedAbility(null)} />

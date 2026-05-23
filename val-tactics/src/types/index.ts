@@ -67,6 +67,7 @@ export interface AbilityShape {
   width: number                  // 矩形高
   thickness: number              // 线宽
   iconOnly?: boolean             // 仅显示图标
+  path?: { x: number; y: number }[]  // 自由绘制路径（如 harbor-cascade 弯曲水墙）
 }
 
 // ====== 工具模式 ======

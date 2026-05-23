@@ -53,7 +53,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'astra-nebula':             { radius: 4.75 * M },   // 4.75m 最大
   'viper-poison-cloud':       { radius: 4.5 * M },    // 4.5m
   'jett-cloudburst':          { radius: 3.5 * M },    // 3.5m 瞬发烟
-  'harbor-cove':              { radius: 3.5 * M },    // 3.5m 护盾
+  'harbor-cove':              { shape: 'circle', radius: 4.5 * M },    // 4.5m 护盾
+  'harbor-reckoning':         { shape: 'line', length: 30 * M, thickness: 0.006 },
   'clove-ruse':               { radius: 4.1 * M },    // 4.1m
   'cypher-cyber-cage':        { radius: 3.5 * M },    // 3.5m 网牢
 
@@ -83,9 +84,12 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 墙体 ===
   'viper-toxic-screen':       { shape: 'line', length: 65 * M, thickness: 0.003 },
   'sage-barrier-orb':         { shape: 'rect', length: 10 * M, width: 2.5 * M },
-  'phoenix-blaze':            { shape: 'line', length: 12 * M, thickness: 0.003 },
-  'harbor-high-tide':         { shape: 'line', length: 25 * M, thickness: 0.012 },
-  'harbor-cascade':           { shape: 'rect', length: 4 * M, width: 2 * M },
+  'phoenix-blaze':            { shape: 'line', length: 20 * M, thickness: 0.003 },
+  'phoenix-hot-hands':        { shape: 'circle', radius: 3.5 * M },
+  'phoenix-curveball':        { shape: 'circle', radius: 1.2 * M },
+  'astra-astral-form':        { shape: 'line', length: 150 * M, thickness: 0.003 },
+  'harbor-high-tide':         { shape: 'line', length: 100 * M, thickness: 0.003 },
+  'harbor-cascade':           { shape: 'circle', radius: 3.5 * M },
   'deadlock-barrier-mesh':    { shape: 'line', length: 6 * M, thickness: 0.01 },
   'neon-relay-bolt':          { shape: 'circle', radius: 2 * M },
   'neon-fast-lane':           { shape: 'line', length: 40 * M, thickness: 0.003 },
@@ -137,8 +141,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'yoru-fakeout':              { shape: 'circle', radius: 2.5 * M },
   'yoru-gatecrash':            { shape: 'circle', radius: 2.5 * M },
   'yoru-dimensional-drift':    { shape: 'circle', radius: 2.5 * M },
-  'omen-shrouded-step':        { shape: 'line', length: 8 * M, thickness: 0.003 },
-  'omen-paranoia':             { shape: 'rect', length: 60 * M, width: 10 * M },
+  'omen-shrouded-step':        { shape: 'line', length: 16 * M, thickness: 0.003 },
+  'omen-paranoia':             { shape: 'rect', length: 40 * M, width: 10 * M },
   'omen-from-the-shadows':     { shape: 'circle', radius: 2 * M },
   'chamber-rendezvous':        { shape: 'line', length: 12 * M, thickness: 0.006 },
   'chamber-trademark':         { radius: 3 * M },
@@ -159,55 +163,55 @@ const agents: Agent[] = [
   {
     id: 'sage', name: '贤者', nameEn: 'Sage', role: '哨卫',
     abilities: [
-      { id: 'sage-slow-orb', name: '缓速灵球', nameEn: 'Slow Orb', key: 'C', type: 'control', iconUrl: '/images/abilities/sage-slow-orb.png', description: '装备一颗缓速灵球。按射击键向前投掷，落地后生成一片缓速区域，踏入的敌人移速大幅降低。', usage: '按C装备，鼠标左键投掷，落地形成减速场。' },
-      { id: 'sage-healing-orb', name: '治愈灵球', nameEn: 'Healing Orb', key: 'E', type: 'heal', iconUrl: '/images/abilities/sage-healing-orb.png', description: '装备一颗治愈灵球。按射击键对准队友释放，持续回血。可按右键对自己使用。', usage: '按E装备，左键对队友治疗，右键自愈。' },
-      { id: 'sage-barrier-orb', name: '冰墙', nameEn: 'Barrier Orb', key: 'Q', type: 'control', iconUrl: '/images/abilities/sage-barrier-orb.png', description: '装备冰墙灵球。按射击键在面前放置一堵坚实冰墙，阻挡视野和子弹。右键旋转方向。', usage: '按Q装备，左键放置冰墙，右键旋转方向。' },
-      { id: 'sage-resurrection', name: '复活', nameEn: 'Resurrection', key: 'X', type: 'heal', iconUrl: '/images/abilities/sage-resurrection.png', description: '对准一名阵亡队友的尸体，按射击键将其复活并恢复满血。需要短暂引导时间。', usage: '按X，对准队友尸体，左键引导复活。' }
+      { id: 'sage-barrier-orb', name: '玉城', nameEn: 'Barrier Orb', key: 'C', type: 'control', iconUrl: '/images/abilities/sage-barrier-orb.png', description: '装备屏障法球。按[射击]来布置一道墙壁，[辅助射击]可旋转目标指示器。', usage: '按C装备，左键放置冰墙，右键旋转方向。' },
+      { id: 'sage-slow-orb', name: '薄冰', nameEn: 'Slow Orb', key: 'Q', type: 'control', iconUrl: '/images/abilities/sage-slow-orb.png', description: '装备减速法球。按[射击]将其掷出，它会在落地时爆开，生成一片持续的[减速]领域，降低其中玩家的移动速度和冲刺速度。', usage: '按Q装备，左键投掷，落地形成减速场。' },
+      { id: 'sage-healing-orb', name: '逢春', nameEn: 'Healing Orb', key: 'E', type: 'heal', iconUrl: '/images/abilities/sage-healing-orb.png', description: '装备治疗法球。按[射击]并用准星对准受伤队友以持续对其进行[治疗]。当贤者受伤时，使用[辅助射击]来[治疗]自己。', usage: '按E装备，左键对队友治疗，右键自愈。' },
+      { id: 'sage-resurrection', name: '再起', nameEn: 'Resurrection', key: 'X', type: 'heal', iconUrl: '/images/abilities/sage-resurrection.png', description: '装备复活技能。瞄准一名倒下的队友按下[射击]，即可在短暂引导后使其满血复活。', usage: '按X，对准队友尸体，左键引导复活。' }
     ]
   },
   {
     id: 'jett', name: '婕提', nameEn: 'Jett', role: '决斗者',
     abilities: [
-      { id: 'jett-cloudburst', name: '烟雾弹', nameEn: 'Cloudburst', key: 'C', type: 'smoke', iconUrl: '/images/abilities/jett-cloudburst.png', description: '投掷一颗烟雾弹，撞击地形后膨胀为球形烟雾，阻挡视野。飞行中移动鼠标可弯曲轨迹。', usage: '按C装备，左键投掷，飞行中移动鼠标控制轨迹。' },
-      { id: 'jett-updraft', name: '上升气流', nameEn: 'Updraft', key: 'Q', type: 'mobility', iconUrl: '/images/abilities/jett-updraft.png', description: '瞬间将自己弹射到空中，到达常规跳跃无法企及的高处位置。', usage: '按Q立即向上弹射起飞。' },
-      { id: 'jett-tailwind', name: '逐风', nameEn: 'Tailwind', key: 'E', type: 'mobility', iconUrl: '/images/abilities/jett-tailwind.png', description: '向移动方向快速冲刺一段距离。空中使用则向准星方向冲刺。', usage: '按E向移动方向冲刺，可在空中使用。' },
-      { id: 'jett-blade-storm', name: '剑刃风暴', nameEn: 'Blade Storm', key: 'X', type: 'damage', iconUrl: '/images/abilities/jett-blade-storm.png', description: '装备五把精准飞刀。左键单发射击，击杀敌人恢复所有飞刀。右键一次性投掷所有剩余飞刀。', usage: '按X装备飞刀，左键精准射击，右键全投。' }
+      { id: 'jett-cloudburst', name: '瞬云', nameEn: 'Cloudburst', key: 'C', type: 'smoke', iconUrl: '/images/abilities/jett-cloudburst.png', description: '投掷一个发射物，其在触碰后可扩展成一朵能短暂阻挡视线的云雾。按住技能键能扭曲云雾至准星的方向。', usage: '按C装备，左键投掷，按住技能键扭曲云雾方向。' },
+      { id: 'jett-updraft', name: '凌空', nameEn: 'Updraft', key: 'Q', type: 'mobility', iconUrl: '/images/abilities/jett-updraft.png', description: '立即腾空直上，高高跃起。', usage: '按Q立即向上腾空跃起。' },
+      { id: 'jett-tailwind', name: '逐风', nameEn: 'Tailwind', key: 'E', type: 'mobility', iconUrl: '/images/abilities/jett-tailwind.png', description: '[激活]即可在限定时间内刮起阵风。[再次使用]该技能可朝移动方向突进。若站立不动，则向面朝的方向突进。每击败两名敌人，可重置[逐风]的充能。', usage: '按E激活，再次按E向移动方向突进。每击败2名敌人重置充能。' },
+      { id: 'jett-blade-storm', name: '飓刃', nameEn: 'Blade Storm', key: 'X', type: 'damage', iconUrl: '/images/abilities/jett-blade-storm.png', description: '装备一组飞刀，按[射击]向目标掷出一把飞刀，击败敌人即可重新充能所有飞刀。按[辅助射击]向你的目标抛掷所有剩余的飞刀，但这样做无法通过击败敌人获得充能。', usage: '按X装备飞刀，左键单发射击(击杀充能)，右键全投(不充能)。' }
     ]
   },
   {
     id: 'phoenix', name: '不死鸟', nameEn: 'Phoenix', role: '决斗者',
     abilities: [
-      { id: 'phoenix-blaze', name: '火墙', nameEn: 'Blaze', key: 'C', type: 'damage', iconUrl: '/images/abilities/phoenix-blaze.png', description: '装备一面火焰墙壁。按射击键在面前生成一道火墙，阻挡视野并对穿过的敌人造成伤害，同时可治疗自己。', usage: '按C装备，左键放置火墙，移动鼠标可弯曲墙体轨迹。' },
-      { id: 'phoenix-curveball', name: '闪光弹', nameEn: 'Curveball', key: 'Q', type: 'flash', iconUrl: '/images/abilities/phoenix-curveball.png', description: '装备一颗弯曲闪光弹。左键向左弯曲，右键向右弯曲。爆炸后致盲范围内所有玩家。', usage: '按Q装备，左键向左弯曲投掷，右键向右弯。' },
-      { id: 'phoenix-hot-hands', name: '烈焰之手', nameEn: 'Hot Hands', key: 'E', type: 'damage', iconUrl: '/images/abilities/phoenix-hot-hands.png', description: '在面前投掷一颗火焰灵球，落地形成燃烧区域，对敌人造成伤害并治疗自己。', usage: '按E装备，左键投掷，落地形成燃烧区。' },
-      { id: 'phoenix-run-it-back', name: '归来', nameEn: 'Run it Back', key: 'X', type: 'damage', iconUrl: '/images/abilities/phoenix-run-it-back.png', description: '标记当前位置。技能持续期间若阵亡或倒计时结束，将自动回到标记位置并满血复活。', usage: '按X标记位置，持续时间内可冲锋，结束后回到标记点。' }
+      { id: 'phoenix-blaze', name: '火冒三丈', nameEn: 'Blaze', key: 'C', type: 'damage', iconUrl: '/images/abilities/phoenix-blaze.png', description: '装备烈焰屏障。按[射击]向前生成一道可穿越地形的火墙，可阻挡视野并伤害穿过它的人。不死鸟不会受到火墙的伤害，反而会获得治疗。[按住射击]可使火墙朝你准星的方向卷曲。', usage: '按C装备，左键放置火墙，按住射击可卷曲火墙。' },
+      { id: 'phoenix-hot-hands', name: '火热手感', nameEn: 'Hot Hands', key: 'Q', type: 'damage', iconUrl: '/images/abilities/phoenix-hot-hands.png', description: '装备一颗火球，按[射击]将其掷出，在落地或一定时间后爆炸，生成一片持续燃烧的区域，对进入其中的敌人造成伤害。不死鸟不会受到燃烧区域的伤害，反而会获得治疗。按[辅助射击]可轻抛。', usage: '按Q装备，左键投掷火球，右键轻抛。' },
+      { id: 'phoenix-curveball', name: '闪光曲球', nameEn: 'Curveball', key: 'E', type: 'flash', iconUrl: '/images/abilities/phoenix-curveball.png', description: '装备一颗闪光球，投掷后，闪光球沿弧线轨迹飞行并在短时间内爆炸。爆炸时，所有视野内可看到闪光球的玩家均会被[致盲]。按[射击]投掷左曲球，按[辅助射击]投掷右曲球。每击败两名敌人，可重置[闪光曲球]的充能。', usage: '按E装备，左键左曲球，右键右曲球。每击败2名敌人重置充能。' },
+      { id: 'phoenix-run-it-back', name: '再火一回', nameEn: 'Run it Back', key: 'X', type: 'damage', iconUrl: '/images/abilities/phoenix-run-it-back.png', description: '立即标记不死鸟的位置。如果他在技能激活期间阵亡，或当技能时效结束，他都会返回该位置满血重生，并且保留技能施放时的护甲值。', usage: '按X标记位置，阵亡或时效结束后满血重生并保留护甲。' }
     ]
   },
   {
     id: 'raze', name: '雷兹', nameEn: 'Raze', role: '决斗者',
     abilities: [
-      { id: 'raze-boom-bot', name: '爆破机器人', nameEn: 'Boom Bot', key: 'C', type: 'damage', iconUrl: '/images/abilities/raze-boom-bot.png', description: '部署一个沿直线前进的机器人，撞到墙壁会弹跳。发现敌人后锁定追踪并爆炸。', usage: '按C部署，机器人自动前进追踪爆炸。' },
-      { id: 'raze-blast-pack', name: '炸药包', nameEn: 'Blast Pack', key: 'Q', type: 'mobility', iconUrl: '/images/abilities/raze-blast-pack.png', description: '投掷一个可粘附的炸药包。再次按技能键引爆，可以弹射自己或伤害敌人。', usage: '按Q投掷，再按Q引爆，可弹射跳跃。' },
-      { id: 'raze-paint-shells', name: '彩雷弹', nameEn: 'Paint Shells', key: 'E', type: 'damage', iconUrl: '/images/abilities/raze-paint-shells.png', description: '投掷一颗手雷，落地后分裂为多颗小型手雷，在范围内多次爆炸。', usage: '按E投掷，落地后多段爆炸。' },
-      { id: 'raze-showstopper', name: '终极技能', nameEn: 'Showstopper', key: 'X', type: 'damage', iconUrl: '/images/abilities/raze-showstopper.png', description: '装备一发火箭炮。按射击键发射火箭弹，在撞击点造成巨大范围伤害。', usage: '按X装备火箭炮，左键发射。' }
+      { id: 'raze-boom-bot', name: '花车巡游', nameEn: 'Boom Bot', key: 'C', type: 'damage', iconUrl: '/images/abilities/raze-boom-bot.png', description: '装备爆弹机器人。按[射击]即可部署机器人，它在地上沿直线行进，并会在碰到墙体后弹开。爆弹机器人会锁定任何在其锥形范围内的敌人并追逐他们，一旦追上便会引爆并造成严重伤害。', usage: '按C部署，机器人沿直线行进，锁定锥形范围内敌人追逐引爆。' },
+      { id: 'raze-blast-pack', name: '惊喜翻腾', nameEn: 'Blast Pack', key: 'Q', type: 'mobility', iconUrl: '/images/abilities/raze-blast-pack.png', description: '投掷一个可粘在物体表面的炸药包。完成部署后，[再次使用]该技能即可将其引爆，击飞命中的目标。如果炸药包已完全激活，则可造成伤害。', usage: '按Q投掷，再按Q引爆，击飞目标。' },
+      { id: 'raze-paint-shells', name: '彩雷飞溅', nameEn: 'Paint Shells', key: 'E', type: 'damage', iconUrl: '/images/abilities/raze-paint-shells.png', description: '装备集束手雷。按[射击]投掷手雷，手雷爆炸后会生成子榴弹，每颗对范围内所有人造成伤害。按[辅助射击]可轻抛。每击败两名敌人，可重置[彩雷飞溅]的充能。', usage: '按E投掷手雷(子榴弹)，右键轻抛。每击败2名敌人重置充能。' },
+      { id: 'raze-showstopper', name: '晚安焰火', nameEn: 'Showstopper', key: 'X', type: 'damage', iconUrl: '/images/abilities/raze-showstopper.png', description: '装备火箭发射器。按[射击]即可发射一枚在与任何物体接触时造成大范围伤害的火箭。', usage: '按X装备火箭炮，左键发射大范围伤害火箭。' }
     ]
   },
   {
     id: 'reyna', name: '蕾娜', nameEn: 'Reyna', role: '决斗者',
     abilities: [
-      { id: 'reyna-leer', name: '浮空之眼', nameEn: 'Leer', key: 'C', type: 'control', iconUrl: '/images/abilities/reyna-leer.png', description: '投掷一颗浮空眼球，在一定距离内悬停。注视眼球的敌人视野会变窄。眼球可被摧毁。', usage: '按C投掷浮空眼球，敌人视野变窄，可被射爆。' },
-      { id: 'reyna-devour', name: '噬魂', nameEn: 'Devour', key: 'Q', type: 'heal', iconUrl: '/images/abilities/reyna-devour.png', description: '消耗一颗灵魂球，立即回复大量生命值。持续时间内过量治疗会转变为护盾。', usage: '按Q消耗灵魂球回血，超出血量变护盾。' },
-      { id: 'reyna-dismiss', name: '消散', nameEn: 'Dismiss', key: 'E', type: 'mobility', iconUrl: '/images/abilities/reyna-dismiss.png', description: '消耗一颗灵魂球，短暂进入虚无状态，无法被瞄准，移动速度提升。', usage: '按E消耗灵魂球进入虚无，高速移动。' },
-      { id: 'reyna-empress', name: '女皇之力', nameEn: 'Empress', key: 'X', type: 'damage', iconUrl: '/images/abilities/reyna-empress.png', description: '进入狂暴状态，射速和换弹速度大幅提升。击杀敌人自动回复生命值。', usage: '按X进入狂暴状态，大幅提升战斗能力。' }
+      { id: 'reyna-leer', name: '睥睨', nameEn: 'Leer', key: 'C', type: 'control', iconUrl: '/images/abilities/reyna-leer.png', description: '装备一颗可被摧毁的虚灵之眼，[激活]将其向前掷出一段距离，使看见此眼球的敌人[视野收缩]。', usage: '按C投掷虚灵之眼，敌人视野收缩，可被摧毁。' },
+      { id: 'reyna-devour', name: '噬尽', nameEn: 'Devour', key: 'Q', type: 'heal', iconUrl: '/images/abilities/reyna-devour.png', description: '狩魂:被芮娜造成伤害的3秒内被击败的敌人将留下魂珠，持续3秒。噬尽:立即吞噬一颗魂珠并迅速获得[临时生命值]。在[女皇旨令]激活时，噬尽将自动施放且不会消耗魂珠，治疗效果也将持续生效。', usage: '按Q吞噬魂珠获得临时生命值。女皇旨令时自动触发。' },
+      { id: 'reyna-dismiss', name: '逐散', nameEn: 'Dismiss', key: 'E', type: 'mobility', iconUrl: '/images/abilities/reyna-dismiss.png', description: '立即吞噬邻近的魂珠，在短时间内变得[无形]。在[女皇旨令]激活时，此技能还会使你[隐形]。', usage: '按E吞噬魂珠进入无形状态。女皇旨令时额外隐形。' },
+      { id: 'reyna-empress', name: '女皇旨令', nameEn: 'Empress', key: 'X', type: 'damage', iconUrl: '/images/abilities/reyna-empress.png', description: '进入狂暴状态，获得[作战强化]效果，大幅度提升射击、装备与换弹速度，可以不限次数地使用[噬尽]技能。', usage: '按X进入狂暴状态，大幅提升战斗能力，无限噬尽。' }
     ]
   },
   {
     id: 'yoru', name: '夜露', nameEn: 'Yoru', role: '决斗者',
     abilities: [
-      { id: 'yoru-fakeout', name: '假脚步声', nameEn: 'Fakeout', key: 'C', type: 'recon', iconUrl: '/images/abilities/yoru-fakeout.png', description: '发射一个可模拟脚步声的装置，迷惑敌人判断你的位置。', usage: '按C发射脚步声模拟器，迷惑敌人。' },
-      { id: 'yoru-blindside', name: '致盲弹', nameEn: 'Blindside', key: 'Q', type: 'flash', iconUrl: '/images/abilities/yoru-blindside.png', description: '投掷一颗可在表面反弹的闪光弹，每弹一次缩短引爆时间。', usage: '按Q投掷，撞击表面反弹后引爆致盲。' },
-      { id: 'yoru-gatecrash', name: '传送锚', nameEn: 'Gatecrash', key: 'E', type: 'recon', iconUrl: '/images/abilities/yoru-gatecrash.png', description: '放置一个传送信标，再次按E传送到信标处。信标对敌人不可见。', usage: '按E放置传送锚，再按E传送到锚点。' },
-      { id: 'yoru-dimensional-drift', name: '空间漂移', nameEn: 'Dimensional Drift', key: 'X', type: 'recon', iconUrl: '/images/abilities/yoru-dimensional-drift.png', description: '进入异次元空间，对敌人不可见且无敌。可以自由移动到任何位置后退出。', usage: '按X进入隐身无敌状态，自由移动后退出。' }
+      { id: 'yoru-fakeout', name: '出其不意', nameEn: 'Fakeout', key: 'C', type: 'recon', iconUrl: '/images/abilities/yoru-fakeout.png', description: '装备一个启动时变为夜露外形的回声镜像，[射击]即可激活镜像并令其前进，[辅助射击]则可放置一个未激活的回声镜像，[按下技能键]可激活之前未激活的镜像并使其前进。镜像被敌人摧毁时，会放出[致盲]闪光。', usage: '按C装备，左键激活镜像前进，右键放置未激活镜像。' },
+      { id: 'yoru-blindside', name: '攻其不备', nameEn: 'Blindside', key: 'Q', type: 'flash', iconUrl: '/images/abilities/yoru-blindside.png', description: '从现实中撕下一块不稳定的空间碎片。按[射击]掷出碎片，在它与坚硬表面碰撞后，会变成一颗闪光弹。', usage: '按Q投掷空间碎片，碰撞后变闪光弹。' },
+      { id: 'yoru-gatecrash', name: '不请自来', nameEn: 'Gatecrash', key: 'E', type: 'recon', iconUrl: '/images/abilities/yoru-gatecrash.png', description: '装备裂隙锚索，[射击]使其向前射出，[辅助射击]可放置固定锚索。[激活]此技能可以将自己传送到锚索的位置。按下[使用]可触发佯装传送。每击败两名敌人，可重置[不请自来]的充能。', usage: '按E装备，左键射出锚索，右键放置固定。按E传送到锚索位置。每击败2名敌人重置。' },
+      { id: 'yoru-dimensional-drift', name: '神鬼不觉', nameEn: 'Dimensional Drift', key: 'X', type: 'recon', iconUrl: '/images/abilities/yoru-dimensional-drift.png', description: '装备一个可穿越位面的面具。按[射击]即可进入夜露的位面，不会被外界的敌人看见或影响。[再次激活]技能即可提前离开夜露的位面。', usage: '按X进入位面(不被看见/影响)，再次按X提前离开。' }
     ]
   },
   {
@@ -258,19 +262,19 @@ const agents: Agent[] = [
   {
     id: 'astra', name: '星礈', nameEn: 'Astra', role: '控场者',
     abilities: [
-      { id: 'astra-gravity-well', name: '重力井', nameEn: 'Gravity Well', key: 'C', type: 'control', iconUrl: '/images/abilities/astra-gravity-well.png', description: '激活一颗星体形成重力井，将附近敌人拉向中心并造成易伤。', usage: '按C激活星体，将敌人拉入中心。' },
-      { id: 'astra-nova-pulse', name: '新星脉冲', nameEn: 'Nova Pulse', key: 'Q', type: 'control', iconUrl: '/images/abilities/astra-nova-pulse.png', description: '激活一颗星体释放脉冲，在短延迟后眩晕范围内的敌人。', usage: '按Q激活星体，眩晕敌人。' },
-      { id: 'astra-nebula', name: '星云', nameEn: 'Nebula', key: 'E', type: 'smoke', iconUrl: '/images/abilities/astra-nebula.png', description: '激活一颗星体形成烟雾。可提前将星体部署在任何位置。', usage: '按E激活星体形成烟雾弹。' },
-      { id: 'astra-astral-form', name: '星界形态', nameEn: 'Astral Form', key: 'X', type: 'control', iconUrl: '/images/abilities/astra-astral-form.png', description: '进入星界形态，可在全局地图上任意位置部署技能。结束后返回肉身。', usage: '按X进入星界形态，全局部署技能。' }
+      { id: 'astra-gravity-well', name: '重力之阱', nameEn: 'Gravity Well', key: 'C', type: 'control', iconUrl: '/images/abilities/astra-gravity-well.png', description: '进入星界形态(终极技能键)并放置星体。[激活]一颗星体，将其转化为重力之阱。处于该区域内的玩家会被拉向中心点，随后重力之阱引爆，对陷入其中的所有玩家施加[易伤]效果。', usage: '按C激活星体，将敌人拉入中心。' },
+      { id: 'astra-nova-pulse', name: '新星脉冲', nameEn: 'Nova Pulse', key: 'Q', type: 'control', iconUrl: '/images/abilities/astra-nova-pulse.png', description: '进入星界形态(终极技能键)并放置星体。[激活]一颗星体，引发一次新星脉冲。新星脉冲会在短暂充能后爆发，使范围内的所有玩家受到[震荡]。', usage: '按Q激活星体，引发新星脉冲震荡敌人。' },
+      { id: 'astra-nebula', name: '星云/消散', nameEn: 'Nebula / Dissipate', key: 'E', type: 'smoke', iconUrl: '/images/abilities/astra-nebula.png', description: '[激活]一颗星体，将其转化为星云(烟雾)。对星体按[使用]键即可将其驱散和回收，以便在一段时间后重新布置。驱散星云后，其所在位置仍会短暂存续一片混淆视听的假星云，直至星体回收完毕。', usage: '按E激活星体形成星云烟雾，按F驱散回收星体。' },
+      { id: 'astra-astral-form', name: '星界形态/宇宙分裂', nameEn: 'Astral Form / Cosmic Divide', key: 'X', type: 'control', iconUrl: '/images/abilities/astra-astral-form.png', description: '当[宇宙分裂]充能完毕时，你可在星体形态下使用[辅助射击]进行瞄准，然后按[射击]选择两个位置。一道无边无际的宇宙裂隙会在两个位置之间生成，阻挡所有子弹并完全阻隔声音的传播。', usage: '按X进入星界形态，右键瞄准，左键选择两点生成宇宙裂隙。' }
     ]
   },
   {
     id: 'harbor', name: '海神', nameEn: 'Harbor', role: '控场者',
     abilities: [
-      { id: 'harbor-cove', name: '护盾泡', nameEn: 'Cove', key: 'C', type: 'smoke', iconUrl: '/images/abilities/harbor-cove.png', description: '在面前生成一个由水构成的护盾泡，可阻挡子弹，内部队友受到保护。', usage: '按C生成水护盾，阻挡子弹。' },
-      { id: 'harbor-cascade', name: '瀑布', nameEn: 'Cascade', key: 'Q', type: 'smoke', iconUrl: '/images/abilities/harbor-cascade.png', description: '发射一道水流瀑布，形成移动的烟雾墙，可推动敌人。', usage: '按Q发射瀑布，形成移动水墙。' },
-      { id: 'harbor-high-tide', name: '高潮', nameEn: 'High Tide', key: 'E', type: 'smoke', iconUrl: '/images/abilities/harbor-high-tide.png', description: '发射一道水墙，形成持续烟雾屏障。穿过水墙的敌人移速降低。', usage: '按E发射水墙，减速穿过敌人。' },
-      { id: 'harbor-reckoning', name: '清算', nameEn: 'Reckoning', key: 'X', type: 'control', iconUrl: '/images/abilities/harbor-reckoning.png', description: '释放大量水流冲击前方区域，被击中的敌人受到伤害并被标记。', usage: '按X释放水流冲击，标记并伤害敌人。' }
+      { id: 'harbor-cascade', name: '乱涌', nameEn: 'Cascade', key: 'C', type: 'recon', iconUrl: '/images/abilities/harbor-cascade.png', description: '装备乱涌。按[射击]向前投掷，制造一股具有强大破坏力的漩流，短时间后使漩流内的玩家受到[减速]和[视野收缩]。', usage: '按C装备，左键投掷乱涌，制造减速和视野收缩的漩流。' },
+      { id: 'harbor-high-tide', name: '狂潮', nameEn: 'High Tide', key: 'Q', type: 'recon', iconUrl: '/images/abilities/harbor-high-tide.png', description: '装备狂潮。按[射击]使水流沿地面向前延展。[按住射击]可使水流朝准星方向卷曲，沿路生成一道封锁视野的屏障。按[辅助射击]可提前中断水流。所有穿过狂潮的玩家都将受到[减速]。', usage: '按Q装备，左键发射水流，按住可卷曲，右键提前中断。' },
+      { id: 'harbor-cove', name: '海盾', nameEn: 'Cove', key: 'E', type: 'recon', iconUrl: '/images/abilities/harbor-cove.png', description: '装备海盾。[激活]后在选定位置形成一道水雾。瞄准期间，[按住射击]可将标记移远，[按住辅助射击]可将标记移近。[换弹]即可切换至瞄准视野。[再次激活]技能即可为水雾生成护盾，阻挡所有命中它的子弹。受护盾保护的水雾可被敌人摧毁。', usage: '按E装备，左键定位水雾，按R切换瞄准视野，再次按E生成护盾。' },
+      { id: 'harbor-reckoning', name: '清算', nameEn: 'Reckoning', key: 'X', type: 'recon', iconUrl: '/images/abilities/harbor-reckoning.png', description: '释放大量水流冲击前方区域，被击中的敌人受到伤害并被标记。', usage: '按X释放水流冲击，标记并伤害敌人。' }
     ]
   },
   {

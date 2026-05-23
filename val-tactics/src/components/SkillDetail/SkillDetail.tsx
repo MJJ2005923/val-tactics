@@ -1,4 +1,5 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import type { Ability } from '../../data/agents'
 import styles from './SkillDetail.module.css'
 
@@ -36,9 +37,28 @@ export default function SkillDetail({ ability, agentName, agentRole, onClose }: 
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
-  return (
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = modalRef.current
+    if (!el) return
+    const preventScroll = (e: WheelEvent) => {
+      const { scrollTop, scrollHeight, clientHeight } = el
+      const atTop = scrollTop <= 0
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1
+      if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+        e.preventDefault()
+        return
+      }
+      e.stopPropagation()
+    }
+    el.addEventListener('wheel', preventScroll, { passive: false })
+    return () => el.removeEventListener('wheel', preventScroll)
+  }, [])
+
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+      <div className={styles.modal} ref={modalRef} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div>
             <span className={styles.agentInfo}>{agentName} · {agentRole}</span>
@@ -65,6 +85,7 @@ export default function SkillDetail({ ability, agentName, agentRole, onClose }: 
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
