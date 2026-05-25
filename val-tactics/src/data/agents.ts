@@ -55,6 +55,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'jett-cloudburst':          { radius: 3.5 * M },    // 3.5m 瞬发烟
   'harbor-cove':              { shape: 'circle', radius: 4.5 * M },    // 4.5m 护盾
   'harbor-reckoning':         { shape: 'line', length: 30 * M, thickness: 0.006 },
+  'sova-owl-drone':           { shape: 'line', length: 40 * M, thickness: 0.004 },
   'clove-ruse':               { radius: 4.1 * M },    // 4.1m
   'cypher-cyber-cage':        { radius: 3.5 * M },    // 3.5m 网牢
 
@@ -66,7 +67,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'gekko-mosh-pit':           { radius: 5.0 * M },
   'raze-boom-bot':            { radius: 2.0 * M },
   'kayo-frag':                { radius: 3.0 * M },
-  'sova-shock-bolt':          { radius: 2.0 * M },
+  'sova-shock-bolt':          { radius: 3.5 * M },
   'vyse-razorvine':           { radius: 3.0 * M },
 
   // === 终极技能 ===
@@ -96,8 +97,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'neon-high-gear':           { shape: 'line', length: 6 * M, thickness: 0.003 },
 
   // === 侦查 ===
-  'sova-recon-bolt':           { angle: 60, length: 20 * M },
-  'sova-owl-drone':            { angle: 40, length: 15 * M },
+  'sova-recon-bolt':           { shape: 'circle', radius: 40 * M },
+  'sova-hunters-fury':         { shape: 'line', length: 60 * M, thickness: 0.008 },
   'fade-haunt':                { angle: 60, length: 18 * M },
   'killjoy-turret':            { shape: 'cone', angle: 100, length: 12 * M },
   'killjoy-alarmbot':          { angle: 60, length: 10 * M },
@@ -280,19 +281,19 @@ const agents: Agent[] = [
   {
     id: 'clove', name: '暮蝶', nameEn: 'Clove', role: '控场者',
     abilities: [
-      { id: 'clove-pick-me-up', name: '起来吧', nameEn: 'Pick Me Up', key: 'C', type: 'heal', iconUrl: '/images/abilities/clove-pick-me-up.png', description: '消耗一颗灵魂能量，短暂提升自己的生命值和移速。', usage: '按C消耗灵魂能量，短暂恢复。' },
-      { id: 'clove-meddle', name: '干扰', nameEn: 'Meddle', key: 'Q', type: 'control', iconUrl: '/images/abilities/clove-meddle.png', description: '投掷一颗干扰弹，使范围内敌人短暂无法使用技能。', usage: '按Q投掷，使敌人技能失效。' },
-      { id: 'clove-ruse', name: '伪装', nameEn: 'Ruse', key: 'E', type: 'smoke', iconUrl: '/images/abilities/clove-ruse.png', description: '在指定位置生成持续烟雾。阵亡后仍可使用此技能支援队友。', usage: '按E指定位置释放烟雾，死后仍可使用。' },
-      { id: 'clove-not-dead-yet', name: '还没死', nameEn: 'Not Dead Yet', key: 'X', type: 'heal', iconUrl: '/images/abilities/clove-not-dead-yet.png', description: '被动：阵亡后短暂时间内可为自己复活一次。主动：激活时获得爆发移速。', usage: '阵亡后短暂时间内自动复活，按X可激活移速爆发。' }
+      { id: 'clove-pick-me-up', name: '虹吸', nameEn: 'Pick Me Up', key: 'C', type: 'heal', iconUrl: '/images/abilities/clove-pick-me-up.png', description: '激活后，从被暮蝶击败或助攻的敌人身上吸收生命能量，获得加速和临时生命值。', usage: '按C激活，从击败/助攻的敌人吸收生命能量获得加速和临时生命值。' },
+      { id: 'clove-meddle', name: '整蛊', nameEn: 'Meddle', key: 'Q', type: 'control', iconUrl: '/images/abilities/clove-meddle.png', description: '装备一块不朽精华碎片。按[射击]将其掷出，落地后，碎片会在短暂延迟后爆炸，对范围内所有目标施加短时间的[腐坏]效果。', usage: '按Q装备，左键投掷不朽精华碎片，爆炸施加腐坏效果。' },
+      { id: 'clove-ruse', name: '霞染', nameEn: 'Ruse', key: 'E', type: 'smoke', iconUrl: '/images/abilities/clove-ruse.png', description: '装备战场地图。按[射击]选择烟雾的部署位置，按[辅助射击]以确认，在指定地点创造阻隔视线的云雾。暮蝶可以在被击败期间使用此技能。', usage: '按E打开地图，左键选择位置，右键确认释放烟雾。被击败期间仍可使用。' },
+      { id: 'clove-not-dead-yet', name: '化蝶', nameEn: 'Not Dead Yet', key: 'X', type: 'heal', iconUrl: '/images/abilities/clove-not-dead-yet.png', description: '被击败后，[激活]此技能以复活。复活后，暮蝶必须在限定时间内完成击败或助攻，否则将会回到被击败状态。[再次激活]可提前取消技能。', usage: '被击败后按X复活，限定时间内完成击败/助攻否则回到被击败状态。再次按X提前取消。' }
     ]
   },
   {
     id: 'sova', name: '猎枭', nameEn: 'Sova', role: '先锋',
     abilities: [
-      { id: 'sova-owl-drone', name: '枭型无人机', nameEn: 'Owl Drone', key: 'C', type: 'recon', iconUrl: '/images/abilities/sova-owl-drone.png', description: '部署一架可操控的无人机。飞行中可按射击键发射标记镖，标记命中的敌人。', usage: '按C部署无人机，操控飞行，左键发射标记镖。' },
-      { id: 'sova-shock-bolt', name: '冲击箭', nameEn: 'Shock Bolt', key: 'Q', type: 'damage', iconUrl: '/images/abilities/sova-shock-bolt.png', description: '装备一把弓箭，发射冲击箭。撞击后释放伤害脉冲，可蓄力调整射程。', usage: '按Q装备弓，左键蓄力射击。' },
-      { id: 'sova-recon-bolt', name: '侦察箭', nameEn: 'Recon Bolt', key: 'E', type: 'recon', iconUrl: '/images/abilities/sova-recon-bolt.png', description: '发射一支侦察箭，落地后持续扫描附近敌人位置并标记。可蓄力调整射程和弹跳次数。', usage: '按E装备弓，左键蓄力，右键切换弹跳次数。' },
-      { id: 'sova-hunters-fury', name: '猎人之怒', nameEn: "Hunter's Fury", key: 'X', type: 'damage', iconUrl: '/images/abilities/sova-hunters-fury.png', description: '装备弓箭，发射三支高能穿透箭，可穿透墙壁，对沿途敌人造成伤害并标记。', usage: '按X装备，左键发射穿透箭，共三发。' }
+      { id: 'sova-owl-drone', name: '枭型无人机', nameEn: 'Owl Drone', key: 'C', type: 'recon', iconUrl: '/images/abilities/sova-owl-drone.png', description: '装备枭型无人机，按[射击]即可部署并操作无人机，在操作期间按[射击]可发射定位镖，[揭露]所命中目标的位置。枭型无人机可被敌人摧毁。', usage: '按C部署无人机，操控飞行，按射击发射定位镖揭露目标位置。' },
+      { id: 'sova-shock-bolt', name: '雷击箭', nameEn: 'Shock Bolt', key: 'Q', type: 'recon', iconUrl: '/images/abilities/sova-shock-bolt.png', description: '装备弓和雷击箭，按[射击]即可将箭矢向前射出，箭矢在碰撞物体后爆炸，对附近的玩家造成伤害。[按住射击]可延长投射距离。按[辅助射击]可为该弩箭增加一次弹射次数，最多两次。', usage: '按Q装备弓，左键射出箭矢(可蓄力)，右键增加弹射次数(最多2次)。' },
+      { id: 'sova-recon-bolt', name: '寻敌箭', nameEn: 'Recon Bolt', key: 'E', type: 'recon', iconUrl: '/images/abilities/sova-recon-bolt.png', description: '装备弓和寻敌箭，按[射击]即可将箭矢向前射出，箭矢在碰撞物体后激活声纳并[揭露]探测范围内的敌人位置。敌人可摧毁该箭矢。[按住射击]可延长投射距离。按[辅助射击]可为该弩箭增加一次弹射次数，最多两次。', usage: '按E装备弓，左键射出箭矢(可蓄力)，右键增加弹射次数(最多2次)。' },
+      { id: 'sova-hunters-fury', name: '狂猎之怒', nameEn: "Hunter's Fury", key: 'X', type: 'recon', iconUrl: '/images/abilities/sova-hunters-fury.png', description: '装备弓和三发可穿墙的远程能量箭。按[射击]即向猎枭的前方发射一道能量冲击波，对直线上的敌人造成伤害并[揭露]其位置。此技能在计时器结束前可[再次使用]最多两次。', usage: '按X装备，左键发射能量冲击波(可穿墙)，计时器内最多再使用2次。' }
     ]
   },
   {

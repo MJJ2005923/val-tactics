@@ -279,9 +279,9 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
       const shapeConfig = getAbilityShapeConfig(data.abilityId)
       if (shapeConfig) {
         // 线型技能进入画线模式：先放起点，再拖终点
-        if (shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning') {
+        if (shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') {
           setLineDrawing({
-            mode: (data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze') ? 'freehand' : 'line',
+            mode: (data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone') ? 'freehand' : 'line',
             startX: x, startY: y,
             currentX: x, currentY: y,
             abilityId: data.abilityId, agentId: data.agentId,

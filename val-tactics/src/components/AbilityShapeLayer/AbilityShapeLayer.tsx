@@ -62,6 +62,10 @@ const iconTints: Record<string, string> = {
   'harbor-high-tide': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'harbor-cove': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'harbor-reckoning': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sova-owl-drone': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sova-shock-bolt': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sova-recon-bolt': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sova-hunters-fury': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
 }
 
 function getAbilityInfo(shape: AbilityShape): AbilityInfo {
