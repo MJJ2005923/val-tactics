@@ -41,6 +41,11 @@ const nonDraggable = new Set(['sage-healing-orb', 'sage-resurrection', 'reyna-de
 
 function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }) {
   const isDraggable = !nonDraggable.has(ability.id)
+  const isJett = agent.id === 'jett'
+  const isSage = agent.id === 'sage'
+  const overrideColor = isJett ? '#ffffff' : isSage ? '#50b4f0' : undefined
+  const c = overrideColor || typeColors[ability.type]
+  const label = isJett ? typeLabels[ability.type] : typeLabels[ability.type]
   return (
     <div
       className={`${styles.abilityBtn} ${!isDraggable ? styles.abilityBtnDisabled : ''}`}
@@ -50,9 +55,9 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
         e.dataTransfer.effectAllowed = 'copy'
       } : undefined}
     >
-      <span className={styles.abilityKeyBadge} style={{ background: typeColors[ability.type] }}>{ability.key}</span>
+      <span className={styles.abilityKeyBadge} style={{ background: c }}>{ability.key}</span>
       <span className={styles.abilityName}>{ability.name}</span>
-      <span className={styles.abilityType} style={{ color: typeColors[ability.type] }}>{typeLabels[ability.type]}</span>
+      <span className={styles.abilityType} style={{ color: c }}>{label}</span>
     </div>
   )
 }

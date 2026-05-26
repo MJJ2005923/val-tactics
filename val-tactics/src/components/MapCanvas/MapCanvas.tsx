@@ -551,7 +551,9 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
 
       <DrawingLayer offset={{ x: offsetX, y: offsetY }} scale={displayScale} mapW={mapW} mapH={mapH} containerRef={containerRef} />
 
-      <AbilityShapeLayer offset={{ x: offsetX, y: offsetY }} scale={displayScale} mapW={mapW} mapH={mapH} containerRef={containerRef} />
+      <div className={lineDrawing ? styles.noPointer : undefined}>
+        <AbilityShapeLayer offset={{ x: offsetX, y: offsetY }} scale={displayScale} mapW={mapW} mapH={mapH} containerRef={containerRef} />
+      </div>
 
             {/* 画线模式预览 */}
       {lineDrawing && (() => {

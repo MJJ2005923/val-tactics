@@ -66,20 +66,31 @@ const iconTints: Record<string, string> = {
   'sova-shock-bolt': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'sova-recon-bolt': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'sova-hunters-fury': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sage-barrier-orb': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sage-slow-orb': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sage-healing-orb': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sage-resurrection': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'jett-cloudburst': 'brightness(0) invert(1)', // 白色
+  'jett-updraft': 'brightness(0) invert(1)', // 白色
+  'jett-tailwind': 'brightness(0) invert(1)', // 白色
+  'jett-blade-storm': 'brightness(0) invert(1)', // 白色
 }
 
 function getAbilityInfo(shape: AbilityShape): AbilityInfo {
   const agent = agents.find(a => a.id === shape.agentId)
   const ab = agent?.abilities.find(a => a.id === shape.abilityId)
   const type = ab?.type || 'smoke'
+  const isJett = shape.agentId === 'jett'
+  const isSage = shape.agentId === 'sage'
   const ts = typeStyles[type]
   const svgColor = typeColors[type] || '#888'
+  const overrideColor = isJett ? '#ffffff' : isSage ? '#50b4f0' : undefined
   return {
-    color: svgColor,
+    color: overrideColor || svgColor,
     key: ab?.key || '',
     name: ab?.name || '',
     type,
-    gradient: ts?.gradient || '',
+    gradient: overrideColor ? '' : (ts?.gradient || ''),
     iconUrl: ab?.iconUrl || '',
     iconFilter: iconTints[shape.abilityId],
   }
@@ -95,7 +106,7 @@ interface DragState {
 }
 
 export default function AbilityShapeLayer({ offset, scale, mapW, mapH, containerRef }: Props) {
-  const { abilityShapes, selectedId, selectedType, dispatch } = useTactics()
+  const { abilityShapes, selectedId, selectedType, toolMode, dispatch } = useTactics()
   const dragRef = useRef<DragState | null>(null)
 
   const screenToWorld = useCallback((sx: number, sy: number) => {
@@ -116,7 +127,12 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
       const dx = world.x - startWorld.x
       const dy = world.y - startWorld.y
       if (d.mode === 'move') {
-        dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: d.shapeId, updates: { x: d.startShape.x + dx, y: d.startShape.y + dy } })
+        if (d.startShape.path && d.startShape.path.length > 1) {
+          const newPath = d.startShape.path.map(p => ({ x: p.x + dx, y: p.y + dy }))
+          dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: d.shapeId, updates: { path: newPath } })
+        } else {
+          dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: d.shapeId, updates: { x: d.startShape.x + dx, y: d.startShape.y + dy } })
+        }
       } else if (d.mode === 'rotate') {
         const cx = d.startShape.x, cy = d.startShape.y
         const sa = Math.atan2(startWorld.x - cx, -(startWorld.y - cy))
@@ -132,9 +148,13 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
 
   const handleMouseDown = useCallback((e: React.MouseEvent, shape: AbilityShape) => {
     e.stopPropagation()
+    if (toolMode === 'eraser') {
+      dispatch({ type: 'REMOVE_ABILITY_SHAPE', id: shape.id })
+      return
+    }
     dispatch({ type: 'SELECT', id: shape.id, selType: 'abilityShape' })
     dragRef.current = { shapeId: shape.id, mode: 'move', startMouse: { x: e.clientX, y: e.clientY }, startShape: { ...shape } }
-  }, [dispatch])
+  }, [dispatch, toolMode])
 
   const handleRotMouseDown = useCallback((e: React.MouseEvent, shape: AbilityShape) => {
     e.stopPropagation()
@@ -180,6 +200,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
         const isSelected = s.id === selectedId && selectedType === 'abilityShape'
         const info = getAbilityInfo(s)
         const { color } = info
+
         const cx = offset.x + s.x * mapW * scale
         const cy = offset.y + s.y * mapH * scale
 
@@ -208,7 +229,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
           const r = Math.max(s.radius * mapW * scale, 6)
           const t = info.type
           return (
-            <div key={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+            <div key={s.id} data-shape={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
               {t === 'smoke' && (
                 <>
                   <div style={{ position: 'absolute', left: cx - r*1.3, top: cy - r*1.3, width: r*2.6, height: r*2.6,
@@ -300,7 +321,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
           const hw = (s.length * mapW * scale) / 2
           const hh = (s.width * mapH * scale) / 2
           return (
-            <div key={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+            <div key={s.id} data-shape={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
               <div style={{
                 position: 'absolute', left: cx - hw, top: cy - hh, width: hw * 2, height: hh * 2,
                 border: `2px solid ${isSelected ? '#fff' : color}90`, borderRadius: 2,
@@ -332,7 +353,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
         const svgW = Math.max(s.length * mapW * scale * 2, 200)
         const svgH = Math.max(s.length * mapW * scale * 2, 200)
         return (
-          <svg key={s.id}
+          <svg key={s.id} data-shape={s.id}
             style={{
               position: 'absolute', left: cx - svgW / 2, top: cy - svgH / 2,
               width: svgW, height: svgH, pointerEvents: 'auto', overflow: 'visible',
@@ -387,24 +408,68 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               )
             })()}
             {s.shape === 'line' && (() => {
-              // 自由路径渲染（harbor-cascade 等弯曲水墙）
-              const hasPath = s.path && s.path.length > 1
-              if (hasPath) {
-                const pts = s.path!.map(p => {
-                  const px = svgW / 2 + (p.x - s.x) * mapW * scale
-                  const py = svgH / 2 + (p.y - s.y) * mapH * scale
+              // 自由路径渲染
+              const pathPts = s.path && s.path.length > 1 ? s.path : null
+              if (pathPts) {
+                const pts = pathPts.map(p => {
+                  const px = offset.x + p.x * mapW * scale - (cx - svgW / 2)
+                  const py = offset.y + p.y * mapH * scale - (cy - svgH / 2)
                   return px + ',' + py
                 }).join(' ')
                 const sw = Math.max(s.thickness * mapW * scale, 3)
                 return (
                   <>
+                    <polyline points={pts} fill="none" stroke="transparent" strokeWidth={sw + 12}
+                      strokeLinecap="round" strokeLinejoin="round"
+                      style={{ cursor: 'move' }}
+                      onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, s) }}
+                      onClick={(e) => e.stopPropagation()} />
                     <polyline points={pts} fill="none" stroke={color} strokeWidth={sw}
                       strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
-                      style={{ cursor: 'move', filter: isSelected ? `drop-shadow(0 0 4px ${color})` : undefined }}
-                      onMouseDown={(e) => handleMouseDown(e, s)} />
+                      style={{ pointerEvents: 'none' }} />
                     <image href={'/images/abilities/' + s.abilityId + '.png'}
                       x={svgW / 2 - 14} y={svgH / 2 - 14}
                       width={28} height={28} style={{ pointerEvents: 'none' }} />
+                  </>
+                )
+              }
+              // 不死鸟闪光曲球：半圆弧线连接两点
+              if (s.abilityId === 'phoenix-curveball') {
+                const halfLen = (s.length * mapW * scale) / 2
+                const rad = degToRad(s.rotation)
+                const scx = svgW / 2, scy = svgH / 2
+                const startX = scx - halfLen * Math.sin(rad)
+                const startY = scy + halfLen * Math.cos(rad)
+                const endX = scx + halfLen * Math.sin(rad)
+                const endY = scy - halfLen * Math.cos(rad)
+                const perpX = halfLen * Math.cos(rad)
+                const perpY = halfLen * Math.sin(rad)
+                const cpX = scx - perpX, cpY = scy - perpY
+                const arcD = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`
+                const sw = Math.max(s.thickness * mapW * scale, 3)
+                return (
+                  <>
+                    <path d={arcD} fill="none" stroke="transparent" strokeWidth={sw + 12}
+                      strokeLinecap="round" style={{ cursor: 'move' }}
+                      onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, s) }}
+                      onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={(e) => { e.stopPropagation(); dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: s.id, updates: { rotation: (s.rotation + 180) % 360 } }) }} />
+                    <path d={arcD} fill="none" stroke={color} strokeWidth={sw}
+                      strokeLinecap="round" opacity={0.85}
+                      style={{ pointerEvents: 'none', filter: isSelected ? `drop-shadow(0 0 4px ${color})` : undefined }} />
+                    <image href={'/images/abilities/' + s.abilityId + '.png'}
+                      x={startX - 14} y={startY - 14}
+                      width={28} height={28} style={{ pointerEvents: 'none' }} />
+                    <circle cx={endX} cy={endY} r={10} fill={color} opacity={0.6}
+                      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 6px ${color})` }} />
+                    <image href={'/images/abilities/' + s.abilityId + '.png'}
+                      x={endX - 16} y={endY - 16} width={32} height={32}
+                      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 8px ${color})` }} />
+                    {isSelected && (
+                      <circle cx={cpX} cy={cpY - 10} r={6} fill="#fff" stroke="#333" strokeWidth={2}
+                        style={{ cursor: 'grab', filter: 'drop-shadow(0 0 4px black)' }}
+                        onMouseDown={(e) => { e.stopPropagation(); handleRotMouseDown(e as unknown as React.MouseEvent, s) }} />
+                    )}
                   </>
                 )
               }
@@ -423,23 +488,31 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const isDualLine = s.abilityId === 'neon-fast-lane'
               const offsetX = isDualLine ? 5 * Math.cos(degToRad(s.rotation)) : 0
               const offsetY = isDualLine ? 5 * Math.sin(degToRad(s.rotation)) : 0
-              const renderLine = (ox: number, oy: number, key: string) => (
+              const renderLine = (ox: number, oy: number, key: string, hitOnly = false) => (
                 <line key={key} x1={sx1 + ox} y1={sy1 + oy} x2={sx2 + ox} y2={sy2 + oy}
-                  stroke={color} strokeWidth={sw} strokeLinecap="round" opacity={isOmenC ? 0 : 0.85}
-                  strokeDasharray={dashArray}
-                  style={{ cursor: 'move', filter: isSelected ? `drop-shadow(0 0 4px ${color})` : `drop-shadow(0 0 2px ${color}40)`, transition: 'filter 0.15s' }}
-                  onMouseDown={isDualLine ? undefined : (e) => handleMouseDown(e, s)}
+                  stroke={hitOnly ? 'transparent' : color} strokeWidth={hitOnly ? sw + 12 : sw} strokeLinecap="round"
+                  opacity={hitOnly ? 1 : (isOmenC ? 0 : 0.85)}
+                  strokeDasharray={hitOnly ? 'none' : dashArray}
+                  style={hitOnly ? { cursor: 'move' } : { cursor: 'move', filter: isSelected ? `drop-shadow(0 0 4px ${color})` : `drop-shadow(0 0 2px ${color}40)`, transition: 'filter 0.15s', pointerEvents: 'none' }}
+                  onMouseDown={hitOnly ? (isDualLine ? undefined : (e) => handleMouseDown(e, s)) : undefined}
+                  onClick={hitOnly ? (e) => e.stopPropagation() : undefined}
                 />
               )
               return (
                 <>
+                  {/* 透明宽点击区域 */}
                   {isDualLine ? (
                     <g onMouseDown={(e) => handleMouseDown(e, s)} style={{ cursor: 'move' }}>
-                      {renderLine(-offsetX, -offsetY, 'l1')}
-                      {renderLine(offsetX, offsetY, 'l2')}
+                      {renderLine(-offsetX, -offsetY, 'hl1', true)}
+                      {renderLine(offsetX, offsetY, 'hl2', true)}
+                      {renderLine(-offsetX, -offsetY, 'vl1')}
+                      {renderLine(offsetX, offsetY, 'vl2')}
                     </g>
                   ) : (
-                    renderLine(0, 0, 'l')
+                    <>
+                      {renderLine(0, 0, 'hl', true)}
+                      {renderLine(0, 0, 'vl')}
+                    </>
                   )}
                   {/* 箭头 (位移类型或特定技能) */}
                   {(info.type === 'mobility' || s.abilityId === 'iso-contingency') && (

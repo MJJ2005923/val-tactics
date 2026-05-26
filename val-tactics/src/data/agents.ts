@@ -52,7 +52,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'omen-dark-cover':          { radius: 4.1 * M },    // 4.1m
   'astra-nebula':             { radius: 4.75 * M },   // 4.75m 最大
   'viper-poison-cloud':       { radius: 4.5 * M },    // 4.5m
-  'jett-cloudburst':          { radius: 3.5 * M },    // 3.5m 瞬发烟
+  'jett-cloudburst':          { shape: 'circle', radius: 3.5 * M },    // 3.5m 瞬发烟
   'harbor-cove':              { shape: 'circle', radius: 4.5 * M },    // 4.5m 护盾
   'harbor-reckoning':         { shape: 'line', length: 30 * M, thickness: 0.006 },
   'sova-owl-drone':           { shape: 'line', length: 40 * M, thickness: 0.004 },
@@ -84,10 +84,10 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
 
   // === 墙体 ===
   'viper-toxic-screen':       { shape: 'line', length: 65 * M, thickness: 0.003 },
-  'sage-barrier-orb':         { shape: 'rect', length: 10 * M, width: 2.5 * M },
+  'sage-barrier-orb':         { shape: 'rect', length: 10 * M, width: 4 * M },
   'phoenix-blaze':            { shape: 'line', length: 20 * M, thickness: 0.003 },
   'phoenix-hot-hands':        { shape: 'circle', radius: 3.5 * M },
-  'phoenix-curveball':        { shape: 'circle', radius: 1.2 * M },
+  'phoenix-curveball':        { shape: 'line', length: 6 * M, thickness: 0.004 },
   'astra-astral-form':        { shape: 'line', length: 150 * M, thickness: 0.003 },
   'harbor-high-tide':         { shape: 'line', length: 100 * M, thickness: 0.003 },
   'harbor-cascade':           { shape: 'circle', radius: 3.5 * M },
@@ -111,14 +111,13 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 闪光 ===
   'breach-flashpoint':         { angle: 70, length: 18 * M },
   'skye-guiding-light':        { angle: 60, length: 20 * M },
-  'phoenix-curveball':         { shape: 'circle', radius: 4 * M },
   'kayo-flash':                { angle: 60, length: 15 * M },
   'yoru-blindside':            { angle: 50, length: 12 * M },
   'gekko-dizzy':               { angle: 50, length: 14 * M },
   'reyna-leer':                { shape: 'circle', radius: 2 * M },
 
   // === 减速/控制 ===
-  'sage-slow-orb':             { radius: 4.5 * M },
+  'sage-slow-orb':             { shape: 'circle', radius: 4.5 * M },
   'astra-gravity-well':        { radius: 3.5 * M },
   'astra-nova-pulse':          { radius: 4.0 * M },
   'fade-seize':                { radius: 3.5 * M },
@@ -129,15 +128,15 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'iso-kill-contract':         { shape: 'rect', length: 56 * M, width: 24 * M },
 
   // === 治疗 ===
-  'sage-healing-orb':          { radius: 3 * M },
+  'sage-healing-orb':          { shape: 'circle', radius: 3 * M },
   'sage-resurrection':         { radius: 2 * M },
   'skye-regrowth':             { radius: 6 * M },
   'reyna-devour':              { radius: 1 * M },
   'clove-pick-me-up':          { radius: 3 * M },
 
   // === 位移 ===
-  'jett-tailwind':             { length: 18 * M, thickness: 0.003 },
-  'jett-updraft':              { length: 4 * M, thickness: 0.008, iconOnly: true },
+  'jett-tailwind':             { shape: 'line', length: 18 * M, thickness: 0.003 },
+  'jett-updraft':              { shape: 'circle', radius: 1.2 * M },
   'raze-blast-pack':           { length: 14 * M, thickness: 0.003 },
   'yoru-fakeout':              { shape: 'circle', radius: 2.5 * M },
   'yoru-gatecrash':            { shape: 'circle', radius: 2.5 * M },

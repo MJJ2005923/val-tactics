@@ -223,3 +223,7 @@
   min-width: 36px;
   text-align: center;
 }
+
+.noPointer {
+  pointer-events: none;
+}
