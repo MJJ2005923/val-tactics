@@ -68,6 +68,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'raze-boom-bot':            { radius: 2.0 * M },
   'kayo-frag':                { radius: 3.0 * M },
   'tejo-c':                    { shape: 'line', length: 35 * M, thickness: 0.004 },
+  'tejo-q':                    { shape: 'line', length: 25 * M, thickness: 0.005 },
   'sova-shock-bolt':          { shape: 'circle', radius: 3.5 * M },
   'vyse-razorvine':           { radius: 3.0 * M },
   'vyse-steel-garden':         { radius: 45 * M },
@@ -132,6 +133,9 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'fade-seize':                { radius: 4 * M },
   'breach-aftershock':         { shape: 'cone', angle: 80, length: 11 * M },
   'breach-fault-line':         { shape: 'line', length: 18 * M, thickness: 0.01 },
+  'veto-c':                    { shape: 'circle', radius: 41 * M },
+  'veto-e':                    { shape: 'circle', radius: 1.2 * M },
+  'miks-x':                    { shape: 'cone', angle: 63, length: 30 * M },
   'iso-contingency':           { shape: 'line', length: 12 * M, thickness: 0.003 },
   'iso-undercut':              { shape: 'rect', length: 28 * M, width: 8 * M },
   'iso-kill-contract':         { shape: 'rect', length: 56 * M, width: 24 * M },
@@ -416,10 +420,10 @@ const agents: Agent[] = [
   {
     id: 'miks', name: '迷核', nameEn: 'Miks', role: '控场者',
     abilities: [
-      { id: 'miks-c', name: '电音脉冲', nameEn: 'Starfall', key: 'C', type: 'smoke', iconUrl: '/images/abilities/miks-c.png', description: '装备电音脉冲。按[辅助射击]可在震荡输出与治疗输出之间切换。按[射击]投掷装置。落地时，电音脉冲会释放声波，对玩家造成震荡或治疗效果。', usage: '按C装备，右键切换震荡/治疗模式，左键投掷释放声波。' },
-      { id: 'miks-q', name: '共振谐律', nameEn: 'Binary', key: 'Q', type: 'smoke', iconUrl: '/images/abilities/miks-q.png', description: '装备共振谐律。锁定一名队友并按下[射击]，为你和该队友激活[作战强化]效果和速度加成，每次击败都会刷新效果。按[辅助射击]让自己获得[作战强化]效果和速度加成。', usage: '按Q锁定队友，左键激活双方作战强化+加速(击败刷新)，右键只给自己。' },
+      { id: 'miks-c', name: '电音脉冲', nameEn: 'Starfall', key: 'C', type: 'heal', iconUrl: '/images/abilities/miks-c.png', description: '装备电音脉冲。按[辅助射击]可在震荡输出与治疗输出之间切换。按[射击]投掷装置。落地时，电音脉冲会释放声波，对玩家造成震荡或治疗效果。', usage: '按C装备，右键切换震荡/治疗模式，左键投掷释放声波。' },
+      { id: 'miks-q', name: '共振谐律', nameEn: 'Binary', key: 'Q', type: 'control', iconUrl: '/images/abilities/miks-q.png', description: '装备共振谐律。锁定一名队友并按下[射击]，为你和该队友激活[作战强化]效果和速度加成，每次击败都会刷新效果。按[辅助射击]让自己获得[作战强化]效果和速度加成。', usage: '按Q锁定队友，左键激活双方作战强化+加速(击败刷新)，右键只给自己。' },
       { id: 'miks-e', name: '声波帷幕', nameEn: 'Vertigo', key: 'E', type: 'smoke', iconUrl: '/images/abilities/miks-e.png', description: '装备地图定位仪。按[射击]设定位置。按[辅助射击]在选定位置释放烟雾。', usage: '按E打开定位仪，左键设定位置，右键释放烟雾。' },
-      { id: 'miks-x', name: '音脉强袭', nameEn: 'Encore', key: 'X', type: 'smoke', iconUrl: '/images/abilities/miks-x.png', description: '装备音脉强袭。按[射击]积蓄能量并向前释放音波源光，击退目标，并对其造成[致聋]和[减速]。', usage: '按X蓄力释放音波源光，击退并致聋+减速目标。' }
+      { id: 'miks-x', name: '音脉强袭', nameEn: 'Encore', key: 'X', type: 'control', iconUrl: '/images/abilities/miks-x.png', description: '装备音脉强袭。按[射击]积蓄能量并向前释放音波源光，击退目标，并对其造成[致聋]和[减速]。', usage: '按X蓄力释放音波源光，击退并致聋+减速目标。' }
     ]
   }
 ]

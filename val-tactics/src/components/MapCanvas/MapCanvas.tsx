@@ -285,9 +285,9 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
       const shapeConfig = getAbilityShapeConfig(data.abilityId)
       if (shapeConfig) {
         // 矩形拖拽绘制
-        if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall') {
+        if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
-        } else if (shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury' && data.abilityId !== 'phoenix-curveball') {
+        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury' && data.abilityId !== 'phoenix-curveball') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q') {
           // 线型技能进入画线模式：先放起点，再拖终点
           const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c'
           setLineDrawing({
@@ -445,8 +445,8 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
       const dy = (ey - lineDrawing.startY) * mapH
       const len = Math.sqrt(dx * dx + dy * dy) / mapW
       const rot = Math.atan2(dx, -dy) * 180 / Math.PI
-      // Deadlock X 多段线
-      if (lineDrawing.abilityId === 'deadlock-annihilation') {
+      // Deadlock X / Tejo Q 多段线
+      if (lineDrawing.abilityId === 'deadlock-annihilation' || lineDrawing.abilityId === 'tejo-q') {
         const mlr = multiLineRef.current
         if (mlr.count === 0) {
           mlr.pts = [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: ex, y: ey }]
@@ -468,6 +468,18 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
           x: sx3 / allPts.length, y: sy3 / allPts.length, rotation: 0, shape: 'line',
           radius: 0.08, angle: 60, length: totalLen, width: 0.02,
           thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: false, path: allPts,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      // Miks X 锥形拖拽
+      if (lineDrawing.abilityId === 'miks-x') {
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: lineDrawing.startX, y: lineDrawing.startY, rotation: rot,
+          shape: 'cone', radius: 0.08, angle: lineDrawing.config.angle ?? 80,
+          length: Math.max(len, 0.02), width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.008, iconOnly: false,
         }})
         setLineDrawing(null)
         return

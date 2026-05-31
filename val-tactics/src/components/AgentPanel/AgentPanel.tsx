@@ -37,7 +37,7 @@ function DraggableAgentHeader({ agent }: { agent: Agent }) {
 }
 
 // 不可拖拽的技能（治疗/复活等单体技能，不需要战术布置）
-const nonDraggable = new Set(['sage-healing-orb', 'sage-resurrection', 'reyna-devour', 'reyna-dismiss', 'reyna-empress', 'clove-pick-me-up', 'clove-not-dead-yet', 'jett-blade-storm', 'neon-overdrive', 'iso-double-tap', 'cypher-neural-theft', 'chamber-headhunter', 'chamber-tour-de-force'])
+const nonDraggable = new Set(['sage-healing-orb', 'sage-resurrection', 'reyna-devour', 'reyna-dismiss', 'reyna-empress', 'clove-pick-me-up', 'clove-not-dead-yet', 'jett-blade-storm', 'neon-overdrive', 'iso-double-tap', 'cypher-neural-theft', 'chamber-headhunter', 'chamber-tour-de-force', 'veto-x', 'miks-q'])
 
 function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }) {
   const isDraggable = !nonDraggable.has(ability.id)
