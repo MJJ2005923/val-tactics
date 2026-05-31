@@ -287,7 +287,7 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
         // 矩形拖拽绘制
         if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
-        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury' && data.abilityId !== 'phoenix-curveball') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q') {
+        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball') {
           // 线型技能进入画线模式：先放起点，再拖终点
           const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c'
           setLineDrawing({
@@ -468,6 +468,18 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
           x: sx3 / allPts.length, y: sy3 / allPts.length, rotation: 0, shape: 'line',
           radius: 0.08, angle: 60, length: totalLen, width: 0.02,
           thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: false, path: allPts,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      // Phoenix E 弧线：起点+终点自动弧线连接
+      if (lineDrawing.abilityId === 'phoenix-curveball') {
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: cx, y: cy, rotation: rot,
+          shape: 'line', radius: 0.08, angle: 60,
+          length: Math.max(len, 0.02), width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.004, iconOnly: false,
         }})
         setLineDrawing(null)
         return
