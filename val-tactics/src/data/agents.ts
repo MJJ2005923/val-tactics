@@ -29,7 +29,7 @@ export const agentImages: Record<string, string> = {
   harbor: 'mage', clove: 'smonk', sova: 'hunter', breach: 'breach',
   fade: 'bountyhunter', gekko: 'aggrobot', skye: 'guide', kayo: 'grenadier',
   killjoy: 'killjoy', cypher: 'gumshoe', chamber: 'deadeye', deadlock: 'cable',
-  vyse: 'cashew'
+  tejo: 'tejo', vyse: 'vyse', veto: 'pine', miks: 'iris'
 }
 
 // 游戏内技能范围 (地图 1800x1200, 1m=7px, norm=0.0039)
@@ -62,25 +62,32 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 燃烧弹/伤害 ===
   'brimstone-incendiary':     { radius: 4.0 * M },
   'phoenix-hot-hands':        { radius: 3.0 * M },
-  'killjoy-nanoswarm':        { radius: 3.5 * M },
-  'raze-paint-shells':        { radius: 2.5 * M },
+  'killjoy-nanoswarm':        { radius: 5 * M },
+  'raze-paint-shells':        { shape: 'circle', radius: 5 * M },
   'gekko-mosh-pit':           { radius: 5.0 * M },
   'raze-boom-bot':            { radius: 2.0 * M },
   'kayo-frag':                { radius: 3.0 * M },
-  'sova-shock-bolt':          { radius: 3.5 * M },
+  'tejo-c':                    { shape: 'line', length: 35 * M, thickness: 0.004 },
+  'sova-shock-bolt':          { shape: 'circle', radius: 3.5 * M },
   'vyse-razorvine':           { radius: 3.0 * M },
+  'vyse-steel-garden':         { radius: 45 * M },
+  'vyse-arc-rose':             { shape: 'circle', radius: 1.2 * M },
+  'vyse-shear':                { shape: 'line', length: 15 * M, thickness: 0.01 },
 
   // === 终极技能 ===
   'brimstone-orbital-strike': { radius: 12.0 * M },
   'viper-snake-bite':         { radius: 4.0 * M },
   'viper-pit':                { radius: 12.0 * M },
   'raze-showstopper':         { radius: 3.5 * M },
-  'kayo-null-cmd':             { radius: 9.0 * M },
-  'killjoy-lockdown':          { radius: 9.0 * M },
-  'deadlock-annihilation':     { radius: 7.0 * M },
-  'breach-rolling-thunder':    { shape: 'cone', angle: 90, length: 35 * M },
+  'kayo-null-cmd':             { radius: 50 * M },
+  'kayo-zero-point':           { radius: 16 * M },
+  'killjoy-lockdown':          { radius: 50 * M },
+  'deadlock-gravnet':          { shape: 'circle', radius: 5 * M },
+  'deadlock-sonic-sensor':     { shape: 'rect', length: 13 * M, width: 7 * M },
+  'deadlock-annihilation':     { shape: 'line', length: 50 * M, thickness: 0.006 },
+  'breach-rolling-thunder':    { shape: 'line', length: 40 * M, thickness: 0.015 },
   'sova-hunters-fury':         { shape: 'line', length: 40 * M, thickness: 0.016 },
-  'fade-nightfall':            { shape: 'cone', angle: 70, length: 25 * M },
+  'fade-nightfall':            { shape: 'line', length: 50 * M, thickness: 0.015 },
 
   // === 墙体 ===
   'viper-toxic-screen':       { shape: 'line', length: 65 * M, thickness: 0.003 },
@@ -91,38 +98,40 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'astra-astral-form':        { shape: 'line', length: 150 * M, thickness: 0.003 },
   'harbor-high-tide':         { shape: 'line', length: 100 * M, thickness: 0.003 },
   'harbor-cascade':           { shape: 'circle', radius: 3.5 * M },
-  'deadlock-barrier-mesh':    { shape: 'line', length: 6 * M, thickness: 0.01 },
-  'neon-relay-bolt':          { shape: 'circle', radius: 2 * M },
+  'deadlock-barrier-mesh':    { shape: 'circle', radius: 6 * M },
+  'neon-relay-bolt':          { shape: 'circle', radius: 4 * M },
   'neon-fast-lane':           { shape: 'line', length: 40 * M, thickness: 0.003 },
   'neon-high-gear':           { shape: 'line', length: 6 * M, thickness: 0.003 },
 
   // === 侦查 ===
   'sova-recon-bolt':           { shape: 'circle', radius: 40 * M },
   'sova-hunters-fury':         { shape: 'line', length: 60 * M, thickness: 0.008 },
-  'fade-haunt':                { angle: 60, length: 18 * M },
+  'fade-prowler':              { shape: 'line', length: 35 * M, thickness: 0.004 },
+  'fade-haunt':                { shape: 'circle', radius: 40 * M },
   'killjoy-turret':            { shape: 'cone', angle: 100, length: 12 * M },
-  'killjoy-alarmbot':          { angle: 60, length: 10 * M },
-  'cypher-spycam':             { shape: 'cone', angle: 40, length: 15 * M },
-  'gekko-thrash':              { angle: 50, length: 18 * M },
+  'killjoy-alarmbot':          { shape: 'circle', radius: 5 * M },
+  'cypher-tripwire':           { shape: 'line', length: 15 * M, thickness: 0.003 },
+  'cypher-spycam':             { shape: 'circle', radius: 1.2 * M },
+  'gekko-thrash':              { shape: 'line', length: 60 * M, thickness: 0.005 },
   'gekko-wingman':             { angle: 30, length: 12 * M },
-  'skye-trailblazer':          { angle: 30, length: 15 * M },
-  'skye-seekers':              { angle: 60, length: 20 * M },
+  'skye-trailblazer':          { shape: 'line', length: 40 * M, thickness: 0.005 },
+  'skye-seekers':              { shape: 'circle', radius: 1.2 * M },
 
   // === 闪光 ===
   'breach-flashpoint':         { angle: 70, length: 18 * M },
-  'skye-guiding-light':        { angle: 60, length: 20 * M },
-  'kayo-flash':                { angle: 60, length: 15 * M },
+  'skye-guiding-light':        { shape: 'line', length: 40 * M, thickness: 0.005 },
+  'kayo-flash':                { shape: 'circle', radius: 1.2 * M },
   'yoru-blindside':            { angle: 50, length: 12 * M },
-  'gekko-dizzy':               { angle: 50, length: 14 * M },
+  'gekko-dizzy':               { shape: 'circle', radius: 50 * M },
   'reyna-leer':                { shape: 'circle', radius: 2 * M },
 
   // === 减速/控制 ===
   'sage-slow-orb':             { shape: 'circle', radius: 4.5 * M },
   'astra-gravity-well':        { radius: 3.5 * M },
   'astra-nova-pulse':          { radius: 4.0 * M },
-  'fade-seize':                { radius: 3.5 * M },
-  'breach-aftershock':         { shape: 'rect', length: 4 * M, width: 1.5 * M },
-  'breach-fault-line':         { shape: 'cone', angle: 40, length: 20 * M },
+  'fade-seize':                { radius: 4 * M },
+  'breach-aftershock':         { shape: 'cone', angle: 80, length: 11 * M },
+  'breach-fault-line':         { shape: 'line', length: 18 * M, thickness: 0.01 },
   'iso-contingency':           { shape: 'line', length: 12 * M, thickness: 0.003 },
   'iso-undercut':              { shape: 'rect', length: 28 * M, width: 8 * M },
   'iso-kill-contract':         { shape: 'rect', length: 56 * M, width: 24 * M },
@@ -130,7 +139,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 治疗 ===
   'sage-healing-orb':          { shape: 'circle', radius: 3 * M },
   'sage-resurrection':         { radius: 2 * M },
-  'skye-regrowth':             { radius: 6 * M },
+  'skye-regrowth':             { radius: 10 * M },
   'reyna-devour':              { radius: 1 * M },
   'clove-pick-me-up':          { radius: 3 * M },
 
@@ -145,7 +154,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'omen-paranoia':             { shape: 'rect', length: 40 * M, width: 10 * M },
   'omen-from-the-shadows':     { shape: 'circle', radius: 2 * M },
   'chamber-rendezvous':        { shape: 'line', length: 12 * M, thickness: 0.006 },
-  'chamber-trademark':         { radius: 3 * M },
+  'chamber-trademark':         { shape: 'circle', radius: 1.2 * M },
+  'chamber-rendezvous':        { shape: 'circle', radius: 20 * M },
 }
 
 export function getAbilityShapeConfig(abilityId: string): AbilityShapeConfig | null {
@@ -298,45 +308,45 @@ const agents: Agent[] = [
   {
     id: 'breach', name: '铁臂', nameEn: 'Breach', role: '先锋',
     abilities: [
-      { id: 'breach-aftershock', name: '余震', nameEn: 'Aftershock', key: 'C', type: 'damage', iconUrl: '/images/abilities/breach-aftershock.png', description: '向墙壁释放能量冲击，穿透墙壁并震击后方敌人，造成伤害。', usage: '按C瞄准墙壁释放，穿透震击敌人。' },
-      { id: 'breach-flashpoint', name: '闪光点', nameEn: 'Flashpoint', key: 'Q', type: 'flash', iconUrl: '/images/abilities/breach-flashpoint.png', description: '向墙壁发射闪光弹，穿透墙壁在另一侧引爆，致盲敌人。', usage: '按Q瞄准墙壁释放，穿透致盲。' },
-      { id: 'breach-fault-line', name: '断层线', nameEn: 'Fault Line', key: 'E', type: 'control', iconUrl: '/images/abilities/breach-fault-line.png', description: '释放一道沿地面传播的冲击波，击晕直线上的敌人。可蓄力延长射程。', usage: '按E蓄力，释放地面冲击波眩晕敌人。' },
-      { id: 'breach-rolling-thunder', name: '滚雷', nameEn: 'Rolling Thunder', key: 'X', type: 'control', iconUrl: '/images/abilities/breach-rolling-thunder.png', description: '释放一道巨大的扇形冲击波，击飞并眩晕大面积所有敌人。', usage: '按X释放扇形冲击波，击飞大范围敌人。' }
+      { id: 'breach-aftershock', name: '剧震余波', nameEn: 'Aftershock', key: 'C', type: 'damage', iconUrl: '/images/abilities/breach-aftershock.png', description: '向墙壁释放能量冲击，穿透墙壁并震击后方敌人，造成伤害。', usage: '按C瞄准墙壁释放，穿透震击敌人。' },
+      { id: 'breach-flashpoint', name: '闪点爆破', nameEn: 'Flashpoint', key: 'Q', type: 'flash', iconUrl: '/images/abilities/breach-flashpoint.png', description: '向墙壁发射闪光弹，穿透墙壁在另一侧引爆，致盲敌人。', usage: '按Q瞄准墙壁释放，穿透致盲。' },
+      { id: 'breach-fault-line', name: '山崩地陷', nameEn: 'Fault Line', key: 'E', type: 'control', iconUrl: '/images/abilities/breach-fault-line.png', description: '释放一道沿地面传播的冲击波，击晕直线上的敌人。可蓄力延长射程。', usage: '按E蓄力，释放地面冲击波眩晕敌人。' },
+      { id: 'breach-rolling-thunder', name: '惊雷卷地', nameEn: 'Rolling Thunder', key: 'X', type: 'control', iconUrl: '/images/abilities/breach-rolling-thunder.png', description: '释放一道巨大的扇形冲击波，击飞并眩晕大面积所有敌人。', usage: '按X释放扇形冲击波，击飞大范围敌人。' }
     ]
   },
   {
     id: 'fade', name: '黑梦', nameEn: 'Fade', role: '先锋',
     abilities: [
-      { id: 'fade-prowler', name: '潜行者', nameEn: 'Prowler', key: 'C', type: 'recon', iconUrl: '/images/abilities/fade-prowler.png', description: '释放一只追踪猎犬，沿直线追踪被标记或受伤害的敌人。追上后咬住敌人使其暂时失明。', usage: '按C释放猎犬，自动追踪受伤敌人并致盲。' },
-      { id: 'fade-seize', name: '捕获', nameEn: 'Seize', key: 'Q', type: 'control', iconUrl: '/images/abilities/fade-seize.png', description: '投掷一颗暗影灵球，落地形成束缚区，将范围内敌人拉向中心并减速。', usage: '按Q投掷，形成束缚区将敌人拉入中心。' },
-      { id: 'fade-haunt', name: '噩梦之眼', nameEn: 'Haunt', key: 'E', type: 'recon', iconUrl: '/images/abilities/fade-haunt.png', description: '投掷一颗侦察球，落地后持续标记附近敌人位置。敌人可摧毁该球。', usage: '按E投掷侦察球，自动标记附近敌人。' },
-      { id: 'fade-nightfall', name: '夜幕', nameEn: 'Nightfall', key: 'X', type: 'recon', iconUrl: '/images/abilities/fade-nightfall.png', description: '释放一道巨大的暗影冲击波，穿透整个地图，标记所有被击中的敌人并施加耳鸣效果。', usage: '按X释放全图冲击波，标记并致聋敌人。' }
+      { id: 'fade-prowler', name: '黯兽', nameEn: 'Prowler', key: 'C', type: 'recon', iconUrl: '/images/abilities/fade-prowler.png', description: '释放一只追踪猎犬，沿直线追踪被标记或受伤害的敌人。追上后咬住敌人使其暂时失明。', usage: '按C释放猎犬，自动追踪受伤敌人并致盲。' },
+      { id: 'fade-seize', name: '幽爪', nameEn: 'Seize', key: 'Q', type: 'control', iconUrl: '/images/abilities/fade-seize.png', description: '投掷一颗暗影灵球，落地形成束缚区，将范围内敌人拉向中心并减速。', usage: '按Q投掷，形成束缚区将敌人拉入中心。' },
+      { id: 'fade-haunt', name: '诡眼', nameEn: 'Haunt', key: 'E', type: 'recon', iconUrl: '/images/abilities/fade-haunt.png', description: '投掷一颗侦察球，落地后持续标记附近敌人位置。敌人可摧毁该球。', usage: '按E投掷侦察球，自动标记附近敌人。' },
+      { id: 'fade-nightfall', name: '夜临', nameEn: 'Nightfall', key: 'X', type: 'recon', iconUrl: '/images/abilities/fade-nightfall.png', description: '释放一道巨大的暗影冲击波，穿透整个地图，标记所有被击中的敌人并施加耳鸣效果。', usage: '按X释放全图冲击波，标记并致聋敌人。' }
     ]
   },
   {
     id: 'gekko', name: '盖可', nameEn: 'Gekko', role: '先锋',
     abilities: [
-      { id: 'gekko-mosh-pit', name: '鱼池', nameEn: 'Mosh Pit', key: 'C', type: 'damage', iconUrl: '/images/abilities/gekko-mosh-pit.png', description: '投掷一颗海藻炸弹，落地形成持续伤害区域，对敌人造成伤害。', usage: '按C投掷，形成持续伤害区域。' },
-      { id: 'gekko-wingman', name: '搭档', nameEn: 'Wingman', key: 'Q', type: 'recon', iconUrl: '/images/abilities/gekko-wingman.png', description: '派出小宠物向前搜索，发现敌人后追踪并眩晕。可用于安装/拆除爆能器。', usage: '按Q派出搭档，自动追踪敌人眩晕。' },
-      { id: 'gekko-dizzy', name: '眩晕蛋', nameEn: 'Dizzy', key: 'E', type: 'flash', iconUrl: '/images/abilities/gekko-dizzy.png', description: '发射一颗宠物蛋到空中，向下喷射致盲气体，使注视它的敌人短暂失明。', usage: '按E发射到空中，向下致盲敌人。' },
-      { id: 'gekko-thrash', name: '暴走', nameEn: 'Thrash', key: 'X', type: 'recon', iconUrl: '/images/abilities/gekko-thrash.png', description: '释放一只大型宠物向前冲锋，撞到敌人后爆炸将其束缚。可回收并重新使用。', usage: '按X释放冲锋宠物，撞到敌人后爆炸束缚。' }
+      { id: 'gekko-mosh-pit', name: '嗨爆全场', nameEn: 'Mosh Pit', key: 'C', type: 'damage', iconUrl: '/images/abilities/gekko-mosh-pit.png', description: '投掷一颗海藻炸弹，落地形成持续伤害区域，对敌人造成伤害。', usage: '按C投掷，形成持续伤害区域。' },
+      { id: 'gekko-wingman', name: '顽皮搭档', nameEn: 'Wingman', key: 'Q', type: 'recon', iconUrl: '/images/abilities/gekko-wingman.png', description: '派出小宠物向前搜索，发现敌人后追踪并眩晕。可用于安装/拆除爆能器。', usage: '按Q派出搭档，自动追踪敌人眩晕。' },
+      { id: 'gekko-dizzy', name: '炫晕光波', nameEn: 'Dizzy', key: 'E', type: 'flash', iconUrl: '/images/abilities/gekko-dizzy.png', description: '发射一颗宠物蛋到空中，向下喷射致盲气体，使注视它的敌人短暂失明。', usage: '按E发射到空中，向下致盲敌人。' },
+      { id: 'gekko-thrash', name: '无敌超鲨', nameEn: 'Thrash', key: 'X', type: 'recon', iconUrl: '/images/abilities/gekko-thrash.png', description: '释放一只大型宠物向前冲锋，撞到敌人后爆炸将其束缚。可回收并重新使用。', usage: '按X释放冲锋宠物，撞到敌人后爆炸束缚。' }
     ]
   },
   {
     id: 'skye', name: '斯凯', nameEn: 'Skye', role: '先锋',
     abilities: [
-      { id: 'skye-regrowth', name: '再生', nameEn: 'Regrowth', key: 'C', type: 'heal', iconUrl: '/images/abilities/skye-regrowth.png', description: '装备一个治疗光环，持续为范围内的队友回复生命值。消耗治疗能量池。', usage: '按C装备，持续治疗范围内队友，消耗能量。' },
-      { id: 'skye-trailblazer', name: '开拓者', nameEn: 'Trailblazer', key: 'Q', type: 'recon', iconUrl: '/images/abilities/skye-trailblazer.png', description: '释放一只可控的猎鹰，向前飞行。按射击键释放闪光爆炸，致盲注视猎鹰的敌人。', usage: '按Q释放猎鹰，操控飞行，左键引爆闪光。' },
-      { id: 'skye-guiding-light', name: '引路之光', nameEn: 'Guiding Light', key: 'E', type: 'flash', iconUrl: '/images/abilities/skye-guiding-light.png', description: '发射一颗光球，可操控其飞行方向。引爆后致盲敌人，致盲时间与引爆距离相关。', usage: '按E发射光球，操控方向，引爆致盲。' },
-      { id: 'skye-seekers', name: '追猎者', nameEn: 'Seekers', key: 'X', type: 'recon', iconUrl: '/images/abilities/skye-seekers.png', description: '派出三只追踪精灵，自动搜索并锁定最近的三个敌人，追上后眩晕。', usage: '按X释放三只追踪精灵，自动锁敌。' }
+      { id: 'skye-regrowth', name: '愈生之息', nameEn: 'Regrowth', key: 'C', type: 'heal', iconUrl: '/images/abilities/skye-regrowth.png', description: '装备一个治疗光环，持续为范围内的队友回复生命值。消耗治疗能量池。', usage: '按C装备，持续治疗范围内队友，消耗能量。' },
+      { id: 'skye-trailblazer', name: '辟林之虎', nameEn: 'Trailblazer', key: 'Q', type: 'recon', iconUrl: '/images/abilities/skye-trailblazer.png', description: '释放一只可控的猎鹰，向前飞行。按射击键释放闪光爆炸，致盲注视猎鹰的敌人。', usage: '按Q释放猎鹰，操控飞行，左键引爆闪光。' },
+      { id: 'skye-guiding-light', name: '引路之隼', nameEn: 'Guiding Light', key: 'E', type: 'flash', iconUrl: '/images/abilities/skye-guiding-light.png', description: '发射一颗光球，可操控其飞行方向。引爆后致盲敌人，致盲时间与引爆距离相关。', usage: '按E发射光球，操控方向，引爆致盲。' },
+      { id: 'skye-seekers', name: '追猎之灵', nameEn: 'Seekers', key: 'X', type: 'recon', iconUrl: '/images/abilities/skye-seekers.png', description: '派出三只追踪精灵，自动搜索并锁定最近的三个敌人，追上后眩晕。', usage: '按X释放三只追踪精灵，自动锁敌。' }
     ]
   },
   {
-    id: 'kayo', name: '恺宙', nameEn: 'KAY/O', role: '先锋',
+    id: 'kayo', name: 'K/O', nameEn: 'KAY/O', role: '先锋',
     abilities: [
-      { id: 'kayo-frag', name: '手雷', nameEn: 'FRAG/ment', key: 'C', type: 'damage', iconUrl: '/images/abilities/kayo-frag.png', description: '投掷一颗碎片手雷，落地后分四段爆炸，每段对范围内敌人造成伤害。', usage: '按C投掷，多段爆炸伤害。' },
-      { id: 'kayo-flash', name: '闪光弹', nameEn: 'FLASH/drive', key: 'Q', type: 'flash', iconUrl: '/images/abilities/kayo-flash.png', description: '投掷一颗闪光弹，爆炸后致盲范围内敌人。可蓄力调整引爆时间。', usage: '按Q投掷闪光弹，蓄力控制引爆时间。' },
-      { id: 'kayo-zero-point', name: '零秒点', nameEn: 'ZERO/point', key: 'E', type: 'control', iconUrl: '/images/abilities/kayo-zero-point.png', description: '发射一颗抑制刀，范围内的敌人暂时无法使用任何技能，且已激活技能被打断。', usage: '按E发射抑制刀，沉默敌人技能。' },
+      { id: 'kayo-frag', name: '碎片溢出', nameEn: 'FRAG/ment', key: 'C', type: 'damage', iconUrl: '/images/abilities/kayo-frag.png', description: '投掷一颗碎片手雷，落地后分四段爆炸，每段对范围内敌人造成伤害。', usage: '按C投掷，多段爆炸伤害。' },
+      { id: 'kayo-flash', name: '闪存过载', nameEn: 'FLASH/drive', key: 'Q', type: 'flash', iconUrl: '/images/abilities/kayo-flash.png', description: '投掷一颗闪光弹，爆炸后致盲范围内敌人。可蓄力调整引爆时间。', usage: '按Q投掷闪光弹，蓄力控制引爆时间。' },
+      { id: 'kayo-zero-point', name: '零点嗅探', nameEn: 'ZERO/point', key: 'E', type: 'control', iconUrl: '/images/abilities/kayo-zero-point.png', description: '发射一颗抑制刀，范围内的敌人暂时无法使用任何技能，且已激活技能被打断。', usage: '按E发射抑制刀，沉默敌人技能。' },
       { id: 'kayo-null-cmd', name: '无效指令', nameEn: 'NULL/cmd', key: 'X', type: 'control', iconUrl: '/images/abilities/kayo-null-cmd.png', description: '进入能量超载状态，释放大范围抑制脉冲，持续沉默周围敌人。若被击杀可被队友复活。', usage: '按X进入超载状态，持续大范围沉默敌人。' }
     ]
   },
@@ -344,45 +354,72 @@ const agents: Agent[] = [
     id: 'killjoy', name: '奇乐', nameEn: 'Killjoy', role: '哨卫',
     abilities: [
       { id: 'killjoy-nanoswarm', name: '纳米蜂群', nameEn: 'Nanoswarm', key: 'C', type: 'damage', iconUrl: '/images/abilities/killjoy-nanoswarm.png', description: '投掷两颗纳米手雷。按技能键引爆，对范围内敌人造成持续伤害。', usage: '按C投掷，再按C引爆，持续伤害。' },
-      { id: 'killjoy-alarmbot', name: '警报机器人', nameEn: 'Alarmbot', key: 'Q', type: 'recon', iconUrl: '/images/abilities/killjoy-alarmbot.png', description: '部署一个隐形警报机器人。敌人靠近后追踪并引爆，造成易伤效果。', usage: '按Q部署，敌人靠近自动追踪爆。' },
-      { id: 'killjoy-turret', name: '炮塔', nameEn: 'Turret', key: 'E', type: 'damage', iconUrl: '/images/abilities/killjoy-turret.png', description: '部署一座自动炮塔，持续扫描前方扇形区域并射击敌人。可收回重新部署。', usage: '按E部署炮塔，自动扫描射击。' },
-      { id: 'killjoy-lockdown', name: '封锁', nameEn: 'Lockdown', key: 'X', type: 'control', iconUrl: '/images/abilities/killjoy-lockdown.png', description: '部署一个大型封锁装置，经过长蓄力后释放冲击波，将范围内所有敌人禁锢。', usage: '按X部署，蓄力后大范围禁锢敌人。' }
+      { id: 'killjoy-alarmbot', name: '自动哨兵', nameEn: 'Alarmbot', key: 'Q', type: 'recon', iconUrl: '/images/abilities/killjoy-alarmbot.png', description: '部署一个隐形警报机器人。敌人靠近后追踪并引爆，造成易伤效果。', usage: '按Q部署，敌人靠近自动追踪爆。' },
+      { id: 'killjoy-turret', name: '哨戒炮台', nameEn: 'Turret', key: 'E', type: 'damage', iconUrl: '/images/abilities/killjoy-turret.png', description: '部署一座自动炮塔，持续扫描前方扇形区域并射击敌人。可收回重新部署。', usage: '按E部署炮塔，自动扫描射击。' },
+      { id: 'killjoy-lockdown', name: '全面封锁', nameEn: 'Lockdown', key: 'X', type: 'control', iconUrl: '/images/abilities/killjoy-lockdown.png', description: '部署一个大型封锁装置，经过长蓄力后释放冲击波，将范围内所有敌人禁锢。', usage: '按X部署，蓄力后大范围禁锢敌人。' }
     ]
   },
   {
     id: 'cypher', name: '零', nameEn: 'Cypher', role: '哨卫',
     abilities: [
-      { id: 'cypher-tripwire', name: '绊索', nameEn: 'Tripwire', key: 'C', type: 'control', iconUrl: '/images/abilities/cypher-tripwire.png', description: '在两堵墙之间拉一条隐形绊索。敌人触发后被短暂暴露位置并减速。', usage: '按C在两面墙之间部署绊线。' },
-      { id: 'cypher-cyber-cage', name: '网牢', nameEn: 'Cyber Cage', key: 'Q', type: 'smoke', iconUrl: '/images/abilities/cypher-cyber-cage.png', description: '远程激活一个网笼装置，形成空心烟雾区域。穿过时发出声音提示。', usage: '按Q激活网笼，形成中空烟雾。' },
-      { id: 'cypher-spycam', name: '侦察摄像头', nameEn: 'Spycam', key: 'E', type: 'recon', iconUrl: '/images/abilities/cypher-spycam.png', description: '部署一个远程摄像头，可操控查看周围情况。按射击键发射标记镖标记敌人。', usage: '按E部署摄像头，操控观察，左键标记。' },
-      { id: 'cypher-neural-theft', name: '神经窃取', nameEn: 'Neural Theft', key: 'X', type: 'recon', iconUrl: '/images/abilities/cypher-neural-theft.png', description: '对准一名阵亡敌人使用，短暂揭示所有敌方位置。', usage: '按X对准尸体使用，全图揭示敌人。' }
+      { id: 'cypher-tripwire', name: '震慑绊线', nameEn: 'Tripwire', key: 'C', type: 'control', iconUrl: '/images/abilities/cypher-tripwire.png', description: '在两堵墙之间拉一条隐形绊索。敌人触发后被短暂暴露位置并减速。', usage: '按C在两面墙之间部署绊线。' },
+      { id: 'cypher-cyber-cage', name: '赛博囚笼', nameEn: 'Cyber Cage', key: 'Q', type: 'smoke', iconUrl: '/images/abilities/cypher-cyber-cage.png', description: '远程激活一个网笼装置，形成空心烟雾区域。穿过时发出声音提示。', usage: '按Q激活网笼，形成中空烟雾。' },
+      { id: 'cypher-spycam', name: '战术监控', nameEn: 'Spycam', key: 'E', type: 'recon', iconUrl: '/images/abilities/cypher-spycam.png', description: '部署一个远程摄像头，可操控查看周围情况。按射击键发射标记镖标记敌人。', usage: '按E部署摄像头，操控观察，左键标记。' },
+      { id: 'cypher-neural-theft', name: '神经取析', nameEn: 'Neural Theft', key: 'X', type: 'recon', iconUrl: '/images/abilities/cypher-neural-theft.png', description: '对准一名阵亡敌人使用，短暂揭示所有敌方位置。', usage: '按X对准尸体使用，全图揭示敌人。' }
     ]
   },
   {
     id: 'chamber', name: '钱包', nameEn: 'Chamber', role: '哨卫',
     abilities: [
-      { id: 'chamber-trademark', name: '标记', nameEn: 'Trademark', key: 'C', type: 'control', iconUrl: '/images/abilities/chamber-trademark.png', description: '放置一个扫描装置，有敌人进入范围后触发，减速区域内所有敌人。', usage: '按C部署扫描器，触发后减速敌人。' },
-      { id: 'chamber-headhunter', name: '猎头者', nameEn: 'Headhunter', key: 'Q', type: 'damage', iconUrl: '/images/abilities/chamber-headhunter.png', description: '装备一把高精度手枪。按右键开镜，精准射击。共8发子弹，每击杀一人补一发。', usage: '按Q装备精准手枪，右键开镜射击。' },
-      { id: 'chamber-rendezvous', name: '会合点', nameEn: 'Rendezvous', key: 'E', type: 'mobility', iconUrl: '/images/abilities/chamber-rendezvous.png', description: '放置两个传送信标。在范围内按E可瞬间传送到另一信标处。', usage: '按E放置信标，再按E传送。' },
-      { id: 'chamber-tour-de-force', name: '终极力量', nameEn: 'Tour De Force', key: 'X', type: 'damage', iconUrl: '/images/abilities/chamber-tour-de-force.png', description: '装备一把威力巨大的狙击步枪。击杀敌人后产生减速区域。', usage: '按X装备终极狙击枪，击杀产生减速场。' }
+      { id: 'chamber-trademark', name: '贵宾限行', nameEn: 'Trademark', key: 'C', type: 'control', iconUrl: '/images/abilities/chamber-trademark.png', description: '放置一个扫描装置，有敌人进入范围后触发，减速区域内所有敌人。', usage: '按C部署扫描器，触发后减速敌人。' },
+      { id: 'chamber-headhunter', name: '金牌猎头', nameEn: 'Headhunter', key: 'Q', type: 'damage', iconUrl: '/images/abilities/chamber-headhunter.png', description: '装备一把高精度手枪。按右键开镜，精准射击。共8发子弹，每击杀一人补一发。', usage: '按Q装备精准手枪，右键开镜射击。' },
+      { id: 'chamber-rendezvous', name: '闪转自如', nameEn: 'Rendezvous', key: 'E', type: 'mobility', iconUrl: '/images/abilities/chamber-rendezvous.png', description: '放置两个传送信标。在范围内按E可瞬间传送到另一信标处。', usage: '按E放置信标，再按E传送。' },
+      { id: 'chamber-tour-de-force', name: '孤高火力', nameEn: 'Tour De Force', key: 'X', type: 'damage', iconUrl: '/images/abilities/chamber-tour-de-force.png', description: '装备一把威力巨大的狙击步枪。击杀敌人后产生减速区域。', usage: '按X装备终极狙击枪，击杀产生减速场。' }
     ]
   },
   {
-    id: 'deadlock', name: '铁壁', nameEn: 'Deadlock', role: '哨卫',
+    id: 'deadlock', name: '钢锁', nameEn: 'Deadlock', role: '哨卫',
     abilities: [
-      { id: 'deadlock-gravnet', name: '重力网', nameEn: 'GravNet', key: 'C', type: 'control', iconUrl: '/images/abilities/deadlock-gravnet.png', description: '投掷一颗重力网手雷，爆炸后将范围内敌人拉向地面并强制蹲下。', usage: '按C投掷，爆炸后强制拉倒敌人。' },
-      { id: 'deadlock-sonic-sensor', name: '声波传感器', nameEn: 'Sonic Sensor', key: 'Q', type: 'recon', iconUrl: '/images/abilities/deadlock-sonic-sensor.png', description: '部署一个声波传感器，检测到敌人移动时释放声波震动，使敌人减速。', usage: '按Q部署，检测移动后震动减速。' },
-      { id: 'deadlock-barrier-mesh', name: '屏障网', nameEn: 'Barrier Mesh', key: 'E', type: 'control', iconUrl: '/images/abilities/deadlock-barrier-mesh.png', description: '部署一道网状屏障，阻挡通过并吸收子弹伤害。', usage: '按E部署网状屏障。' },
-      { id: 'deadlock-annihilation', name: '湮灭', nameEn: 'Annihilation', key: 'X', type: 'control', iconUrl: '/images/abilities/deadlock-annihilation.png', description: '发射一颗强力能量弹，追逐第一名被击中的敌人，将其禁锢并拖行。', usage: '按X发射能量弹，追捕并禁锢敌人。' }
+      { id: 'deadlock-gravnet', name: '阻域屏障', nameEn: 'GravNet', key: 'C', type: 'control', iconUrl: '/images/abilities/deadlock-gravnet.png', description: '投掷一颗重力网手雷，爆炸后将范围内敌人拉向地面并强制蹲下。', usage: '按C投掷，爆炸后强制拉倒敌人。' },
+      { id: 'deadlock-sonic-sensor', name: '声感陷阱', nameEn: 'Sonic Sensor', key: 'Q', type: 'recon', iconUrl: '/images/abilities/deadlock-sonic-sensor.png', description: '部署一个声波传感器，检测到敌人移动时释放声波震动，使敌人减速。', usage: '按Q部署，检测移动后震动减速。' },
+      { id: 'deadlock-barrier-mesh', name: '重力捕网', nameEn: 'Barrier Mesh', key: 'E', type: 'control', iconUrl: '/images/abilities/deadlock-barrier-mesh.png', description: '部署一道网状屏障，阻挡通过并吸收子弹伤害。', usage: '按E部署网状屏障。' },
+      { id: 'deadlock-annihilation', name: '断魂索道', nameEn: 'Annihilation', key: 'X', type: 'control', iconUrl: '/images/abilities/deadlock-annihilation.png', description: '发射一颗强力能量弹，追逐第一名被击中的敌人，将其禁锢并拖行。', usage: '按X发射能量弹，追捕并禁锢敌人。' }
     ]
   },
   {
-    id: 'vyse', name: '钛狐', nameEn: 'Vyse', role: '哨卫',
+    id: 'vyse', name: '维斯', nameEn: 'Vyse', role: '哨卫',
     abilities: [
-      { id: 'vyse-razorvine', name: '剃刀藤', nameEn: 'Razorvine', key: 'C', type: 'damage', iconUrl: '/images/abilities/vyse-razorvine.png', description: '部署一组剃刀藤蔓陷阱，敌人踩入后受到持续伤害并减速。', usage: '按C部署藤蔓陷阱，踩入受伤减速。' },
-      { id: 'vyse-arc-rose', name: '弧玫瑰', nameEn: 'Arc Rose', key: 'Q', type: 'flash', iconUrl: '/images/abilities/vyse-arc-rose.png', description: '投掷一颗可在表面弹射的闪光装置，引爆后致盲敌人。', usage: '按Q投掷弹射，引爆致盲。' },
-      { id: 'vyse-shear', name: '剪切', nameEn: 'Shear', key: 'E', type: 'control', iconUrl: '/images/abilities/vyse-shear.png', description: '在两面墙之间生成一道激光绊线，触发后短暂暴露并伤害敌人。', usage: '按E在墙间部署激光绊线。' },
-      { id: 'vyse-steel-garden', name: '钢铁花园', nameEn: 'Steel Garden', key: 'X', type: 'control', iconUrl: '/images/abilities/vyse-steel-garden.png', description: '召唤大片金属荆棘，覆盖广阔区域，对敌人造成伤害并限制移动。', usage: '按X召唤金属荆棘覆盖区域。' }
+      { id: 'vyse-razorvine', name: '剃刀藤蔓', nameEn: 'Razorvine', key: 'C', type: 'damage', iconUrl: '/images/abilities/vyse-razorvine.png', description: '部署一组剃刀藤蔓陷阱，敌人踩入后受到持续伤害并减速。', usage: '按C部署藤蔓陷阱，踩入受伤减速。' },
+      { id: 'vyse-shear', name: '裁断', nameEn: 'Arc Rose', key: 'Q', type: 'control', iconUrl: '/images/abilities/vyse-shear.png', description: '装备条状液态金属。按[射击]放置一道隐藏的隔断陷阱。当有敌人经过时，会在其身后升起一道无法摧毁的屏障墙。墙体将在一段时间后自行瓦解。', usage: '按Q放置隐藏隔断陷阱，敌人经过后升起屏障墙。' },
+      { id: 'vyse-arc-rose', name: '弧光玫瑰', nameEn: 'Shear', key: 'E', type: 'flash', iconUrl: '/images/abilities/vyse-arc-rose.png', description: '装备弧光玫瑰。选择一块墙面，放置隐形的弧光玫瑰，按[辅助射击]可部署到墙的另一侧。[再次按技能键]可致盲所有目击闪爆点的玩家。此技能可回收和[重新部署]。', usage: '按E在墙面放置隐形弧光玫瑰，右键部署墙另一侧，再次按E致盲，可回收重新部署。' },
+      { id: 'vyse-steel-garden', name: '铁棘禁园', nameEn: 'Steel Garden', key: 'X', type: 'control', iconUrl: '/images/abilities/vyse-steel-garden.png', description: '召唤大片金属荆棘，覆盖广阔区域，对敌人造成伤害并限制移动。', usage: '按X召唤金属荆棘覆盖区域。' }
+    ]
+  },
+  {
+    id: 'tejo', name: '钛狐', nameEn: 'Tejo', role: '先锋',
+    abilities: [
+      { id: 'tejo-c', name: '潜袭爬虫', nameEn: 'Stealth Drone', key: 'C', type: 'damage', iconUrl: '/images/abilities/tejo-c.png', description: '装备一架潜袭爬虫，按[射击]将爬虫抛向前方，直接控制其移动。再次按[射击]可触发脉冲，压制并揭露被击中的敌人。', usage: '按C抛出潜袭爬虫并控制移动，再次按射击触发脉冲压制揭露敌人。' },
+      { id: 'tejo-q', name: '特快专递', nameEn: 'Special Delivery', key: 'Q', type: 'damage', iconUrl: '/images/abilities/tejo-q.png', description: '装备一颗粘性榴弹，按[射击]发射。榴弹会粘附击中的首个表面并爆炸，被爆炸波及的所有目标都会受到震荡和伤害。按[辅助射击]发射榴弹时，榴弹会在反弹一次后爆炸。', usage: '按Q发射粘性榴弹(右键反弹一次后爆炸)，爆炸造成震荡和伤害。' },
+      { id: 'tejo-e', name: '精准投放', nameEn: 'Guided Salvo', key: 'E', type: 'damage', iconUrl: '/images/abilities/tejo-e.png', description: '装备一套战术投送系统。按[射击]在地图上最多选择两个目标位置。按[辅助射击]发射导弹，导弹可自动导航至目标位置，到达时多次引爆，造成伤害。', usage: '按E在地图选最多两个目标位置，右键发射自动导航导弹造成伤害。' },
+      { id: 'tejo-x', name: '末日审判', nameEn: 'Armageddon', key: 'X', type: 'damage', iconUrl: '/images/abilities/tejo-x.png', description: '装备战术打击地图。按[射击]选择打击起点。[再次按射击键]设置终点并发动无人机空袭，沿所选路径进行地毯式爆破，造成致命伤害。', usage: '按X选择起点，再次按射击选终点发动地毯式空袭。' }
+    ]
+  },
+  {
+    id: 'veto', name: '禁灭', nameEn: 'Veto', role: '哨卫',
+    abilities: [
+      { id: 'veto-c', name: '涡流折跃', nameEn: 'Crosscut', key: 'C', type: 'control', iconUrl: '/images/abilities/veto-c.png', description: '装备一颗漩涡能量球。按[射击]将其放置于地面。在技能范围内且瞄准漩涡时，[激活]技能即可传送至漩涡所在位置。在购买阶段期间，可将能量球回收并[重新部署]。', usage: '按C放置漩涡能量球，瞄准时激活传送到漩涡处，购买阶段可回收重新部署。' },
+      { id: 'veto-q', name: '裂变残片', nameEn: 'Chokehold', key: 'Q', type: 'control', iconUrl: '/images/abilities/veto-q.png', description: '装备一块由异变产生的黏液碎片。按[射击]将其掷出。碎片会在碰到地面时部署为陷阱，困住经过的敌人。被困敌人将受到[致聋]和[腐坏]效果。陷阱激活前可被敌人摧毁。', usage: '按Q投掷黏液碎片，部署陷阱困住敌人，致聋+腐坏敌人。' },
+      { id: 'veto-e', name: '噬源体', nameEn: 'Interceptor', key: 'E', type: 'control', iconUrl: '/images/abilities/veto-e.png', description: '装备噬源体。按[射击]将其部署至目标位置。部署后，[再次使用]技能即可激活。激活后，噬源体将摧毁一切能从玩家身上弹开或被枪火自然摧毁的装置。噬源体可被敌人摧毁。', usage: '按E部署噬源体，再次激活后摧毁敌方弹射物和装置，可被敌人摧毁。' },
+      { id: 'veto-x', name: '完全进化', nameEn: 'Evolution', key: 'X', type: 'control', iconUrl: '/images/abilities/veto-x.png', description: '立即进入完全变异形态，获得[作战强化]效果和再生能力，并免疫所有形式的减益效果。', usage: '按X进入完全变异形态，获得作战强化+再生+免疫所有减益。' }
+    ]
+  },
+  {
+    id: 'miks', name: '迷核', nameEn: 'Miks', role: '控场者',
+    abilities: [
+      { id: 'miks-c', name: '电音脉冲', nameEn: 'Starfall', key: 'C', type: 'smoke', iconUrl: '/images/abilities/miks-c.png', description: '装备电音脉冲。按[辅助射击]可在震荡输出与治疗输出之间切换。按[射击]投掷装置。落地时，电音脉冲会释放声波，对玩家造成震荡或治疗效果。', usage: '按C装备，右键切换震荡/治疗模式，左键投掷释放声波。' },
+      { id: 'miks-q', name: '共振谐律', nameEn: 'Binary', key: 'Q', type: 'smoke', iconUrl: '/images/abilities/miks-q.png', description: '装备共振谐律。锁定一名队友并按下[射击]，为你和该队友激活[作战强化]效果和速度加成，每次击败都会刷新效果。按[辅助射击]让自己获得[作战强化]效果和速度加成。', usage: '按Q锁定队友，左键激活双方作战强化+加速(击败刷新)，右键只给自己。' },
+      { id: 'miks-e', name: '声波帷幕', nameEn: 'Vertigo', key: 'E', type: 'smoke', iconUrl: '/images/abilities/miks-e.png', description: '装备地图定位仪。按[射击]设定位置。按[辅助射击]在选定位置释放烟雾。', usage: '按E打开定位仪，左键设定位置，右键释放烟雾。' },
+      { id: 'miks-x', name: '音脉强袭', nameEn: 'Encore', key: 'X', type: 'smoke', iconUrl: '/images/abilities/miks-x.png', description: '装备音脉强袭。按[射击]积蓄能量并向前释放音波源光，击退目标，并对其造成[致聋]和[减速]。', usage: '按X蓄力释放音波源光，击退并致聋+减速目标。' }
     ]
   }
 ]

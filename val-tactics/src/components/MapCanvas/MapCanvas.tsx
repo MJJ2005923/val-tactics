@@ -146,6 +146,12 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
   const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
+  // 矩形拖拽绘制
+  const [rectDrawing, setRectDrawing] = useState<{
+    startX: number; startY: number; currentX: number; currentY: number;
+    abilityId: string; agentId: string; config: any; drawing: boolean;
+  } | null>(null)
+
   // 画线模式：线型技能拖放后进入画线（直线/自由绘制）
   const [lineDrawing, setLineDrawing] = useState<{
     mode: 'line' | 'freehand'       // line=两点直线, freehand=拖拽自由绘制
@@ -278,12 +284,16 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     } else if (data.type === 'ability' && data.abilityId) {
       const shapeConfig = getAbilityShapeConfig(data.abilityId)
       if (shapeConfig) {
-        // 线型技能进入画线模式：先放起点，再拖终点
-        if (shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') {
+        // 矩形拖拽绘制
+        if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall') {
+          setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
+        } else if (shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury' && data.abilityId !== 'phoenix-curveball') {
+          // 线型技能进入画线模式：先放起点，再拖终点
+          const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c'
           setLineDrawing({
-            mode: (data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone') ? 'freehand' : 'line',
-            startX: x, startY: y,
-            currentX: x, currentY: y,
+            mode: isFH ? 'freehand' : 'line',
+            startX: isFH ? x : -1, startY: isFH ? y : -1,
+            currentX: isFH ? x : -1, currentY: isFH ? y : -1,
             abilityId: data.abilityId, agentId: data.agentId,
             config: shapeConfig,
           })
@@ -332,7 +342,7 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
       return total
     }
 
-    const maxLen = lineDrawing?.config.length ?? 0.50
+    const maxLen = (lineDrawing?.abilityId === 'gekko-thrash' || lineDrawing?.abilityId === 'skye-trailblazer' || lineDrawing?.abilityId === 'skye-guiding-light' || lineDrawing?.abilityId === 'tejo-c') ? 999 : (lineDrawing?.config.length ?? 0.50)
 
     const down = (e: MouseEvent) => {
       if (!lineDrawing || lineDrawing.mode !== 'freehand') return
@@ -415,7 +425,7 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
 
   // 地图点击 — 画线确认 / 文字工具创建标注
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
-    // 画线模式：点击确认终点（freehand 模式由 mouseup 处理，此处跳过）
+    // 画线模式：点击确认终点/起点（freehand 模式由 mouseup 处理，此处跳过）
     if (lineDrawing && lineDrawing.mode !== 'freehand') {
       const t = transformRef.current
       if (!t.container) return
@@ -424,20 +434,54 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
       const sy = e.clientY - rect.top
       const ex = (sx - offsetX) / (displayScale * mapW)
       const ey = (sy - offsetY) / (displayScale * mapH)
+      // 两步点击：先设起点
+      if (lineDrawing.startX < 0) {
+        setLineDrawing(prev => prev ? { ...prev, startX: ex, startY: ey, currentX: ex, currentY: ey } : null)
+        return
+      }
       const cx = (lineDrawing.startX + ex) / 2
       const cy = (lineDrawing.startY + ey) / 2
-      const dx = ex - lineDrawing.startX
-      const dy = ey - lineDrawing.startY
-      const len = Math.sqrt(dx * dx + dy * dy)
+      const dx = (ex - lineDrawing.startX) * mapW
+      const dy = (ey - lineDrawing.startY) * mapH
+      const len = Math.sqrt(dx * dx + dy * dy) / mapW
       const rot = Math.atan2(dx, -dy) * 180 / Math.PI
+      // Deadlock X 多段线
+      if (lineDrawing.abilityId === 'deadlock-annihilation') {
+        const mlr = multiLineRef.current
+        if (mlr.count === 0) {
+          mlr.pts = [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: ex, y: ey }]
+          mlr.count = 1
+          setLineDrawing(prev => prev ? { ...prev, startX: ex, startY: ey, currentX: ex, currentY: ey } : null)
+          return
+        }
+        mlr.pts.push({ x: ex, y: ey })
+        const allPts = [...mlr.pts]
+        mlr.pts = []; mlr.count = 0
+        let sx3 = 0, sy3 = 0
+        for (const p of allPts) { sx3 += p.x; sy3 += p.y }
+        let totalLen = 0
+        for (let i = 1; i < allPts.length; i++) {
+          totalLen += Math.sqrt((allPts[i].x - allPts[i-1].x) ** 2 + (allPts[i].y - allPts[i-1].y) ** 2)
+        }
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: sx3 / allPts.length, y: sy3 / allPts.length, rotation: 0, shape: 'line',
+          radius: 0.08, angle: 60, length: totalLen, width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: false, path: allPts,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      const isBreachRect = lineDrawing.abilityId === 'breach-fault-line' || lineDrawing.abilityId === 'breach-rolling-thunder' || lineDrawing.abilityId === 'vyse-shear'
+      const rw = lineDrawing.abilityId === 'breach-fault-line' ? 8 : lineDrawing.abilityId === 'vyse-shear' ? 3 : 40
       dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
         id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
-        x: cx, y: cy, rotation: rot,
-        shape: 'line',
+        x: cx, y: cy, rotation: isBreachRect ? (rot - 90) : rot,
+        shape: isBreachRect ? 'rect' : 'line',
         radius: 0.08,
         angle: 60,
         length: Math.max(len, 0.02),
-        width: 0.02,
+        width: isBreachRect ? (rw * 7 / 1800) : 0.02,
         thickness: lineDrawing.config.thickness ?? 0.008,
         iconOnly: false,
       }})
@@ -508,6 +552,7 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
   const markerDragRef = useRef<{ id: string; type: string; sx: number; sy: number; ox: number; oy: number } | null>(null)
   // 自由绘制状态（用 ref 避免 effect 重注册打断绘制）
   const freehandRef = useRef<{ drawing: boolean; path: { x: number; y: number }[] }>({ drawing: false, path: [] })
+  const multiLineRef = useRef<{ pts: { x: number; y: number }[], count: number }>({ pts: [], count: 0 })
 
   const handleMarkerMouseDown = useCallback((e: React.MouseEvent, id: string, type: 'marker' | 'text' | 'agent') => {
     e.stopPropagation(); e.preventDefault()
@@ -546,6 +591,36 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onMouseDown={(e) => {
+        if (!rectDrawing || rectDrawing.drawing) return
+        const t3 = transformRef.current
+        if (!t3.container) return
+        if ((e.target as HTMLElement).closest?.('[data-shape]')) return
+        const rr = t3.container.getBoundingClientRect()
+        setRectDrawing(p => p ? { ...p, drawing: true, startX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), startY: (e.clientY - rr.top - offsetY) / (displayScale * mapH), currentX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), currentY: (e.clientY - rr.top - offsetY) / (displayScale * mapH) } : null)
+      }}
+      onMouseMove={(e) => {
+        if (!rectDrawing || !rectDrawing.drawing) return
+        const rr = transformRef.current?.container?.getBoundingClientRect()
+        if (!rr) return
+        setRectDrawing(p => p ? { ...p, currentX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), currentY: (e.clientY - rr.top - offsetY) / (displayScale * mapH) } : null)
+      }}
+      onMouseUp={() => {
+        if (!rectDrawing || !rectDrawing.drawing) return
+        const rd = rectDrawing
+        const xx = (rd.startX + rd.currentX) / 2
+        const yy = (rd.startY + rd.currentY) / 2
+        const ww = Math.abs(rd.currentX - rd.startX)
+        const hh = Math.abs(rd.currentY - rd.startY)
+        if (ww > 0.005 && hh > 0.005) {
+          dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+            id: '', abilityId: rd.abilityId, agentId: rd.agentId,
+            x: xx, y: yy, rotation: 0, shape: 'rect', radius: 0.08, angle: 60,
+            length: ww, width: hh, thickness: 0.008, iconOnly: false,
+          }})
+        }
+        setRectDrawing(null)
+      }}
     >
       <canvas ref={canvasRef} className={styles.canvas} />
 
@@ -568,7 +643,7 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
         const isFreehand = lineDrawing.mode === 'freehand'
         const hintText = isFreehand
           ? (lineDrawing.drawing ? '拖动鼠标绘制线形 / 松手确认' : '按住鼠标开始绘制 / ESC 取消')
-          : '点击放置终点 / ESC 取消'
+          : (lineDrawing.startX < 0 ? '点击放置起点 / ESC 取消' : '点击放置终点 / ESC 取消')
         return (
           <svg style={{ position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none', overflow: 'visible' }}>
             {/* 自由绘制路径预览 */}
@@ -608,7 +683,24 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
         )
       })()}
 
-      {isOver && !lineDrawing && <div className={styles.dropHint}>释放以放置技能</div>}
+      {/* 矩形拖拽预览 */}
+      {rectDrawing && rectDrawing.drawing && (() => {
+        const sx2 = offsetX + Math.min(rectDrawing.startX, rectDrawing.currentX) * mapW * displayScale
+        const sy2 = offsetY + Math.min(rectDrawing.startY, rectDrawing.currentY) * mapH * displayScale
+        const agent2 = agents.find(a => a.id === rectDrawing.agentId)
+        const ab2 = agent2?.abilities.find(a => a.id === rectDrawing.abilityId)
+        const c2 = ab2 ? typeColors[ab2.type] || '#888' : '#888'
+        return (
+          <svg style={{ position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none', overflow: 'visible' }}>
+            <rect x={sx2} y={sy2}
+              width={Math.abs(rectDrawing.currentX - rectDrawing.startX) * mapW * displayScale}
+              height={Math.abs(rectDrawing.currentY - rectDrawing.startY) * mapH * displayScale}
+              fill={c2 + '12'} stroke={c2} strokeWidth={2} strokeDasharray="6 3" rx={2} opacity={0.7} />
+          </svg>
+        )
+      })()}
+
+      {isOver && !lineDrawing && !rectDrawing && <div className={styles.dropHint}>释放以放置技能</div>}
 
       {/* 技能标记 */}
       {markers.map(marker => {

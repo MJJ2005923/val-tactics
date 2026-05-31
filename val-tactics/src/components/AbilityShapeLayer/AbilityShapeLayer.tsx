@@ -129,7 +129,9 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
       if (d.mode === 'move') {
         if (d.startShape.path && d.startShape.path.length > 1) {
           const newPath = d.startShape.path.map(p => ({ x: p.x + dx, y: p.y + dy }))
-          dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: d.shapeId, updates: { path: newPath } })
+          let sx4 = 0, sy4 = 0
+          for (const p of newPath) { sx4 += p.x; sy4 += p.y }
+          dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: d.shapeId, updates: { path: newPath, x: sx4 / newPath.length, y: sy4 / newPath.length } })
         } else {
           dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: d.shapeId, updates: { x: d.startShape.x + dx, y: d.startShape.y + dy } })
         }
@@ -228,6 +230,53 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
         if (s.shape === 'circle') {
           const r = Math.max(s.radius * mapW * scale, 6)
           const t = info.type
+          // Deadlock C 十字形
+          if (s.abilityId === 'deadlock-gravnet') {
+            const armW2 = Math.max(r * 0.15, 4)
+            const armLen2 = r * 1.5
+            return (
+              <div key={s.id} data-shape={s.id} style={{ position: 'absolute', pointerEvents: 'auto', transform: `rotate(${s.rotation}deg)`, transformOrigin: `${cx}px ${cy}px` }}>
+                {[[0, -armLen2], [0, armLen2], [-armLen2, 0], [armLen2, 0]].map(([ox, oy], i) => (
+                  <span key={i}>
+                    <div style={{ position: 'absolute', left: cx + (ox > 0 ? 0 : ox) - (ox ? 0 : armW2), top: cy + (oy > 0 ? 0 : oy) - (oy ? 0 : armW2), width: ox ? armLen2 : armW2 * 2, height: oy ? armLen2 : armW2 * 2, background: color + '60', borderRadius: armW2, pointerEvents: 'none' }} />
+                    <div style={{ position: 'absolute', left: cx + ox - armW2 * 1.5, top: cy + oy - armW2 * 1.5, width: armW2 * 3, height: armW2 * 3, borderRadius: '50%', background: color + '80', border: '1px solid ' + color, pointerEvents: 'none' }} />
+                  </span>
+                ))}
+                <div style={{ position: 'absolute', left: cx - 8, top: cy - 8, width: 16, height: 16, borderRadius: '50%', cursor: 'move', background: 'transparent', border: isSelected ? '2px solid #fff' : 'none' }} onMouseDown={(e) => handleMouseDown(e, s)} />
+                <img src={info.iconUrl} style={{ position: 'absolute', left: cx-10, top: cy-10, width: 20, height: 20, filter: 'drop-shadow(0 1px 3px black)', pointerEvents: 'none' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                {isSelected && (<div style={{ position: 'absolute', left: cx-6, top: cy-r-20, width: 12, height: 12, borderRadius: '50%', background: '#fff', border: '2px solid #333', cursor: 'grab', boxShadow: '0 0 6px black' }} onMouseDown={(e) => handleRotMouseDown(e, s)} />)}
+              </div>
+            )
+          }
+          // Raze E 大圆+4小圆
+          if (s.abilityId === 'raze-paint-shells') {
+            const sr = Math.max(r * 0.22, 5)
+            const dirs = [[0, -r*0.85], [0, r*0.85], [-r*0.85, 0], [r*0.85, 0]]
+            return (
+              <div key={s.id} data-shape={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+                {dirs.map(([ox, oy], i) => (
+                  <div key={i} style={{ position: 'absolute', left: cx + ox - sr, top: cy + oy - sr,
+                    width: sr*2, height: sr*2, borderRadius: '50%',
+                    border: '2px solid ' + color + '80', background: color + '25',
+                    pointerEvents: 'none' }} />
+                ))}
+                <div style={{ position: 'absolute', left: cx - r, top: cy - r, width: r*2, height: r*2,
+                  borderRadius: '50%', cursor: 'move',
+                  border: '2px solid ' + (isSelected ? '#fff' : color) + '90',
+                  background: 'radial-gradient(circle, ' + color + '25 0%, ' + color + '10 60%, transparent 100%)',
+                  boxShadow: isSelected ? '0 0 14px ' + color + '80' : '0 0 4px ' + color + '20',
+                }} onMouseDown={(e) => handleMouseDown(e, s)} />
+                <img src={info.iconUrl} style={{ position: 'absolute', left: cx-16, top: cy-16,
+                  width: 32, height: 32, filter: 'drop-shadow(0 1px 3px black)', pointerEvents: 'none' }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                {isSelected && (
+                  <div style={{ position: 'absolute', left: cx-6, top: cy-r-20, width: 12, height: 12,
+                    borderRadius: '50%', background: '#fff', border: '2px solid #333', cursor: 'grab',
+                    boxShadow: '0 0 6px black' }} onMouseDown={(e) => handleRotMouseDown(e, s)} />
+                )}
+              </div>
+            )
+          }
           return (
             <div key={s.id} data-shape={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
               {t === 'smoke' && (
@@ -291,7 +340,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
               </div>
               {/* 夜露C技能方向箭头（圆形外围） */}
-              {s.abilityId === 'yoru-fakeout' && (
+              {(s.abilityId === 'yoru-fakeout' || s.abilityId === 'raze-boom-bot') && (
                 <div style={{
                   position: 'absolute', left: cx - 5, top: cy - r - 14, width: 10, height: 18,
                   pointerEvents: 'none', transformOrigin: `5px ${r + 14}px`,
@@ -370,6 +419,37 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const tipX = scx + len * Math.cos(degToRad(s.rotation - 90))
               const tipY = scy + len * Math.sin(degToRad(s.rotation - 90))
               const d = `M ${scx} ${scy} L ${leftX} ${leftY} A ${len} ${len} 0 0 1 ${rightX} ${rightY} Z`
+              // Breach C 3椭圆环
+              if (s.abilityId === 'breach-aftershock') {
+                const dir = degToRad(s.rotation - 90)
+                const waves = [0.18, 0.42, 0.65]
+                const strokes = [4, 3, 2]
+                const ops = [0.9, 0.6, 0.35]
+                return (
+                  <>
+                    <path d={`M ${scx} ${scy} L ${leftX} ${leftY} A ${len} ${len} 0 0 1 ${rightX} ${rightY} Z`}
+                      fill="transparent" stroke="transparent" strokeWidth={12}
+                      style={{ cursor: 'move' }} onMouseDown={(e) => handleMouseDown(e, s)} />
+                    {waves.map((frac, i) => {
+                      const ecx = scx + len * frac * Math.cos(dir)
+                      const ecy = scy + len * frac * Math.sin(dir)
+                      const rx = (len * (1 - frac) * Math.tan(degToRad(s.angle / 2))) * 0.5
+                      const ry = rx * 0.35
+                      return (<ellipse key={i} cx={ecx} cy={ecy} rx={rx} ry={ry}
+                        fill="none" stroke={color} strokeWidth={strokes[i]} opacity={ops[i]}
+                        transform={`rotate(${s.rotation} ${ecx} ${ecy})`}
+                        style={{ pointerEvents: 'none' }} />)
+                    })}
+                    <circle cx={scx} cy={scy} r={4} fill="#fff" stroke={color} strokeWidth={2} style={{ pointerEvents: 'none' }} />
+                    <image href={'/images/abilities/' + s.abilityId + '.png'}
+                      x={scx + len * 0.3 * Math.cos(dir) - 10} y={scy + len * 0.3 * Math.sin(dir) - 10}
+                      width={20} height={20} style={{ pointerEvents: 'none' }} />
+                    {isSelected && (<circle cx={scx + len * Math.cos(dir)} cy={scy + len * Math.sin(dir)} r={6}
+                      fill="#fff" stroke="#333" strokeWidth={2} style={{ cursor: 'grab', filter: 'drop-shadow(0 0 4px black)' }}
+                      onMouseDown={(e) => { e.stopPropagation(); handleRotMouseDown(e as any, s) }} />)}
+                  </>
+                )
+              }
               const patternId = info.type === 'recon' ? 'recon-scan' : 'flash-rays'
               return (
                 <>
@@ -408,6 +488,39 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               )
             })()}
             {s.shape === 'line' && (() => {
+              // Phoenix E 半圆弧线
+              if (s.abilityId === 'phoenix-curveball') {
+                const halfLen = (s.length * mapW * scale) / 2
+                const rad = degToRad(s.rotation)
+                const scx = svgW / 2, scy = svgH / 2
+                const startX = scx - halfLen * Math.sin(rad), startY = scy + halfLen * Math.cos(rad)
+                const endX = scx + halfLen * Math.sin(rad), endY = scy - halfLen * Math.cos(rad)
+                const cpX = scx - halfLen * Math.cos(rad), cpY = scy - halfLen * Math.sin(rad)
+                const arcD = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`
+                const sw2 = Math.max(s.thickness * mapW * scale, 3)
+                return (
+                  <>
+                    <path d={arcD} fill="none" stroke="transparent" strokeWidth={sw2 + 12}
+                      strokeLinecap="round" style={{ cursor: 'move' }}
+                      onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, s) }}
+                      onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={(e) => { e.stopPropagation(); dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: s.id, updates: { rotation: (s.rotation + 180) % 360 } }) }} />
+                    <path d={arcD} fill="none" stroke={color} strokeWidth={sw2}
+                      strokeLinecap="round" opacity={0.85}
+                      style={{ pointerEvents: 'none', filter: isSelected ? `drop-shadow(0 0 4px ${color})` : undefined }} />
+                    <image href={'/images/abilities/' + s.abilityId + '.png'}
+                      x={startX - 14} y={startY - 14} width={28} height={28} style={{ pointerEvents: 'none' }} />
+                    <circle cx={endX} cy={endY} r={10} fill={color} opacity={0.6}
+                      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 6px ${color})` }} />
+                    <image href={'/images/abilities/' + s.abilityId + '.png'}
+                      x={endX - 16} y={endY - 16} width={32} height={32}
+                      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 8px ${color})` }} />
+                    {isSelected && (<circle cx={cpX} cy={cpY - 10} r={6}
+                      fill="#fff" stroke="#333" strokeWidth={2} style={{ cursor: 'grab', filter: 'drop-shadow(0 0 4px black)' }}
+                      onMouseDown={(e) => { e.stopPropagation(); handleRotMouseDown(e as any, s) }} />)}
+                  </>
+                )
+              }
               // 自由路径渲染
               const pathPts = s.path && s.path.length > 1 ? s.path : null
               if (pathPts) {
@@ -490,7 +603,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const offsetY = isDualLine ? 5 * Math.sin(degToRad(s.rotation)) : 0
               const renderLine = (ox: number, oy: number, key: string, hitOnly = false) => (
                 <line key={key} x1={sx1 + ox} y1={sy1 + oy} x2={sx2 + ox} y2={sy2 + oy}
-                  stroke={hitOnly ? 'transparent' : color} strokeWidth={hitOnly ? sw + 12 : sw} strokeLinecap="round"
+                  stroke={hitOnly ? 'transparent' : color} strokeWidth={hitOnly ? sw + 12 : sw} strokeLinecap={hitOnly ? 'round' : 'butt'}
                   opacity={hitOnly ? 1 : (isOmenC ? 0 : 0.85)}
                   strokeDasharray={hitOnly ? 'none' : dashArray}
                   style={hitOnly ? { cursor: 'move' } : { cursor: 'move', filter: isSelected ? `drop-shadow(0 0 4px ${color})` : `drop-shadow(0 0 2px ${color}40)`, transition: 'filter 0.15s', pointerEvents: 'none' }}
