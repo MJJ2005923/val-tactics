@@ -652,8 +652,6 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                 </>
               )
             })()}
-            {s.shape === 'line' && (() => {
-            })()}
           </svg>
         )
       })}

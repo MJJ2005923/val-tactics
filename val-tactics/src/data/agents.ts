@@ -61,7 +61,6 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
 
   // === 燃烧弹/伤害 ===
   'brimstone-incendiary':     { radius: 4.0 * M },
-  'phoenix-hot-hands':        { radius: 3.0 * M },
   'killjoy-nanoswarm':        { radius: 5 * M },
   'raze-paint-shells':        { shape: 'circle', radius: 5 * M },
   'gekko-mosh-pit':           { radius: 5.0 * M },
@@ -87,7 +86,6 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'deadlock-sonic-sensor':     { shape: 'rect', length: 13 * M, width: 7 * M },
   'deadlock-annihilation':     { shape: 'line', length: 50 * M, thickness: 0.006 },
   'breach-rolling-thunder':    { shape: 'line', length: 40 * M, thickness: 0.015 },
-  'sova-hunters-fury':         { shape: 'line', length: 40 * M, thickness: 0.016 },
   'fade-nightfall':            { shape: 'line', length: 50 * M, thickness: 0.015 },
 
   // === 墙体 ===
@@ -157,7 +155,6 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'omen-shrouded-step':        { shape: 'line', length: 16 * M, thickness: 0.003 },
   'omen-paranoia':             { shape: 'rect', length: 40 * M, width: 10 * M },
   'omen-from-the-shadows':     { shape: 'circle', radius: 2 * M },
-  'chamber-rendezvous':        { shape: 'line', length: 12 * M, thickness: 0.006 },
   'chamber-trademark':         { shape: 'circle', radius: 1.2 * M },
   'chamber-rendezvous':        { shape: 'circle', radius: 20 * M },
 }

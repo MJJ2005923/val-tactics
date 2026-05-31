@@ -45,7 +45,7 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
   const isSage = agent.id === 'sage'
   const overrideColor = isJett ? '#ffffff' : isSage ? '#50b4f0' : undefined
   const c = overrideColor || typeColors[ability.type]
-  const label = isJett ? typeLabels[ability.type] : typeLabels[ability.type]
+  const label = typeLabels[ability.type]
   return (
     <div
       className={`${styles.abilityBtn} ${!isDraggable ? styles.abilityBtnDisabled : ''}`}
