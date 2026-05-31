@@ -12,6 +12,21 @@
 2. 严格按照开发阶段顺序执行，不要跳阶段
 3. 每个步骤完成后进行验收，确认无误再进入下一步
 4. 每次会话结束时，更新 dev-logs/YYYY-MM-DD.md 开发日志
+5. **每次会话结束时，必须 git commit 提交所有改动**（防止代码丢失，可随时回退）
+
+## Git 分支策略
+- **master**：发布分支，仅上线时推送（触发 Cloudflare/Vercel 部署）
+- **dev**：日常开发分支，本地改动先提交到 dev
+- 发布时：`git checkout master && git merge dev && git push gitee master && git checkout dev`
+
+## Git 提交（日常开发）
+```bash
+cd d:\无畏契约战术布置
+git checkout dev
+git add val-tactics/src/ dev-logs/ val-tactics/public/
+git commit -m "描述本次改动的提交信息"
+git push gitee dev
+```
 
 ## 文档规范
 - 所有开发规范文档在 docs/ 文件夹
