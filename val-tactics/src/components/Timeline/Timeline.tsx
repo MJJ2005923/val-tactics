@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useTactics } from '../../store/TacticsContext'
 import agents from '../../data/agents'
 import styles from './Timeline.module.css'
@@ -113,7 +113,7 @@ export default function Timeline() {
             const prevPhase = idx > 0 ? (sorted[idx - 1].phase || '') : ''
             const showPhase = phase !== prevPhase
             return (
-              <div key={marker.id}>
+              <React.Fragment key={marker.id}>
                 {/* 阶段分隔线 */}
                 {showPhase && (
                   <div className={styles.phaseSep} style={phase ? { borderColor: phaseColors[phase] || '#888' } : undefined}>
@@ -160,7 +160,7 @@ export default function Timeline() {
                       onClick={e => { e.stopPropagation(); dispatch({ type: 'REMOVE_MARKER', id: marker.id }) }}>✕</button>
                   </div>
                 </div>
-              </div>
+              </React.Fragment>
             )
           })}
         </div>
