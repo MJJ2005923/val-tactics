@@ -2,6 +2,16 @@ import { useState, useRef, useCallback } from 'react'
 import { useTactics } from '../../store/TacticsContext'
 import type { DrawPath } from '../../types'
 
+// 点到线段的距离
+function distToSegment(p: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }): number {
+  const dx = b.x - a.x, dy = b.y - a.y
+  const len2 = dx * dx + dy * dy
+  if (len2 === 0) return Math.sqrt((p.x - a.x) ** 2 + (p.y - a.y) ** 2)
+  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2
+  t = Math.max(0, Math.min(1, t))
+  return Math.sqrt((p.x - (a.x + t * dx)) ** 2 + (p.y - (a.y + t * dy)) ** 2)
+}
+
 interface Props {
   offset: { x: number; y: number }
   scale: number
@@ -16,6 +26,35 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
   const drawingRef = useRef(false)
 
+  // 命中检测：判断点击是否在绘图附近
+  const hitTest = (d: DrawPath, p: { x: number; y: number }): boolean => {
+    const threshold = 0.02 // 点击容差
+    switch (d.type) {
+      case 'line': case 'arrow': {
+        const [a, b] = d.points
+        return distToSegment(p, a, b) < threshold
+      }
+      case 'rect': {
+        if (!d.x || !d.w || !d.h) return false
+        const rx = Math.min(d.x, d.x + d.w), ry = Math.min(d.y!, d.y! + d.h)
+        const rw = Math.abs(d.w), rh = Math.abs(d.h)
+        return p.x >= rx - threshold && p.x <= rx + rw + threshold && p.y >= ry - threshold && p.y <= ry + rh + threshold
+      }
+      case 'circle': {
+        if (!d.cx || !d.cy || !d.r) return false
+        const dist = Math.sqrt((p.x - d.cx) ** 2 + (p.y - d.cy) ** 2)
+        return Math.abs(dist - d.r) < threshold
+      }
+      case 'freehand': {
+        for (let i = 1; i < d.points.length; i++) {
+          if (distToSegment(p, d.points[i - 1], d.points[i]) < threshold) return true
+        }
+        return false
+      }
+      default: return false
+    }
+  }
+
   const screenToWorld = useCallback((sx: number, sy: number) => {
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return { x: 0, y: 0 }
@@ -26,7 +65,14 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
   }, [offset, scale, mapW, mapH, containerRef])
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (toolMode === 'select' || toolMode === 'text' || toolMode === 'agent' || toolMode === 'eraser') return
+    // 橡皮擦模式：检测点击是否命中绘图
+    if (toolMode === 'eraser') {
+      const p = screenToWorld(e.clientX, e.clientY)
+      const hit = drawings.find(d => hitTest(d, p))
+      if (hit) dispatch({ type: 'REMOVE_DRAWING', id: hit.id })
+      return
+    }
+    if (toolMode === 'select' || toolMode === 'text' || toolMode === 'agent') return
     e.stopPropagation()
     drawingRef.current = true
     const p = screenToWorld(e.clientX, e.clientY)
@@ -119,14 +165,16 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
   }
 
   const isDrawing = toolMode === 'freehand' || toolMode === 'line' || toolMode === 'arrow' || toolMode === 'rect' || toolMode === 'circle'
+  const isEraser = toolMode === 'eraser'
+  const svgActive = isDrawing || isEraser
 
   return (
     <svg
       style={{
         position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
         zIndex: 3,
-        cursor: isDrawing ? 'crosshair' : undefined,
-        pointerEvents: isDrawing ? 'auto' : 'none',
+        cursor: isEraser ? 'pointer' : isDrawing ? 'crosshair' : undefined,
+        pointerEvents: svgActive ? 'auto' : 'none',
       }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
