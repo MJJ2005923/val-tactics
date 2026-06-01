@@ -13,6 +13,7 @@ interface Props {
 export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }: Props) {
   const { drawings, toolMode, drawColor, drawWidth, dispatch } = useTactics()
   const [preview, setPreview] = useState<DrawPath | null>(null)
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
   const drawingRef = useRef(false)
 
   const screenToWorld = useCallback((sx: number, sy: number) => {
@@ -41,8 +42,9 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
   }, [toolMode, drawColor, drawWidth, screenToWorld])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!drawingRef.current) return
     const p = screenToWorld(e.clientX, e.clientY)
+    setCursorPos(p)
+    if (!drawingRef.current) return
     setPreview(d => {
       if (!d) return null
       if (d.type === 'freehand') return { ...d, points: [...d.points, p] }
@@ -134,6 +136,13 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
         {drawings.map(d => renderPath(d))}
         {/* 正在绘制的预览 — 虚线+半透明 */}
         {preview && renderPath(preview, true)}
+        {/* 光标指示器 — 显示当前颜色和粗细 */}
+        {cursorPos && isDrawing && !drawingRef.current && (
+          <circle cx={cursorPos.x * mapW} cy={cursorPos.y * mapH}
+            r={drawWidth * 2 / scale}
+            fill={`${drawColor}30`} stroke={drawColor} strokeWidth={1.5 / scale}
+            style={{ pointerEvents: 'none' }} />
+        )}
       </g>
     </svg>
   )

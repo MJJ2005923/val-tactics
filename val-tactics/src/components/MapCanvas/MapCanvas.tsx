@@ -5,6 +5,7 @@ import type { AbilityShapeConfig } from '../../types'
 import DrawingLayer from '../DrawingLayer/DrawingLayer'
 import AbilityShapeLayer from '../AbilityShapeLayer/AbilityShapeLayer'
 import TextInputModal from '../TextInputModal/TextInputModal'
+import SelectionInspector from '../SelectionInspector/SelectionInspector'
 import styles from './MapCanvas.module.css'
 
 interface MapCanvasProps {
@@ -122,6 +123,47 @@ function drawPlaceholderMap(ctx: CanvasRenderingContext2D, mapId: string, w: num
   for (let y = gs; y < h; y += gs) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke() }
   const layout = mapLayouts[mapId]
   if (layout) layout(ctx, w, h)
+  // 绘制地图标注点
+  const callouts = calloutLabels[mapId]
+  if (callouts) {
+    ctx.font = '9px "PingFang SC","Microsoft YaHei",sans-serif'
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    for (const c of callouts) {
+      ctx.fillStyle = 'rgba(255,255,255,0.12)'
+      ctx.fillText(c.label, c.x * w, c.y * h)
+    }
+  }
+}
+
+// 地图标注点（callout labels）
+const calloutLabels: Record<string, { label: string; x: number; y: number }[]> = {
+  ascent: [
+    { label: 'A Main', x: 0.78, y: 0.18 },
+    { label: 'A Heaven', x: 0.72, y: 0.10 },
+    { label: 'A Garden', x: 0.70, y: 0.55 },
+    { label: 'Mid', x: 0.50, y: 0.42 },
+    { label: 'B Main', x: 0.22, y: 0.55 },
+    { label: 'B Lane', x: 0.30, y: 0.80 },
+    { label: 'Catwalk', x: 0.60, y: 0.45 },
+  ],
+  bind: [
+    { label: 'A Short', x: 0.72, y: 0.18 },
+    { label: 'A Lamps', x: 0.78, y: 0.35 },
+    { label: 'Hookah', x: 0.72, y: 0.60 },
+    { label: 'B Long', x: 0.18, y: 0.55 },
+    { label: 'B Elbow', x: 0.28, y: 0.72 },
+    { label: 'Garden', x: 0.28, y: 0.45 },
+    { label: 'TP', x: 0.50, y: 0.35 },
+  ],
+  haven: [
+    { label: 'A Long', x: 0.78, y: 0.12 },
+    { label: 'A Heaven', x: 0.72, y: 0.25 },
+    { label: 'C Long', x: 0.15, y: 0.60 },
+    { label: 'C Garage', x: 0.08, y: 0.35 },
+    { label: 'Mid', x: 0.50, y: 0.40 },
+    { label: 'B Site', x: 0.50, y: 0.62 },
+    { label: 'A Sewer', x: 0.65, y: 0.50 },
+  ],
 }
 
 // ====== 辅助函数 ======
@@ -144,7 +186,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
   const [scale, setScale] = useState(1)
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
-  const { markers, textAnnotations, agentPositions, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side } = useTactics()
+  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side } = useTactics()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
   const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
@@ -564,10 +606,31 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
         e.preventDefault(); dispatch({ type: 'REDO' })
       }
+      // Ctrl+D 复制选中元素
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && selectedId && selectedType) {
+        e.preventDefault()
+        const offset = 0.012
+        if (selectedType === 'abilityShape') {
+          const s = abilityShapes.find(x => x.id === selectedId)
+          if (s) dispatch({ type: 'ADD_ABILITY_SHAPE', shape: { ...s, id: '', x: s.x + offset, y: s.y + offset, path: s.path?.map(p => ({ ...p })) } })
+        } else if (selectedType === 'marker') {
+          const m = markers.find(x => x.id === selectedId)
+          if (m) dispatch({ type: 'ADD_MARKER', marker: { ...m, id: '', x: m.x + offset, y: m.y + offset, step: m.step + 1 } })
+        } else if (selectedType === 'text') {
+          const t = textAnnotations.find(x => x.id === selectedId)
+          if (t) dispatch({ type: 'ADD_TEXT', text: { ...t, id: '', x: t.x + offset, y: t.y + offset } })
+        } else if (selectedType === 'agent') {
+          const a = agentPositions.find(x => x.id === selectedId)
+          if (a) dispatch({ type: 'ADD_AGENT_POS', pos: { ...a, id: '', x: a.x + offset, y: a.y + offset } })
+        } else if (selectedType === 'drawing') {
+          const d = drawings.find(x => x.id === selectedId)
+          if (d) dispatch({ type: 'ADD_DRAWING', drawing: { ...d, id: '', points: d.points.map(p => ({ x: p.x + offset, y: p.y + offset })) } })
+        }
+      }
     }
     window.addEventListener('keydown', keydown)
     return () => window.removeEventListener('keydown', keydown)
-  }, [selectedId, selectedType, dispatch])
+  }, [selectedId, selectedType, dispatch, abilityShapes, markers, textAnnotations, agentPositions, drawings])
 
   // 标记拖拽
   const markerDragRef = useRef<{ id: string; type: string; sx: number; sy: number; ox: number; oy: number } | null>(null)
@@ -832,6 +895,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           }}
         />
       )}
+
+      {/* 选中对象属性面板 */}
+      <SelectionInspector />
 
       {/* 缩放控件 */}
       <div className={styles.controls}>
