@@ -30,9 +30,6 @@ export default function SplashScreen({ onEnter }: Props) {
         </button>
         <div className={styles.hint}>或按 Enter 键进入</div>
       </div>
-      <div className={styles.footer}>
-        Inspired by ValoPlant · Built for Tactical Planning
-      </div>
     </div>
   )
 }
