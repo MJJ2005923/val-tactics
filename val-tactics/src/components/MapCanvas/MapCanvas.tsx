@@ -137,11 +137,13 @@ function getAbilityInfo(abilityId: string, agentId: string) {
 }
 
 // ====== MapCanvas ======
-export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasProps) {
+export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
   const [scale, setScale] = useState(1)
+  const [mapImgLoaded, setMapImgLoaded] = useState(false)
   const { markers, textAnnotations, agentPositions, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side } = useTactics()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
@@ -195,6 +197,18 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     }
   })
 
+  // 地图图片缓存加载（仅在地图切换时加载）
+  useEffect(() => {
+    setMapImgLoaded(false)
+    const img = new Image()
+    img.onload = () => {
+      imageRef.current = img
+      setMapImgLoaded(true)
+    }
+    img.onerror = () => { imageRef.current = null; setMapImgLoaded(false) }
+    img.src = `/images/maps/${mapId}.png`
+  }, [mapId])
+
   // 渲染地图 Canvas
   const render = useCallback(() => {
     const canvas = canvasRef.current
@@ -210,38 +224,21 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     // 背景
     ctx.fillStyle = '#0a0a0a'
     ctx.fillRect(0, 0, containerSize.w, containerSize.h)
-
-    const img = new Image()
-    const drawImg = () => {
-      ctx.save()
-      // 攻防翻转
-      if (side === 'defense') {
-        ctx.translate(containerSize.w / 2, containerSize.h / 2)
-        ctx.rotate(Math.PI)
-        ctx.translate(-containerSize.w / 2, -containerSize.h / 2)
-      }
-      ctx.translate(offsetX, offsetY)
-      ctx.scale(displayScale, displayScale)
-      ctx.drawImage(img, 0, 0, mapW, mapH)
-      ctx.restore()
+    ctx.save()
+    if (side === 'defense') {
+      ctx.translate(containerSize.w / 2, containerSize.h / 2)
+      ctx.rotate(Math.PI)
+      ctx.translate(-containerSize.w / 2, -containerSize.h / 2)
     }
-    const drawFallback = () => {
-      ctx.save()
-      if (side === 'defense') {
-        ctx.translate(containerSize.w / 2, containerSize.h / 2)
-        ctx.rotate(Math.PI)
-        ctx.translate(-containerSize.w / 2, -containerSize.h / 2)
-      }
-      ctx.translate(offsetX, offsetY)
-      ctx.scale(displayScale, displayScale)
+    ctx.translate(offsetX, offsetY)
+    ctx.scale(displayScale, displayScale)
+    if (imageRef.current && mapImgLoaded) {
+      ctx.drawImage(imageRef.current, 0, 0, mapW, mapH)
+    } else {
       drawPlaceholderMap(ctx, mapId, mapW, mapH)
-      ctx.restore()
     }
-    drawFallback()
-    img.onload = () => { ctx.clearRect(0, 0, containerSize.w, containerSize.h); drawImg() }
-    img.onerror = () => {}
-    img.src = `/images/maps/${mapId}.png`
-  }, [containerSize, displayScale, offsetX, offsetY, mapId, mapName, side])
+    ctx.restore()
+  }, [containerSize, displayScale, offsetX, offsetY, mapId, mapImgLoaded, side])
 
   useEffect(() => { render() }, [render])
 

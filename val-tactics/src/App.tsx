@@ -12,7 +12,24 @@ import { TacticsProvider, useTactics } from './store/TacticsContext'
 function AppInner() {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
-  const { dispatch, side } = useTactics()
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription } = useTactics()
+
+  const handleDirectExport = () => {
+    const data = {
+      version: 2, exportedAt: Date.now(),
+      strategyName, strategyDescription,
+      markers: markers.map(m => ({ abilityId: m.abilityId, agentId: m.agentId, x: m.x, y: m.y, step: m.step, time: m.time, note: m.note })),
+      drawings: drawings.map(d => ({ ...d })),
+      textAnnotations: textAnnotations.map(t => ({ ...t })),
+      agentPositions: agentPositions.map(a => ({ ...a })),
+      abilityShapes: abilityShapes.map(s => ({ ...s })),
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob); a.download = `tactics-${Date.now()}.json`; a.click()
+    URL.revokeObjectURL(a.href)
+  }
 
   const transformRef = useRef<{ offset: { x: number; y: number }; scale: number; mapW: number; mapH: number; container: HTMLDivElement | null }>({
     offset: { x: 0, y: 0 }, scale: 1, mapW: 1800, mapH: 1200, container: null
@@ -44,14 +61,17 @@ function AppInner() {
           onClick={() => dispatch({ type: 'SET_SIDE', side: side === 'attack' ? 'defense' : 'attack' })}>
           {side === 'attack' ? '进攻方' : '防守方'}
         </button>
+        <button className="btn mobile-menu-btn" onClick={() => setMobileSidebarOpen(v => !v)}
+          style={{ display: 'none' }}>☰</button>
         <div className="navbar__actions">
           <button className="btn" onClick={() => setShowTemplates(true)}>模板管理</button>
-          <button className="btn btn--primary" onClick={() => setShowTemplates(true)}>导出</button>
+          <button className="btn btn--primary" onClick={handleDirectExport}>导出 JSON</button>
         </div>
       </nav>
 
       <div className="main-area">
-        <aside className="sidebar">
+        {mobileSidebarOpen && <div className="sidebar-overlay" onClick={() => setMobileSidebarOpen(false)} />}
+        <aside className={`sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
           <AgentPanel />
         </aside>
         <div className="canvas-area">

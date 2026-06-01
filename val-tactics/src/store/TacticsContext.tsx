@@ -46,7 +46,10 @@ function takeSnapshot(state: TacticsState): Snapshot {
     drawings: state.drawings.map(d => ({ ...d, points: d.points.map(p => ({ ...p })) })),
     textAnnotations: state.textAnnotations.map(t => ({ ...t })),
     agentPositions: state.agentPositions.map(a => ({ ...a })),
-    abilityShapes: state.abilityShapes.map(s => ({ ...s }))
+    abilityShapes: state.abilityShapes.map(s => ({
+      ...s,
+      path: s.path ? s.path.map(p => ({ ...p })) : undefined,
+    })),
   }
 }
 
