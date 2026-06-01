@@ -20,7 +20,7 @@ function getInfo(abilityId: string, agentId: string) {
 }
 
 export default function Timeline() {
-  const { markers, selectedId, selectedType, playing, playSpeed, playStep, dispatch } = useTactics()
+  const { markers, abilityShapes, selectedId, selectedType, playing, playSpeed, playStep, dispatch } = useTactics()
   const [collapsed, setCollapsed] = useState(false)
   const timerRef = useRef<number | null>(null)
 
@@ -66,11 +66,12 @@ export default function Timeline() {
 
   const totalDuration = sorted.reduce((sum, m) => Math.max(sum, m.time), 0)
 
-  // 空状态
-  if (markers.length === 0) {
+  // 空状态：同时检查 shape 数量
+  const totalItems = markers.length + abilityShapes.length
+  if (totalItems === 0) {
     return (
       <div className={`${styles.wrapper} ${styles.empty}`}>
-        <div className={styles.header} onClick={() => setCollapsed(!collapsed)}>
+        <div className={styles.header}>
           <span>时间轴</span>
           <span className={styles.tip}>拖拽技能到地图上以添加步骤</span>
         </div>
