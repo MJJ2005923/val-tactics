@@ -1,10 +1,11 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { useTactics } from '../../store/TacticsContext'
-import agents, { getAbilityShapeConfig } from '../../data/agents'
+import agents, { getAbilityShapeConfig, agentImages } from '../../data/agents'
 import type { AbilityShapeConfig } from '../../types'
 import DrawingLayer from '../DrawingLayer/DrawingLayer'
 import AbilityShapeLayer from '../AbilityShapeLayer/AbilityShapeLayer'
 import TextInputModal from '../TextInputModal/TextInputModal'
+import SelectionInspector from '../SelectionInspector/SelectionInspector'
 import styles from './MapCanvas.module.css'
 
 interface MapCanvasProps {
@@ -122,6 +123,47 @@ function drawPlaceholderMap(ctx: CanvasRenderingContext2D, mapId: string, w: num
   for (let y = gs; y < h; y += gs) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke() }
   const layout = mapLayouts[mapId]
   if (layout) layout(ctx, w, h)
+  // 绘制地图标注点
+  const callouts = calloutLabels[mapId]
+  if (callouts) {
+    ctx.font = '9px "PingFang SC","Microsoft YaHei",sans-serif'
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    for (const c of callouts) {
+      ctx.fillStyle = 'rgba(255,255,255,0.12)'
+      ctx.fillText(c.label, c.x * w, c.y * h)
+    }
+  }
+}
+
+// 地图标注点（callout labels）
+const calloutLabels: Record<string, { label: string; x: number; y: number }[]> = {
+  ascent: [
+    { label: 'A Main', x: 0.78, y: 0.18 },
+    { label: 'A Heaven', x: 0.72, y: 0.10 },
+    { label: 'A Garden', x: 0.70, y: 0.55 },
+    { label: 'Mid', x: 0.50, y: 0.42 },
+    { label: 'B Main', x: 0.22, y: 0.55 },
+    { label: 'B Lane', x: 0.30, y: 0.80 },
+    { label: 'Catwalk', x: 0.60, y: 0.45 },
+  ],
+  bind: [
+    { label: 'A Short', x: 0.72, y: 0.18 },
+    { label: 'A Lamps', x: 0.78, y: 0.35 },
+    { label: 'Hookah', x: 0.72, y: 0.60 },
+    { label: 'B Long', x: 0.18, y: 0.55 },
+    { label: 'B Elbow', x: 0.28, y: 0.72 },
+    { label: 'Garden', x: 0.28, y: 0.45 },
+    { label: 'TP', x: 0.50, y: 0.35 },
+  ],
+  haven: [
+    { label: 'A Long', x: 0.78, y: 0.12 },
+    { label: 'A Heaven', x: 0.72, y: 0.25 },
+    { label: 'C Long', x: 0.15, y: 0.60 },
+    { label: 'C Garage', x: 0.08, y: 0.35 },
+    { label: 'Mid', x: 0.50, y: 0.40 },
+    { label: 'B Site', x: 0.50, y: 0.62 },
+    { label: 'A Sewer', x: 0.65, y: 0.50 },
+  ],
 }
 
 // ====== 辅助函数 ======
@@ -130,19 +172,15 @@ const typeColors: Record<string, string> = {
   recon: '#50b4f0', control: '#a070d8', heal: '#50e890', mobility: '#ff8c42'
 }
 
-function getAbilityInfo(abilityId: string, agentId: string) {
-  const agent = agents.find(a => a.id === agentId)
-  const ability = agent?.abilities.find(a => a.id === abilityId)
-  return { agentName: agent?.name || '', abilityName: ability?.name || '', abilityKey: ability?.key || '' }
-}
-
 // ====== MapCanvas ======
-export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasProps) {
+export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
   const [scale, setScale] = useState(1)
-  const { markers, textAnnotations, agentPositions, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side } = useTactics()
+  const [mapImgLoaded, setMapImgLoaded] = useState(false)
+  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side } = useTactics()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
   const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
@@ -195,6 +233,18 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     }
   })
 
+  // 地图图片缓存加载（仅在地图切换时加载）
+  useEffect(() => {
+    setMapImgLoaded(false)
+    const img = new Image()
+    img.onload = () => {
+      imageRef.current = img
+      setMapImgLoaded(true)
+    }
+    img.onerror = () => { imageRef.current = null; setMapImgLoaded(false) }
+    img.src = `/images/maps/${mapId}.png`
+  }, [mapId])
+
   // 渲染地图 Canvas
   const render = useCallback(() => {
     const canvas = canvasRef.current
@@ -210,38 +260,21 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
     // 背景
     ctx.fillStyle = '#0a0a0a'
     ctx.fillRect(0, 0, containerSize.w, containerSize.h)
-
-    const img = new Image()
-    const drawImg = () => {
-      ctx.save()
-      // 攻防翻转
-      if (side === 'defense') {
-        ctx.translate(containerSize.w / 2, containerSize.h / 2)
-        ctx.rotate(Math.PI)
-        ctx.translate(-containerSize.w / 2, -containerSize.h / 2)
-      }
-      ctx.translate(offsetX, offsetY)
-      ctx.scale(displayScale, displayScale)
-      ctx.drawImage(img, 0, 0, mapW, mapH)
-      ctx.restore()
+    ctx.save()
+    if (side === 'defense') {
+      ctx.translate(containerSize.w / 2, containerSize.h / 2)
+      ctx.rotate(Math.PI)
+      ctx.translate(-containerSize.w / 2, -containerSize.h / 2)
     }
-    const drawFallback = () => {
-      ctx.save()
-      if (side === 'defense') {
-        ctx.translate(containerSize.w / 2, containerSize.h / 2)
-        ctx.rotate(Math.PI)
-        ctx.translate(-containerSize.w / 2, -containerSize.h / 2)
-      }
-      ctx.translate(offsetX, offsetY)
-      ctx.scale(displayScale, displayScale)
+    ctx.translate(offsetX, offsetY)
+    ctx.scale(displayScale, displayScale)
+    if (imageRef.current && mapImgLoaded) {
+      ctx.drawImage(imageRef.current, 0, 0, mapW, mapH)
+    } else {
       drawPlaceholderMap(ctx, mapId, mapW, mapH)
-      ctx.restore()
     }
-    drawFallback()
-    img.onload = () => { ctx.clearRect(0, 0, containerSize.w, containerSize.h); drawImg() }
-    img.onerror = () => {}
-    img.src = `/images/maps/${mapId}.png`
-  }, [containerSize, displayScale, offsetX, offsetY, mapId, mapName, side])
+    ctx.restore()
+  }, [containerSize, displayScale, offsetX, offsetY, mapId, mapImgLoaded, side])
 
   useEffect(() => { render() }, [render])
 
@@ -567,10 +600,31 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
       if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
         e.preventDefault(); dispatch({ type: 'REDO' })
       }
+      // Ctrl+D 复制选中元素
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && selectedId && selectedType) {
+        e.preventDefault()
+        const offset = 0.012
+        if (selectedType === 'abilityShape') {
+          const s = abilityShapes.find(x => x.id === selectedId)
+          if (s) dispatch({ type: 'ADD_ABILITY_SHAPE', shape: { ...s, id: '', x: s.x + offset, y: s.y + offset, path: s.path?.map(p => ({ ...p })) } })
+        } else if (selectedType === 'marker') {
+          const m = markers.find(x => x.id === selectedId)
+          if (m) dispatch({ type: 'ADD_MARKER', marker: { ...m, id: '', x: m.x + offset, y: m.y + offset, step: m.step + 1 } })
+        } else if (selectedType === 'text') {
+          const t = textAnnotations.find(x => x.id === selectedId)
+          if (t) dispatch({ type: 'ADD_TEXT', text: { ...t, id: '', x: t.x + offset, y: t.y + offset } })
+        } else if (selectedType === 'agent') {
+          const a = agentPositions.find(x => x.id === selectedId)
+          if (a) dispatch({ type: 'ADD_AGENT_POS', pos: { ...a, id: '', x: a.x + offset, y: a.y + offset } })
+        } else if (selectedType === 'drawing') {
+          const d = drawings.find(x => x.id === selectedId)
+          if (d) dispatch({ type: 'ADD_DRAWING', drawing: { ...d, id: '', points: d.points.map(p => ({ x: p.x + offset, y: p.y + offset })) } })
+        }
+      }
     }
     window.addEventListener('keydown', keydown)
     return () => window.removeEventListener('keydown', keydown)
-  }, [selectedId, selectedType, dispatch])
+  }, [selectedId, selectedType, dispatch, abilityShapes, markers, textAnnotations, agentPositions, drawings])
 
   // 标记拖拽
   const markerDragRef = useRef<{ id: string; type: string; sx: number; sy: number; ox: number; oy: number } | null>(null)
@@ -726,31 +780,6 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
 
       {isOver && !lineDrawing && !rectDrawing && <div className={styles.dropHint}>释放以放置技能</div>}
 
-      {/* 技能标记 */}
-      {markers.map(marker => {
-        const info = getAbilityInfo(marker.abilityId, marker.agentId)
-        const agent = agents.find(a => a.id === marker.agentId)
-        const ab = agent?.abilities.find(a => a.id === marker.abilityId)
-        const color = ab ? typeColors[ab.type] || '#888' : '#888'
-        const isSelected = marker.id === selectedId && selectedType === 'marker'
-        return (
-          <div key={marker.id}
-            className={`${styles.marker} ${isSelected ? styles.markerSelected : ''}`}
-            style={{
-              left: offsetX + marker.x * mapW * displayScale,
-              top: offsetY + marker.y * mapH * displayScale,
-              borderColor: isSelected ? '#fff' : color,
-              background: isSelected ? color + '30' : 'rgba(0,0,0,0.85)'
-            }}
-            onMouseDown={(e) => handleMarkerMouseDown(e, marker.id, 'marker')}
-          >
-            <span className={styles.markerStep}>{marker.step}</span>
-            <span className={styles.markerKey}>{info.abilityKey}</span>
-            <span className={styles.markerName}>{info.abilityName}</span>
-            {marker.note && <span className={styles.markerNote}>{marker.note}</span>}
-          </div>
-        )
-      })}
 
       {/* 文字标注 */}
       {textAnnotations.map(tx => {
@@ -780,18 +809,24 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
         const agent = agents.find(a => a.id === ap.agentId)
         const isSelected = ap.id === selectedId && selectedType === 'agent'
         const teamColor = ap.team === 'attack' ? '#ff4655' : '#50b4f0'
+        const imgFile = agent ? (agentImages[agent.id] || agent.id) : ''
         return (
           <div key={ap.id}
             className={`${styles.agentPos} ${isSelected ? styles.agentPosSelected : ''}`}
             style={{
               left: offsetX + ap.x * mapW * displayScale,
               top: offsetY + ap.y * mapH * displayScale,
-              borderColor: teamColor
+              borderColor: isSelected ? '#fff' : teamColor,
             }}
             onMouseDown={(e) => handleMarkerMouseDown(e, ap.id, 'agent')}
           >
-            <div className={styles.agentPosDot} style={{ background: teamColor }} />
-            <span className={styles.agentPosName}>{agent?.name || '?'}</span>
+            <img
+              src={`/images/agents/${imgFile}.png`}
+              alt={agent?.name || ''}
+              className={styles.agentAvatar}
+              style={{ borderColor: teamColor }}
+              title={agent?.name}
+            />
           </div>
         )
       })}
@@ -829,6 +864,9 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
           }}
         />
       )}
+
+      {/* 选中对象属性面板 */}
+      <SelectionInspector />
 
       {/* 缩放控件 */}
       <div className={styles.controls}>

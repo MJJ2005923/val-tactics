@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, type ReactNode } from 'react'
-import type { Marker, DrawPath, TextAnnotation, AgentPosition, AbilityShape, ToolMode } from '../types'
+import type { Marker, DrawPath, TextAnnotation, AgentPosition, AbilityShape, RecordedTrack, ToolMode } from '../types'
 
 // ====== 完整状态 ======
 export interface TacticsState {
@@ -22,6 +22,14 @@ export interface TacticsState {
   // 策略元信息
   strategyName: string
   strategyDescription: string
+  // 录制与回放
+  tracks: RecordedTrack[]
+  currentTrackId: string | null
+  recording: boolean
+  replaying: boolean
+  replayIndex: number
+  revealedShapeIds: string[]
+  animatingShapeId: string | null  // 正在播放入场动画的形状ID
 }
 
 // ====== 快照（用于撤销重做） ======
@@ -46,7 +54,10 @@ function takeSnapshot(state: TacticsState): Snapshot {
     drawings: state.drawings.map(d => ({ ...d, points: d.points.map(p => ({ ...p })) })),
     textAnnotations: state.textAnnotations.map(t => ({ ...t })),
     agentPositions: state.agentPositions.map(a => ({ ...a })),
-    abilityShapes: state.abilityShapes.map(s => ({ ...s }))
+    abilityShapes: state.abilityShapes.map(s => ({
+      ...s,
+      path: s.path ? s.path.map(p => ({ ...p })) : undefined,
+    })),
   }
 }
 
@@ -83,6 +94,13 @@ type Action =
   | { type: 'PLAY_STOP' }
   | { type: 'PLAY_STEP'; step: number }
   | { type: 'PLAY_SPEED'; speed: number }
+  | { type: 'CREATE_TRACK'; name: string }
+  | { type: 'DELETE_TRACK'; id: string }
+  | { type: 'RECORDING_START' }
+  | { type: 'RECORDING_STOP' }
+  | { type: 'REPLAY_START'; markers: Marker[] }
+  | { type: 'REPLAY_STEP'; shapeId: string }
+  | { type: 'REPLAY_STOP' }
 
 // ====== 初始状态 ======
 const initialState: TacticsState = {
@@ -102,7 +120,14 @@ const initialState: TacticsState = {
   playSpeed: 1,
   playStep: -1,
   strategyName: '',
-  strategyDescription: ''
+  strategyDescription: '',
+  tracks: [],
+  currentTrackId: null,
+  recording: false,
+  replaying: false,
+  replayIndex: -1,
+  revealedShapeIds: [],
+  animatingShapeId: null,
 }
 
 let idCounter = 0
@@ -119,7 +144,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     'ADD_TEXT', 'UPDATE_TEXT', 'REMOVE_TEXT',
     'ADD_AGENT_POS', 'UPDATE_AGENT_POS', 'REMOVE_AGENT_POS',
     'ADD_ABILITY_SHAPE', 'UPDATE_ABILITY_SHAPE', 'REMOVE_ABILITY_SHAPE',
-    'CLEAR_ALL', 'LOAD_ALL'
+    'CLEAR_ALL', 'LOAD_ALL', 'REPLAY_START', 'REPLAY_STOP', 'CREATE_TRACK', 'DELETE_TRACK'
   ])
 
   let newHistory = { ...history }
@@ -180,9 +205,32 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     case 'REMOVE_AGENT_POS':
       return { state: { ...state, agentPositions: state.agentPositions.filter(a => a.id !== action.id), selectedId: state.selectedId === action.id ? null : state.selectedId, selectedType: state.selectedId === action.id ? null : state.selectedType }, history: newHistory }
 
-    // Ability shapes
-    case 'ADD_ABILITY_SHAPE':
-      return { state: { ...state, abilityShapes: [...state.abilityShapes, { ...action.shape, id: action.shape.id || genId('as') }] }, history: newHistory }
+    // Ability shapes — 同时自动创建时间轴标记
+    case 'ADD_ABILITY_SHAPE': {
+      const maxStep = state.markers.reduce((max, m) => Math.max(max, m.step), 0)
+      const now = Date.now()
+      const shapeId = action.shape.id || genId('as')
+      const newMarker = {
+        id: genId('mk'),
+        abilityId: action.shape.abilityId,
+        agentId: action.shape.agentId,
+        x: action.shape.x, y: action.shape.y,
+        step: state.recording ? maxStep + 1 : maxStep + 1,
+        time: state.recording ? Math.round((now - (state.markers[0]?.createdAt ?? now)) / 1000) : (maxStep + 1) * 5,
+        note: '',
+        createdAt: state.recording ? now : undefined,
+        shapeId,
+        trackId: state.currentTrackId || undefined,
+      }
+      return {
+        state: {
+          ...state,
+          abilityShapes: [...state.abilityShapes, { ...action.shape, id: shapeId }],
+          markers: [...state.markers, newMarker],
+        },
+        history: newHistory,
+      }
+    }
     case 'UPDATE_ABILITY_SHAPE':
       return { state: { ...state, abilityShapes: state.abilityShapes.map(s => s.id === action.id ? { ...s, ...action.updates } : s) }, history: newHistory }
     case 'REMOVE_ABILITY_SHAPE':
@@ -227,6 +275,30 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       return { state: { ...state, playStep: action.step }, history: newHistory }
     case 'PLAY_SPEED':
       return { state: { ...state, playSpeed: action.speed }, history: newHistory }
+
+    // 轨道管理
+    case 'CREATE_TRACK':
+      return { state: { ...state, tracks: [...state.tracks, { id: genId('tr'), name: action.name, createdAt: Date.now() }] }, history: newHistory }
+    case 'DELETE_TRACK':
+      return { state: { ...state, tracks: state.tracks.filter(t => t.id !== action.id), markers: state.markers.filter(m => m.trackId !== action.id) }, history: newHistory }
+
+    // 录制
+    case 'RECORDING_START': {
+      const newTrack: RecordedTrack = { id: genId('tr'), name: `录制 ${state.tracks.length + 1}`, createdAt: Date.now() }
+      return { state: { ...state, tracks: [...state.tracks, newTrack], currentTrackId: newTrack.id, recording: true, replaying: false }, history: newHistory }
+    }
+    case 'RECORDING_STOP':
+      return { state: { ...state, recording: false }, history: newHistory }
+
+    // 回放
+    case 'REPLAY_START':
+      return { state: { ...state, replaying: true, replayIndex: 0, recording: false, revealedShapeIds: [] }, history: newHistory }
+    case 'REPLAY_STEP': {
+      const revealed = [...state.revealedShapeIds, action.shapeId]
+      return { state: { ...state, revealedShapeIds: revealed, animatingShapeId: action.shapeId, replayIndex: state.replayIndex + 1 }, history: newHistory }
+    }
+    case 'REPLAY_STOP':
+      return { state: { ...state, replaying: false, replayIndex: -1 }, history: newHistory }
 
     default:
       return { state, history: newHistory }

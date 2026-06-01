@@ -5,18 +5,20 @@
   z-index: 30;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 6px;
+  min-width: 130px;
+  box-shadow: var(--shadow-md);
 }
 
 .paletteHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px 4px;
+  padding: 0 4px 2px;
 }
 
 .paletteTitle {
@@ -36,15 +38,22 @@
   background: transparent;
   border: none;
   color: var(--color-text-muted);
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
+  line-height: 1;
 }
 
 .collapseBtn:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-hover);
+}
+
+.toolGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .group {
@@ -72,8 +81,9 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  font-size: 13px;
+  font-size: 12px;
   text-align: left;
+  user-select: none;
 }
 
 .toolBtn:hover {
@@ -91,6 +101,7 @@
   font-size: 14px;
   width: 20px;
   text-align: center;
+  line-height: 1;
 }
 
 .toolLabel {
@@ -116,7 +127,7 @@
   border: 2px solid transparent;
   border-radius: 50%;
   cursor: pointer;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .colorBtn:hover {
@@ -128,38 +139,77 @@
   box-shadow: 0 0 6px currentColor;
 }
 
-.widthRow {
-  display: flex;
-  gap: 4px;
-  padding: 2px 4px;
-  align-items: center;
-}
-
-.widthBtn {
+.sliderHeader {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 24px;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: border-color var(--transition-fast);
+  justify-content: space-between;
+  padding: 0 4px;
 }
 
-.widthBtn:hover {
+.sliderValue {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+}
+
+.sliderPreview {
+  width: 14px;
+  height: 0;
+  border-style: solid;
   border-color: var(--color-text-secondary);
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 
-.widthBtnActive {
-  border-color: #fff;
+.slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border);
+  outline: none;
+  cursor: pointer;
 }
 
-.widthDot {
-  background: currentColor;
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  display: block;
+  background: var(--color-accent);
+  border: 2px solid #fff;
+  cursor: grab;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+.slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+
+.slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid #fff;
+  cursor: grab;
+}
+
+.hint {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 2px 4px 0;
+  line-height: 1.3;
 }
 
 /* 移动端: 横向排列，固定在底部 */
@@ -173,21 +223,21 @@
     gap: 6px;
     padding: 4px 8px;
     border-radius: 20px;
+    min-width: 0;
   }
 
-  .group {
+  .paletteHeader { display: none; }
+  .divider { width: 1px; height: 24px; margin: 0 2px; align-self: center; }
+  .hint { display: none; }
+
+  .group, .toolGroup {
     flex-direction: row;
     align-items: center;
     gap: 2px;
   }
 
-  .groupLabel {
-    display: none;
-  }
-
-  .toolLabel {
-    display: none;
-  }
+  .groupLabel { display: none; }
+  .toolLabel { display: none; }
 
   .toolBtn {
     width: 32px;
@@ -196,24 +246,7 @@
     justify-content: center;
   }
 
-  .divider {
-    width: 1px;
-    height: 24px;
-    margin: 0 2px;
-    align-self: center;
-  }
-
-  .colorRow {
-    gap: 3px;
-  }
-
-  .colorBtn {
-    width: 16px;
-    height: 16px;
-  }
-
-  .widthBtn {
-    width: 24px;
-    height: 20px;
-  }
+  .colorRow { gap: 3px; }
+  .colorBtn { width: 16px; height: 16px; }
+  .widthBtn { width: 24px; height: 20px; }
 }

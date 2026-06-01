@@ -15,59 +15,51 @@ function getInfo(abilityId: string, agentId: string) {
 }
 
 export default function Timeline() {
-  const { markers, selectedId, selectedType, playing, playSpeed, playStep, dispatch } = useTactics()
+  const { markers, abilityShapes, tracks, currentTrackId, recording, replaying, replayIndex, dispatch } = useTactics()
   const [collapsed, setCollapsed] = useState(false)
+  const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
   const timerRef = useRef<number | null>(null)
 
-  const sorted = [...markers].sort((a, b) => a.step - b.step)
+  // 当前活跃轨道
+  const trackId = activeTrackId || currentTrackId
+  const trackMarkers = markers.filter(m => m.trackId === trackId)
+  const sorted = [...trackMarkers].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
 
-  const moveStep = (id: string, direction: -1 | 1) => {
-    const idx = sorted.findIndex(m => m.id === id)
-    if (idx === -1) return
-    const target = sorted[idx + direction]
-    if (!target) return
-    const current = markers.find(m => m.id === id)!
-    const swap = markers.find(m => m.id === target.id)!
-    dispatch({ type: 'UPDATE_MARKER', id, updates: { step: swap.step, time: swap.time } })
-    dispatch({ type: 'UPDATE_MARKER', id: target.id, updates: { step: current.step, time: current.time } })
-  }
-
-  const adjustTime = (id: string, delta: number) => {
-    const marker = markers.find(m => m.id === id)
-    if (!marker) return
-    dispatch({ type: 'UPDATE_MARKER', id, updates: { time: Math.max(0, marker.time + delta) } })
-  }
-
-  // 播放逻辑
+  // 回放引擎
   useEffect(() => {
-    if (!playing) { if (timerRef.current) clearInterval(timerRef.current); return }
-    const sorted2 = [...markers].sort((a, b) => a.step - b.step)
-    const totalSteps = sorted2.length
-    if (totalSteps === 0) { dispatch({ type: 'PLAY_STOP' }); return }
+    if (!replaying) { if (timerRef.current) clearTimeout(timerRef.current); return }
+    if (sorted.length === 0) { dispatch({ type: 'REPLAY_STOP' }); return }
 
-    timerRef.current = window.setInterval(() => {
-      dispatch({ type: 'PLAY_STEP', step: (playStep + 1) })
-    }, 1000 / playSpeed)
-
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [playing, playSpeed, playStep, markers, dispatch])
-
-  // 播放完自动停止
-  useEffect(() => {
-    if (playing && playStep >= sorted.length) {
-      dispatch({ type: 'PLAY_STOP' })
+    const playNext = (idx: number) => {
+      if (idx >= sorted.length) {
+        dispatch({ type: 'REPLAY_STOP' })
+        return
+      }
+      const shapeId = sorted[idx].shapeId
+      if (shapeId) dispatch({ type: 'REPLAY_STEP', shapeId })
+      timerRef.current = window.setTimeout(() => playNext(idx + 1), 1500)
     }
-  }, [playStep, sorted.length, playing, dispatch])
 
-  const totalDuration = sorted.reduce((sum, m) => Math.max(sum, m.time), 0)
+    playNext(0)
 
-  // 空状态
-  if (markers.length === 0) {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [replaying, sorted.length, dispatch])
+
+  const totalItems = tracks.length + markers.length + abilityShapes.length
+
+  if (totalItems === 0) {
     return (
       <div className={`${styles.wrapper} ${styles.empty}`}>
-        <div className={styles.header} onClick={() => setCollapsed(!collapsed)}>
+        <div className={styles.header}>
           <span>时间轴</span>
-          <span className={styles.tip}>拖拽技能到地图上以添加步骤</span>
+          <span className={styles.tip}>拖拽技能到地图上 · 点击录制按钮开始</span>
+          <div className={styles.recControls} onClick={e => e.stopPropagation()}>
+            <button className={`${styles.recBtn} ${recording ? styles.recordingActive : ''}`}
+              onClick={() => dispatch({ type: recording ? 'RECORDING_STOP' : 'RECORDING_START' })}
+              title={recording ? '停止录制' : '开始录制'}>
+              {recording ? '⏹' : '⏺'}
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -77,65 +69,72 @@ export default function Timeline() {
     <div className={styles.wrapper}>
       <div className={styles.header} onClick={() => setCollapsed(!collapsed)}>
         <span>时间轴</span>
-        <span className={styles.count}>{markers.length} 个步骤 · {totalDuration}s</span>
-        <div className={styles.playbackControls} onClick={e => e.stopPropagation()}>
-          <button className={styles.playBtn} onClick={() => dispatch({ type: playing ? 'PLAY_STOP' : 'PLAY_START' })}>
-            {playing ? '⏸' : '▶'}
+        <span className={styles.count}>{tracks.length} 个录制 · {markers.length} 步骤</span>
+        <div className={styles.recControls} onClick={e => e.stopPropagation()}>
+          <button className={`${styles.recBtn} ${recording ? styles.recordingActive : ''}`}
+            onClick={() => dispatch({ type: recording ? 'RECORDING_STOP' : 'RECORDING_START' })}
+            title={recording ? '停止录制' : '开始录制'}>
+            {recording ? '⏹' : '⏺'}
           </button>
-          {playing && (
-            <select className={styles.speedSelect} value={playSpeed} onChange={e => dispatch({ type: 'PLAY_SPEED', speed: Number(e.target.value) })}>
-              <option value={0.5}>0.5x</option>
-              <option value={1}>1x</option>
-              <option value={2}>2x</option>
-            </select>
-          )}
         </div>
         <span className={styles.collapseIcon}>{collapsed ? '▲' : '▼'}</span>
       </div>
       {!collapsed && (
-        <div className={styles.track}>
-          {/* 时间标尺 */}
-          <div className={styles.ruler}>
-            {Array.from({ length: Math.max(totalDuration, 1) + 1 }, (_, i) => (
-              <span key={i} className={styles.rulerTick}>{i}s</span>
-            ))}
-          </div>
-          {sorted.map((marker, idx) => {
-            const info = getInfo(marker.abilityId, marker.agentId)
-            const isSelected = marker.id === selectedId && selectedType === 'marker'
-            const isPlaying = playing && playStep === idx
+        <div className={styles.trackList}>
+          {tracks.map(t => {
+            const tm = markers.filter(m => m.trackId === t.id)
+            const isActive = t.id === trackId
+            const isRecording = recording && t.id === currentTrackId
             return (
-              <div key={marker.id}
-                className={`${styles.item} ${isSelected ? styles.itemSelected : ''} ${isPlaying ? styles.itemPlaying : ''}`}
-                style={{ borderLeftColor: info.color }}
-                onClick={() => dispatch({ type: 'SELECT', id: marker.id, selType: 'marker' })}
-              >
-                <div className={styles.stepBadge}>{marker.step}</div>
-                <div className={styles.itemInfo}>
-                  <div className={styles.agentLabel}>{info.agentName}</div>
-                  <div className={styles.abilityLabel}>
-                    <span className={styles.keyTag}>{info.abilityKey}</span>
-                    {info.abilityName}
-                  </div>
-                </div>
-                <div className={styles.itemActions}>
-                  <div className={styles.timeControl}>
-                    <button className={styles.timeBtn} onClick={e => { e.stopPropagation(); adjustTime(marker.id, -1) }}>−</button>
-                    <span className={styles.timeValue}>{marker.time}s</span>
-                    <button className={styles.timeBtn} onClick={e => { e.stopPropagation(); adjustTime(marker.id, 1) }}>+</button>
-                  </div>
-                  <div className={styles.orderBtns}>
-                    <button className={styles.orderBtn} disabled={idx === 0}
-                      onClick={e => { e.stopPropagation(); moveStep(marker.id, -1) }}>←</button>
-                    <button className={styles.orderBtn} disabled={idx === sorted.length - 1}
-                      onClick={e => { e.stopPropagation(); moveStep(marker.id, 1) }}>→</button>
-                  </div>
-                  <button className={styles.removeBtn}
-                    onClick={e => { e.stopPropagation(); dispatch({ type: 'REMOVE_MARKER', id: marker.id }) }}>✕</button>
-                </div>
+              <div key={t.id}
+                className={`${styles.trackItem} ${isActive ? styles.trackItemActive : ''} ${isRecording ? styles.trackItemRecording : ''}`}
+                onClick={() => { if (!isActive) { setActiveTrackId(t.id); dispatch({ type: 'REPLAY_STOP' }) } }}>
+                <span className={styles.trackName}>{t.name}</span>
+                <span className={styles.trackCount}>{tm.length} 步骤</span>
+                <button className={`${styles.trackPlayBtn} ${isActive && replaying ? styles.trackPlayBtnActive : ''}`}
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (isActive) {
+                      dispatch({ type: replaying ? 'REPLAY_STOP' : 'REPLAY_START', markers: sorted })
+                    } else {
+                      setActiveTrackId(t.id)
+                    }
+                  }}
+                  title={isActive && replaying ? '停止' : '回放'}>
+                  {isActive && replaying ? '⏹' : '▶'}
+                </button>
+                <button className={styles.trackDelBtn}
+                  onClick={e => {
+                    e.stopPropagation()
+                    dispatch({ type: 'DELETE_TRACK', id: t.id })
+                    if (isActive) setActiveTrackId(null)
+                  }}>✕</button>
               </div>
             )
           })}
+          {/* 活动轨道的步骤列表 */}
+          {trackId && sorted.length > 0 && (
+            <div className={styles.trackSteps}>
+              {sorted.map((marker, idx) => {
+                const info = getInfo(marker.abilityId, marker.agentId)
+                const isPlaying = replaying && idx === replayIndex
+                const isPast = replaying && idx <= replayIndex
+                return (
+                  <div key={marker.id}
+                    className={`${styles.stepItem} ${isPlaying ? styles.stepItemPlaying : ''} ${isPast ? styles.stepItemPast : ''}`}
+                    style={{ borderLeftColor: info.color }}>
+                    <span className={styles.stepNum}>{idx + 1}</span>
+                    <span className={styles.stepAgent}>{info.agentName}</span>
+                    <span className={styles.stepAbility}>
+                      <span className={styles.keyTag}>{info.abilityKey}</span>
+                      {info.abilityName}
+                    </span>
+                    <span className={styles.stepTime}>{marker.time}s</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -21,10 +21,9 @@ export default function SplashScreen({ onEnter }: Props) {
           <span>战术布置板</span>
         </h1>
         <p className={styles.desc}>
-          26 位特工 · 100 项技能 · 精准范围可视化<br />
-          拖拽布置 · 实时协作 · 一键导出
+          28 位特工 · 112 项技能 · 精准范围可视化<br />
+          拖拽布置 · 即时回放 · 一键导出
         </p>
-        <p className={styles.tagline}>国内首个 AI 开发战术网站</p>
         <button className={styles.enterBtn} onClick={onEnter}>
           进入战术板
           <span className={styles.btnArrow}>→</span>

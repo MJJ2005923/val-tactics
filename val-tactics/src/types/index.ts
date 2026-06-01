@@ -8,6 +8,17 @@ export interface Marker {
   step: number
   time: number
   note: string
+  phase?: string  // 回合阶段: 站位/默认/执行/残局等
+  createdAt?: number  // 录制时间戳
+  shapeId?: string  // 关联的技能形状ID
+  trackId?: string  // 所属录制轨道ID
+}
+
+// 录制轨道
+export interface RecordedTrack {
+  id: string
+  name: string
+  createdAt: number
 }
 
 // ====== 绘图路径 ======

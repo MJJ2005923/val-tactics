@@ -148,10 +148,9 @@
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
+  padding: 2px;
   border: 1.5px solid #888;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(0,0,0,0.8);
   cursor: pointer;
   z-index: 4;
@@ -167,19 +166,16 @@
   border-color: #fff !important;
 }
 
-.agentPosDot {
-  width: 12px;
-  height: 12px;
+.agentAvatar {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   flex-shrink: 0;
+  border: 2px solid #888;
+  object-fit: cover;
 }
 
-.agentPosName {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-}
+
 
 /* 缩放控件 */
 .controls {
