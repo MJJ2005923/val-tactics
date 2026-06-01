@@ -2,6 +2,7 @@ import { useRef, useCallback, useEffect } from 'react'
 import { useTactics } from '../../store/TacticsContext'
 import agents from '../../data/agents'
 import type { AbilityShape } from '../../types'
+import styles from './AbilityShapeLayer.module.css'
 
 interface Props {
   offset: { x: number; y: number }
@@ -106,7 +107,7 @@ interface DragState {
 }
 
 export default function AbilityShapeLayer({ offset, scale, mapW, mapH, containerRef }: Props) {
-  const { abilityShapes, selectedId, selectedType, toolMode, replaying, revealedShapeIds, dispatch } = useTactics()
+  const { abilityShapes, selectedId, selectedType, toolMode, replaying, revealedShapeIds, animatingShapeId, dispatch } = useTactics()
   const dragRef = useRef<DragState | null>(null)
 
   const screenToWorld = useCallback((sx: number, sy: number) => {
@@ -200,6 +201,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
 
       {abilityShapes.filter(s => !replaying || revealedShapeIds.includes(s.id)).map(s => {
         const isSelected = s.id === selectedId && selectedType === 'abilityShape'
+        const isAnimating = animatingShapeId === s.id
         const info = getAbilityInfo(s)
         const { color } = info
 
@@ -209,7 +211,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
         // 仅图标模式：不渲染形状，只显示图标
         if (s.iconOnly) {
           return (
-            <div key={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+            <div key={s.id} className={isAnimating ? styles.shapeReveal : undefined} style={{ position: 'absolute', pointerEvents: 'auto' }}>
               <div style={{ position: 'absolute', left: cx - 14, top: cy - 14, pointerEvents: 'none' }}>
                 <img src={info.iconUrl} style={{ width: 28, height: 28,
                   filter: info.iconFilter
@@ -235,7 +237,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
             const armW2 = Math.max(r * 0.15, 4)
             const armLen2 = r * 1.5
             return (
-              <div key={s.id} data-shape={s.id} style={{ position: 'absolute', pointerEvents: 'auto', transform: `rotate(${s.rotation}deg)`, transformOrigin: `${cx}px ${cy}px` }}>
+              <div key={s.id} data-shape={s.id} className={isAnimating ? styles.shapeReveal : undefined} style={{ position: 'absolute', pointerEvents: 'auto', transform: `rotate(${s.rotation}deg)`, transformOrigin: `${cx}px ${cy}px` }}>
                 {[[0, -armLen2], [0, armLen2], [-armLen2, 0], [armLen2, 0]].map(([ox, oy], i) => (
                   <span key={i}>
                     <div style={{ position: 'absolute', left: cx + (ox > 0 ? 0 : ox) - (ox ? 0 : armW2), top: cy + (oy > 0 ? 0 : oy) - (oy ? 0 : armW2), width: ox ? armLen2 : armW2 * 2, height: oy ? armLen2 : armW2 * 2, background: color + '60', borderRadius: armW2, pointerEvents: 'none' }} />
@@ -253,7 +255,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
             const sr = Math.max(r * 0.22, 5)
             const dirs = [[0, -r*0.85], [0, r*0.85], [-r*0.85, 0], [r*0.85, 0]]
             return (
-              <div key={s.id} data-shape={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+              <div key={s.id} data-shape={s.id} className={isAnimating ? styles.shapeReveal : undefined} style={{ position: 'absolute', pointerEvents: 'auto' }}>
                 {dirs.map(([ox, oy], i) => (
                   <div key={i} style={{ position: 'absolute', left: cx + ox - sr, top: cy + oy - sr,
                     width: sr*2, height: sr*2, borderRadius: '50%',
@@ -278,7 +280,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
             )
           }
           return (
-            <div key={s.id} data-shape={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+            <div key={s.id} data-shape={s.id} className={isAnimating ? styles.shapeReveal : undefined} style={{ position: 'absolute', pointerEvents: 'auto' }}>
               {t === 'smoke' && (
                 <>
                   <div style={{ position: 'absolute', left: cx - r*1.3, top: cy - r*1.3, width: r*2.6, height: r*2.6,
@@ -370,7 +372,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
           const hw = (s.length * mapW * scale) / 2
           const hh = (s.width * mapH * scale) / 2
           return (
-            <div key={s.id} data-shape={s.id} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+            <div key={s.id} data-shape={s.id} className={isAnimating ? styles.shapeReveal : undefined} style={{ position: 'absolute', pointerEvents: 'auto' }}>
               <div style={{
                 position: 'absolute', left: cx - hw, top: cy - hh, width: hw * 2, height: hh * 2,
                 border: `2px solid ${isSelected ? '#fff' : color}90`, borderRadius: 2,

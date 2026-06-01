@@ -27,6 +27,7 @@ export interface TacticsState {
   replaying: boolean
   replayIndex: number
   revealedShapeIds: string[]
+  animatingShapeId: string | null  // 正在播放入场动画的形状ID
 }
 
 // ====== 快照（用于撤销重做） ======
@@ -120,6 +121,7 @@ const initialState: TacticsState = {
   replaying: false,
   replayIndex: -1,
   revealedShapeIds: [],
+  animatingShapeId: null,
 }
 
 let idCounter = 0
@@ -278,8 +280,10 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       return { state: { ...state, replaying: true, replayIndex: 0, recording: false }, history: newHistory }
     case 'REPLAY_STEP': {
       const sorted = [...state.markers].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
-      const revealed = sorted.slice(0, action.index + 1).map(m => m.shapeId).filter(Boolean) as string[]
-      return { state: { ...state, replayIndex: action.index, revealedShapeIds: revealed }, history: newHistory }
+      // 只显示当前步骤的形状（非累积）
+      const current = sorted[action.index]
+      const revealed = current?.shapeId ? [current.shapeId] : []
+      return { state: { ...state, replayIndex: action.index, revealedShapeIds: revealed, animatingShapeId: current?.shapeId || null }, history: newHistory }
     }
     case 'REPLAY_STOP':
       return { state: { ...state, replaying: false, replayIndex: -1 }, history: newHistory }
