@@ -35,15 +35,15 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
         return distToSegment(p, a, b) < threshold
       }
       case 'rect': {
-        if (!d.x || !d.w || !d.h) return false
-        const rx = Math.min(d.x, d.x + d.w), ry = Math.min(d.y!, d.y! + d.h)
+        if (d.w === undefined || d.h === undefined || d.x === undefined || d.y === undefined) return false
+        const rx = Math.min(d.x, d.x + d.w), ry = Math.min(d.y, d.y + d.h)
         const rw = Math.abs(d.w), rh = Math.abs(d.h)
         return p.x >= rx - threshold && p.x <= rx + rw + threshold && p.y >= ry - threshold && p.y <= ry + rh + threshold
       }
       case 'circle': {
         if (!d.cx || !d.cy || !d.r) return false
         const dist = Math.sqrt((p.x - d.cx) ** 2 + (p.y - d.cy) ** 2)
-        return Math.abs(dist - d.r) < threshold
+        return dist < d.r + threshold
       }
       case 'freehand': {
         for (let i = 1; i < d.points.length; i++) {
