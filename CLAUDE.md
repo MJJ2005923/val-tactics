@@ -16,12 +16,22 @@
 3. 每个步骤完成后进行验收，确认无误再进入下一步
 4. 每次会话结束时，更新 dev-logs/YYYY-MM-DD.md 开发日志
 5. **本地与公网隔离**：日常开发在 `dev` 分支，本地服务器 `http://localhost:5173/`；确认上线时才合并到 `master` 部署
+6. **每次会话结束时，必须 git commit 提交所有改动**（防止代码丢失，可随时回退）
 
 ## 本地 ↔ 公网 隔离规则（必要）
 - **本地开发**：`dev` 分支 → `http://localhost:5173/`（所有改动在此进行）
 - **公网发布**：`master` 分支 → https://val-tactics.pages.dev
 - **禁止日常开发直接推送 master**，防止未完成的改动自动触发公网部署
 - 发布命令：`git checkout master && git merge dev && git push gitee master && npx wrangler pages deploy dist --project-name=val-tactics --branch=main && git checkout dev`
+
+## Git 提交流程（日常）
+```bash
+cd d:\无畏契约战术布置
+git checkout dev
+git add val-tactics/src/ dev-logs/ val-tactics/public/
+git commit -m "描述本次改动的提交信息"
+git push gitee dev
+```
 
 ## 文档规范
 - 所有开发规范文档在 docs/ 文件夹
