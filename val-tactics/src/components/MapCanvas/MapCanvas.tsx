@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { useTactics } from '../../store/TacticsContext'
-import agents, { getAbilityShapeConfig } from '../../data/agents'
+import agents, { getAbilityShapeConfig, agentImages } from '../../data/agents'
 import type { AbilityShapeConfig } from '../../types'
 import DrawingLayer from '../DrawingLayer/DrawingLayer'
 import AbilityShapeLayer from '../AbilityShapeLayer/AbilityShapeLayer'
@@ -780,18 +780,24 @@ export default function MapCanvas({ mapId, mapName, transformRef }: MapCanvasPro
         const agent = agents.find(a => a.id === ap.agentId)
         const isSelected = ap.id === selectedId && selectedType === 'agent'
         const teamColor = ap.team === 'attack' ? '#ff4655' : '#50b4f0'
+        const imgFile = agent ? (agentImages[agent.id] || agent.id) : ''
         return (
           <div key={ap.id}
             className={`${styles.agentPos} ${isSelected ? styles.agentPosSelected : ''}`}
             style={{
               left: offsetX + ap.x * mapW * displayScale,
               top: offsetY + ap.y * mapH * displayScale,
-              borderColor: teamColor
+              borderColor: isSelected ? '#fff' : teamColor,
             }}
             onMouseDown={(e) => handleMarkerMouseDown(e, ap.id, 'agent')}
           >
-            <div className={styles.agentPosDot} style={{ background: teamColor }} />
-            <span className={styles.agentPosName}>{agent?.name || '?'}</span>
+            <img
+              src={`/images/agents/${imgFile}.png`}
+              alt={agent?.name || ''}
+              className={styles.agentAvatar}
+              style={{ borderColor: teamColor }}
+              title={agent?.name}
+            />
           </div>
         )
       })}
