@@ -99,7 +99,7 @@ type Action =
   | { type: 'RECORDING_START' }
   | { type: 'RECORDING_STOP' }
   | { type: 'REPLAY_START'; markers: Marker[] }
-  | { type: 'REPLAY_STEP'; index: number }
+  | { type: 'REPLAY_STEP'; shapeId: string }
   | { type: 'REPLAY_STOP' }
 
 // ====== 初始状态 ======
@@ -294,11 +294,8 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     case 'REPLAY_START':
       return { state: { ...state, replaying: true, replayIndex: 0, recording: false, revealedShapeIds: [] }, history: newHistory }
     case 'REPLAY_STEP': {
-      const sorted = [...state.markers].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
-      // 累积显示所有已播放步骤的形状
-      const revealed = sorted.slice(0, action.index + 1).map(m => m.shapeId).filter(Boolean) as string[]
-      const animId = sorted[action.index]?.shapeId || null
-      return { state: { ...state, replayIndex: action.index, revealedShapeIds: revealed, animatingShapeId: animId }, history: newHistory }
+      const revealed = [...state.revealedShapeIds, action.shapeId]
+      return { state: { ...state, revealedShapeIds: revealed, animatingShapeId: action.shapeId, replayIndex: state.replayIndex + 1 }, history: newHistory }
     }
     case 'REPLAY_STOP':
       return { state: { ...state, replaying: false, replayIndex: -1 }, history: newHistory }

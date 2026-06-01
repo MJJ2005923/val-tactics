@@ -35,7 +35,8 @@ export default function Timeline() {
         dispatch({ type: 'REPLAY_STOP' })
         return
       }
-      dispatch({ type: 'REPLAY_STEP', index: idx })
+      const shapeId = sorted[idx].shapeId
+      if (shapeId) dispatch({ type: 'REPLAY_STEP', shapeId })
       timerRef.current = window.setTimeout(() => playNext(idx + 1), 1500)
     }
 
