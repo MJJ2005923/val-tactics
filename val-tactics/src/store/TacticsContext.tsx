@@ -277,7 +277,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
 
     // 回放
     case 'REPLAY_START':
-      return { state: { ...state, replaying: true, replayIndex: 0, recording: false }, history: newHistory }
+      return { state: { ...state, replaying: true, replayIndex: 0, recording: false, revealedShapeIds: [] }, history: newHistory }
     case 'REPLAY_STEP': {
       const sorted = [...state.markers].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
       // 累积显示所有已播放步骤的形状
