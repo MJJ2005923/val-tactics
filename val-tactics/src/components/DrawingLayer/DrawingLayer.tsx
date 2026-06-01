@@ -69,7 +69,8 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
     if (toolMode === 'eraser') {
       const p = screenToWorld(e.clientX, e.clientY)
       const hit = drawings.find(d => hitTest(d, p))
-      if (hit) dispatch({ type: 'REMOVE_DRAWING', id: hit.id })
+      if (hit) { dispatch({ type: 'REMOVE_DRAWING', id: hit.id }); return }
+      // 如果没命中绘图，穿透到下方让 AbilityShapeLayer 处理技能形状
       return
     }
     if (toolMode === 'select' || toolMode === 'text' || toolMode === 'agent') return
@@ -172,7 +173,7 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
     <svg
       style={{
         position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-        zIndex: 3,
+        zIndex: isEraser ? 1 : 3,
         cursor: isEraser ? 'pointer' : isDrawing ? 'crosshair' : undefined,
         pointerEvents: svgActive ? 'auto' : 'none',
       }}
