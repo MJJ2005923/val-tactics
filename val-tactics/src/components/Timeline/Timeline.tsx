@@ -25,24 +25,23 @@ export default function Timeline() {
     return a.step - b.step
   })
 
-  // 回放引擎
-  const replayIndexRef = useRef(replayIndex)
-  replayIndexRef.current = replayIndex
-
+  // 回放引擎 — 用 setTimeout 递归避免重叠
   useEffect(() => {
-    if (!replaying) { if (timerRef.current) clearInterval(timerRef.current); return }
+    if (!replaying) { if (timerRef.current) clearTimeout(timerRef.current); return }
     if (sorted.length === 0) { dispatch({ type: 'REPLAY_STOP' }); return }
 
-    timerRef.current = window.setInterval(() => {
-      const next = replayIndexRef.current + 1
-      if (next >= sorted.length) {
+    const playNext = (idx: number) => {
+      if (idx >= sorted.length) {
         dispatch({ type: 'REPLAY_STOP' })
         return
       }
-      dispatch({ type: 'REPLAY_STEP', index: next })
-    }, 1500)
+      dispatch({ type: 'REPLAY_STEP', index: idx })
+      timerRef.current = window.setTimeout(() => playNext(idx + 1), 1500)
+    }
 
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+    playNext(0)
+
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [replaying, sorted.length, dispatch])
 
   const totalItems = markers.length + abilityShapes.length
