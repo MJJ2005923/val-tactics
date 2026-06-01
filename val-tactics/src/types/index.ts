@@ -9,6 +9,7 @@ export interface Marker {
   time: number
   note: string
   phase?: string  // 回合阶段: 站位/默认/执行/残局等
+  createdAt?: number  // 录制时间戳
 }
 
 // ====== 绘图路径 ======

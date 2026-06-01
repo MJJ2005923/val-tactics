@@ -20,60 +20,51 @@ function getInfo(abilityId: string, agentId: string) {
 }
 
 export default function Timeline() {
-  const { markers, abilityShapes, selectedId, selectedType, playing, playSpeed, playStep, dispatch } = useTactics()
+  const { markers, abilityShapes, selectedId, selectedType, recording, replaying, replayIndex, dispatch } = useTactics()
   const [collapsed, setCollapsed] = useState(false)
   const timerRef = useRef<number | null>(null)
 
-  const sorted = [...markers].sort((a, b) => a.step - b.step)
+  // 按 mark 创建时间排序（录制模式）或 step 排序
+  const sorted = [...markers].sort((a, b) => {
+    if (a.createdAt && b.createdAt) return a.createdAt - b.createdAt
+    return a.step - b.step
+  })
 
-  const moveStep = (id: string, direction: -1 | 1) => {
-    const idx = sorted.findIndex(m => m.id === id)
-    if (idx === -1) return
-    const target = sorted[idx + direction]
-    if (!target) return
-    const current = markers.find(m => m.id === id)!
-    const swap = markers.find(m => m.id === target.id)!
-    dispatch({ type: 'UPDATE_MARKER', id, updates: { step: swap.step, time: swap.time } })
-    dispatch({ type: 'UPDATE_MARKER', id: target.id, updates: { step: current.step, time: current.time } })
-  }
-
-  const adjustTime = (id: string, delta: number) => {
-    const marker = markers.find(m => m.id === id)
-    if (!marker) return
-    dispatch({ type: 'UPDATE_MARKER', id, updates: { time: Math.max(0, marker.time + delta) } })
-  }
-
-  // 播放逻辑
+  // 回放引擎
   useEffect(() => {
-    if (!playing) { if (timerRef.current) clearInterval(timerRef.current); return }
-    const sorted2 = [...markers].sort((a, b) => a.step - b.step)
-    const totalSteps = sorted2.length
-    if (totalSteps === 0) { dispatch({ type: 'PLAY_STOP' }); return }
+    if (!replaying) { if (timerRef.current) clearInterval(timerRef.current); return }
+    if (sorted.length === 0) { dispatch({ type: 'REPLAY_STOP' }); return }
 
     timerRef.current = window.setInterval(() => {
-      dispatch({ type: 'PLAY_STEP', step: (playStep + 1) })
-    }, 1000 / playSpeed)
+      dispatch({ type: 'REPLAY_STEP', index: replayIndex + 1 })
+    }, 1000)
 
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [playing, playSpeed, playStep, markers, dispatch])
+  }, [replaying, replayIndex, sorted.length, dispatch])
 
-  // 播放完自动停止
+  // 回放结束
   useEffect(() => {
-    if (playing && playStep >= sorted.length) {
-      dispatch({ type: 'PLAY_STOP' })
+    if (replaying && replayIndex >= sorted.length) {
+      dispatch({ type: 'REPLAY_STOP' })
     }
-  }, [playStep, sorted.length, playing, dispatch])
+  }, [replayIndex, sorted.length, replaying, dispatch])
 
-  const totalDuration = sorted.reduce((sum, m) => Math.max(sum, m.time), 0)
-
-  // 空状态：同时检查 shape 数量
   const totalItems = markers.length + abilityShapes.length
+
+  // 空状态
   if (totalItems === 0) {
     return (
       <div className={`${styles.wrapper} ${styles.empty}`}>
         <div className={styles.header}>
           <span>时间轴</span>
-          <span className={styles.tip}>拖拽技能到地图上以添加步骤</span>
+          <span className={styles.tip}>拖拽技能到地图上以添加步骤 · 点击录制按钮开始实时记录</span>
+          <div className={styles.recControls} onClick={e => e.stopPropagation()}>
+            <button className={`${styles.recBtn} ${recording ? styles.recordingActive : ''}`}
+              onClick={() => dispatch({ type: recording ? 'RECORDING_STOP' : 'RECORDING_START' })}
+              title={recording ? '停止录制' : '开始录制'}>
+              {recording ? '⏹' : '⏺'}
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -83,39 +74,34 @@ export default function Timeline() {
     <div className={styles.wrapper}>
       <div className={styles.header} onClick={() => setCollapsed(!collapsed)}>
         <span>时间轴</span>
-        <span className={styles.count}>{markers.length} 个步骤 · {totalDuration}s</span>
-        <div className={styles.playbackControls} onClick={e => e.stopPropagation()}>
-          <button className={styles.playBtn} onClick={() => dispatch({ type: playing ? 'PLAY_STOP' : 'PLAY_START' })}>
-            {playing ? '⏸' : '▶'}
+        <span className={styles.count}>{markers.length} 步骤</span>
+        <div className={styles.recControls} onClick={e => e.stopPropagation()}>
+          <button className={`${styles.recBtn} ${recording ? styles.recordingActive : ''}`}
+            onClick={() => dispatch({ type: recording ? 'RECORDING_STOP' : 'RECORDING_START' })}
+            title={recording ? '停止录制' : '开始录制'}>
+            {recording ? '⏹' : '⏺'}
           </button>
-          {playing && (
-            <select className={styles.speedSelect} value={playSpeed} onChange={e => dispatch({ type: 'PLAY_SPEED', speed: Number(e.target.value) })}>
-              <option value={0.5}>0.5x</option>
-              <option value={1}>1x</option>
-              <option value={2}>2x</option>
-            </select>
-          )}
+          <button className={styles.playBtn}
+            onClick={() => dispatch({ type: replaying ? 'REPLAY_STOP' : 'REPLAY_START', markers: sorted })}
+            title={replaying ? '停止回放' : '回放'}>
+            {replaying ? '⏹' : '▶'}
+          </button>
         </div>
         <span className={styles.collapseIcon}>{collapsed ? '▲' : '▼'}</span>
       </div>
       {!collapsed && (
         <div className={styles.track}>
-          {/* 时间标尺 */}
-          <div className={styles.ruler}>
-            {Array.from({ length: Math.max(totalDuration, 1) + 1 }, (_, i) => (
-              <span key={i} className={styles.rulerTick}>{i}s</span>
-            ))}
-          </div>
           {sorted.map((marker, idx) => {
             const info = getInfo(marker.abilityId, marker.agentId)
             const isSelected = marker.id === selectedId && selectedType === 'marker'
-            const isPlaying = playing && playStep === idx
+            const isPlaying = replaying && idx === replayIndex
             const phase = marker.phase || ''
             const prevPhase = idx > 0 ? (sorted[idx - 1].phase || '') : ''
             const showPhase = phase !== prevPhase
+            // 回放时已过的步骤
+            const isPast = replaying && idx <= replayIndex
             return (
               <React.Fragment key={marker.id}>
-                {/* 阶段分隔线 */}
                 {showPhase && (
                   <div className={styles.phaseSep} style={phase ? { borderColor: phaseColors[phase] || '#888' } : undefined}>
                     <span className={styles.phaseLabel} style={phase ? { color: phaseColors[phase] || '#888' } : { color: '#555' }}>
@@ -125,11 +111,11 @@ export default function Timeline() {
                   </div>
                 )}
                 <div
-                  className={`${styles.item} ${isSelected ? styles.itemSelected : ''} ${isPlaying ? styles.itemPlaying : ''}`}
+                  className={`${styles.item} ${isSelected ? styles.itemSelected : ''} ${isPlaying ? styles.itemPlaying : ''} ${isPast ? styles.itemPast : ''}`}
                   style={{ borderLeftColor: info.color }}
                   onClick={() => dispatch({ type: 'SELECT', id: marker.id, selType: 'marker' })}
                 >
-                  <div className={styles.stepBadge}>{marker.step}</div>
+                  <div className={styles.stepBadge}>{idx + 1}</div>
                   <div className={styles.itemInfo}>
                     <div className={styles.agentLabel}>{info.agentName}</div>
                     <div className={styles.abilityLabel}>
@@ -137,6 +123,7 @@ export default function Timeline() {
                       {info.abilityName}
                     </div>
                   </div>
+                  <div className={styles.itemTime}>{marker.time}s</div>
                   <div className={styles.itemActions}>
                     <select className={styles.phaseSelect} value={phase}
                       onClick={e => e.stopPropagation()}
@@ -146,17 +133,6 @@ export default function Timeline() {
                       }}>
                       {phases.map(p => <option key={p} value={p}>{p || '—'}</option>)}
                     </select>
-                    <div className={styles.timeControl}>
-                      <button className={styles.timeBtn} onClick={e => { e.stopPropagation(); adjustTime(marker.id, -1) }}>−</button>
-                      <span className={styles.timeValue}>{marker.time}s</span>
-                      <button className={styles.timeBtn} onClick={e => { e.stopPropagation(); adjustTime(marker.id, 1) }}>+</button>
-                    </div>
-                    <div className={styles.orderBtns}>
-                      <button className={styles.orderBtn} disabled={idx === 0}
-                        onClick={e => { e.stopPropagation(); moveStep(marker.id, -1) }}>←</button>
-                      <button className={styles.orderBtn} disabled={idx === sorted.length - 1}
-                        onClick={e => { e.stopPropagation(); moveStep(marker.id, 1) }}>→</button>
-                    </div>
                     <button className={styles.removeBtn}
                       onClick={e => { e.stopPropagation(); dispatch({ type: 'REMOVE_MARKER', id: marker.id }) }}>✕</button>
                   </div>
