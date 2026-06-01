@@ -26,6 +26,7 @@ export interface TacticsState {
   recording: boolean
   replaying: boolean
   replayIndex: number
+  revealedShapeIds: string[]
 }
 
 // ====== 快照（用于撤销重做） ======
@@ -118,6 +119,7 @@ const initialState: TacticsState = {
   recording: false,
   replaying: false,
   replayIndex: -1,
+  revealedShapeIds: [],
 }
 
 let idCounter = 0
@@ -199,6 +201,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     case 'ADD_ABILITY_SHAPE': {
       const maxStep = state.markers.reduce((max, m) => Math.max(max, m.step), 0)
       const now = Date.now()
+      const shapeId = action.shape.id || genId('as')
       const newMarker = {
         id: genId('mk'),
         abilityId: action.shape.abilityId,
@@ -208,11 +211,12 @@ function reducer(state: TacticsState, action: Action, history: History): { state
         time: state.recording ? Math.round((now - (state.markers[0]?.createdAt ?? now)) / 1000) : (maxStep + 1) * 5,
         note: '',
         createdAt: state.recording ? now : undefined,
+        shapeId,
       }
       return {
         state: {
           ...state,
-          abilityShapes: [...state.abilityShapes, { ...action.shape, id: action.shape.id || genId('as') }],
+          abilityShapes: [...state.abilityShapes, { ...action.shape, id: shapeId }],
           markers: [...state.markers, newMarker],
         },
         history: newHistory,
@@ -272,8 +276,11 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     // 回放
     case 'REPLAY_START':
       return { state: { ...state, replaying: true, replayIndex: 0, recording: false }, history: newHistory }
-    case 'REPLAY_STEP':
-      return { state: { ...state, replayIndex: action.index }, history: newHistory }
+    case 'REPLAY_STEP': {
+      const sorted = [...state.markers].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
+      const revealed = sorted.slice(0, action.index + 1).map(m => m.shapeId).filter(Boolean) as string[]
+      return { state: { ...state, replayIndex: action.index, revealedShapeIds: revealed }, history: newHistory }
+    }
     case 'REPLAY_STOP':
       return { state: { ...state, replaying: false, replayIndex: -1 }, history: newHistory }
 

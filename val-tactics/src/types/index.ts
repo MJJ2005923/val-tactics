@@ -10,6 +10,7 @@ export interface Marker {
   note: string
   phase?: string  // 回合阶段: 站位/默认/执行/残局等
   createdAt?: number  // 录制时间戳
+  shapeId?: string  // 关联的技能形状ID
 }
 
 // ====== 绘图路径 ======

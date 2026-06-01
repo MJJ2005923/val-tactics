@@ -106,7 +106,7 @@ interface DragState {
 }
 
 export default function AbilityShapeLayer({ offset, scale, mapW, mapH, containerRef }: Props) {
-  const { abilityShapes, selectedId, selectedType, toolMode, dispatch } = useTactics()
+  const { abilityShapes, selectedId, selectedType, toolMode, replaying, revealedShapeIds, dispatch } = useTactics()
   const dragRef = useRef<DragState | null>(null)
 
   const screenToWorld = useCallback((sx: number, sy: number) => {
@@ -198,7 +198,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
         </defs>
       </svg>
 
-      {abilityShapes.map(s => {
+      {abilityShapes.filter(s => !replaying || revealedShapeIds.includes(s.id)).map(s => {
         const isSelected = s.id === selectedId && selectedType === 'abilityShape'
         const info = getAbilityInfo(s)
         const { color } = info
