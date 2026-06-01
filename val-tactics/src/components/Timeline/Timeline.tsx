@@ -26,23 +26,24 @@ export default function Timeline() {
   })
 
   // 回放引擎
+  const replayIndexRef = useRef(replayIndex)
+  replayIndexRef.current = replayIndex
+
   useEffect(() => {
     if (!replaying) { if (timerRef.current) clearInterval(timerRef.current); return }
     if (sorted.length === 0) { dispatch({ type: 'REPLAY_STOP' }); return }
 
     timerRef.current = window.setInterval(() => {
-      dispatch({ type: 'REPLAY_STEP', index: replayIndex + 1 })
+      const next = replayIndexRef.current + 1
+      if (next >= sorted.length) {
+        dispatch({ type: 'REPLAY_STOP' })
+        return
+      }
+      dispatch({ type: 'REPLAY_STEP', index: next })
     }, 1500)
 
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [replaying, replayIndex, sorted.length, dispatch])
-
-  // 回放结束
-  useEffect(() => {
-    if (replaying && replayIndex >= sorted.length) {
-      dispatch({ type: 'REPLAY_STOP' })
-    }
-  }, [replayIndex, sorted.length, replaying, dispatch])
+  }, [replaying, sorted.length, dispatch])
 
   const totalItems = markers.length + abilityShapes.length
 
