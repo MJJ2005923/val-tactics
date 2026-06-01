@@ -85,7 +85,7 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
     } else if (toolMode === 'circle') {
       setPreview({ id: '', type: 'circle', points: [p], color: drawColor, width: drawWidth, cx: p.x, cy: p.y, r: 0 })
     }
-  }, [toolMode, drawColor, drawWidth, screenToWorld])
+  }, [toolMode, drawColor, drawWidth, drawings, screenToWorld])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const p = screenToWorld(e.clientX, e.clientY)
