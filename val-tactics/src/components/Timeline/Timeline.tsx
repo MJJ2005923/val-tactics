@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useTactics } from '../../store/TacticsContext'
 import agents from '../../data/agents'
 import styles from './Timeline.module.css'
@@ -6,11 +6,6 @@ import styles from './Timeline.module.css'
 const typeColors: Record<string, string> = {
   smoke: '#7ec868', flash: '#f0c850', damage: '#ff4655',
   recon: '#50b4f0', control: '#a070d8', heal: '#50e890', mobility: '#ff8c42'
-}
-
-const phases = ['', '购买阶段', '站位', '默认', '执行', '残局']
-const phaseColors: Record<string, string> = {
-  '购买阶段': '#f0c850', '站位': '#50b4f0', '默认': '#50e890', '执行': '#ff4655', '残局': '#a070d8'
 }
 
 function getInfo(abilityId: string, agentId: string) {
@@ -95,49 +90,23 @@ export default function Timeline() {
             const info = getInfo(marker.abilityId, marker.agentId)
             const isSelected = marker.id === selectedId && selectedType === 'marker'
             const isPlaying = replaying && idx === replayIndex
-            const phase = marker.phase || ''
-            const prevPhase = idx > 0 ? (sorted[idx - 1].phase || '') : ''
-            const showPhase = phase !== prevPhase
             // 回放时已过的步骤
             const isPast = replaying && idx <= replayIndex
             return (
-              <React.Fragment key={marker.id}>
-                {showPhase && (
-                  <div className={styles.phaseSep} style={phase ? { borderColor: phaseColors[phase] || '#888' } : undefined}>
-                    <span className={styles.phaseLabel} style={phase ? { color: phaseColors[phase] || '#888' } : { color: '#555' }}>
-                      {phase || '未分组'}
-                    </span>
-                    <div className={styles.phaseLine} style={phase ? { background: phaseColors[phase] + '40' } : undefined} />
-                  </div>
-                )}
-                <div
-                  className={`${styles.item} ${isSelected ? styles.itemSelected : ''} ${isPlaying ? styles.itemPlaying : ''} ${isPast ? styles.itemPast : ''}`}
-                  style={{ borderLeftColor: info.color }}
-                  onClick={() => dispatch({ type: 'SELECT', id: marker.id, selType: 'marker' })}
-                >
-                  <div className={styles.stepBadge}>{idx + 1}</div>
-                  <div className={styles.itemInfo}>
-                    <div className={styles.agentLabel}>{info.agentName}</div>
-                    <div className={styles.abilityLabel}>
-                      <span className={styles.keyTag}>{info.abilityKey}</span>
-                      {info.abilityName}
-                    </div>
-                  </div>
-                  <div className={styles.itemTime}>{marker.time}s</div>
-                  <div className={styles.itemActions}>
-                    <select className={styles.phaseSelect} value={phase}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => {
-                        const v = e.target.value
-                        dispatch({ type: 'UPDATE_MARKER', id: marker.id, updates: { phase: v || undefined } })
-                      }}>
-                      {phases.map(p => <option key={p} value={p}>{p || '—'}</option>)}
-                    </select>
-                    <button className={styles.removeBtn}
-                      onClick={e => { e.stopPropagation(); dispatch({ type: 'REMOVE_MARKER', id: marker.id }) }}>✕</button>
+              <div key={marker.id}
+                className={`${styles.item} ${isSelected ? styles.itemSelected : ''} ${isPlaying ? styles.itemPlaying : ''} ${isPast ? styles.itemPast : ''}`}
+                style={{ borderLeftColor: info.color, minWidth: 160 }}
+              >
+                <div className={styles.stepBadge}>{idx + 1}</div>
+                <div className={styles.itemInfo}>
+                  <div className={styles.agentLabel}>{info.agentName}</div>
+                  <div className={styles.abilityLabel}>
+                    <span className={styles.keyTag}>{info.abilityKey}</span>
+                    {info.abilityName}
                   </div>
                 </div>
-              </React.Fragment>
+                <div className={styles.itemTime}>{marker.time}s</div>
+              </div>
             )
           })}
         </div>
