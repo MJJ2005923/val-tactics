@@ -296,3 +296,43 @@
   box-shadow: 0 0 16px rgba(255, 70, 85, 0.4);
   background: var(--color-bg-active);
 }
+
+/* 阶段分隔线 */
+.phaseSep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 2px;
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+.phaseLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.phaseLine {
+  flex: 1;
+  height: 1px;
+  min-width: 20px;
+}
+
+/* 阶段选择器 */
+.phaseSelect {
+  font-size: 10px;
+  padding: 2px 3px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  max-width: 70px;
+}
+
+.phaseSelect:hover {
+  border-color: var(--color-border-light);
+}

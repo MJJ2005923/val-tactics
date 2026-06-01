@@ -8,6 +8,7 @@ export interface Marker {
   step: number
   time: number
   note: string
+  phase?: string  // 回合阶段: 站位/默认/执行/残局等
 }
 
 // ====== 绘图路径 ======
