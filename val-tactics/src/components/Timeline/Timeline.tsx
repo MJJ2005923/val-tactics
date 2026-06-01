@@ -32,7 +32,7 @@ export default function Timeline() {
 
     timerRef.current = window.setInterval(() => {
       dispatch({ type: 'REPLAY_STEP', index: replayIndex + 1 })
-    }, 500)
+    }, 1500)
 
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [replaying, replayIndex, sorted.length, dispatch])
