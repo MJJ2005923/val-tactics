@@ -108,6 +108,55 @@ function AppInner() {
     }, 'image/png')
   }
 
+  const handleShareLink = () => {
+    const data = {
+      v: 2, m: selectedMap.id,
+      mk: markers.map(m => ({ a: m.abilityId, g: m.agentId, x: Math.round(m.x * 1e4) / 1e4, y: Math.round(m.y * 1e4) / 1e4, s: m.step, t: m.time, n: m.note || undefined })),
+      dr: drawings.map(d => ({ ...d })),
+      tx: textAnnotations.map(t => ({ ...t })),
+      ap: agentPositions.map(a => ({ ...a })),
+      as: abilityShapes.map(s => ({ ...s, path: s.path?.map(p => ({ x: Math.round(p.x * 1e4) / 1e4, y: Math.round(p.y * 1e4) / 1e4 })) })),
+    }
+    const json = JSON.stringify(data)
+    // 如果太长则截断提醒
+    if (json.length > 3000) {
+      alert('战术内容过多，链接可能过长。建议使用 JSON 导出分享。')
+      return
+    }
+    const hash = btoa(unescape(encodeURIComponent(json)))
+    const url = `${window.location.origin}${window.location.pathname}#tactic=${hash}`
+    navigator.clipboard.writeText(url).then(() => {
+      alert('分享链接已复制到剪贴板！')
+    }).catch(() => {
+      prompt('复制此链接分享：', url)
+    })
+  }
+
+  // 从 URL 加载分享的战术
+  useEffect(() => {
+    const hash = window.location.hash
+    if (!hash.startsWith('#tactic=')) return
+    try {
+      const json = decodeURIComponent(escape(atob(hash.slice('#tactic='.length))))
+      const data = JSON.parse(json)
+      if (data.v === 2 && data.m) {
+        const map = maps.find(m => m.id === data.m)
+        if (map) setSelectedMap(map)
+        dispatch({
+          type: 'LOAD_ALL',
+          markers: (data.mk || []).map((m: any) => ({ ...m, id: '', abilityId: m.a, agentId: m.g })),
+          drawings: data.dr || [],
+          texts: data.tx || [],
+          agents: data.ap || [],
+          shapes: data.as || [],
+          name: '', desc: '',
+        })
+        // 清除 hash 避免重复加载
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+    } catch { /* 忽略无效链接 */ }
+  }, [])
+
   const transformRef = useRef<{ offset: { x: number; y: number }; scale: number; mapW: number; mapH: number; container: HTMLDivElement | null }>({
     offset: { x: 0, y: 0 }, scale: 1, mapW: 1800, mapH: 1200, container: null
   })
@@ -144,6 +193,7 @@ function AppInner() {
           <button className="btn" onClick={() => setShowTemplates(true)}>模板管理</button>
           <button className="btn btn--primary" onClick={handleDirectExport}>导出 JSON</button>
           <button className="btn" onClick={handleExportImage}>导出图片</button>
+          <button className="btn" onClick={handleShareLink}>分享链接</button>
         </div>
       </nav>
 
