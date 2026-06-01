@@ -172,12 +172,6 @@ const typeColors: Record<string, string> = {
   recon: '#50b4f0', control: '#a070d8', heal: '#50e890', mobility: '#ff8c42'
 }
 
-function getAbilityInfo(abilityId: string, agentId: string) {
-  const agent = agents.find(a => a.id === agentId)
-  const ability = agent?.abilities.find(a => a.id === abilityId)
-  return { agentName: agent?.name || '', abilityName: ability?.name || '', abilityKey: ability?.key || '' }
-}
-
 // ====== MapCanvas ======
 export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -786,31 +780,6 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
 
       {isOver && !lineDrawing && !rectDrawing && <div className={styles.dropHint}>释放以放置技能</div>}
 
-      {/* 技能标记 */}
-      {markers.map(marker => {
-        const info = getAbilityInfo(marker.abilityId, marker.agentId)
-        const agent = agents.find(a => a.id === marker.agentId)
-        const ab = agent?.abilities.find(a => a.id === marker.abilityId)
-        const color = ab ? typeColors[ab.type] || '#888' : '#888'
-        const isSelected = marker.id === selectedId && selectedType === 'marker'
-        return (
-          <div key={marker.id}
-            className={`${styles.marker} ${isSelected ? styles.markerSelected : ''}`}
-            style={{
-              left: offsetX + marker.x * mapW * displayScale,
-              top: offsetY + marker.y * mapH * displayScale,
-              borderColor: isSelected ? '#fff' : color,
-              background: isSelected ? color + '30' : 'rgba(0,0,0,0.85)'
-            }}
-            onMouseDown={(e) => handleMarkerMouseDown(e, marker.id, 'marker')}
-          >
-            <span className={styles.markerStep}>{marker.step}</span>
-            <span className={styles.markerKey}>{info.abilityKey}</span>
-            <span className={styles.markerName}>{info.abilityName}</span>
-            {marker.note && <span className={styles.markerNote}>{marker.note}</span>}
-          </div>
-        )
-      })}
 
       {/* 文字标注 */}
       {textAnnotations.map(tx => {
