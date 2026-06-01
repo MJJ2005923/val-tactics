@@ -183,9 +183,27 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     case 'REMOVE_AGENT_POS':
       return { state: { ...state, agentPositions: state.agentPositions.filter(a => a.id !== action.id), selectedId: state.selectedId === action.id ? null : state.selectedId, selectedType: state.selectedId === action.id ? null : state.selectedType }, history: newHistory }
 
-    // Ability shapes
-    case 'ADD_ABILITY_SHAPE':
-      return { state: { ...state, abilityShapes: [...state.abilityShapes, { ...action.shape, id: action.shape.id || genId('as') }] }, history: newHistory }
+    // Ability shapes — 同时自动创建时间轴标记
+    case 'ADD_ABILITY_SHAPE': {
+      const maxStep = state.markers.reduce((max, m) => Math.max(max, m.step), 0)
+      const newMarker = {
+        id: genId('mk'),
+        abilityId: action.shape.abilityId,
+        agentId: action.shape.agentId,
+        x: action.shape.x, y: action.shape.y,
+        step: maxStep + 1,
+        time: (maxStep + 1) * 5,
+        note: '',
+      }
+      return {
+        state: {
+          ...state,
+          abilityShapes: [...state.abilityShapes, { ...action.shape, id: action.shape.id || genId('as') }],
+          markers: [...state.markers, newMarker],
+        },
+        history: newHistory,
+      }
+    }
     case 'UPDATE_ABILITY_SHAPE':
       return { state: { ...state, abilityShapes: state.abilityShapes.map(s => s.id === action.id ? { ...s, ...action.updates } : s) }, history: newHistory }
     case 'REMOVE_ABILITY_SHAPE':
