@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, type ReactNode } from 'react'
-import type { Marker, DrawPath, TextAnnotation, AgentPosition, AbilityShape, ToolMode } from '../types'
+import type { Marker, DrawPath, TextAnnotation, AgentPosition, AbilityShape, RecordedTrack, ToolMode } from '../types'
 
 // ====== 完整状态 ======
 export interface TacticsState {
@@ -23,6 +23,8 @@ export interface TacticsState {
   strategyName: string
   strategyDescription: string
   // 录制与回放
+  tracks: RecordedTrack[]
+  currentTrackId: string | null
   recording: boolean
   replaying: boolean
   replayIndex: number
@@ -92,6 +94,8 @@ type Action =
   | { type: 'PLAY_STOP' }
   | { type: 'PLAY_STEP'; step: number }
   | { type: 'PLAY_SPEED'; speed: number }
+  | { type: 'CREATE_TRACK'; name: string }
+  | { type: 'DELETE_TRACK'; id: string }
   | { type: 'RECORDING_START' }
   | { type: 'RECORDING_STOP' }
   | { type: 'REPLAY_START'; markers: Marker[] }
@@ -117,6 +121,8 @@ const initialState: TacticsState = {
   playStep: -1,
   strategyName: '',
   strategyDescription: '',
+  tracks: [],
+  currentTrackId: null,
   recording: false,
   replaying: false,
   replayIndex: -1,
@@ -138,7 +144,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     'ADD_TEXT', 'UPDATE_TEXT', 'REMOVE_TEXT',
     'ADD_AGENT_POS', 'UPDATE_AGENT_POS', 'REMOVE_AGENT_POS',
     'ADD_ABILITY_SHAPE', 'UPDATE_ABILITY_SHAPE', 'REMOVE_ABILITY_SHAPE',
-    'CLEAR_ALL', 'LOAD_ALL', 'REPLAY_START', 'REPLAY_STOP'
+    'CLEAR_ALL', 'LOAD_ALL', 'REPLAY_START', 'REPLAY_STOP', 'CREATE_TRACK', 'DELETE_TRACK'
   ])
 
   let newHistory = { ...history }
@@ -214,6 +220,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
         note: '',
         createdAt: state.recording ? now : undefined,
         shapeId,
+        trackId: state.currentTrackId || undefined,
       }
       return {
         state: {
@@ -269,9 +276,17 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     case 'PLAY_SPEED':
       return { state: { ...state, playSpeed: action.speed }, history: newHistory }
 
+    // 轨道管理
+    case 'CREATE_TRACK':
+      return { state: { ...state, tracks: [...state.tracks, { id: genId('tr'), name: action.name, createdAt: Date.now() }] }, history: newHistory }
+    case 'DELETE_TRACK':
+      return { state: { ...state, tracks: state.tracks.filter(t => t.id !== action.id), markers: state.markers.filter(m => m.trackId !== action.id) }, history: newHistory }
+
     // 录制
-    case 'RECORDING_START':
-      return { state: { ...state, recording: true, replaying: false }, history: newHistory }
+    case 'RECORDING_START': {
+      const newTrack: RecordedTrack = { id: genId('tr'), name: `录制 ${state.tracks.length + 1}`, createdAt: Date.now() }
+      return { state: { ...state, tracks: [...state.tracks, newTrack], currentTrackId: newTrack.id, recording: true, replaying: false }, history: newHistory }
+    }
     case 'RECORDING_STOP':
       return { state: { ...state, recording: false }, history: newHistory }
 
