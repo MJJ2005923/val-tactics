@@ -111,6 +111,13 @@ const mapLayouts: Record<string, (ctx: CanvasRenderingContext2D, w: number, h: n
     ctx.fillStyle = '#a070d8'; ctx.font = '9px Arial'; ctx.textAlign = 'center'; ctx.fillText('旋转门', w*0.46+10, h*0.4+13)
     drawSite(ctx, w*0.78, h*0.22, 'A', '#ff4655'); drawSite(ctx, w*0.2, h*0.7, 'B', '#50b4f0'); drawSite(ctx, w*0.5, h*0.5, 'C', '#f0c850')
     drawSpawnMarkers(ctx, w*0.5, h*0.06, w*0.5, h*0.93)
+  },
+  breeze: (ctx, w, h) => {
+    drawLane(ctx, w*0.12, 0, w*0.08, h); drawLane(ctx, w*0.48, 0, w*0.06, h); drawLane(ctx, w*0.80, 0, w*0.08, h)
+    drawBuilding(ctx, w*0.2, h*0.15, w*0.18, h*0.15); drawBuilding(ctx, w*0.55, h*0.15, w*0.15, h*0.2)
+    drawBuilding(ctx, w*0.55, h*0.55, w*0.18, h*0.2); drawBuilding(ctx, w*0.2, h*0.6, w*0.16, h*0.15)
+    drawSite(ctx, w*0.77, h*0.25, 'A', '#ff4655'); drawSite(ctx, w*0.22, h*0.7, 'B', '#50b4f0')
+    drawSpawnMarkers(ctx, w*0.5, h*0.06, w*0.5, h*0.94)
   }
 }
 
@@ -163,6 +170,60 @@ const calloutLabels: Record<string, { label: string; x: number; y: number }[]> =
     { label: 'Mid', x: 0.50, y: 0.40 },
     { label: 'B Site', x: 0.50, y: 0.62 },
     { label: 'A Sewer', x: 0.65, y: 0.50 },
+  ],
+  icebox: [
+    { label: 'A Site', x: 0.78, y: 0.25 },
+    { label: 'A Pipes', x: 0.70, y: 0.12 },
+    { label: 'Mid', x: 0.50, y: 0.50 },
+    { label: 'B Site', x: 0.20, y: 0.68 },
+    { label: 'B Garage', x: 0.10, y: 0.35 },
+    { label: 'Kitchen', x: 0.35, y: 0.55 },
+  ],
+  split: [
+    { label: 'A Heaven', x: 0.80, y: 0.15 },
+    { label: 'A Ramps', x: 0.72, y: 0.35 },
+    { label: 'Mid', x: 0.50, y: 0.42 },
+    { label: 'B Heaven', x: 0.18, y: 0.55 },
+    { label: 'B Garage', x: 0.25, y: 0.72 },
+    { label: 'Sewer', x: 0.50, y: 0.65 },
+  ],
+  pearl: [
+    { label: 'A Main', x: 0.78, y: 0.15 },
+    { label: 'A Art', x: 0.65, y: 0.35 },
+    { label: 'Mid', x: 0.50, y: 0.42 },
+    { label: 'B Main', x: 0.20, y: 0.55 },
+    { label: 'B Link', x: 0.35, y: 0.72 },
+    { label: 'Mid Doors', x: 0.55, y: 0.60 },
+  ],
+  fracture: [
+    { label: 'A Main', x: 0.82, y: 0.45 },
+    { label: 'A Drop', x: 0.65, y: 0.25 },
+    { label: 'B Main', x: 0.15, y: 0.45 },
+    { label: 'B Arcade', x: 0.30, y: 0.20 },
+    { label: 'Tower', x: 0.45, y: 0.15 },
+  ],
+  sunset: [
+    { label: 'A Main', x: 0.75, y: 0.18 },
+    { label: 'A Elbow', x: 0.68, y: 0.40 },
+    { label: 'Mid', x: 0.50, y: 0.42 },
+    { label: 'B Main', x: 0.22, y: 0.55 },
+    { label: 'B Market', x: 0.35, y: 0.72 },
+    { label: 'Courtyard', x: 0.40, y: 0.25 },
+  ],
+  lotus: [
+    { label: 'A Main', x: 0.80, y: 0.18 },
+    { label: 'A Tree', x: 0.70, y: 0.35 },
+    { label: 'B Main', x: 0.20, y: 0.60 },
+    { label: 'C Main', x: 0.50, y: 0.45 },
+    { label: 'C Mound', x: 0.55, y: 0.35 },
+  ],
+  breeze: [
+    { label: 'A Hall', x: 0.78, y: 0.22 },
+    { label: 'A Bridge', x: 0.70, y: 0.12 },
+    { label: 'Mid', x: 0.50, y: 0.42 },
+    { label: 'B Main', x: 0.22, y: 0.55 },
+    { label: 'B Tunnel', x: 0.30, y: 0.72 },
+    { label: 'Elbow', x: 0.45, y: 0.35 },
   ],
 }
 

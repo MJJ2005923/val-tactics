@@ -4,10 +4,10 @@ import type { Template } from '../../types'
 import { useTactics } from '../../store/TacticsContext'
 import styles from './TemplateManager.module.css'
 
-interface Props { onClose: () => void }
+interface Props { onClose: () => void; mapId: string; onLoadMap: (mapId: string) => void }
 
-export default function TemplateManager({ onClose }: Props) {
-  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, dispatch } = useTactics()
+export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
+  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks, dispatch } = useTactics()
   const [templates, setTemplates] = useState<Template[]>([])
   const [name, setName] = useState(strategyName)
   const [desc, setDesc] = useState(strategyDescription)
@@ -27,14 +27,16 @@ export default function TemplateManager({ onClose }: Props) {
       id: Date.now().toString(),
       name: n,
       description: desc,
-      mapId: '',
+      mapId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       markers: markers.map(m => ({ ...m })),
       drawings: drawings.map(d => ({ ...d, points: d.points.map(p => ({ ...p })) })),
       textAnnotations: textAnnotations.map(t => ({ ...t })),
       agentPositions: agentPositions.map(a => ({ ...a })),
-      abilityShapes: abilityShapes.map(s => ({ ...s }))
+      abilityShapes: abilityShapes.map(s => ({ ...s })),
+      roster: { ...roster, attack: [...roster.attack], defense: [...roster.defense] },
+      tracks: tracks.map(t => ({ ...t })),
     }
     await db.templates.add(tpl)
     dispatch({ type: 'SET_STRATEGY_NAME', name: n })
@@ -44,7 +46,8 @@ export default function TemplateManager({ onClose }: Props) {
   }
 
   const handleLoad = async (tpl: Template) => {
-    dispatch({ type: 'LOAD_ALL', markers: tpl.markers, drawings: tpl.drawings || [], texts: tpl.textAnnotations || [], agents: tpl.agentPositions || [], shapes: tpl.abilityShapes || [], name: tpl.name, desc: tpl.description || '' })
+    dispatch({ type: 'LOAD_ALL', markers: tpl.markers, drawings: tpl.drawings || [], texts: tpl.textAnnotations || [], agents: tpl.agentPositions || [], shapes: tpl.abilityShapes || [], name: tpl.name, desc: tpl.description || '', roster: tpl.roster || { attack: [], defense: [] }, tracks: tpl.tracks || [] })
+    if (tpl.mapId) onLoadMap(tpl.mapId)
     onClose()
   }
 
@@ -81,7 +84,7 @@ export default function TemplateManager({ onClose }: Props) {
         const text = await file.text()
         const data = JSON.parse(text)
         if (!data.markers || !Array.isArray(data.markers)) { alert('无效的战术文件格式'); return }
-        dispatch({ type: 'LOAD_ALL', markers: data.markers.map((m: Record<string, unknown>, i: number) => ({ id: 'm_' + Date.now() + '_' + i, abilityId: m.abilityId as string, agentId: m.agentId as string, x: m.x as number, y: m.y as number, step: (m.step as number) || i + 1, time: (m.time as number) || (i * 5), note: (m.note as string) || '' })), drawings: (data.drawings || []) as Template['drawings'], texts: (data.textAnnotations || []) as Template['textAnnotations'], agents: (data.agentPositions || []) as Template['agentPositions'], shapes: (data.abilityShapes || []) as Template['abilityShapes'], name: (data.strategyName as string) || '', desc: (data.strategyDescription as string) || '' })
+        dispatch({ type: 'LOAD_ALL', markers: data.markers.map((m: Record<string, unknown>, i: number) => ({ id: 'm_' + Date.now() + '_' + i, abilityId: m.abilityId as string, agentId: m.agentId as string, x: m.x as number, y: m.y as number, step: (m.step as number) || i + 1, time: (m.time as number) || (i * 5), note: (m.note as string) || '' })), drawings: (data.drawings || []) as Template['drawings'], texts: (data.textAnnotations || []) as Template['textAnnotations'], agents: (data.agentPositions || []) as Template['agentPositions'], shapes: (data.abilityShapes || []) as Template['abilityShapes'], name: (data.strategyName as string) || '', desc: (data.strategyDescription as string) || '', roster: { attack: [], defense: [] }, tracks: [] })
         onClose()
       } catch { alert('文件解析失败，请检查文件格式') }
     }

@@ -150,6 +150,7 @@ function AppInner() {
           agents: data.ap || [],
           shapes: data.as || [],
           name: '', desc: '',
+          roster: { attack: [], defense: [] }, tracks: [],
         })
         // 清除 hash 避免重复加载
         window.history.replaceState(null, '', window.location.pathname)
@@ -209,7 +210,7 @@ function AppInner() {
       </div>
 
       <Timeline />
-      {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} />}
+      {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} />}
     </div>
   )
 }

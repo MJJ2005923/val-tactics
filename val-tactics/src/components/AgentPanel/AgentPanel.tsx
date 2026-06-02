@@ -130,6 +130,9 @@ function AgentPanel() {
 
   const agentList = useMemo(() => (
     <div className={styles.list} ref={listRef}>
+      {filtered.length === 0 && (
+        <div className={styles.emptySearch}>未找到匹配的特工</div>
+      )}
       {filtered.map(agent => {
         const isExpanded = expandedId === agent.id
         const sorted = [...agent.abilities].sort((a, b) => abilityKeyOrder[a.key] - abilityKeyOrder[b.key])

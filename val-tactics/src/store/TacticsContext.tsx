@@ -89,7 +89,7 @@ type Action =
   | { type: 'REMOVE_ABILITY_SHAPE'; id: string }
   | { type: 'SELECT'; id: string | null; selType: TacticsState['selectedType'] }
   | { type: 'CLEAR_ALL' }
-  | { type: 'LOAD_ALL'; markers: Marker[]; drawings: DrawPath[]; texts: TextAnnotation[]; agents: AgentPosition[]; shapes: AbilityShape[]; name: string; desc: string }
+  | { type: 'LOAD_ALL'; markers: Marker[]; drawings: DrawPath[]; texts: TextAnnotation[]; agents: AgentPosition[]; shapes: AbilityShape[]; name: string; desc: string; roster: { attack: string[]; defense: string[] }; tracks: RecordedTrack[] }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'PLAY_START' }
@@ -249,7 +249,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     case 'CLEAR_ALL':
       return { state: { ...initialState, toolMode: state.toolMode, drawColor: state.drawColor, drawWidth: state.drawWidth, side: state.side }, history: newHistory }
     case 'LOAD_ALL':
-      return { state: { ...state, markers: action.markers, drawings: action.drawings, textAnnotations: action.texts, agentPositions: action.agents, abilityShapes: action.shapes, strategyName: action.name, strategyDescription: action.desc, selectedId: null, selectedType: null }, history: newHistory }
+      return { state: { ...state, markers: action.markers, drawings: action.drawings, textAnnotations: action.texts, agentPositions: action.agents, abilityShapes: action.shapes, strategyName: action.name, strategyDescription: action.desc, selectedId: null, selectedType: null, roster: action.roster, tracks: action.tracks }, history: newHistory }
 
     // Undo / Redo
     case 'UNDO': {

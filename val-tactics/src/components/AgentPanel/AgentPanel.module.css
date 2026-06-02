@@ -293,3 +293,10 @@
   object-fit: cover;
   border: 2px solid var(--color-border);
 }
+
+.emptySearch {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}

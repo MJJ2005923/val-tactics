@@ -106,4 +106,6 @@ export interface Template {
   textAnnotations: TextAnnotation[]
   agentPositions: AgentPosition[]
   abilityShapes: AbilityShape[]
+  roster: { attack: string[]; defense: string[] }
+  tracks: RecordedTrack[]
 }
