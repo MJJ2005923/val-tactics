@@ -92,11 +92,11 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
     input.click()
   }
 
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+
   const handleClear = () => {
     if (markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0) return
-    if (confirm('确定要清空当前地图上的所有内容吗？此操作不可撤销。')) {
-      dispatch({ type: 'CLEAR_ALL' })
-    }
+    setShowClearConfirm(true)
   }
 
   const formatDate = (ts: number) => {
@@ -128,7 +128,15 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
             <div className={styles.actionRow}>
               <button className={styles.btn} onClick={handleExport} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>导出 JSON</button>
               <button className={styles.btn} onClick={handleImport}>导入 JSON</button>
-              <button className={styles.btnDanger} onClick={handleClear} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>清空画布</button>
+              {showClearConfirm ? (
+                <div className={styles.confirmRow}>
+                  <span className={styles.confirmText}>确定清空？</span>
+                  <button className={styles.btnDanger} onClick={() => { dispatch({ type: 'CLEAR_ALL' }); setShowClearConfirm(false); toast('已清空') }}>确定</button>
+                  <button className={styles.btnSm} onClick={() => setShowClearConfirm(false)}>取消</button>
+                </div>
+              ) : (
+                <button className={styles.btnDanger} onClick={handleClear} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>清空画布</button>
+              )}
             </div>
           </div>
 

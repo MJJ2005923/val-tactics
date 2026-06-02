@@ -92,3 +92,7 @@
 .templateMeta { font-size: 11px; color: var(--color-text-muted); }
 
 .templateActions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.confirmRow { display: flex; align-items: center; gap: 6px; }
+
+.confirmText { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; }
