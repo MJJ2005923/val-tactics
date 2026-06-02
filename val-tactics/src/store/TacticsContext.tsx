@@ -30,6 +30,8 @@ export interface TacticsState {
   replayIndex: number
   revealedShapeIds: string[]
   animatingShapeId: string | null  // 正在播放入场动画的形状ID
+  // 阵容构建
+  roster: { attack: string[]; defense: string[] }
 }
 
 // ====== 快照（用于撤销重做） ======
@@ -96,6 +98,8 @@ type Action =
   | { type: 'PLAY_SPEED'; speed: number }
   | { type: 'CREATE_TRACK'; name: string }
   | { type: 'DELETE_TRACK'; id: string }
+  | { type: 'ADD_TO_ROSTER'; team: 'attack' | 'defense'; agentId: string }
+  | { type: 'REMOVE_FROM_ROSTER'; team: 'attack' | 'defense'; agentId: string }
   | { type: 'RECORDING_START' }
   | { type: 'RECORDING_STOP' }
   | { type: 'REPLAY_START'; markers: Marker[] }
@@ -128,6 +132,7 @@ const initialState: TacticsState = {
   replayIndex: -1,
   revealedShapeIds: [],
   animatingShapeId: null,
+  roster: { attack: [], defense: [] },
 }
 
 let idCounter = 0
@@ -281,6 +286,16 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       return { state: { ...state, tracks: [...state.tracks, { id: genId('tr'), name: action.name, createdAt: Date.now() }] }, history: newHistory }
     case 'DELETE_TRACK':
       return { state: { ...state, tracks: state.tracks.filter(t => t.id !== action.id), markers: state.markers.filter(m => m.trackId !== action.id) }, history: newHistory }
+
+    // 阵容
+    case 'ADD_TO_ROSTER': {
+      const team = [...state.roster[action.team]]
+      if (team.length >= 5) return { state, history: newHistory }
+      if (team.includes(action.agentId)) return { state, history: newHistory }
+      return { state: { ...state, roster: { ...state.roster, [action.team]: [...team, action.agentId] } }, history: newHistory }
+    }
+    case 'REMOVE_FROM_ROSTER':
+      return { state: { ...state, roster: { ...state.roster, [action.team]: state.roster[action.team].filter(id => id !== action.agentId) } }, history: newHistory }
 
     // 录制
     case 'RECORDING_START': {

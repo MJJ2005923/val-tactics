@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import agents, { agentImages, type Agent, type Ability } from '../../data/agents'
+import { useTactics } from '../../store/TacticsContext'
 import SkillDetail from '../SkillDetail/SkillDetail'
 import { setPendingDragData } from '../MapCanvas/MapCanvas'
 import styles from './AgentPanel.module.css'
@@ -65,20 +66,59 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
   )
 }
 
+function RosterSlots({ team }: { team: 'attack' | 'defense' }) {
+  const { roster, dispatch } = useTactics()
+  const ids = roster[team]
+  const color = team === 'attack' ? '#ff4655' : '#50b4f0'
+  const label = team === 'attack' ? '进攻方' : '防守方'
+  return (
+    <div className={styles.rosterGroup}>
+      <div className={styles.rosterLabel} style={{ color }}>{label}</div>
+      <div className={styles.rosterSlots}>
+        {[0, 1, 2, 3, 4].map(i => {
+          const agentId = ids[i]
+          const agent = agentId ? agents.find(a => a.id === agentId) : null
+          return (
+            <div key={i} className={styles.rosterSlot} style={{ borderColor: color }}
+              onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
+              onDrop={e => {
+                e.preventDefault()
+                const raw = e.dataTransfer.getData('application/json')
+                if (!raw) return
+                try {
+                  const data = JSON.parse(raw)
+                  if (data.type === 'agent') dispatch({ type: 'ADD_TO_ROSTER', team, agentId: data.agentId })
+                } catch {}
+              }}>
+              {agent
+                ? <img src={getAgentImage(agent)} alt={agent.name} className={styles.rosterAvatar}
+                    onClick={() => dispatch({ type: 'REMOVE_FROM_ROSTER', team, agentId: agent.id })} title="点击移除" />
+                : <span className={styles.rosterEmpty}>+</span>}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function AgentPanel() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [selectedAbility, setSelectedAbility] = useState<{ ability: Ability; agent: Agent } | null>(null)
   const [search, setSearch] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
+  const { roster } = useTactics()
 
   useEffect(() => {
     if (!listRef.current) return
     listRef.current.style.overflowY = selectedAbility ? 'hidden' : 'auto'
   }, [selectedAbility])
 
+  const allRosterIds = [...roster.attack, ...roster.defense]
+  const baseList = allRosterIds.length > 0 ? agents.filter(a => allRosterIds.includes(a.id)) : agents
   const filtered = useMemo(() => search
-    ? agents.filter(a => a.name.includes(search) || a.nameEn.toLowerCase().includes(search.toLowerCase()))
-    : agents, [search])
+    ? baseList.filter(a => a.name.includes(search) || a.nameEn.toLowerCase().includes(search.toLowerCase()))
+    : baseList, [search, baseList])
 
   const agentList = useMemo(() => (
     <div className={styles.list} ref={listRef}>
@@ -118,7 +158,10 @@ function AgentPanel() {
   return (
     <>
       <div className={styles.panel}>
-        <div className={styles.header}>特工列表</div>
+        <div className={styles.header}>阵容</div>
+        <RosterSlots team="attack" />
+        <RosterSlots team="defense" />
+        <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
         <div className={styles.searchBox}>
           <input className={styles.searchInput} type="text" placeholder="搜索特工..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
