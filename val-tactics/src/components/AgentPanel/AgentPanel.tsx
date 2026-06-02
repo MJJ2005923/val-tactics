@@ -66,7 +66,7 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
   )
 }
 
-function RosterSlots({ team }: { team: 'attack' | 'defense' }) {
+function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAgentClick: (agentId: string) => void }) {
   const { roster, dispatch } = useTactics()
   const ids = roster[team]
   const color = team === 'attack' ? '#ff4655' : '#50b4f0'
@@ -92,7 +92,9 @@ function RosterSlots({ team }: { team: 'attack' | 'defense' }) {
               }}>
               {agent
                 ? <img src={getAgentImage(agent)} alt={agent.name} className={styles.rosterAvatar}
-                    onClick={() => dispatch({ type: 'REMOVE_FROM_ROSTER', team, agentId: agent.id })} title="点击移除" />
+                    onClick={() => onAgentClick(agent.id)}
+                    onContextMenu={e => { e.preventDefault(); dispatch({ type: 'REMOVE_FROM_ROSTER', team, agentId: agent.id }) }}
+                    title="左键查看 · 右键移除" />
                 : <span className={styles.rosterEmpty}>+</span>}
             </div>
           )
@@ -107,18 +109,24 @@ function AgentPanel() {
   const [selectedAbility, setSelectedAbility] = useState<{ ability: Ability; agent: Agent } | null>(null)
   const [search, setSearch] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
-  const { roster } = useTactics()
+
+  const handleRosterClick = (agentId: string) => {
+    setExpandedId(agentId)
+    // 滚动到该特工
+    setTimeout(() => {
+      const el = listRef.current?.querySelector(`[data-agent-id="${agentId}"]`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+  }
 
   useEffect(() => {
     if (!listRef.current) return
     listRef.current.style.overflowY = selectedAbility ? 'hidden' : 'auto'
   }, [selectedAbility])
 
-  const allRosterIds = [...roster.attack, ...roster.defense]
-  const baseList = allRosterIds.length > 0 ? agents.filter(a => allRosterIds.includes(a.id)) : agents
   const filtered = useMemo(() => search
-    ? baseList.filter(a => a.name.includes(search) || a.nameEn.toLowerCase().includes(search.toLowerCase()))
-    : baseList, [search, baseList])
+    ? agents.filter(a => a.name.includes(search) || a.nameEn.toLowerCase().includes(search.toLowerCase()))
+    : agents, [search])
 
   const agentList = useMemo(() => (
     <div className={styles.list} ref={listRef}>
@@ -126,7 +134,7 @@ function AgentPanel() {
         const isExpanded = expandedId === agent.id
         const sorted = [...agent.abilities].sort((a, b) => abilityKeyOrder[a.key] - abilityKeyOrder[b.key])
         return (
-              <div key={agent.id} className={styles.agentItem}>
+              <div key={agent.id} className={styles.agentItem} data-agent-id={agent.id}>
                 <div className={styles.agentRow}>
                   <DraggableAgentHeader agent={agent} />
                   <button
@@ -159,8 +167,8 @@ function AgentPanel() {
     <>
       <div className={styles.panel}>
         <div className={styles.header}>阵容</div>
-        <RosterSlots team="attack" />
-        <RosterSlots team="defense" />
+        <RosterSlots team="attack" onAgentClick={handleRosterClick} />
+        <RosterSlots team="defense" onAgentClick={handleRosterClick} />
         <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
         <div className={styles.searchBox}>
           <input className={styles.searchInput} type="text" placeholder="搜索特工..." value={search} onChange={e => setSearch(e.target.value)} />
