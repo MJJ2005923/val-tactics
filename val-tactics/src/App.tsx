@@ -15,8 +15,37 @@ function AppInner() {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription } = useTactics()
+  const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
   const toast = useToast()
+
+  const handleSaveProgress = () => {
+    const data = {
+      mapId: selectedMap.id,
+      markers, drawings, textAnnotations, agentPositions, abilityShapes,
+      strategyName, strategyDescription, roster, tracks,
+    }
+    localStorage.setItem('val-tactics-autosave', JSON.stringify(data))
+    toast('进度已保存')
+  }
+
+  useEffect(() => {
+    const raw = localStorage.getItem('val-tactics-autosave')
+    if (!raw) return
+    try {
+      const d = JSON.parse(raw)
+      if (!d.mapId) return
+      const map = maps.find(m => m.id === d.mapId)
+      if (map) setSelectedMap(map)
+      dispatch({
+        type: 'LOAD_ALL',
+        markers: d.markers || [], drawings: d.drawings || [],
+        texts: d.textAnnotations || [], agents: d.agentPositions || [],
+        shapes: d.abilityShapes || [], name: d.strategyName || '',
+        desc: d.strategyDescription || '',
+        roster: d.roster || { attack: [], defense: [] }, tracks: d.tracks || [],
+      })
+    } catch {}
+  }, [])
 
   const handleDirectExport = () => {
     const data = {
@@ -196,6 +225,7 @@ function AppInner() {
           <button className="btn btn--primary" onClick={handleDirectExport}>导出 JSON</button>
           <button className="btn" onClick={handleExportImage}>导出图片</button>
           <button className="btn" onClick={handleShareLink}>分享链接</button>
+          <button className="btn" onClick={handleSaveProgress}>保存进度</button>
         </div>
       </nav>
 
