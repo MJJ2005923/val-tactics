@@ -249,7 +249,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     ctx.clearRect(0, 0, containerSize.w, containerSize.h)
 
     // 背景
-    ctx.fillStyle = '#0a0a0a'
+    ctx.fillStyle = '#000'
     ctx.fillRect(0, 0, containerSize.w, containerSize.h)
     ctx.save()
     if (side === 'defense') {
