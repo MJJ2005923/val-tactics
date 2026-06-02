@@ -184,6 +184,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
   const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
+  // 拖拽预览
+  const [dragPreview, setDragPreview] = useState<{ x: number; y: number; abilityId: string; agentId: string; shape: AbilityShapeConfig; color: string } | null>(null)
+
   // 矩形拖拽绘制
   const [rectDrawing, setRectDrawing] = useState<{
     startX: number; startY: number; currentX: number; currentY: number;
@@ -290,15 +293,39 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
     setIsOver(true)
-  }, [])
+    // 拖拽预览
+    const raw = e.dataTransfer.getData('application/json')
+    if (raw) {
+      try {
+        const data = JSON.parse(raw)
+        if (data.type === 'ability' && data.abilityId) {
+          const sc = getAbilityShapeConfig(data.abilityId)
+          if (sc) {
+            const agent = agents.find(a => a.id === data.agentId)
+            const ab = agent?.abilities.find(a => a.id === data.abilityId)
+            const color = ab ? typeColors[ab.type] || '#888' : '#888'
+            const t = transformRef.current; if (!t.container) return
+            const rr = t.container.getBoundingClientRect()
+            const x = (e.clientX - rr.left - offsetX) / (displayScale * mapW)
+            const y = (e.clientY - rr.top - offsetY) / (displayScale * mapH)
+            setDragPreview({ x, y, abilityId: data.abilityId, agentId: data.agentId, shape: sc, color })
+            return
+          }
+        }
+      } catch {}
+    }
+    setDragPreview(null)
+  }, [offsetX, offsetY, displayScale, mapW, mapH, transformRef])
 
   const handleDragLeave = useCallback(() => {
     setIsOver(false)
+    setDragPreview(null)
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsOver(false)
+    setDragPreview(null)
     const raw = e.dataTransfer.getData('application/json')
     if (!raw) return
     let data: { type: string; agentId: string; abilityId?: string }
@@ -778,7 +805,52 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         )
       })()}
 
-      {isOver && !lineDrawing && !rectDrawing && <div className={styles.dropHint}>释放以放置技能</div>}
+      {/* 拖拽预览 */}
+      {dragPreview && (() => {
+        const px = offsetX + dragPreview.x * mapW * displayScale
+        const py = offsetY + dragPreview.y * mapH * displayScale
+        if (dragPreview.shape.shape === 'circle') {
+          const r = (dragPreview.shape.radius ?? 0.08) * mapW * displayScale
+          return (
+            <svg style={{ position: 'absolute', inset: 0, zIndex: 8, pointerEvents: 'none', overflow: 'visible' }}>
+              <circle cx={px} cy={py} r={r} fill={dragPreview.color + '15'} stroke={dragPreview.color} strokeWidth={2} strokeDasharray="6 3" opacity={0.6} />
+            </svg>
+          )
+        }
+        if (dragPreview.shape.shape === 'cone') {
+          const len = (dragPreview.shape.length ?? 0.15) * mapW * displayScale
+          const halfA = ((dragPreview.shape.angle ?? 60) / 2) * Math.PI / 180
+          const rad = -90 * Math.PI / 180
+          const x1 = px + Math.cos(rad - halfA) * len, y1 = py + Math.sin(rad - halfA) * len
+          const x2 = px + Math.cos(rad + halfA) * len, y2 = py + Math.sin(rad + halfA) * len
+          return (
+            <svg style={{ position: 'absolute', inset: 0, zIndex: 8, pointerEvents: 'none', overflow: 'visible' }}>
+              <path d={`M ${px} ${py} L ${x1} ${y1} L ${x2} ${y2} Z`} fill={dragPreview.color + '10'} stroke={dragPreview.color} strokeWidth={2} strokeDasharray="6 3" opacity={0.6} />
+            </svg>
+          )
+        }
+        if (dragPreview.shape.shape === 'rect') {
+          const hw = (dragPreview.shape.length ?? 0.1) * mapW * displayScale / 2
+          const hh = (dragPreview.shape.width ?? 0.02) * mapH * displayScale / 2
+          return (
+            <svg style={{ position: 'absolute', inset: 0, zIndex: 8, pointerEvents: 'none', overflow: 'visible' }}>
+              <rect x={px - hw} y={py - hh} width={hw * 2} height={hh * 2} fill={dragPreview.color + '10'} stroke={dragPreview.color} strokeWidth={2} strokeDasharray="6 3" opacity={0.6} rx={2} />
+            </svg>
+          )
+        }
+        if (dragPreview.shape.shape === 'line') {
+          const hl = (dragPreview.shape.length ?? 0.1) * mapW * displayScale / 2
+          const sw = (dragPreview.shape.thickness ?? 0.006) * mapW * displayScale
+          return (
+            <svg style={{ position: 'absolute', inset: 0, zIndex: 8, pointerEvents: 'none', overflow: 'visible' }}>
+              <line x1={px} y1={py - hl} x2={px} y2={py + hl} stroke={dragPreview.color} strokeWidth={sw} strokeDasharray="6 3" opacity={0.5} />
+            </svg>
+          )
+        }
+        return null
+      })()}
+
+      {isOver && !lineDrawing && !rectDrawing && !dragPreview && <div className={styles.dropHint}>释放以放置技能</div>}
 
 
       {/* 文字标注 */}
