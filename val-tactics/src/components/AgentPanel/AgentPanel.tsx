@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import agents, { agentImages, type Agent, type Ability } from '../../data/agents'
 import SkillDetail from '../SkillDetail/SkillDetail'
+import { setPendingDragData } from '../MapCanvas/MapCanvas'
 import styles from './AgentPanel.module.css'
 
 const abilityKeyOrder: Record<string, number> = { C: 0, Q: 1, E: 2, X: 3 }
@@ -51,8 +52,10 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
       className={`${styles.abilityBtn} ${!isDraggable ? styles.abilityBtnDisabled : ''}`}
       draggable={isDraggable}
       onDragStart={isDraggable ? (e) => {
-        e.dataTransfer.setData('application/json', JSON.stringify({ type: 'ability', abilityId: ability.id, agentId: agent.id }))
+        const dragData = { type: 'ability' as const, abilityId: ability.id, agentId: agent.id }
+        e.dataTransfer.setData('application/json', JSON.stringify(dragData))
         e.dataTransfer.effectAllowed = 'copy'
+        setPendingDragData(dragData)
       } : undefined}
     >
       <span className={styles.abilityKeyBadge} style={{ background: c }}>{ability.key}</span>

@@ -172,6 +172,10 @@ const typeColors: Record<string, string> = {
   recon: '#50b4f0', control: '#a070d8', heal: '#50e890', mobility: '#ff8c42'
 }
 
+// 拖拽数据暂存（dragOver 时 getData 不可用）
+let pendingDragData: { type: string; agentId: string; abilityId?: string } | null = null
+export function setPendingDragData(data: typeof pendingDragData) { pendingDragData = data }
+
 // ====== MapCanvas ======
 export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -293,26 +297,21 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
     setIsOver(true)
-    // 拖拽预览
-    const raw = e.dataTransfer.getData('application/json')
-    if (raw) {
-      try {
-        const data = JSON.parse(raw)
-        if (data.type === 'ability' && data.abilityId) {
-          const sc = getAbilityShapeConfig(data.abilityId)
-          if (sc) {
-            const agent = agents.find(a => a.id === data.agentId)
-            const ab = agent?.abilities.find(a => a.id === data.abilityId)
-            const color = ab ? typeColors[ab.type] || '#888' : '#888'
-            const t = transformRef.current; if (!t.container) return
-            const rr = t.container.getBoundingClientRect()
-            const x = (e.clientX - rr.left - offsetX) / (displayScale * mapW)
-            const y = (e.clientY - rr.top - offsetY) / (displayScale * mapH)
-            setDragPreview({ x, y, abilityId: data.abilityId, agentId: data.agentId, shape: sc, color })
-            return
-          }
-        }
-      } catch {}
+    // 拖拽预览（用暂存数据，dragOver 时 getData 不可用）
+    const pd = pendingDragData
+    if (pd?.type === 'ability' && pd.abilityId) {
+      const sc = getAbilityShapeConfig(pd.abilityId)
+      if (sc) {
+        const agent = agents.find(a => a.id === pd.agentId)
+        const ab = agent?.abilities.find(a => a.id === pd.abilityId)
+        const color = ab ? typeColors[ab.type] || '#888' : '#888'
+        const t = transformRef.current; if (!t.container) return
+        const rr = t.container.getBoundingClientRect()
+        const x = (e.clientX - rr.left - offsetX) / (displayScale * mapW)
+        const y = (e.clientY - rr.top - offsetY) / (displayScale * mapH)
+        setDragPreview({ x, y, abilityId: pd.abilityId, agentId: pd.agentId, shape: sc, color })
+        return
+      }
     }
     setDragPreview(null)
   }, [offsetX, offsetY, displayScale, mapW, mapH, transformRef])
