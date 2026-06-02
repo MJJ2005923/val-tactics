@@ -130,16 +130,6 @@ function drawPlaceholderMap(ctx: CanvasRenderingContext2D, mapId: string, w: num
   for (let y = gs; y < h; y += gs) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke() }
   const layout = mapLayouts[mapId]
   if (layout) layout(ctx, w, h)
-  // 绘制地图标注点
-  const callouts = calloutLabels[mapId]
-  if (callouts) {
-    ctx.font = '9px "PingFang SC","Microsoft YaHei",sans-serif'
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    for (const c of callouts) {
-      ctx.fillStyle = 'rgba(255,255,255,0.12)'
-      ctx.fillText(c.label, c.x * w, c.y * h)
-    }
-  }
 }
 
 // 地图标注点（callout labels）
@@ -340,6 +330,16 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       ctx.drawImage(imageRef.current, 0, 0, mapW, mapH)
     } else {
       drawPlaceholderMap(ctx, mapId, mapW, mapH)
+    }
+    // 绘制地图标注点
+    const callouts = calloutLabels[mapId]
+    if (callouts) {
+      ctx.font = '9px "PingFang SC","Microsoft YaHei",sans-serif'
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      for (const c of callouts) {
+        ctx.fillStyle = 'rgba(255,255,255,0.15)'
+        ctx.fillText(c.label, c.x * mapW, c.y * mapH)
+      }
     }
     ctx.restore()
   }, [containerSize, displayScale, offsetX, offsetY, mapId, mapImgLoaded, side])
