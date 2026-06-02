@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import agents, { agentImages, type Agent, type Ability } from '../../data/agents'
+import { useTactics } from '../../store/TacticsContext'
 import SkillDetail from '../SkillDetail/SkillDetail'
+import { setPendingDragData } from '../MapCanvas/MapCanvas'
 import styles from './AgentPanel.module.css'
 
 const abilityKeyOrder: Record<string, number> = { C: 0, Q: 1, E: 2, X: 3 }
@@ -51,8 +53,10 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
       className={`${styles.abilityBtn} ${!isDraggable ? styles.abilityBtnDisabled : ''}`}
       draggable={isDraggable}
       onDragStart={isDraggable ? (e) => {
-        e.dataTransfer.setData('application/json', JSON.stringify({ type: 'ability', abilityId: ability.id, agentId: agent.id }))
+        const dragData = { type: 'ability' as const, abilityId: ability.id, agentId: agent.id }
+        e.dataTransfer.setData('application/json', JSON.stringify(dragData))
         e.dataTransfer.effectAllowed = 'copy'
+        setPendingDragData(dragData)
       } : undefined}
     >
       <span className={styles.abilityKeyBadge} style={{ background: c }}>{ability.key}</span>
@@ -62,11 +66,58 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
   )
 }
 
+function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAgentClick: (agentId: string) => void }) {
+  const { roster, dispatch } = useTactics()
+  const ids = roster[team]
+  const color = team === 'attack' ? '#ff4655' : '#50b4f0'
+  const label = team === 'attack' ? '进攻方' : '防守方'
+  return (
+    <div className={styles.rosterGroup}>
+      <div className={styles.rosterLabel} style={{ color }}>{label}</div>
+      <div className={styles.rosterSlots}>
+        {[0, 1, 2, 3, 4].map(i => {
+          const agentId = ids[i]
+          const agent = agentId ? agents.find(a => a.id === agentId) : null
+          return (
+            <div key={i} className={styles.rosterSlot} style={{ borderColor: color }}
+              onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
+              onDrop={e => {
+                e.preventDefault()
+                const raw = e.dataTransfer.getData('application/json')
+                if (!raw) return
+                try {
+                  const data = JSON.parse(raw)
+                  if (data.type === 'agent') dispatch({ type: 'ADD_TO_ROSTER', team, agentId: data.agentId })
+                } catch {}
+              }}>
+              {agent
+                ? <img src={getAgentImage(agent)} alt={agent.name} className={styles.rosterAvatar}
+                    onClick={() => onAgentClick(agent.id)}
+                    onContextMenu={e => { e.preventDefault(); dispatch({ type: 'REMOVE_FROM_ROSTER', team, agentId: agent.id }) }}
+                    title="左键查看 · 右键移除" />
+                : <span className={styles.rosterEmpty}>+</span>}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function AgentPanel() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [selectedAbility, setSelectedAbility] = useState<{ ability: Ability; agent: Agent } | null>(null)
   const [search, setSearch] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
+
+  const handleRosterClick = (agentId: string) => {
+    setExpandedId(agentId)
+    // 滚动到该特工
+    setTimeout(() => {
+      const el = listRef.current?.querySelector(`[data-agent-id="${agentId}"]`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+  }
 
   useEffect(() => {
     if (!listRef.current) return
@@ -79,11 +130,14 @@ function AgentPanel() {
 
   const agentList = useMemo(() => (
     <div className={styles.list} ref={listRef}>
+      {filtered.length === 0 && (
+        <div className={styles.emptySearch}>未找到匹配的特工</div>
+      )}
       {filtered.map(agent => {
         const isExpanded = expandedId === agent.id
         const sorted = [...agent.abilities].sort((a, b) => abilityKeyOrder[a.key] - abilityKeyOrder[b.key])
         return (
-              <div key={agent.id} className={styles.agentItem}>
+              <div key={agent.id} className={styles.agentItem} data-agent-id={agent.id}>
                 <div className={styles.agentRow}>
                   <DraggableAgentHeader agent={agent} />
                   <button
@@ -115,7 +169,10 @@ function AgentPanel() {
   return (
     <>
       <div className={styles.panel}>
-        <div className={styles.header}>特工列表</div>
+        <div className={styles.header}>阵容</div>
+        <RosterSlots team="attack" onAgentClick={handleRosterClick} />
+        <RosterSlots team="defense" onAgentClick={handleRosterClick} />
+        <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
         <div className={styles.searchBox}>
           <input className={styles.searchInput} type="text" placeholder="搜索特工..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>

@@ -3,12 +3,10 @@
   height: 100%;
   position: relative;
   overflow: hidden;
-  cursor: grab;
   background: var(--color-bg-primary);
 }
 
 .container:active {
-  cursor: grabbing;
 }
 
 .containerOver {

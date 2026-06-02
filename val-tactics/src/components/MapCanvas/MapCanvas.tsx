@@ -111,6 +111,27 @@ const mapLayouts: Record<string, (ctx: CanvasRenderingContext2D, w: number, h: n
     ctx.fillStyle = '#a070d8'; ctx.font = '9px Arial'; ctx.textAlign = 'center'; ctx.fillText('旋转门', w*0.46+10, h*0.4+13)
     drawSite(ctx, w*0.78, h*0.22, 'A', '#ff4655'); drawSite(ctx, w*0.2, h*0.7, 'B', '#50b4f0'); drawSite(ctx, w*0.5, h*0.5, 'C', '#f0c850')
     drawSpawnMarkers(ctx, w*0.5, h*0.06, w*0.5, h*0.93)
+  },
+  breeze: (ctx, w, h) => {
+    drawLane(ctx, w*0.12, 0, w*0.08, h); drawLane(ctx, w*0.48, 0, w*0.06, h); drawLane(ctx, w*0.80, 0, w*0.08, h)
+    drawBuilding(ctx, w*0.2, h*0.15, w*0.18, h*0.15); drawBuilding(ctx, w*0.55, h*0.15, w*0.15, h*0.2)
+    drawBuilding(ctx, w*0.55, h*0.55, w*0.18, h*0.2); drawBuilding(ctx, w*0.2, h*0.6, w*0.16, h*0.15)
+    drawSite(ctx, w*0.77, h*0.25, 'A', '#ff4655'); drawSite(ctx, w*0.22, h*0.7, 'B', '#50b4f0')
+    drawSpawnMarkers(ctx, w*0.5, h*0.06, w*0.5, h*0.94)
+  },
+  abyss: (ctx, w, h) => {
+    drawLane(ctx, w*0.15, 0, w*0.08, h); drawLane(ctx, w*0.48, 0, w*0.06, h); drawLane(ctx, w*0.80, 0, w*0.08, h)
+    drawBuilding(ctx, w*0.22, h*0.2, w*0.18, h*0.15); drawBuilding(ctx, w*0.55, h*0.3, w*0.18, h*0.18)
+    drawBuilding(ctx, w*0.58, h*0.6, w*0.2, h*0.18); drawBuilding(ctx, w*0.2, h*0.6, w*0.15, h*0.15)
+    drawSite(ctx, w*0.78, h*0.22, 'A', '#ff4655'); drawSite(ctx, w*0.2, h*0.7, 'B', '#50b4f0')
+    drawSpawnMarkers(ctx, w*0.5, h*0.06, w*0.5, h*0.94)
+  },
+  saltmine: (ctx, w, h) => {
+    drawLane(ctx, w*0.15, 0, w*0.07, h); drawLane(ctx, w*0.48, 0, w*0.06, h); drawLane(ctx, w*0.80, 0, w*0.08, h)
+    drawBuilding(ctx, w*0.22, h*0.2, w*0.18, h*0.16); drawBuilding(ctx, w*0.55, h*0.3, w*0.18, h*0.18)
+    drawBuilding(ctx, w*0.58, h*0.6, w*0.2, h*0.18); drawBuilding(ctx, w*0.2, h*0.6, w*0.15, h*0.15)
+    drawSite(ctx, w*0.78, h*0.22, 'A', '#ff4655'); drawSite(ctx, w*0.22, h*0.7, 'B', '#50b4f0')
+    drawSpawnMarkers(ctx, w*0.5, h*0.06, w*0.5, h*0.94)
   }
 }
 
@@ -123,54 +144,18 @@ function drawPlaceholderMap(ctx: CanvasRenderingContext2D, mapId: string, w: num
   for (let y = gs; y < h; y += gs) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke() }
   const layout = mapLayouts[mapId]
   if (layout) layout(ctx, w, h)
-  // 绘制地图标注点
-  const callouts = calloutLabels[mapId]
-  if (callouts) {
-    ctx.font = '9px "PingFang SC","Microsoft YaHei",sans-serif'
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    for (const c of callouts) {
-      ctx.fillStyle = 'rgba(255,255,255,0.12)'
-      ctx.fillText(c.label, c.x * w, c.y * h)
-    }
-  }
 }
 
-// 地图标注点（callout labels）
-const calloutLabels: Record<string, { label: string; x: number; y: number }[]> = {
-  ascent: [
-    { label: 'A Main', x: 0.78, y: 0.18 },
-    { label: 'A Heaven', x: 0.72, y: 0.10 },
-    { label: 'A Garden', x: 0.70, y: 0.55 },
-    { label: 'Mid', x: 0.50, y: 0.42 },
-    { label: 'B Main', x: 0.22, y: 0.55 },
-    { label: 'B Lane', x: 0.30, y: 0.80 },
-    { label: 'Catwalk', x: 0.60, y: 0.45 },
-  ],
-  bind: [
-    { label: 'A Short', x: 0.72, y: 0.18 },
-    { label: 'A Lamps', x: 0.78, y: 0.35 },
-    { label: 'Hookah', x: 0.72, y: 0.60 },
-    { label: 'B Long', x: 0.18, y: 0.55 },
-    { label: 'B Elbow', x: 0.28, y: 0.72 },
-    { label: 'Garden', x: 0.28, y: 0.45 },
-    { label: 'TP', x: 0.50, y: 0.35 },
-  ],
-  haven: [
-    { label: 'A Long', x: 0.78, y: 0.12 },
-    { label: 'A Heaven', x: 0.72, y: 0.25 },
-    { label: 'C Long', x: 0.15, y: 0.60 },
-    { label: 'C Garage', x: 0.08, y: 0.35 },
-    { label: 'Mid', x: 0.50, y: 0.40 },
-    { label: 'B Site', x: 0.50, y: 0.62 },
-    { label: 'A Sewer', x: 0.65, y: 0.50 },
-  ],
-}
 
 // ====== 辅助函数 ======
 const typeColors: Record<string, string> = {
   smoke: '#7ec868', flash: '#f0c850', damage: '#ff4655',
   recon: '#50b4f0', control: '#a070d8', heal: '#50e890', mobility: '#ff8c42'
 }
+
+// 拖拽数据暂存（dragOver 时 getData 不可用）
+let pendingDragData: { type: string; agentId: string; abilityId?: string } | null = null
+export function setPendingDragData(data: typeof pendingDragData) { pendingDragData = data }
 
 // ====== MapCanvas ======
 export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: MapCanvasProps) {
@@ -179,11 +164,15 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const imageRef = useRef<HTMLImageElement | null>(null)
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
   const [scale, setScale] = useState(1)
+  const [mapSize, setMapSize] = useState({ w: 1800, h: 1200 })
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side } = useTactics()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
   const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
+  // 拖拽预览
+  const [dragPreview, setDragPreview] = useState<{ x: number; y: number; abilityId: string; agentId: string; shape: AbilityShapeConfig; color: string } | null>(null)
+
   // 矩形拖拽绘制
   const [rectDrawing, setRectDrawing] = useState<{
     startX: number; startY: number; currentX: number; currentY: number;
@@ -201,8 +190,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     drawing?: boolean                  // freehand 正在绘制中
   } | null>(null)
 
-  const mapW = 1800
-  const mapH = 1200
+  const mapW = mapSize.w
+  const mapH = mapSize.h
 
   // 计算使地图填充容器的基准缩放
   const fitScale = Math.min(containerSize.w / mapW, containerSize.h / mapH)
@@ -233,17 +222,20 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     }
   })
 
-  // 地图图片缓存加载（仅在地图切换时加载）
+  // 地图图片缓存加载（仅在地图切换时加载）+ 按图片比例调整 mapW/mapH
   useEffect(() => {
     setMapImgLoaded(false)
     const img = new Image()
     img.onload = () => {
       imageRef.current = img
+      // 使用图片原始尺寸，保持比例准确
+      setMapSize({ w: img.naturalWidth, h: img.naturalHeight })
       setMapImgLoaded(true)
     }
     img.onerror = () => { imageRef.current = null; setMapImgLoaded(false) }
-    img.src = `/images/maps/${mapId}.png`
-  }, [mapId])
+    const suffix = side === 'defense' ? '-defense' : ''
+    img.src = `/images/maps/${mapId}${suffix}.png`
+  }, [mapId, side])
 
   // 渲染地图 Canvas
   const render = useCallback(() => {
@@ -256,16 +248,13 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     canvas.style.width = containerSize.w + 'px'; canvas.style.height = containerSize.h + 'px'
     ctx.scale(dpr, dpr)
     ctx.clearRect(0, 0, containerSize.w, containerSize.h)
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
 
     // 背景
-    ctx.fillStyle = '#0a0a0a'
+    ctx.fillStyle = '#000'
     ctx.fillRect(0, 0, containerSize.w, containerSize.h)
     ctx.save()
-    if (side === 'defense') {
-      ctx.translate(containerSize.w / 2, containerSize.h / 2)
-      ctx.rotate(Math.PI)
-      ctx.translate(-containerSize.w / 2, -containerSize.h / 2)
-    }
     ctx.translate(offsetX, offsetY)
     ctx.scale(displayScale, displayScale)
     if (imageRef.current && mapImgLoaded) {
@@ -290,15 +279,34 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
     setIsOver(true)
-  }, [])
+    // 拖拽预览（用暂存数据，dragOver 时 getData 不可用）
+    const pd = pendingDragData
+    if (pd?.type === 'ability' && pd.abilityId) {
+      const sc = getAbilityShapeConfig(pd.abilityId)
+      if (sc) {
+        const agent = agents.find(a => a.id === pd.agentId)
+        const ab = agent?.abilities.find(a => a.id === pd.abilityId)
+        const color = ab ? typeColors[ab.type] || '#888' : '#888'
+        const t = transformRef.current; if (!t.container) return
+        const rr = t.container.getBoundingClientRect()
+        const x = (e.clientX - rr.left - offsetX) / (displayScale * mapW)
+        const y = (e.clientY - rr.top - offsetY) / (displayScale * mapH)
+        setDragPreview({ x, y, abilityId: pd.abilityId, agentId: pd.agentId, shape: sc, color })
+        return
+      }
+    }
+    setDragPreview(null)
+  }, [offsetX, offsetY, displayScale, mapW, mapH, transformRef])
 
   const handleDragLeave = useCallback(() => {
     setIsOver(false)
+    setDragPreview(null)
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsOver(false)
+    setDragPreview(null)
     const raw = e.dataTransfer.getData('application/json')
     if (!raw) return
     let data: { type: string; agentId: string; abilityId?: string }
@@ -778,7 +786,52 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         )
       })()}
 
-      {isOver && !lineDrawing && !rectDrawing && <div className={styles.dropHint}>释放以放置技能</div>}
+      {/* 拖拽预览 */}
+      {dragPreview && (() => {
+        const px = offsetX + dragPreview.x * mapW * displayScale
+        const py = offsetY + dragPreview.y * mapH * displayScale
+        if (dragPreview.shape.shape === 'circle') {
+          const r = (dragPreview.shape.radius ?? 0.08) * mapW * displayScale
+          return (
+            <svg style={{ position: 'absolute', inset: 0, zIndex: 8, pointerEvents: 'none', overflow: 'visible' }}>
+              <circle cx={px} cy={py} r={r} fill={dragPreview.color + '15'} stroke={dragPreview.color} strokeWidth={2} strokeDasharray="6 3" opacity={0.6} />
+            </svg>
+          )
+        }
+        if (dragPreview.shape.shape === 'cone') {
+          const len = (dragPreview.shape.length ?? 0.15) * mapW * displayScale
+          const halfA = ((dragPreview.shape.angle ?? 60) / 2) * Math.PI / 180
+          const rad = -90 * Math.PI / 180
+          const x1 = px + Math.cos(rad - halfA) * len, y1 = py + Math.sin(rad - halfA) * len
+          const x2 = px + Math.cos(rad + halfA) * len, y2 = py + Math.sin(rad + halfA) * len
+          return (
+            <svg style={{ position: 'absolute', inset: 0, zIndex: 8, pointerEvents: 'none', overflow: 'visible' }}>
+              <path d={`M ${px} ${py} L ${x1} ${y1} L ${x2} ${y2} Z`} fill={dragPreview.color + '10'} stroke={dragPreview.color} strokeWidth={2} strokeDasharray="6 3" opacity={0.6} />
+            </svg>
+          )
+        }
+        if (dragPreview.shape.shape === 'rect') {
+          const hw = (dragPreview.shape.length ?? 0.1) * mapW * displayScale / 2
+          const hh = (dragPreview.shape.width ?? 0.02) * mapH * displayScale / 2
+          return (
+            <svg style={{ position: 'absolute', inset: 0, zIndex: 8, pointerEvents: 'none', overflow: 'visible' }}>
+              <rect x={px - hw} y={py - hh} width={hw * 2} height={hh * 2} fill={dragPreview.color + '10'} stroke={dragPreview.color} strokeWidth={2} strokeDasharray="6 3" opacity={0.6} rx={2} />
+            </svg>
+          )
+        }
+        if (dragPreview.shape.shape === 'line') {
+          const hl = (dragPreview.shape.length ?? 0.1) * mapW * displayScale / 2
+          const sw = (dragPreview.shape.thickness ?? 0.006) * mapW * displayScale
+          return (
+            <svg style={{ position: 'absolute', inset: 0, zIndex: 8, pointerEvents: 'none', overflow: 'visible' }}>
+              <line x1={px} y1={py - hl} x2={px} y2={py + hl} stroke={dragPreview.color} strokeWidth={sw} strokeDasharray="6 3" opacity={0.5} />
+            </svg>
+          )
+        }
+        return null
+      })()}
+
+      {isOver && !lineDrawing && !rectDrawing && !dragPreview && <div className={styles.dropHint}>释放以放置技能</div>}
 
 
       {/* 文字标注 */}

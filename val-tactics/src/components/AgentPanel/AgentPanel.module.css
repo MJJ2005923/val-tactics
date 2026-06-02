@@ -246,3 +246,57 @@
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
 }
+
+/* 阵容 */
+.rosterGroup {
+  padding: 4px 8px;
+}
+
+.rosterLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.rosterSlots {
+  display: flex;
+  gap: 4px;
+}
+
+.rosterSlot {
+  width: 36px;
+  height: 36px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.rosterSlot:hover {
+  border-color: var(--color-border-light);
+}
+
+.rosterEmpty {
+  font-size: 16px;
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.rosterAvatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+}
+
+.emptySearch {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}

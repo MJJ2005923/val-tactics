@@ -8,13 +8,44 @@ import Timeline from './components/Timeline/Timeline'
 import TemplateManager from './components/TemplateManager/TemplateManager'
 import ToolPalette from './components/ToolPalette/ToolPalette'
 import SplashScreen from './components/SplashScreen/SplashScreen'
+import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 
 function AppInner() {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription } = useTactics()
+  const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
+  const toast = useToast()
+
+  const handleSaveProgress = () => {
+    const data = {
+      mapId: selectedMap.id,
+      markers, drawings, textAnnotations, agentPositions, abilityShapes,
+      strategyName, strategyDescription, roster, tracks,
+    }
+    localStorage.setItem('val-tactics-autosave', JSON.stringify(data))
+    toast('进度已保存')
+  }
+
+  useEffect(() => {
+    const raw = localStorage.getItem('val-tactics-autosave')
+    if (!raw) return
+    try {
+      const d = JSON.parse(raw)
+      if (!d.mapId) return
+      const map = maps.find(m => m.id === d.mapId)
+      if (map) setSelectedMap(map)
+      dispatch({
+        type: 'LOAD_ALL',
+        markers: d.markers || [], drawings: d.drawings || [],
+        texts: d.textAnnotations || [], agents: d.agentPositions || [],
+        shapes: d.abilityShapes || [], name: d.strategyName || '',
+        desc: d.strategyDescription || '',
+        roster: d.roster || { attack: [], defense: [] }, tracks: d.tracks || [],
+      })
+    } catch {}
+  }, [])
 
   const handleDirectExport = () => {
     const data = {
@@ -118,15 +149,14 @@ function AppInner() {
       as: abilityShapes.map(s => ({ ...s, path: s.path?.map(p => ({ x: Math.round(p.x * 1e4) / 1e4, y: Math.round(p.y * 1e4) / 1e4 })) })),
     }
     const json = JSON.stringify(data)
-    // 如果太长则截断提醒
     if (json.length > 3000) {
-      alert('战术内容过多，链接可能过长。建议使用 JSON 导出分享。')
+      toast('内容过多，建议使用 JSON 导出')
       return
     }
     const hash = btoa(unescape(encodeURIComponent(json)))
     const url = `${window.location.origin}${window.location.pathname}#tactic=${hash}`
     navigator.clipboard.writeText(url).then(() => {
-      alert('分享链接已复制到剪贴板！')
+      toast('分享链接已复制到剪贴板！')
     }).catch(() => {
       prompt('复制此链接分享：', url)
     })
@@ -150,6 +180,7 @@ function AppInner() {
           agents: data.ap || [],
           shapes: data.as || [],
           name: '', desc: '',
+          roster: { attack: [], defense: [] }, tracks: [],
         })
         // 清除 hash 避免重复加载
         window.history.replaceState(null, '', window.location.pathname)
@@ -194,6 +225,7 @@ function AppInner() {
           <button className="btn btn--primary" onClick={handleDirectExport}>导出 JSON</button>
           <button className="btn" onClick={handleExportImage}>导出图片</button>
           <button className="btn" onClick={handleShareLink}>分享链接</button>
+          <button className="btn" onClick={handleSaveProgress}>保存进度</button>
         </div>
       </nav>
 
@@ -209,7 +241,7 @@ function AppInner() {
       </div>
 
       <Timeline />
-      {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} />}
+      {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} />}
     </div>
   )
 }
@@ -227,8 +259,10 @@ export default function App() {
 
   return (
     <TacticsProvider>
-      {showSplash && <SplashScreen onEnter={() => setShowSplash(false)} />}
-      <AppInner />
+      <ToastProvider>
+        {showSplash && <SplashScreen onEnter={() => setShowSplash(false)} />}
+        <AppInner />
+      </ToastProvider>
     </TacticsProvider>
   )
 }

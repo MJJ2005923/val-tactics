@@ -2,7 +2,7 @@
 
 :root {
   /* 主色调 — 黑色系 */
-  --color-bg-primary: #0a0a0a;
+  --color-bg-primary: #000;
   --color-bg-secondary: #111111;
   --color-bg-tertiary: #1a1a1a;
   --color-bg-hover: #222222;

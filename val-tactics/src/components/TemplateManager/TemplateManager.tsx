@@ -2,17 +2,17 @@ import { useState, useEffect, useCallback } from 'react'
 import { db } from '../../utils/db'
 import type { Template } from '../../types'
 import { useTactics } from '../../store/TacticsContext'
+import { useToast } from '../Toast/Toast'
 import styles from './TemplateManager.module.css'
 
-interface Props { onClose: () => void }
+interface Props { onClose: () => void; mapId: string; onLoadMap: (mapId: string) => void }
 
-export default function TemplateManager({ onClose }: Props) {
-  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, dispatch } = useTactics()
+export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
+  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks, dispatch } = useTactics()
+  const toast = useToast()
   const [templates, setTemplates] = useState<Template[]>([])
   const [name, setName] = useState(strategyName)
   const [desc, setDesc] = useState(strategyDescription)
-  const [saveMsg, setSaveMsg] = useState('')
-
   const refresh = useCallback(async () => {
     const all = await db.templates.orderBy('updatedAt').reverse().toArray()
     setTemplates(all)
@@ -22,29 +22,33 @@ export default function TemplateManager({ onClose }: Props) {
 
   const handleSave = async () => {
     const n = name.trim()
-    if (!n) { setSaveMsg('请输入模板名称'); return }
+    if (!n) { toast('请输入模板名称'); return }
     const tpl: Template = {
       id: Date.now().toString(),
       name: n,
       description: desc,
-      mapId: '',
+      mapId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       markers: markers.map(m => ({ ...m })),
       drawings: drawings.map(d => ({ ...d, points: d.points.map(p => ({ ...p })) })),
       textAnnotations: textAnnotations.map(t => ({ ...t })),
       agentPositions: agentPositions.map(a => ({ ...a })),
-      abilityShapes: abilityShapes.map(s => ({ ...s }))
+      abilityShapes: abilityShapes.map(s => ({ ...s })),
+      roster: { ...roster, attack: [...roster.attack], defense: [...roster.defense] },
+      tracks: tracks.map(t => ({ ...t })),
     }
     await db.templates.add(tpl)
     dispatch({ type: 'SET_STRATEGY_NAME', name: n })
     dispatch({ type: 'SET_STRATEGY_DESCRIPTION', desc })
-    setSaveMsg('保存成功')
+    toast('保存成功')
     refresh()
   }
 
   const handleLoad = async (tpl: Template) => {
-    dispatch({ type: 'LOAD_ALL', markers: tpl.markers, drawings: tpl.drawings || [], texts: tpl.textAnnotations || [], agents: tpl.agentPositions || [], shapes: tpl.abilityShapes || [], name: tpl.name, desc: tpl.description || '' })
+    dispatch({ type: 'LOAD_ALL', markers: tpl.markers, drawings: tpl.drawings || [], texts: tpl.textAnnotations || [], agents: tpl.agentPositions || [], shapes: tpl.abilityShapes || [], name: tpl.name, desc: tpl.description || '', roster: tpl.roster || { attack: [], defense: [] }, tracks: tpl.tracks || [] })
+    if (tpl.mapId) onLoadMap(tpl.mapId)
+    toast('模板已加载')
     onClose()
   }
 
@@ -80,19 +84,19 @@ export default function TemplateManager({ onClose }: Props) {
       try {
         const text = await file.text()
         const data = JSON.parse(text)
-        if (!data.markers || !Array.isArray(data.markers)) { alert('无效的战术文件格式'); return }
-        dispatch({ type: 'LOAD_ALL', markers: data.markers.map((m: Record<string, unknown>, i: number) => ({ id: 'm_' + Date.now() + '_' + i, abilityId: m.abilityId as string, agentId: m.agentId as string, x: m.x as number, y: m.y as number, step: (m.step as number) || i + 1, time: (m.time as number) || (i * 5), note: (m.note as string) || '' })), drawings: (data.drawings || []) as Template['drawings'], texts: (data.textAnnotations || []) as Template['textAnnotations'], agents: (data.agentPositions || []) as Template['agentPositions'], shapes: (data.abilityShapes || []) as Template['abilityShapes'], name: (data.strategyName as string) || '', desc: (data.strategyDescription as string) || '' })
+        if (!data.markers || !Array.isArray(data.markers)) { toast('无效的战术文件格式'); return }
+        dispatch({ type: 'LOAD_ALL', markers: data.markers.map((m: Record<string, unknown>, i: number) => ({ id: 'm_' + Date.now() + '_' + i, abilityId: m.abilityId as string, agentId: m.agentId as string, x: m.x as number, y: m.y as number, step: (m.step as number) || i + 1, time: (m.time as number) || (i * 5), note: (m.note as string) || '' })), drawings: (data.drawings || []) as Template['drawings'], texts: (data.textAnnotations || []) as Template['textAnnotations'], agents: (data.agentPositions || []) as Template['agentPositions'], shapes: (data.abilityShapes || []) as Template['abilityShapes'], name: (data.strategyName as string) || '', desc: (data.strategyDescription as string) || '', roster: { attack: [], defense: [] }, tracks: [] })
         onClose()
-      } catch { alert('文件解析失败，请检查文件格式') }
+      } catch { toast('文件解析失败，请检查文件格式') }
     }
     input.click()
   }
 
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+
   const handleClear = () => {
     if (markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0) return
-    if (confirm('确定要清空当前地图上的所有内容吗？此操作不可撤销。')) {
-      dispatch({ type: 'CLEAR_ALL' })
-    }
+    setShowClearConfirm(true)
   }
 
   const formatDate = (ts: number) => {
@@ -116,7 +120,6 @@ export default function TemplateManager({ onClose }: Props) {
               <button className={styles.btnPrimary} onClick={handleSave}>保存</button>
             </div>
             <input className={styles.input} value={desc} onChange={e => setDesc(e.target.value)} placeholder="策略描述（可选）..." style={{ marginTop: 6 }} />
-            {saveMsg && <span className={saveMsg === '保存成功' ? styles.successMsg : styles.errorMsg}>{saveMsg}</span>}
           </div>
 
           {/* 导入导出 */}
@@ -125,7 +128,15 @@ export default function TemplateManager({ onClose }: Props) {
             <div className={styles.actionRow}>
               <button className={styles.btn} onClick={handleExport} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>导出 JSON</button>
               <button className={styles.btn} onClick={handleImport}>导入 JSON</button>
-              <button className={styles.btnDanger} onClick={handleClear} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>清空画布</button>
+              {showClearConfirm ? (
+                <div className={styles.confirmRow}>
+                  <span className={styles.confirmText}>确定清空？</span>
+                  <button className={styles.btnDanger} onClick={() => { dispatch({ type: 'CLEAR_ALL' }); setShowClearConfirm(false); toast('已清空') }}>确定</button>
+                  <button className={styles.btnSm} onClick={() => setShowClearConfirm(false)}>取消</button>
+                </div>
+              ) : (
+                <button className={styles.btnDanger} onClick={handleClear} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>清空画布</button>
+              )}
             </div>
           </div>
 
