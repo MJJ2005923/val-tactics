@@ -247,6 +247,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     canvas.style.width = containerSize.w + 'px'; canvas.style.height = containerSize.h + 'px'
     ctx.scale(dpr, dpr)
     ctx.clearRect(0, 0, containerSize.w, containerSize.h)
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
 
     // 背景
     ctx.fillStyle = '#000'
