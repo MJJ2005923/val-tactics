@@ -132,90 +132,6 @@ function drawPlaceholderMap(ctx: CanvasRenderingContext2D, mapId: string, w: num
   if (layout) layout(ctx, w, h)
 }
 
-// 地图标注点（callout labels）
-const calloutLabels: Record<string, { label: string; x: number; y: number }[]> = {
-  ascent: [
-    { label: 'A Main', x: 0.78, y: 0.18 },
-    { label: 'A Heaven', x: 0.72, y: 0.10 },
-    { label: 'A Garden', x: 0.70, y: 0.55 },
-    { label: 'Mid', x: 0.50, y: 0.42 },
-    { label: 'B Main', x: 0.22, y: 0.55 },
-    { label: 'B Lane', x: 0.30, y: 0.80 },
-    { label: 'Catwalk', x: 0.60, y: 0.45 },
-  ],
-  bind: [
-    { label: 'A Short', x: 0.72, y: 0.18 },
-    { label: 'A Lamps', x: 0.78, y: 0.35 },
-    { label: 'Hookah', x: 0.72, y: 0.60 },
-    { label: 'B Long', x: 0.18, y: 0.55 },
-    { label: 'B Elbow', x: 0.28, y: 0.72 },
-    { label: 'Garden', x: 0.28, y: 0.45 },
-    { label: 'TP', x: 0.50, y: 0.35 },
-  ],
-  haven: [
-    { label: 'A Long', x: 0.78, y: 0.12 },
-    { label: 'A Heaven', x: 0.72, y: 0.25 },
-    { label: 'C Long', x: 0.15, y: 0.60 },
-    { label: 'C Garage', x: 0.08, y: 0.35 },
-    { label: 'Mid', x: 0.50, y: 0.40 },
-    { label: 'B Site', x: 0.50, y: 0.62 },
-    { label: 'A Sewer', x: 0.65, y: 0.50 },
-  ],
-  icebox: [
-    { label: 'A Site', x: 0.78, y: 0.25 },
-    { label: 'A Pipes', x: 0.70, y: 0.12 },
-    { label: 'Mid', x: 0.50, y: 0.50 },
-    { label: 'B Site', x: 0.20, y: 0.68 },
-    { label: 'B Garage', x: 0.10, y: 0.35 },
-    { label: 'Kitchen', x: 0.35, y: 0.55 },
-  ],
-  split: [
-    { label: 'A Heaven', x: 0.80, y: 0.15 },
-    { label: 'A Ramps', x: 0.72, y: 0.35 },
-    { label: 'Mid', x: 0.50, y: 0.42 },
-    { label: 'B Heaven', x: 0.18, y: 0.55 },
-    { label: 'B Garage', x: 0.25, y: 0.72 },
-    { label: 'Sewer', x: 0.50, y: 0.65 },
-  ],
-  pearl: [
-    { label: 'A Main', x: 0.78, y: 0.15 },
-    { label: 'A Art', x: 0.65, y: 0.35 },
-    { label: 'Mid', x: 0.50, y: 0.42 },
-    { label: 'B Main', x: 0.20, y: 0.55 },
-    { label: 'B Link', x: 0.35, y: 0.72 },
-    { label: 'Mid Doors', x: 0.55, y: 0.60 },
-  ],
-  fracture: [
-    { label: 'A Main', x: 0.82, y: 0.45 },
-    { label: 'A Drop', x: 0.65, y: 0.25 },
-    { label: 'B Main', x: 0.15, y: 0.45 },
-    { label: 'B Arcade', x: 0.30, y: 0.20 },
-    { label: 'Tower', x: 0.45, y: 0.15 },
-  ],
-  sunset: [
-    { label: 'A Main', x: 0.75, y: 0.18 },
-    { label: 'A Elbow', x: 0.68, y: 0.40 },
-    { label: 'Mid', x: 0.50, y: 0.42 },
-    { label: 'B Main', x: 0.22, y: 0.55 },
-    { label: 'B Market', x: 0.35, y: 0.72 },
-    { label: 'Courtyard', x: 0.40, y: 0.25 },
-  ],
-  lotus: [
-    { label: 'A Main', x: 0.80, y: 0.18 },
-    { label: 'A Tree', x: 0.70, y: 0.35 },
-    { label: 'B Main', x: 0.20, y: 0.60 },
-    { label: 'C Main', x: 0.50, y: 0.45 },
-    { label: 'C Mound', x: 0.55, y: 0.35 },
-  ],
-  breeze: [
-    { label: 'A Hall', x: 0.78, y: 0.22 },
-    { label: 'A Bridge', x: 0.70, y: 0.12 },
-    { label: 'Mid', x: 0.50, y: 0.42 },
-    { label: 'B Main', x: 0.22, y: 0.55 },
-    { label: 'B Tunnel', x: 0.30, y: 0.72 },
-    { label: 'Elbow', x: 0.45, y: 0.35 },
-  ],
-}
 
 // ====== 辅助函数 ======
 const typeColors: Record<string, string> = {
@@ -330,16 +246,6 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       ctx.drawImage(imageRef.current, 0, 0, mapW, mapH)
     } else {
       drawPlaceholderMap(ctx, mapId, mapW, mapH)
-    }
-    // 绘制地图标注点
-    const callouts = calloutLabels[mapId]
-    if (callouts) {
-      ctx.font = '9px "PingFang SC","Microsoft YaHei",sans-serif'
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-      for (const c of callouts) {
-        ctx.fillStyle = 'rgba(255,255,255,0.15)'
-        ctx.fillText(c.label, c.x * mapW, c.y * mapH)
-      }
     }
     ctx.restore()
   }, [containerSize, displayScale, offsetX, offsetY, mapId, mapImgLoaded, side])
