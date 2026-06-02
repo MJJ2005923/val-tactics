@@ -125,6 +125,13 @@ const mapLayouts: Record<string, (ctx: CanvasRenderingContext2D, w: number, h: n
     drawBuilding(ctx, w*0.58, h*0.6, w*0.2, h*0.18); drawBuilding(ctx, w*0.2, h*0.6, w*0.15, h*0.15)
     drawSite(ctx, w*0.78, h*0.22, 'A', '#ff4655'); drawSite(ctx, w*0.2, h*0.7, 'B', '#50b4f0')
     drawSpawnMarkers(ctx, w*0.5, h*0.06, w*0.5, h*0.94)
+  },
+  saltmine: (ctx, w, h) => {
+    drawLane(ctx, w*0.15, 0, w*0.07, h); drawLane(ctx, w*0.48, 0, w*0.06, h); drawLane(ctx, w*0.80, 0, w*0.08, h)
+    drawBuilding(ctx, w*0.22, h*0.2, w*0.18, h*0.16); drawBuilding(ctx, w*0.55, h*0.3, w*0.18, h*0.18)
+    drawBuilding(ctx, w*0.58, h*0.6, w*0.2, h*0.18); drawBuilding(ctx, w*0.2, h*0.6, w*0.15, h*0.15)
+    drawSite(ctx, w*0.78, h*0.22, 'A', '#ff4655'); drawSite(ctx, w*0.22, h*0.7, 'B', '#50b4f0')
+    drawSpawnMarkers(ctx, w*0.5, h*0.06, w*0.5, h*0.94)
   }
 }
 
