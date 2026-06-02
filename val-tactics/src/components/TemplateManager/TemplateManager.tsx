@@ -13,8 +13,6 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
   const [templates, setTemplates] = useState<Template[]>([])
   const [name, setName] = useState(strategyName)
   const [desc, setDesc] = useState(strategyDescription)
-  const [saveMsg, setSaveMsg] = useState('')
-
   const refresh = useCallback(async () => {
     const all = await db.templates.orderBy('updatedAt').reverse().toArray()
     setTemplates(all)
@@ -24,7 +22,7 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
 
   const handleSave = async () => {
     const n = name.trim()
-    if (!n) { setSaveMsg('请输入模板名称'); return }
+    if (!n) { toast('请输入模板名称'); return }
     const tpl: Template = {
       id: Date.now().toString(),
       name: n,
@@ -43,13 +41,14 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
     await db.templates.add(tpl)
     dispatch({ type: 'SET_STRATEGY_NAME', name: n })
     dispatch({ type: 'SET_STRATEGY_DESCRIPTION', desc })
-    setSaveMsg('保存成功')
+    toast('保存成功')
     refresh()
   }
 
   const handleLoad = async (tpl: Template) => {
     dispatch({ type: 'LOAD_ALL', markers: tpl.markers, drawings: tpl.drawings || [], texts: tpl.textAnnotations || [], agents: tpl.agentPositions || [], shapes: tpl.abilityShapes || [], name: tpl.name, desc: tpl.description || '', roster: tpl.roster || { attack: [], defense: [] }, tracks: tpl.tracks || [] })
     if (tpl.mapId) onLoadMap(tpl.mapId)
+    toast('模板已加载')
     onClose()
   }
 
@@ -121,7 +120,6 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
               <button className={styles.btnPrimary} onClick={handleSave}>保存</button>
             </div>
             <input className={styles.input} value={desc} onChange={e => setDesc(e.target.value)} placeholder="策略描述（可选）..." style={{ marginTop: 6 }} />
-            {saveMsg && <span className={saveMsg === '保存成功' ? styles.successMsg : styles.errorMsg}>{saveMsg}</span>}
           </div>
 
           {/* 导入导出 */}
