@@ -838,8 +838,14 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       {isOver && !lineDrawing && !rectDrawing && !dragPreview && <div className={styles.dropHint}>释放以放置技能</div>}
 
 
-      {/* 文字标注 */}
-      {textAnnotations.map(tx => {
+      {/* 攻防翻转覆盖层 — 文字/头像等 HTML 元素 */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 5,
+        transform: side === 'defense' ? `rotate(180deg)` : undefined,
+        transformOrigin: `${containerSize.w / 2}px ${containerSize.h / 2}px`,
+      }}>
+        {/* 文字标注 */}
+        {textAnnotations.map(tx => {
         const isSelected = tx.id === selectedId && selectedType === 'text'
         return (
           <div key={tx.id}
@@ -887,6 +893,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           </div>
         )
       })}
+      </div>
 
       {/* 文字输入弹窗 — 新建 */}
       {pendingTextPos && (
