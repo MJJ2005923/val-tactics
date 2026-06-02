@@ -18,6 +18,8 @@ export default function Timeline() {
   const { markers, abilityShapes, tracks, currentTrackId, recording, replaying, replayIndex, dispatch } = useTactics()
   const [collapsed, setCollapsed] = useState(false)
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameText, setRenameText] = useState('')
   const timerRef = useRef<number | null>(null)
 
   // 当前活跃轨道
@@ -89,7 +91,19 @@ export default function Timeline() {
               <div key={t.id}
                 className={`${styles.trackItem} ${isActive ? styles.trackItemActive : ''} ${isRecording ? styles.trackItemRecording : ''}`}
                 onClick={() => { if (!isActive) { setActiveTrackId(t.id); dispatch({ type: 'REPLAY_STOP' }) } }}>
-                <span className={styles.trackName}>{t.name}</span>
+                {renamingId === t.id ? (
+                  <input className={styles.renameInput} value={renameText}
+                    onChange={e => setRenameText(e.target.value)}
+                    onBlur={() => { dispatch({ type: 'RENAME_TRACK', id: t.id, name: renameText || t.name }); setRenamingId(null) }}
+                    onKeyDown={e => { if (e.key === 'Enter') { dispatch({ type: 'RENAME_TRACK', id: t.id, name: renameText || t.name }); setRenamingId(null) } }}
+                    autoFocus
+                    onClick={e => e.stopPropagation()}
+                  />
+                ) : (
+                  <span className={styles.trackName}
+                    onDoubleClick={e => { e.stopPropagation(); setRenamingId(t.id); setRenameText(t.name) }}
+                    title="双击重命名">{t.name}</span>
+                )}
                 <span className={styles.trackCount}>{tm.length} 步骤</span>
                 <button className={`${styles.trackPlayBtn} ${isActive && replaying ? styles.trackPlayBtnActive : ''}`}
                   onClick={e => {

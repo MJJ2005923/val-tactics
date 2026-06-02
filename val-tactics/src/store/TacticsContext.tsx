@@ -98,6 +98,7 @@ type Action =
   | { type: 'PLAY_SPEED'; speed: number }
   | { type: 'CREATE_TRACK'; name: string }
   | { type: 'DELETE_TRACK'; id: string }
+  | { type: 'RENAME_TRACK'; id: string; name: string }
   | { type: 'ADD_TO_ROSTER'; team: 'attack' | 'defense'; agentId: string }
   | { type: 'REMOVE_FROM_ROSTER'; team: 'attack' | 'defense'; agentId: string }
   | { type: 'RECORDING_START' }
@@ -286,6 +287,8 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       return { state: { ...state, tracks: [...state.tracks, { id: genId('tr'), name: action.name, createdAt: Date.now() }] }, history: newHistory }
     case 'DELETE_TRACK':
       return { state: { ...state, tracks: state.tracks.filter(t => t.id !== action.id), markers: state.markers.filter(m => m.trackId !== action.id) }, history: newHistory }
+    case 'RENAME_TRACK':
+      return { state: { ...state, tracks: state.tracks.map(t => t.id === action.id ? { ...t, name: action.name } : t) }, history: newHistory }
 
     // 阵容
     case 'ADD_TO_ROSTER': {
