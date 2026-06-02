@@ -164,6 +164,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const imageRef = useRef<HTMLImageElement | null>(null)
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
   const [scale, setScale] = useState(1)
+  const [mapSize, setMapSize] = useState({ w: 1800, h: 1200 })
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side } = useTactics()
   const [isOver, setIsOver] = useState(false)
@@ -189,8 +190,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     drawing?: boolean                  // freehand 正在绘制中
   } | null>(null)
 
-  const mapW = 1800
-  const mapH = 1200
+  const mapW = mapSize.w
+  const mapH = mapSize.h
 
   // 计算使地图填充容器的基准缩放
   const fitScale = Math.min(containerSize.w / mapW, containerSize.h / mapH)
@@ -221,12 +222,14 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     }
   })
 
-  // 地图图片缓存加载（仅在地图切换时加载）
+  // 地图图片缓存加载（仅在地图切换时加载）+ 按图片比例调整 mapW/mapH
   useEffect(() => {
     setMapImgLoaded(false)
     const img = new Image()
     img.onload = () => {
       imageRef.current = img
+      // 使用图片原始尺寸，保持比例准确
+      setMapSize({ w: img.naturalWidth, h: img.naturalHeight })
       setMapImgLoaded(true)
     }
     img.onerror = () => { imageRef.current = null; setMapImgLoaded(false) }
