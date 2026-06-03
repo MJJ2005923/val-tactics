@@ -135,8 +135,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'veto-e':                    { shape: 'circle', radius: 1.2 * M },
   'miks-x':                    { shape: 'cone', angle: 63, length: 30 * M },
   'iso-contingency':           { shape: 'line', length: 40 * M, thickness: 0.003 },
-  'iso-undercut':              { shape: 'rect', length: 40 * M, width: 8 * M },
-  'iso-kill-contract':         { shape: 'rect', length: 56 * M, width: 24 * M },
+  'iso-undercut':              { shape: 'rect', length: 50 * M, width: 10 * M },
+  'iso-kill-contract':         { shape: 'rect', length: 51.5 * M, width: 25 * M },
 
   // === 治疗 ===
   'sage-healing-orb':          { shape: 'circle', radius: 3 * M },
