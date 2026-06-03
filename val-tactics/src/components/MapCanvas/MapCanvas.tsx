@@ -487,7 +487,39 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       const len = Math.sqrt(dx * dx + dy * dy) / mapW
       const rot = Math.atan2(dx, -dy) * 180 / Math.PI
       // Deadlock X / Tejo Q 多段线
-      if (lineDrawing.abilityId === 'deadlock-annihilation' || lineDrawing.abilityId === 'tejo-q' || lineDrawing.abilityId === 'waylay-q') {
+      // Waylay Q 两段固定13m
+      if (lineDrawing.abilityId === 'waylay-q') {
+        const segLen = 13 * (7 / 1800) // 13m
+        const wlRef = multiLineRef.current
+        const dxW = (ex - lineDrawing.startX), dyW = (ey - lineDrawing.startY)
+        const distW = Math.sqrt(dxW * dxW + dyW * dyW) || 1
+        const nx = lineDrawing.startX + (dxW / distW) * segLen
+        const ny = lineDrawing.startY + (dyW / distW) * segLen
+        if (wlRef.count === 0) {
+          wlRef.pts = [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: nx, y: ny }]
+          wlRef.count = 1
+          setLineDrawing(prev => prev ? { ...prev, startX: nx, startY: ny, currentX: nx, currentY: ny } : null)
+          return
+        }
+        wlRef.pts.push({ x: nx, y: ny })
+        const allPts = [...wlRef.pts]
+        wlRef.pts = []; wlRef.count = 0
+        let sxW = 0, syW = 0
+        for (const p of allPts) { sxW += p.x; syW += p.y }
+        let totalLenW = 0
+        for (let i = 1; i < allPts.length; i++) {
+          totalLenW += Math.sqrt((allPts[i].x - allPts[i-1].x) ** 2 + (allPts[i].y - allPts[i-1].y) ** 2)
+        }
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: sxW / allPts.length, y: syW / allPts.length, rotation: 0, shape: 'line',
+          radius: 0.08, angle: 60, length: totalLenW, width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: false, path: allPts,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      if (lineDrawing.abilityId === 'deadlock-annihilation' || lineDrawing.abilityId === 'tejo-q') {
         const mlr = multiLineRef.current
         if (mlr.count === 0) {
           mlr.pts = [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: ex, y: ey }]
