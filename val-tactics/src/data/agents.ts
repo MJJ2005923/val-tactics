@@ -132,6 +132,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'breach-aftershock':         { shape: 'cone', angle: 80, length: 11 * M },
   'breach-fault-line':         { shape: 'line', length: 18 * M, thickness: 0.01 },
   'brimstone-stim-beacon':     { shape: 'circle', radius: 8 * M },
+  'waylay-c':                  { shape: 'circle', radius: 7.5 * M },
+  'waylay-q':                  { shape: 'line', length: 13 * M, thickness: 0.003 },
   'veto-c':                    { shape: 'circle', radius: 41 * M },
   'veto-e':                    { shape: 'circle', radius: 1.2 * M },
   'miks-x':                    { shape: 'cone', angle: 63, length: 30 * M },
