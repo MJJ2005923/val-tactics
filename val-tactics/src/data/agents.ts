@@ -52,7 +52,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'omen-dark-cover':          { radius: 4.1 * M },    // 4.1m
   'astra-nebula':             { radius: 4.75 * M },   // 4.75m 最大
   'viper-poison-cloud':       { radius: 4.5 * M },    // 4.5m
-  'jett-cloudburst':          { shape: 'circle', radius: 3.5 * M },    // 3.5m 瞬发烟
+  'jett-cloudburst':          { shape: 'circle', radius: 4.5 * M },    // 4.5m 瞬发烟
   'harbor-cove':              { shape: 'circle', radius: 4.5 * M },    // 4.5m 护盾
   'harbor-reckoning':         { shape: 'line', length: 30 * M, thickness: 0.006 },
   'sova-owl-drone':           { shape: 'line', length: 40 * M, thickness: 0.004 },
@@ -90,8 +90,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
 
   // === 墙体 ===
   'viper-toxic-screen':       { shape: 'line', length: 65 * M, thickness: 0.003 },
-  'sage-barrier-orb':         { shape: 'rect', length: 10 * M, width: 4 * M },
-  'phoenix-blaze':            { shape: 'line', length: 20 * M, thickness: 0.003 },
+  'sage-barrier-orb':         { shape: 'rect', length: 16 * M, width: 3 * M },
+  'phoenix-blaze':            { shape: 'line', length: 37 * M, thickness: 0.006 },
   'phoenix-hot-hands':        { shape: 'circle', radius: 3.5 * M },
   'phoenix-curveball':        { shape: 'line', length: 6 * M, thickness: 0.004 },
   'astra-astral-form':        { shape: 'line', length: 150 * M, thickness: 0.003 },
@@ -125,7 +125,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'reyna-leer':                { shape: 'circle', radius: 2 * M },
 
   // === 减速/控制 ===
-  'sage-slow-orb':             { shape: 'circle', radius: 4.5 * M },
+  'sage-slow-orb':             { shape: 'circle', radius: 7 * M },
   'astra-gravity-well':        { radius: 3.5 * M },
   'astra-nova-pulse':          { radius: 4.0 * M },
   'fade-seize':                { radius: 4 * M },
@@ -192,7 +192,7 @@ const agents: Agent[] = [
   {
     id: 'phoenix', name: '不死鸟', nameEn: 'Phoenix', role: '决斗者',
     abilities: [
-      { id: 'phoenix-blaze', name: '火冒三丈', nameEn: 'Blaze', key: 'C', type: 'damage', iconUrl: '/images/abilities/phoenix-blaze.png', description: '装备烈焰屏障。按[射击]向前生成一道可穿越地形的火墙，可阻挡视野并伤害穿过它的人。不死鸟不会受到火墙的伤害，反而会获得治疗。[按住射击]可使火墙朝你准星的方向卷曲。', usage: '按C装备，左键放置火墙，按住射击可卷曲火墙。' },
+      { id: 'phoenix-blaze', name: '火冒三丈', nameEn: 'Blaze', key: 'C', type: 'smoke', iconUrl: '/images/abilities/phoenix-blaze.png', description: '装备烈焰屏障。按[射击]向前生成一道可穿越地形的火墙，可阻挡视野并伤害穿过它的人。不死鸟不会受到火墙的伤害，反而会获得治疗。[按住射击]可使火墙朝你准星的方向卷曲。', usage: '按C装备，左键放置火墙，按住射击可卷曲火墙。' },
       { id: 'phoenix-hot-hands', name: '火热手感', nameEn: 'Hot Hands', key: 'Q', type: 'damage', iconUrl: '/images/abilities/phoenix-hot-hands.png', description: '装备一颗火球，按[射击]将其掷出，在落地或一定时间后爆炸，生成一片持续燃烧的区域，对进入其中的敌人造成伤害。不死鸟不会受到燃烧区域的伤害，反而会获得治疗。按[辅助射击]可轻抛。', usage: '按Q装备，左键投掷火球，右键轻抛。' },
       { id: 'phoenix-curveball', name: '闪光曲球', nameEn: 'Curveball', key: 'E', type: 'flash', iconUrl: '/images/abilities/phoenix-curveball.png', description: '装备一颗闪光球，投掷后，闪光球沿弧线轨迹飞行并在短时间内爆炸。爆炸时，所有视野内可看到闪光球的玩家均会被[致盲]。按[射击]投掷左曲球，按[辅助射击]投掷右曲球。每击败两名敌人，可重置[闪光曲球]的充能。', usage: '按E装备，左键左曲球，右键右曲球。每击败2名敌人重置充能。' },
       { id: 'phoenix-run-it-back', name: '再火一回', nameEn: 'Run it Back', key: 'X', type: 'damage', iconUrl: '/images/abilities/phoenix-run-it-back.png', description: '立即标记不死鸟的位置。如果他在技能激活期间阵亡，或当技能时效结束，他都会返回该位置满血重生，并且保留技能施放时的护甲值。', usage: '按X标记位置，阵亡或时效结束后满血重生并保留护甲。' }

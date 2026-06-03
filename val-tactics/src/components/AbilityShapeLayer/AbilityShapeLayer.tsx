@@ -65,6 +65,11 @@ const iconTints: Record<string, string> = {
   'harbor-reckoning': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'sova-owl-drone': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'sova-shock-bolt': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+}
+
+// 特定技能形状颜色覆盖（标签不变，仅视觉变色）
+const colorOverrides: Record<string, string> = {
+  'phoenix-blaze': '#f0c850', // 火冒三丈 → 黄色
   'sova-recon-bolt': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'sova-hunters-fury': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'sage-barrier-orb': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
@@ -84,7 +89,7 @@ function getAbilityInfo(shape: AbilityShape): AbilityInfo {
   const isJett = shape.agentId === 'jett'
   const isSage = shape.agentId === 'sage'
   const ts = typeStyles[type]
-  const svgColor = typeColors[type] || '#888'
+  const svgColor = colorOverrides[shape.abilityId] || typeColors[type] || '#888'
   const overrideColor = isJett ? '#ffffff' : isSage ? '#50b4f0' : undefined
   return {
     color: overrideColor || svgColor,
