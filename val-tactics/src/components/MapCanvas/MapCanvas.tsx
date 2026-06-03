@@ -513,13 +513,18 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         setLineDrawing(null)
         return
       }
-      // Neon C 固定长度：方向由终点决定，长度固定
+      // Neon C 固定长度：起点为一端，终点定方向，长度固定
       if (lineDrawing.abilityId === 'neon-fast-lane') {
+        const fixLen = lineDrawing.config.length ?? 0.10
+        const halfLen = fixLen / 2
+        const rad = rot * Math.PI / 180
+        const cx = lineDrawing.startX + halfLen * Math.cos(rad)
+        const cy = lineDrawing.startY + halfLen * Math.sin(rad)
         dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
           id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
-          x: lineDrawing.startX, y: lineDrawing.startY, rotation: rot,
+          x: cx, y: cy, rotation: rot,
           shape: 'line', radius: 0.08, angle: 60,
-          length: lineDrawing.config.length ?? 0.10, width: 0.02,
+          length: fixLen, width: 0.02,
           thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: false,
         }})
         setLineDrawing(null)
