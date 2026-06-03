@@ -784,20 +784,15 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
                   })()
                 : { x: ex, y: ey }
               return isRect ? (
-                /* 矩形预览 — 固定长宽 */
-                (() => {
-                  const fixWPx = (lineDrawing.config.width ?? 0.02) * mapH * displayScale / 2
-                  const cxR = (sx + previewEx.x) / 2, cyR = (sy + previewEx.y) / 2
-                  const hw = Math.abs(previewEx.x - sx) / 2, hh = fixWPx
-                  return (
-                    <g transform={`rotate(${Math.atan2(previewEx.y - sy, previewEx.x - sx) * 180 / Math.PI}, ${cxR}, ${cyR})`}>
-                      <rect x={cxR - hw} y={cyR - hh} width={hw * 2} height={hh * 2}
-                        fill="none" stroke={color} strokeWidth={2} strokeDasharray="6 3" opacity={0.5} />
-                      <circle cx={cxR - hw} cy={cyR} r={4} fill={color} opacity={0.8} />
-                      <circle cx={cxR + hw} cy={cyR} r={4} fill="#fff" stroke={color} strokeWidth={2} opacity={0.8} />
-                    </g>
-                  )
-                })()
+                /* 矩形预览 */
+                <g>
+                  <rect
+                    x={Math.min(sx, previewEx.x) - 4} y={Math.min(sy, previewEx.y) - 4}
+                    width={Math.abs(previewEx.x - sx) + 8} height={Math.abs(previewEx.y - sy) + 8}
+                    fill="none" stroke={color} strokeWidth={2} strokeDasharray="6 3" opacity={0.5} />
+                  <circle cx={sx} cy={sy} r={4} fill={color} opacity={0.8} />
+                  <circle cx={previewEx.x} cy={previewEx.y} r={4} fill="#fff" stroke={color} strokeWidth={2} opacity={0.8} />
+                </g>
               ) : (
                 <>
                   <circle cx={sx} cy={sy} r={5} fill={color} opacity={0.8} />
