@@ -51,7 +51,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'brimstone-sky-smoke':      { radius: 4.15 * M },   // 4.15m
   'omen-dark-cover':          { radius: 4.1 * M },    // 4.1m
   'astra-nebula':             { radius: 4.75 * M },   // 4.75m 最大
-  'viper-poison-cloud':       { radius: 4.5 * M },    // 4.5m
+  'viper-poison-cloud':       { radius: 6 * M },    // 6m
   'jett-cloudburst':          { shape: 'circle', radius: 4.5 * M },    // 4.5m 瞬发烟
   'harbor-cove':              { shape: 'circle', radius: 4.5 * M },    // 4.5m 护盾
   'harbor-reckoning':         { shape: 'line', length: 30 * M, thickness: 0.006 },
@@ -76,7 +76,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
 
   // === 终极技能 ===
   'brimstone-orbital-strike': { radius: 12.0 * M },
-  'viper-snake-bite':         { radius: 4.0 * M },
+  'viper-snake-bite':         { radius: 6 * M },
   'viper-pit':                { radius: 12.0 * M },
   'raze-showstopper':         { radius: 5.5 * M },
   'kayo-null-cmd':             { radius: 50 * M },
@@ -89,7 +89,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'fade-nightfall':            { shape: 'line', length: 50 * M, thickness: 0.015 },
 
   // === 墙体 ===
-  'viper-toxic-screen':       { shape: 'line', length: 65 * M, thickness: 0.003 },
+  'viper-toxic-screen':       { shape: 'line', length: 90 * M, thickness: 0.003 },
   'sage-barrier-orb':         { shape: 'rect', length: 16 * M, width: 3 * M },
   'phoenix-blaze':            { shape: 'line', length: 37 * M, thickness: 0.006 },
   'phoenix-hot-hands':        { shape: 'circle', radius: 6.5 * M },
