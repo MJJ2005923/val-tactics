@@ -328,7 +328,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         // 矩形拖拽绘制
         if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
-        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency') {
+        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut') {
           // 线型技能进入画线模式：先放起点，再拖终点
           const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c'
           setLineDrawing({
@@ -509,6 +509,20 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           x: sx3 / allPts.length, y: sy3 / allPts.length, rotation: 0, shape: 'line',
           radius: 0.08, angle: 60, length: totalLen, width: 0.02,
           thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: false, path: allPts,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      // 固定长度矩形：Iso Q
+      if (lineDrawing.abilityId === 'iso-undercut') {
+        const fixLen = lineDrawing.config.length ?? 0.10
+        const fixW = lineDrawing.config.width ?? 0.02
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: cx, y: cy, rotation: rot - 90,
+          shape: 'rect', radius: 0.08, angle: 60,
+          length: fixLen, width: fixW,
+          thickness: 0.008, iconOnly: false,
         }})
         setLineDrawing(null)
         return
