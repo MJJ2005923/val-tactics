@@ -328,9 +328,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         // 矩形拖拽绘制
         if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
-        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball') {
+        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q' || data.abilityId === 'waylay-e' || data.abilityId === 'waylay-x') {
           // 线型技能进入画线模式：先放起点，再拖终点
-          const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c'
+          const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c' || data.abilityId === 'waylay-e'
           setLineDrawing({
             mode: isFH ? 'freehand' : 'line',
             startX: isFH ? x : -1, startY: isFH ? y : -1,
@@ -487,6 +487,38 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       const len = Math.sqrt(dx * dx + dy * dy) / mapW
       const rot = Math.atan2(dx, -dy) * 180 / Math.PI
       // Deadlock X / Tejo Q 多段线
+      // Waylay Q 两段固定15m
+      if (lineDrawing.abilityId === 'waylay-q') {
+        const segLen = 15 * (7 / 1800) // 15m
+        const wlRef = multiLineRef.current
+        const dxW = (ex - lineDrawing.startX), dyW = (ey - lineDrawing.startY)
+        const distW = Math.sqrt(dxW * dxW + dyW * dyW) || 1
+        const nx = lineDrawing.startX + (dxW / distW) * segLen
+        const ny = lineDrawing.startY + (dyW / distW) * segLen
+        if (wlRef.count === 0) {
+          wlRef.pts = [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: nx, y: ny }]
+          wlRef.count = 1
+          setLineDrawing(prev => prev ? { ...prev, startX: nx, startY: ny, currentX: nx, currentY: ny } : null)
+          return
+        }
+        wlRef.pts.push({ x: nx, y: ny })
+        const allPts = [...wlRef.pts]
+        wlRef.pts = []; wlRef.count = 0
+        let sxW = 0, syW = 0
+        for (const p of allPts) { sxW += p.x; syW += p.y }
+        let totalLenW = 0
+        for (let i = 1; i < allPts.length; i++) {
+          totalLenW += Math.sqrt((allPts[i].x - allPts[i-1].x) ** 2 + (allPts[i].y - allPts[i-1].y) ** 2)
+        }
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: sxW / allPts.length, y: syW / allPts.length, rotation: 0, shape: 'line',
+          radius: 0.08, angle: 60, length: totalLenW, width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: false, path: allPts,
+        }})
+        setLineDrawing(null)
+        return
+      }
       if (lineDrawing.abilityId === 'deadlock-annihilation' || lineDrawing.abilityId === 'tejo-q') {
         const mlr = multiLineRef.current
         if (mlr.count === 0) {
@@ -509,6 +541,33 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           x: sx3 / allPts.length, y: sy3 / allPts.length, rotation: 0, shape: 'line',
           radius: 0.08, angle: 60, length: totalLen, width: 0.02,
           thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: false, path: allPts,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      // 固定长度矩形：Iso Q
+      if (lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-x') {
+        const fixLen = lineDrawing.config.length ?? 0.10
+        const fixW = lineDrawing.config.width ?? 0.02
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: cx, y: cy, rotation: rot - 90,
+          shape: 'rect', radius: 0.08, angle: 60,
+          length: fixLen, width: fixW,
+          thickness: 0.008, iconOnly: false,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      // Neon C 固定长度：中点居中，方向由终点决定
+      if (lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'viper-toxic-screen') {
+        const fixLen = lineDrawing.config.length ?? 0.10
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: cx, y: cy, rotation: rot,
+          shape: 'line', radius: 0.08, angle: 60,
+          length: fixLen, width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: false,
         }})
         setLineDrawing(null)
         return
@@ -745,15 +804,26 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
               />
             )}
             {/* 直线模式预览 */}
-            {!isFreehand && (
-              <>
-                <circle cx={sx} cy={sy} r={5} fill={color} opacity={0.8} />
-                <line x1={sx} y1={sy} x2={ex} y2={ey}
-                  stroke={color} strokeWidth={sw} strokeLinecap="round" opacity={0.5}
-                  strokeDasharray="10 6" />
-                <circle cx={ex} cy={ey} r={5} fill="#fff" stroke={color} strokeWidth={2} opacity={0.8} />
-              </>
-            )}
+            {!isFreehand && (() => {
+              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q' || lineDrawing.abilityId === 'waylay-x'
+              const previewEx = isFixedLen && lineDrawing.startX >= 0
+                ? (() => {
+                    const fixLenPx = (lineDrawing.config.length ?? 0.10) * mapW * displayScale
+                    const dx2 = ex - sx, dy2 = ey - sy
+                    const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
+                    return { x: sx + (dx2 / dist2) * fixLenPx, y: sy + (dy2 / dist2) * fixLenPx }
+                  })()
+                : { x: ex, y: ey }
+              return (
+                <>
+                  <circle cx={sx} cy={sy} r={5} fill={color} opacity={0.8} />
+                  <line x1={sx} y1={sy} x2={previewEx.x} y2={previewEx.y}
+                    stroke={color} strokeWidth={sw} strokeLinecap="round" opacity={0.5}
+                    strokeDasharray="10 6" />
+                  <circle cx={previewEx.x} cy={previewEx.y} r={5} fill="#fff" stroke={color} strokeWidth={2} opacity={0.8} />
+                </>
+              )
+            })()}
             {/* 起点标记（所有模式） */}
             <circle cx={sx} cy={sy} r={5} fill="#fff" stroke={color} strokeWidth={2} opacity={0.9} />
             {/* 当前鼠标位置（freehand 模式绘制中） */}
