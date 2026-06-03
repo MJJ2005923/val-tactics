@@ -514,7 +514,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         return
       }
       // 固定长度矩形：Iso Q
-      if (lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'viper-toxic-screen') {
+      if (lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'iso-kill-contract') {
         const fixLen = lineDrawing.config.length ?? 0.10
         const fixW = lineDrawing.config.width ?? 0.02
         dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {

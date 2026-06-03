@@ -89,7 +89,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'fade-nightfall':            { shape: 'line', length: 50 * M, thickness: 0.015 },
 
   // === 墙体 ===
-  'viper-toxic-screen':       { shape: 'line', length: 90 * M, thickness: 0.003 },
+  'viper-toxic-screen':       { shape: 'line', length: 90 * M, thickness: 2 * M },
   'sage-barrier-orb':         { shape: 'rect', length: 16 * M, width: 3 * M },
   'phoenix-blaze':            { shape: 'line', length: 37 * M, thickness: 0.006 },
   'phoenix-hot-hands':        { shape: 'circle', radius: 6.5 * M },
