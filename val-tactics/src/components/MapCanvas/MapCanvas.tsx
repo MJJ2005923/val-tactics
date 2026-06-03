@@ -328,9 +328,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         // 矩形拖拽绘制
         if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
-        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q') {
+        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q' || data.abilityId === 'waylay-e') {
           // 线型技能进入画线模式：先放起点，再拖终点
-          const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c'
+          const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c' || data.abilityId === 'waylay-e'
           setLineDrawing({
             mode: isFH ? 'freehand' : 'line',
             startX: isFH ? x : -1, startY: isFH ? y : -1,
@@ -487,9 +487,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       const len = Math.sqrt(dx * dx + dy * dy) / mapW
       const rot = Math.atan2(dx, -dy) * 180 / Math.PI
       // Deadlock X / Tejo Q 多段线
-      // Waylay Q 两段固定13m
+      // Waylay Q 两段固定15m
       if (lineDrawing.abilityId === 'waylay-q') {
-        const segLen = 13 * (7 / 1800) // 13m
+        const segLen = 15 * (7 / 1800) // 15m
         const wlRef = multiLineRef.current
         const dxW = (ex - lineDrawing.startX), dyW = (ey - lineDrawing.startY)
         const distW = Math.sqrt(dxW * dxW + dyW * dyW) || 1
