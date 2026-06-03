@@ -805,7 +805,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             )}
             {/* 直线模式预览 */}
             {!isFreehand && (() => {
-              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract'
+              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q'
               const previewEx = isFixedLen && lineDrawing.startX >= 0
                 ? (() => {
                     const fixLenPx = (lineDrawing.config.length ?? 0.10) * mapW * displayScale
