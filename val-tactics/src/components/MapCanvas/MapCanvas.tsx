@@ -487,7 +487,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       const len = Math.sqrt(dx * dx + dy * dy) / mapW
       const rot = Math.atan2(dx, -dy) * 180 / Math.PI
       // Deadlock X / Tejo Q 多段线
-      if (lineDrawing.abilityId === 'deadlock-annihilation' || lineDrawing.abilityId === 'tejo-q') {
+      if (lineDrawing.abilityId === 'deadlock-annihilation' || lineDrawing.abilityId === 'tejo-q' || lineDrawing.abilityId === 'waylay-q') {
         const mlr = multiLineRef.current
         if (mlr.count === 0) {
           mlr.pts = [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: ex, y: ey }]
@@ -528,7 +528,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         return
       }
       // Neon C 固定长度：中点居中，方向由终点决定
-      if (lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'waylay-q') {
+      if (lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'viper-toxic-screen') {
         const fixLen = lineDrawing.config.length ?? 0.10
         dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
           id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
@@ -773,7 +773,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             )}
             {/* 直线模式预览 */}
             {!isFreehand && (() => {
-              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'waylay-q' || lineDrawing.abilityId === 'iso-kill-contract'
+              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract'
               const previewEx = isFixedLen && lineDrawing.startX >= 0
                 ? (() => {
                     const fixLenPx = (lineDrawing.config.length ?? 0.10) * mapW * displayScale
