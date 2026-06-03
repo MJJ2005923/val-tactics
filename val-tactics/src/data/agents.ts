@@ -427,9 +427,9 @@ const agents: Agent[] = [
   {
     id: 'waylay', name: '幻棱', nameEn: 'Waylay', role: '决斗者',
     abilities: [
-      { id: 'waylay-c', name: '溯流回光', nameEn: 'Refract', key: 'C', type: 'mobility', iconUrl: '/images/abilities/waylay-c.png', description: '立即在地面上形成一道光束。[再次激活]技能即可让自己化为一颗纯粹的光粒，迅速回到光束的所在位置。穿行时你不会受到伤害。每击败两名敌人重置一次充能。', usage: '按C放置光束，再次按C化为光粒回到光束处，无敌穿行，每击败2人重置。' },
+      { id: 'waylay-c', name: '光棱闪爆', nameEn: 'Prismatic Flash', key: 'C', type: 'control', iconUrl: '/images/abilities/waylay-c.png', description: '装备一道光簇。按下[射击]投掷光簇，与地面接触时爆炸，[干扰]附近的玩家，使其受到大幅的移动和武器减速。', usage: '按C投掷光簇，爆炸后干扰敌人移动和武器减速。' },
       { id: 'waylay-q', name: '光速飞跃', nameEn: 'Light Speed', key: 'Q', type: 'mobility', iconUrl: '/images/abilities/waylay-q.png', description: '准备进行加速。按[射击]向前冲刺两次。按[辅助射击]向前冲刺一次。只有第一段冲刺能让你升空。', usage: '按Q冲刺两次(左键)/一次(右键)，第一段冲刺可升空。' },
-      { id: 'waylay-e', name: '光棱闪爆', nameEn: 'Prismatic Flash', key: 'E', type: 'control', iconUrl: '/images/abilities/waylay-e.png', description: '装备一道光簇。按下[射击]投掷光簇，与地面接触时爆炸，[干扰]附近的玩家，使其受到大幅的移动和武器减速。', usage: '按E投掷光簇，爆炸后干扰敌人移动和武器减速。' },
+      { id: 'waylay-e', name: '溯流回光', nameEn: 'Refract', key: 'E', type: 'mobility', iconUrl: '/images/abilities/waylay-e.png', description: '立即在地面上形成一道光束。[再次激活]技能即可让自己化为一颗纯粹的光粒，迅速回到光束的所在位置。穿行时你不会受到伤害。每击败两名敌人重置一次充能。', usage: '按E放置光束，再次按E化为光粒回到光束处，无敌穿行，每击败2人重置。' },
       { id: 'waylay-x', name: '时光修罗场', nameEn: 'Convergent Paths', key: 'X', type: 'control', iconUrl: '/images/abilities/waylay-x.png', description: '装备并汇聚光棱能量。按[射击]创造一个自己的残像，放射一道光线。短暂延迟后你将获得大幅加速效果，同时光线开始扩张，干扰区域内的其他玩家。', usage: '按X创造残像放射光线，获得加速+光线扩张干扰敌人。' }
     ]
   }
