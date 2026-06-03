@@ -773,8 +773,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             )}
             {/* 直线模式预览 */}
             {!isFreehand && (() => {
-              const isNeonC = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut'
-              const previewEx = isNeonC && lineDrawing.startX >= 0
+              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut'
+              const isRect = lineDrawing.abilityId === 'iso-undercut'
+              const previewEx = isFixedLen && lineDrawing.startX >= 0
                 ? (() => {
                     const fixLenPx = (lineDrawing.config.length ?? 0.10) * mapW * displayScale
                     const dx2 = ex - sx, dy2 = ey - sy
@@ -782,7 +783,17 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
                     return { x: sx + (dx2 / dist2) * fixLenPx, y: sy + (dy2 / dist2) * fixLenPx }
                   })()
                 : { x: ex, y: ey }
-              return (
+              return isRect ? (
+                /* 矩形预览 */
+                <g>
+                  <rect
+                    x={Math.min(sx, previewEx.x) - 4} y={Math.min(sy, previewEx.y) - 4}
+                    width={Math.abs(previewEx.x - sx) + 8} height={Math.abs(previewEx.y - sy) + 8}
+                    fill="none" stroke={color} strokeWidth={2} strokeDasharray="6 3" opacity={0.5} />
+                  <circle cx={sx} cy={sy} r={4} fill={color} opacity={0.8} />
+                  <circle cx={previewEx.x} cy={previewEx.y} r={4} fill="#fff" stroke={color} strokeWidth={2} opacity={0.8} />
+                </g>
+              ) : (
                 <>
                   <circle cx={sx} cy={sy} r={5} fill={color} opacity={0.8} />
                   <line x1={sx} y1={sy} x2={previewEx.x} y2={previewEx.y}
