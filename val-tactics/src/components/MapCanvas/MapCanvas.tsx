@@ -328,7 +328,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         // 矩形拖拽绘制
         if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
-        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball') {
+        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury' && data.abilityId !== 'neon-fast-lane') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball') {
           // 线型技能进入画线模式：先放起点，再拖终点
           const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c'
           setLineDrawing({
