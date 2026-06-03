@@ -29,7 +29,7 @@ export const agentImages: Record<string, string> = {
   harbor: 'mage', clove: 'smonk', sova: 'hunter', breach: 'breach',
   fade: 'bountyhunter', gekko: 'aggrobot', skye: 'guide', kayo: 'grenadier',
   killjoy: 'killjoy', cypher: 'gumshoe', chamber: 'deadeye', deadlock: 'cable',
-  tejo: 'tejo', vyse: 'vyse', veto: 'pine', miks: 'iris'
+  tejo: 'tejo', vyse: 'vyse', veto: 'pine', miks: 'iris', waylay: 'terra'
 }
 
 // 游戏内技能范围 (地图 1800x1200, 1m=7px, norm=0.0039)
@@ -48,7 +48,7 @@ const typeDefaults: Record<AbilityType, AbilityShapeConfig> = {
 // 每个技能根据游戏内实际数据的精确覆盖
 const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 烟雾 (半径单位: 米) ===
-  'brimstone-sky-smoke':      { radius: 4.15 * M },   // 4.15m
+  'brimstone-sky-smoke':      { radius: 5.5 * M },   // 5.5m
   'omen-dark-cover':          { radius: 4.1 * M },    // 4.1m
   'astra-nebula':             { radius: 4.75 * M },   // 4.75m 最大
   'viper-poison-cloud':       { radius: 6 * M },    // 6m
@@ -60,7 +60,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'cypher-cyber-cage':        { radius: 3.5 * M },    // 3.5m 网牢
 
   // === 燃烧弹/伤害 ===
-  'brimstone-incendiary':     { radius: 4.0 * M },
+  'brimstone-incendiary':     { radius: 6 * M },
   'killjoy-nanoswarm':        { radius: 5 * M },
   'raze-paint-shells':        { shape: 'circle', radius: 6.5 * M },
   'gekko-mosh-pit':           { radius: 5.0 * M },
@@ -131,6 +131,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'fade-seize':                { radius: 4 * M },
   'breach-aftershock':         { shape: 'cone', angle: 80, length: 11 * M },
   'breach-fault-line':         { shape: 'line', length: 18 * M, thickness: 0.01 },
+  'brimstone-stim-beacon':     { shape: 'circle', radius: 8 * M },
   'veto-c':                    { shape: 'circle', radius: 41 * M },
   'veto-e':                    { shape: 'circle', radius: 1.2 * M },
   'miks-x':                    { shape: 'cone', angle: 63, length: 30 * M },
@@ -421,6 +422,15 @@ const agents: Agent[] = [
       { id: 'miks-q', name: '共振谐律', nameEn: 'Binary', key: 'Q', type: 'control', iconUrl: '/images/abilities/miks-q.png', description: '装备共振谐律。锁定一名队友并按下[射击]，为你和该队友激活[作战强化]效果和速度加成，每次击败都会刷新效果。按[辅助射击]让自己获得[作战强化]效果和速度加成。', usage: '按Q锁定队友，左键激活双方作战强化+加速(击败刷新)，右键只给自己。' },
       { id: 'miks-e', name: '声波帷幕', nameEn: 'Vertigo', key: 'E', type: 'smoke', iconUrl: '/images/abilities/miks-e.png', description: '装备地图定位仪。按[射击]设定位置。按[辅助射击]在选定位置释放烟雾。', usage: '按E打开定位仪，左键设定位置，右键释放烟雾。' },
       { id: 'miks-x', name: '音脉强袭', nameEn: 'Encore', key: 'X', type: 'control', iconUrl: '/images/abilities/miks-x.png', description: '装备音脉强袭。按[射击]积蓄能量并向前释放音波源光，击退目标，并对其造成[致聋]和[减速]。', usage: '按X蓄力释放音波源光，击退并致聋+减速目标。' }
+    ]
+  },
+  {
+    id: 'waylay', name: '幻棱', nameEn: 'Waylay', role: '决斗者',
+    abilities: [
+      { id: 'waylay-c', name: '溯流回光', nameEn: 'Refract', key: 'C', type: 'mobility', iconUrl: '/images/abilities/waylay-c.png', description: '立即在地面上形成一道光束。[再次激活]技能即可让自己化为一颗纯粹的光粒，迅速回到光束的所在位置。穿行时你不会受到伤害。每击败两名敌人重置一次充能。', usage: '按C放置光束，再次按C化为光粒回到光束处，无敌穿行，每击败2人重置。' },
+      { id: 'waylay-q', name: '光速飞跃', nameEn: 'Light Speed', key: 'Q', type: 'mobility', iconUrl: '/images/abilities/waylay-q.png', description: '准备进行加速。按[射击]向前冲刺两次。按[辅助射击]向前冲刺一次。只有第一段冲刺能让你升空。', usage: '按Q冲刺两次(左键)/一次(右键)，第一段冲刺可升空。' },
+      { id: 'waylay-e', name: '光棱闪爆', nameEn: 'Prismatic Flash', key: 'E', type: 'control', iconUrl: '/images/abilities/waylay-e.png', description: '装备一道光簇。按下[射击]投掷光簇，与地面接触时爆炸，[干扰]附近的玩家，使其受到大幅的移动和武器减速。', usage: '按E投掷光簇，爆炸后干扰敌人移动和武器减速。' },
+      { id: 'waylay-x', name: '时光修罗场', nameEn: 'Convergent Paths', key: 'X', type: 'control', iconUrl: '/images/abilities/waylay-x.png', description: '装备并汇聚光棱能量。按[射击]创造一个自己的残像，放射一道光线。短暂延迟后你将获得大幅加速效果，同时光线开始扩张，干扰区域内的其他玩家。', usage: '按X创造残像放射光线，获得加速+光线扩张干扰敌人。' }
     ]
   }
 ]
