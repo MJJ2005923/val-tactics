@@ -328,7 +328,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         // 矩形拖拽绘制
         if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
-        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury' && data.abilityId !== 'neon-fast-lane') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball') {
+        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane') {
           // 线型技能进入画线模式：先放起点，再拖终点
           const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c'
           setLineDrawing({
@@ -509,6 +509,18 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           x: sx3 / allPts.length, y: sy3 / allPts.length, rotation: 0, shape: 'line',
           radius: 0.08, angle: 60, length: totalLen, width: 0.02,
           thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: false, path: allPts,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      // Neon C 固定长度：方向由终点决定，长度固定
+      if (lineDrawing.abilityId === 'neon-fast-lane') {
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: lineDrawing.startX, y: lineDrawing.startY, rotation: rot,
+          shape: 'line', radius: 0.08, angle: 60,
+          length: lineDrawing.config.length ?? 0.10, width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: false,
         }})
         setLineDrawing(null)
         return
