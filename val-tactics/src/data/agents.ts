@@ -135,6 +135,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'waylay-c':                  { shape: 'circle', radius: 7.5 * M },
   'waylay-q':                  { shape: 'line', length: 15 * M, thickness: 0.003 },
   'waylay-e':                  { shape: 'line', length: 999, thickness: 0.003 },
+  'waylay-x':                  { shape: 'rect', length: 40 * M, width: 20 * M },
   'veto-c':                    { shape: 'circle', radius: 41 * M },
   'veto-e':                    { shape: 'circle', radius: 1.2 * M },
   'miks-x':                    { shape: 'cone', angle: 63, length: 30 * M },

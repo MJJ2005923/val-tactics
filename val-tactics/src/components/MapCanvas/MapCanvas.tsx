@@ -328,7 +328,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         // 矩形拖拽绘制
         if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
-        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q' || data.abilityId === 'waylay-e') {
+        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'harbor-reckoning' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q' || data.abilityId === 'waylay-e' || data.abilityId === 'waylay-x') {
           // 线型技能进入画线模式：先放起点，再拖终点
           const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c' || data.abilityId === 'waylay-e'
           setLineDrawing({
@@ -546,7 +546,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         return
       }
       // 固定长度矩形：Iso Q
-      if (lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'iso-kill-contract') {
+      if (lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-x') {
         const fixLen = lineDrawing.config.length ?? 0.10
         const fixW = lineDrawing.config.width ?? 0.02
         dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
@@ -805,7 +805,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             )}
             {/* 直线模式预览 */}
             {!isFreehand && (() => {
-              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q'
+              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q' || lineDrawing.abilityId === 'waylay-x'
               const previewEx = isFixedLen && lineDrawing.startX >= 0
                 ? (() => {
                     const fixLenPx = (lineDrawing.config.length ?? 0.10) * mapW * displayScale
