@@ -99,7 +99,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'harbor-cascade':           { shape: 'circle', radius: 3.5 * M },
   'deadlock-barrier-mesh':    { shape: 'circle', radius: 6 * M },
   'neon-relay-bolt':          { shape: 'circle', radius: 4 * M },
-  'neon-fast-lane':           { shape: 'line', length: 40 * M, thickness: 0.003 },
+  'neon-fast-lane':           { shape: 'line', length: 65 * M, thickness: 0.003 },
   'neon-high-gear':           { shape: 'line', length: 6 * M, thickness: 0.003 },
 
   // === 侦查 ===

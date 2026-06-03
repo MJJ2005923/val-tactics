@@ -758,15 +758,26 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
               />
             )}
             {/* 直线模式预览 */}
-            {!isFreehand && (
-              <>
-                <circle cx={sx} cy={sy} r={5} fill={color} opacity={0.8} />
-                <line x1={sx} y1={sy} x2={ex} y2={ey}
-                  stroke={color} strokeWidth={sw} strokeLinecap="round" opacity={0.5}
-                  strokeDasharray="10 6" />
-                <circle cx={ex} cy={ey} r={5} fill="#fff" stroke={color} strokeWidth={2} opacity={0.8} />
-              </>
-            )}
+            {!isFreehand && (() => {
+              const isNeonC = lineDrawing.abilityId === 'neon-fast-lane'
+              const previewEx = isNeonC && lineDrawing.startX >= 0
+                ? (() => {
+                    const fixLenPx = (lineDrawing.config.length ?? 0.10) * mapW * displayScale
+                    const dx2 = ex - sx, dy2 = ey - sy
+                    const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
+                    return { x: sx + (dx2 / dist2) * fixLenPx, y: sy + (dy2 / dist2) * fixLenPx }
+                  })()
+                : { x: ex, y: ey }
+              return (
+                <>
+                  <circle cx={sx} cy={sy} r={5} fill={color} opacity={0.8} />
+                  <line x1={sx} y1={sy} x2={previewEx.x} y2={previewEx.y}
+                    stroke={color} strokeWidth={sw} strokeLinecap="round" opacity={0.5}
+                    strokeDasharray="10 6" />
+                  <circle cx={previewEx.x} cy={previewEx.y} r={5} fill="#fff" stroke={color} strokeWidth={2} opacity={0.8} />
+                </>
+              )
+            })()}
             {/* 起点标记（所有模式） */}
             <circle cx={sx} cy={sy} r={5} fill="#fff" stroke={color} strokeWidth={2} opacity={0.9} />
             {/* 当前鼠标位置（freehand 模式绘制中） */}
