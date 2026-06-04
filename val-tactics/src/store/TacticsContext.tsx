@@ -32,6 +32,8 @@ export interface TacticsState {
   animatingShapeId: string | null  // 正在播放入场动画的形状ID
   // 阵容构建
   roster: { attack: string[]; defense: string[] }
+  // 显示全部范围
+  showAllRanges: boolean
 }
 
 // ====== 快照（用于撤销重做） ======
@@ -59,6 +61,7 @@ function takeSnapshot(state: TacticsState): Snapshot {
     abilityShapes: state.abilityShapes.map(s => ({
       ...s,
       path: s.path ? s.path.map(p => ({ ...p })) : undefined,
+      armScales: s.armScales ? [...s.armScales] : undefined,
     })),
   }
 }
@@ -106,6 +109,7 @@ type Action =
   | { type: 'REPLAY_START'; markers: Marker[] }
   | { type: 'REPLAY_STEP'; shapeId: string }
   | { type: 'REPLAY_STOP' }
+  | { type: 'TOGGLE_SHOW_ALL_RANGES' }
 
 // ====== 初始状态 ======
 const initialState: TacticsState = {
@@ -134,6 +138,7 @@ const initialState: TacticsState = {
   revealedShapeIds: [],
   animatingShapeId: null,
   roster: { attack: [], defense: [] },
+  showAllRanges: false,
 }
 
 let idCounter = 0
@@ -317,6 +322,8 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     }
     case 'REPLAY_STOP':
       return { state: { ...state, replaying: false, replayIndex: -1 }, history: newHistory }
+    case 'TOGGLE_SHOW_ALL_RANGES':
+      return { state: { ...state, showAllRanges: !state.showAllRanges }, history: newHistory }
 
     default:
       return { state, history: newHistory }

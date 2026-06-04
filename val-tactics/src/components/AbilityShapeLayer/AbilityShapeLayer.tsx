@@ -122,21 +122,23 @@ const iconTints: Record<string, string> = {
   'harbor-reckoning': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'sova-owl-drone': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
   'sova-shock-bolt': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sova-recon-bolt': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
+  'sova-hunters-fury': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
 }
 
 // 特定技能形状颜色覆盖（标签不变，仅视觉变色）
 const colorOverrides: Record<string, string> = {
   'phoenix-blaze': '#f0c850', // 火冒三丈 → 黄色
-  'sova-recon-bolt': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
-  'sova-hunters-fury': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
-  'sage-barrier-orb': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
-  'sage-slow-orb': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
-  'sage-healing-orb': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
-  'sage-resurrection': 'sepia(1) saturate(3) hue-rotate(180deg) brightness(1.1)', // 蓝色
-  'jett-cloudburst': 'brightness(0) invert(1)', // 白色
-  'jett-updraft': 'brightness(0) invert(1)', // 白色
-  'jett-tailwind': 'brightness(0) invert(1)', // 白色
-  'jett-blade-storm': 'brightness(0) invert(1)', // 白色
+  'sova-recon-bolt': '#50b4f0', // 猎枭寻敌箭 → 侦查蓝
+  'sova-hunters-fury': '#50b4f0', // 猎枭狂猎之怒 → 侦查蓝
+  'sage-barrier-orb': '#a070d8', // 贤者玉城 → 控制紫
+  'sage-slow-orb': '#a070d8', // 贤者薄冰 → 控制紫
+  'sage-healing-orb': '#50e890', // 贤者逢春 → 治疗绿
+  'sage-resurrection': '#50e890', // 贤者再起 → 治疗绿
+  'jett-cloudburst': '#ffffff', // 婕提瞬云 → 白色
+  'jett-updraft': '#ffffff', // 婕提凌空 → 白色
+  'jett-tailwind': '#ffffff', // 婕提逐风 → 白色
+  'jett-blade-storm': '#ffffff', // 婕提飓刃 → 白色
 }
 
 function getAbilityInfo(shape: AbilityShape): AbilityInfo {
@@ -168,8 +170,12 @@ interface DragState {
   startShape: AbilityShape
 }
 
+interface ArmDragState { armIdx: number; startScale: number; startPos: number; isVertical: boolean; dragSign: number; shapeId: string; curScales: number[] }
+
+let armDrag: ArmDragState | null = null
+
 export default function AbilityShapeLayer({ offset, scale, mapW, mapH, containerRef }: Props) {
-  const { abilityShapes, selectedId, selectedType, toolMode, replaying, revealedShapeIds, animatingShapeId, dispatch } = useTactics()
+  const { abilityShapes, selectedId, selectedType, toolMode, replaying, revealedShapeIds, animatingShapeId, showAllRanges, dispatch } = useTactics()
   const dragRef = useRef<DragState | null>(null)
 
   const screenToWorld = useCallback((sx: number, sy: number) => {
@@ -183,6 +189,17 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
 
   useEffect(() => {
     const move = (e: MouseEvent) => {
+      // 手臂拖拽(钢锁C)
+      if (armDrag) {
+        const ad = armDrag
+        const curPos = ad.isVertical ? e.clientY : e.clientX
+        const delta = ((ad.startPos - curPos) * ad.dragSign) / (scale * mapW)
+        const s = abilityShapes.find(x => x.id === ad.shapeId)
+        const baseLenNorm = (s?.radius ?? 0.04) * 1.2
+        const newScale = Math.max(0.3, Math.min(3, ad.startScale + delta / baseLenNorm))
+        dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: ad.shapeId, updates: { armScales: ad.curScales.map((v, i) => i === ad.armIdx ? newScale : v) } })
+        return
+      }
       const d = dragRef.current
       if (!d) return
       const world = screenToWorld(e.clientX, e.clientY)
@@ -205,11 +222,11 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
         dispatch({ type: 'UPDATE_ABILITY_SHAPE', id: d.shapeId, updates: { rotation: (d.startShape.rotation + ((ea - sa) * 180) / Math.PI) % 360 } })
       }
     }
-    const up = () => { dragRef.current = null }
+    const up = () => { dragRef.current = null; armDrag = null }
     window.addEventListener('mousemove', move)
     window.addEventListener('mouseup', up)
     return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }
-  }, [dispatch, screenToWorld])
+  }, [dispatch, screenToWorld, scale, mapW, abilityShapes])
 
   const handleMouseDown = useCallback((e: React.MouseEvent, shape: AbilityShape) => {
     e.stopPropagation()
@@ -270,23 +287,31 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
         const cx = offset.x + s.x * mapW * scale
         const cy = offset.y + s.y * mapH * scale
 
-        // 仅图标模式：不渲染形状，只显示图标
-        if (s.iconOnly) {
+        // 仅图标模式：不渲染形状，只显示图标（选中时显示完整范围）
+        if (s.iconOnly && s.id !== selectedId && !showAllRanges) {
+          // 有路径的技能：图标显示在终点（waylay-e=起点）
+          const startFirst = s.abilityId === 'waylay-e' || s.abilityId === 'phoenix-blaze' || s.abilityId === 'neon-fast-lane' || s.abilityId === 'iso-contingency' || s.abilityId === 'sova-owl-drone' || s.abilityId === 'fade-prowler' || s.abilityId === 'sova-hunters-fury' || s.abilityId === 'gekko-wingman'
+          const pathPt = (s.path && s.path.length > 1) ? (startFirst ? s.path[0] : s.path[s.path.length - 1]) : null
+          const rad = s.rotation * Math.PI / 180
+          const hw2 = (s.length * mapW * scale) / 2
+          // 矩形技能：图标在起点（矩形一端）
+          const rectPt = s.shape === 'rect' ? { x: cx - hw2 * Math.cos(rad), y: cy - hw2 * Math.sin(rad) } : null
+          // 直线技能：图标在终点或起点
+          const a1 = (s.rotation - 90) * Math.PI / 180
+          const a2 = (s.rotation + 90) * Math.PI / 180
+          const lineEndPt = (!pathPt && !rectPt && s.shape === 'line') ? { x: cx + hw2 * Math.cos(startFirst ? a2 : a1), y: cy + hw2 * Math.sin(startFirst ? a2 : a1) } : null
+          const iconX = pathPt ? offset.x + pathPt.x * mapW * scale : (rectPt ? rectPt.x : (lineEndPt ? lineEndPt.x : cx))
+          const iconY = pathPt ? offset.y + pathPt.y * mapH * scale : (rectPt ? rectPt.y : (lineEndPt ? lineEndPt.y : cy))
           return (
             <div key={s.id} className={isAnimating ? styles.shapeReveal : undefined} style={{ position: 'absolute', pointerEvents: 'auto' }}>
-              <div style={{ position: 'absolute', left: cx - 14, top: cy - 14, pointerEvents: 'none' }}>
-                <img src={info.iconUrl} style={{ width: 28, height: 28,
+              <div style={{ position: 'absolute', left: iconX - 11, top: iconY - 11, width: 22, height: 22, cursor: 'move', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onMouseDown={(e) => handleMouseDown(e, s)}>
+                <img src={info.iconUrl} style={{ width: 22, height: 22,
                   filter: info.iconFilter
                     ? `drop-shadow(0 1px 3px rgba(0,0,0,0.6)) ${info.iconFilter}`
                     : 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
               </div>
-              <div style={{ position: 'absolute', left: cx - 4, top: cy - 4, width: 8, height: 8, borderRadius: '50%', background: color, cursor: 'move' }}
-                onMouseDown={(e) => handleMouseDown(e, s)} />
-              {isSelected && (
-                <div style={{ position: 'absolute', left: cx - 4, top: cy - 16, width: 8, height: 8, borderRadius: '50%', background: '#fff', border: '1px solid #333', cursor: 'grab' }}
-                  onMouseDown={(e) => handleRotMouseDown(e, s)} />
-              )}
             </div>
           )
         }
@@ -294,21 +319,38 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
         if (s.shape === 'circle') {
           const r = Math.max(s.radius * mapW * scale, 6)
           const t = info.type
-          // Deadlock C 十字形
+          // Deadlock C 十字形（选中后可拖拽四臂末端调节长度）
           if (s.abilityId === 'deadlock-gravnet') {
-            const armW2 = Math.max(r * 0.15, 4)
-            const armLen2 = r * 1.5
+            const armW2 = Math.max(r * 0.04, 2)
+            const baseLen = r * 1.2
+            const scales = s.armScales || [1, 1, 1, 1]
+            const dirs: [number, number, number][] = [
+              [0, -1, 0], [0, 1, 1], [-1, 0, 2], [1, 0, 3]
+            ]
             return (
               <div key={s.id} data-shape={s.id} className={isAnimating ? styles.shapeReveal : undefined} style={{ position: 'absolute', pointerEvents: 'auto', transform: `rotate(${s.rotation}deg)`, transformOrigin: `${cx}px ${cy}px` }}>
-                {[[0, -armLen2], [0, armLen2], [-armLen2, 0], [armLen2, 0]].map(([ox, oy], i) => (
-                  <span key={i}>
-                    <div style={{ position: 'absolute', left: cx + (ox > 0 ? 0 : ox) - (ox ? 0 : armW2), top: cy + (oy > 0 ? 0 : oy) - (oy ? 0 : armW2), width: ox ? armLen2 : armW2 * 2, height: oy ? armLen2 : armW2 * 2, background: color + '60', borderRadius: armW2, pointerEvents: 'none' }} />
-                    <div style={{ position: 'absolute', left: cx + ox - armW2 * 1.5, top: cy + oy - armW2 * 1.5, width: armW2 * 3, height: armW2 * 3, borderRadius: '50%', background: color + '80', border: '1px solid ' + color, pointerEvents: 'none' }} />
-                  </span>
-                ))}
-                <div style={{ position: 'absolute', left: cx - 8, top: cy - 8, width: 16, height: 16, borderRadius: '50%', cursor: 'move', background: 'transparent', border: isSelected ? '2px solid #fff' : 'none' }} onMouseDown={(e) => handleMouseDown(e, s)} />
-                <img src={info.iconUrl} style={{ position: 'absolute', left: cx-10, top: cy-10, width: 20, height: 20, filter: 'drop-shadow(0 1px 3px black)', pointerEvents: 'none' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                {isSelected && (<div style={{ position: 'absolute', left: cx-6, top: cy-r-20, width: 12, height: 12, borderRadius: '50%', background: '#fff', border: '2px solid #333', cursor: 'grab', boxShadow: '0 0 6px black' }} onMouseDown={(e) => handleRotMouseDown(e, s)} />)}
+                {dirs.map(([dx, dy, idx]) => {
+                  const armLen = baseLen * scales[idx]
+                  const ox = dx * armLen, oy = dy * armLen
+                  const isV = dy !== 0
+                  const dSign = isV ? -dy : -dx
+                  return (
+                    <span key={idx}>
+                      <div style={{ position: 'absolute', left: cx + (dx > 0 ? 0 : ox) - (dx ? 0 : armW2), top: cy + (dy > 0 ? 0 : oy) - (dy ? 0 : armW2), width: dx ? armLen : armW2 * 2, height: dy ? armLen : armW2 * 2, background: color + '60', borderRadius: armW2, pointerEvents: 'none' }} />
+                      <div style={{ position: 'absolute', left: cx + ox - armW2 * 1.5, top: cy + oy - armW2 * 1.5, width: armW2 * 3, height: armW2 * 3, borderRadius: '50%', background: color + '80', border: '1px solid ' + color, pointerEvents: 'none' }} />
+                      {isSelected && (
+                        <div style={{ position: 'absolute', left: cx + ox - 6, top: cy + oy - 6, width: 12, height: 12, borderRadius: '50%', background: '#fff', border: '2px solid #333', cursor: isV ? 'ns-resize' : 'ew-resize', boxShadow: '0 0 4px black', zIndex: 3 }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation(); e.preventDefault()
+                            armDrag = { armIdx: idx, startScale: scales[idx], startPos: isV ? e.clientY : e.clientX, isVertical: isV, dragSign: dSign, shapeId: s.id, curScales: [...scales] }
+                          }} />
+                      )}
+                    </span>
+                  )
+                })}
+                <div style={{ position: 'absolute', left: cx - 5, top: cy - 5, width: 10, height: 10, borderRadius: '50%', cursor: 'move', background: 'transparent', border: isSelected ? '2px solid #fff' : 'none' }} onMouseDown={(e) => handleMouseDown(e, s)} />
+                <img src={info.iconUrl} style={{ position: 'absolute', left: cx-8, top: cy-8, width: 16, height: 16, filter: 'drop-shadow(0 1px 3px black)', pointerEvents: 'none' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                {isSelected && (<div style={{ position: 'absolute', left: cx+r+4, top: cy-r-4, width: 12, height: 12, borderRadius: '50%', background: '#fff', border: '2px solid #333', cursor: 'grab', boxShadow: '0 0 6px black' }} onMouseDown={(e) => handleRotMouseDown(e, s)} />)}
               </div>
             )
           }
@@ -401,6 +443,13 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               }}
                 onMouseDown={(e) => handleMouseDown(e, s)}
               />
+              {/* 外圈（如奇乐Q双圈：警戒范围） */}
+              {s.outerRadius != null && (
+                <div style={{ position: 'absolute', left: cx - s.outerRadius * mapW * scale, top: cy - s.outerRadius * mapW * scale,
+                  width: s.outerRadius * mapW * scale * 2, height: s.outerRadius * mapW * scale * 2,
+                  borderRadius: '50%', border: `2px dashed ${color}60`, pointerEvents: 'none',
+                  background: `${color}06` }} />
+              )}
               <div style={{ position: 'absolute', left: cx - 14, top: cy - 14, pointerEvents: 'none' }}>
                 <img src={info.iconUrl} style={{ width: 28, height: 28,
                   filter: info.iconFilter
@@ -451,6 +500,20 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               }}
                 onMouseDown={(e) => handleMouseDown(e, s)}
               />
+              {/* 钛狐X起点圆形（矩形宽度=圆直径） */}
+              {s.abilityId === 'tejo-x' && s.radius > 0 && (
+                (() => {
+                  const hw = (s.length * mapW * scale) / 2
+                  const rad = s.rotation * Math.PI / 180
+                  const sx = cx - hw * Math.cos(rad)
+                  const sy = cy - hw * Math.sin(rad)
+                  const cr = (s.width * mapH * scale) / 2
+                  return <div style={{ position: 'absolute', left: sx - cr, top: sy - cr,
+                    width: cr * 2, height: cr * 2,
+                    borderRadius: '50%', border: `2px solid ${color}90`, pointerEvents: 'none',
+                    background: `${color}20` }} />
+                })()
+              )}
               <div style={{
                 position: 'absolute', left: cx - 16, top: cy - 16,
                 pointerEvents: 'none',
@@ -609,6 +672,14 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     <polyline points={pts} fill="none" stroke={color} strokeWidth={sw}
                       strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
                       style={{ pointerEvents: 'none' }} />
+                    {/* 盖可X/斯凯Q/钢锁X/钛狐C/钛狐Q终点圆形范围 */}
+                    {(s.abilityId === 'gekko-thrash' || s.abilityId === 'skye-trailblazer' || s.abilityId === 'deadlock-annihilation' || s.abilityId === 'tejo-c' || s.abilityId === 'tejo-q') && (() => {
+                      const lastPt = pathPts[pathPts.length - 1]
+                      const lpx = offset.x + lastPt.x * mapW * scale - (cx - svgW / 2)
+                      const lpy = offset.y + lastPt.y * mapH * scale - (cy - svgH / 2)
+                      const cr = Math.max((s.radius || 0.02) * mapW * scale, 5)
+                      return <circle cx={lpx} cy={lpy} r={cr} fill={color + '20'} stroke={color} strokeWidth={2} strokeDasharray="4 3" opacity={0.7} style={{ pointerEvents: 'none' }} />
+                    })()}
                     {/* 海神X波浪动画 — 通过线两端生成路径 */}
                     {s.abilityId === 'harbor-reckoning' && (() => {
                       const rad3 = s.rotation * Math.PI / 180
@@ -621,9 +692,19 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                         svgCenterX={s.x} svgCenterY={s.y}
                         svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
                     })()}
-                    <image href={'/images/abilities/' + s.abilityId + '.png'}
-                      x={svgW / 2 - 14} y={svgH / 2 - 14}
-                      width={28} height={28} style={{ pointerEvents: 'none' }} />
+                    {/* 斯凯E：图标显示在终点 */}
+                    {s.abilityId === 'skye-guiding-light' ? (() => {
+                      const lastPt = pathPts[pathPts.length - 1]
+                      const lpx = offset.x + lastPt.x * mapW * scale - (cx - svgW / 2)
+                      const lpy = offset.y + lastPt.y * mapH * scale - (cy - svgH / 2)
+                      return <image href={'/images/abilities/' + s.abilityId + '.png'}
+                        x={lpx - 14} y={lpy - 14} width={28} height={28}
+                        style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 6px ${color})` }} />
+                    })() : (
+                      <image href={'/images/abilities/' + s.abilityId + '.png'}
+                        x={svgW / 2 - 14} y={svgH / 2 - 14}
+                        width={28} height={28} style={{ pointerEvents: 'none' }} />
+                    )}
                   </>
                 )
               }

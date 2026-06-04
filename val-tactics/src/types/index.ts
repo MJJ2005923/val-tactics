@@ -57,6 +57,7 @@ export interface AgentPosition {
 export interface AbilityShapeConfig {
   shape: 'circle' | 'cone' | 'rect' | 'line'
   radius?: number       // 圆形半径 0-1
+  outerRadius?: number  // 外层圆形半径 0-1（如奇乐Q双圈）
   angle?: number        // 锥形角度（度）
   length?: number       // 锥形边长 / 矩形长 / 直线长
   width?: number        // 矩形高
@@ -73,12 +74,14 @@ export interface AbilityShape {
   rotation: number               // 旋转角度（度, 0=上）
   shape: 'circle' | 'cone' | 'rect' | 'line'
   radius: number                 // 圆半径
+  outerRadius?: number           // 外层圆形半径
   angle: number                  // 锥形角度
   length: number                 // 锥形边长 / 矩形长 / 直线长
   width: number                  // 矩形高
   thickness: number              // 线宽
   iconOnly?: boolean             // 仅显示图标
   path?: { x: number; y: number }[]  // 自由绘制路径（如 harbor-cascade 弯曲水墙）
+  armScales?: number[]           // 钢锁C四臂独立长度比例 [上,右,下,左] 默认[1,1,1,1]
 }
 
 // ====== 工具模式 ======

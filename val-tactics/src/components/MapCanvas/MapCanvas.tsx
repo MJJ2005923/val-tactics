@@ -166,7 +166,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [scale, setScale] = useState(1)
   const [mapSize, setMapSize] = useState({ w: 1800, h: 1200 })
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
-  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side } = useTactics()
+  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
   const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
@@ -329,9 +329,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           console.log('OmenC config length:', JSON.stringify(shapeConfig.length), 'meters:', Math.round((shapeConfig.length ?? 0) / (7/1800)))
         }
         // 矩形拖拽绘制
-        if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
-          setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
-        } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q' || data.abilityId === 'waylay-e' || data.abilityId === 'waylay-x' || data.abilityId === 'omen-paranoia') {
+        if (shapeConfig.shape === 'line' || data.abilityId === 'miks-x' || data.abilityId === 'tejo-x' || data.abilityId === 'breach-aftershock' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q' || data.abilityId === 'waylay-e' || data.abilityId === 'waylay-x' || data.abilityId === 'omen-paranoia') {
           // 线型技能进入画线模式：先放起点，再拖终点
           const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c' || data.abilityId === 'waylay-e'
           setLineDrawing({
@@ -347,6 +345,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             x, y, rotation: 0,
             shape: shapeConfig.shape,
             radius: shapeConfig.radius ?? 0.08,
+            outerRadius: shapeConfig.outerRadius,
             angle: shapeConfig.angle ?? 60,
             length: shapeConfig.length ?? 0.10,
             width: shapeConfig.width ?? 0.02,
@@ -386,7 +385,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       return total
     }
 
-    const maxLen = (lineDrawing?.abilityId === 'gekko-thrash' || lineDrawing?.abilityId === 'skye-trailblazer' || lineDrawing?.abilityId === 'skye-guiding-light' || lineDrawing?.abilityId === 'tejo-c') ? 999 : (lineDrawing?.config.length ?? 0.50)
+    const maxLen = (lineDrawing?.abilityId === 'skye-trailblazer' || lineDrawing?.abilityId === 'skye-guiding-light' || lineDrawing?.abilityId === 'tejo-c') ? 999 : (lineDrawing?.config.length ?? 0.50)
+    // 斯凯Q：250点 / 斯凯E：200点 / 钛狐C：350点
+    const maxPts = lineDrawing?.abilityId === 'skye-trailblazer' ? 250 : lineDrawing?.abilityId === 'skye-guiding-light' ? 200 : lineDrawing?.abilityId === 'tejo-c' ? 350 : Infinity
 
     const down = (e: MouseEvent) => {
       if (!lineDrawing || lineDrawing.mode !== 'freehand') return
@@ -401,8 +402,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       e.preventDefault()
       const w = getPos(e)
       freehandRef.current.path.push(w)
-      // 限制最大长度
-      if (pathLen(freehandRef.current.path) > maxLen) {
+      // 限制最大长度或最大点数
+      if (pathLen(freehandRef.current.path) > maxLen || freehandRef.current.path.length >= maxPts) {
         freehandRef.current.drawing = false
         // 触发保存
         const pts = [...freehandRef.current.path]
@@ -415,11 +416,11 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             id: '', abilityId: prev.abilityId, agentId: prev.agentId,
             x: sumX / pts.length, y: sumY / pts.length, rotation: 0,
             shape: 'line',
-            radius: 0.08, angle: 60,
+            radius: prev.config.radius ?? 0.08, angle: 60,
             length: pathLen(pts),
             width: 0.02,
             thickness: prev.config.thickness ?? 0.008,
-            iconOnly: false,
+            iconOnly: prev.config.iconOnly ?? false,
             path: pts,
           }})
         }
@@ -443,11 +444,11 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           id: '', abilityId: prev2.abilityId, agentId: prev2.agentId,
           x: cx, y: cy, rotation: 0,
           shape: 'line',
-          radius: 0.08, angle: 60,
+          radius: prev2.config.radius ?? 0.08, angle: 60,
           length: pathLen(pts),
           width: 0.02,
           thickness: prev2.config.thickness ?? 0.008,
-          iconOnly: false,
+          iconOnly: prev2.config.iconOnly ?? false,
           path: pts,
         }})
       }
@@ -494,7 +495,20 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         }
         actualLen = Math.sqrt((ex - lineDrawing.startX) ** 2 + (ey - lineDrawing.startY) ** 2)
       }
-      // 海神X：限制终点在45m范围内
+      // 猎枭X：固定90m
+      let furyLen = 0
+      if (lineDrawing.abilityId === 'sova-hunters-fury') {
+        const maxLen = lineDrawing.config.length ?? (90 * 7 / 1800)
+        const drx = ex - lineDrawing.startX, dry = ey - lineDrawing.startY
+        const dist = Math.sqrt(drx * drx + dry * dry)
+        if (dist > maxLen && dist > 0) {
+          const ratio = maxLen / dist
+          ex = lineDrawing.startX + drx * ratio
+          ey = lineDrawing.startY + dry * ratio
+        }
+        furyLen = maxLen
+      }
+      // 海神X：限制终点在50m范围内
       let hxLen = 0, hxRot = 0
       if (lineDrawing.abilityId === 'harbor-reckoning') {
         const maxLen = lineDrawing.config.length ?? (50 * 7 / 1800)
@@ -515,21 +529,27 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       const dy = (ey - lineDrawing.startY) * mapH
       const len = Math.sqrt(dx * dx + dy * dy) / mapW
       const rot = Math.atan2(dx, -dy) * 180 / Math.PI
-      // Deadlock X / Tejo Q 多段线
-      // Waylay Q 两段固定15m
+      // Waylay Q：左键=一段(15m)，右键=两段（和钛狐Q一样，无终点圆）
       if (lineDrawing.abilityId === 'waylay-q') {
-        const segLen = 15 * (7 / 1800) // 15m
+        const segLen = lineDrawing.config.length ?? (15 * 7 / 1800)
         const wlRef = multiLineRef.current
         const dxW = (ex - lineDrawing.startX), dyW = (ey - lineDrawing.startY)
         const distW = Math.sqrt(dxW * dxW + dyW * dyW) || 1
         const nx = lineDrawing.startX + (dxW / distW) * segLen
         const ny = lineDrawing.startY + (dyW / distW) * segLen
         if (wlRef.count === 0) {
-          wlRef.pts = [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: nx, y: ny }]
-          wlRef.count = 1
-          setLineDrawing(prev => prev ? { ...prev, startX: nx, startY: ny, currentX: nx, currentY: ny } : null)
+          // 左键=一段完成
+          dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+            id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+            x: (lineDrawing.startX + nx) / 2, y: (lineDrawing.startY + ny) / 2, rotation: 0, shape: 'line',
+            radius: 0.08, angle: 60, length: segLen, width: 0.02,
+            thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: lineDrawing.config.iconOnly ?? false,
+            path: [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: nx, y: ny }],
+          }})
+          setLineDrawing(null)
           return
         }
+        // 第二段
         wlRef.pts.push({ x: nx, y: ny })
         const allPts = [...wlRef.pts]
         wlRef.pts = []; wlRef.count = 0
@@ -543,12 +563,47 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
           x: sxW / allPts.length, y: syW / allPts.length, rotation: 0, shape: 'line',
           radius: 0.08, angle: 60, length: totalLenW, width: 0.02,
-          thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: false, path: allPts,
+          thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: lineDrawing.config.iconOnly ?? false, path: allPts,
         }})
         setLineDrawing(null)
         return
       }
-      if (lineDrawing.abilityId === 'deadlock-annihilation' || lineDrawing.abilityId === 'tejo-q') {
+      // 钛狐Q：左键=一段完成，右键=记录第一段继续等第二段
+      if (lineDrawing.abilityId === 'tejo-q') {
+        const mlr = multiLineRef.current
+        if (mlr.count === 0) {
+          // 左键点击=一段完成，直接派发
+          dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+            id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+            x: (lineDrawing.startX + ex) / 2, y: (lineDrawing.startY + ey) / 2, rotation: 0, shape: 'line',
+            radius: lineDrawing.config.radius ?? 0.08, angle: 60,
+            length: Math.sqrt((ex - lineDrawing.startX) ** 2 + (ey - lineDrawing.startY) ** 2), width: 0.02,
+            thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: lineDrawing.config.iconOnly ?? false,
+            path: [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: ex, y: ey }],
+          }})
+          setLineDrawing(null)
+          return
+        }
+        // 第二段（右键后再左键）
+        mlr.pts.push({ x: ex, y: ey })
+        const allPts = [...mlr.pts]
+        mlr.pts = []; mlr.count = 0
+        let sx3 = 0, sy3 = 0
+        for (const p of allPts) { sx3 += p.x; sy3 += p.y }
+        let totalLen = 0
+        for (let i = 1; i < allPts.length; i++) {
+          totalLen += Math.sqrt((allPts[i].x - allPts[i-1].x) ** 2 + (allPts[i].y - allPts[i-1].y) ** 2)
+        }
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: sx3 / allPts.length, y: sy3 / allPts.length, rotation: 0, shape: 'line',
+          radius: lineDrawing.config.radius ?? 0.08, angle: 60, length: totalLen, width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: lineDrawing.config.iconOnly ?? false, path: allPts,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      if (lineDrawing.abilityId === 'deadlock-annihilation') {
         const mlr = multiLineRef.current
         if (mlr.count === 0) {
           mlr.pts = [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: ex, y: ey }]
@@ -568,8 +623,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
           id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
           x: sx3 / allPts.length, y: sy3 / allPts.length, rotation: 0, shape: 'line',
-          radius: 0.08, angle: 60, length: totalLen, width: 0.02,
-          thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: false, path: allPts,
+          radius: lineDrawing.config.radius ?? 0.08, angle: 60, length: totalLen, width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.006, iconOnly: lineDrawing.config.iconOnly ?? false, path: allPts,
         }})
         setLineDrawing(null)
         return
@@ -583,7 +638,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           x: cx, y: cy, rotation: rot - 90,
           shape: 'rect', radius: 0.08, angle: 60,
           length: fixLen, width: fixW,
-          thickness: 0.008, iconOnly: false,
+          thickness: 0.008, iconOnly: lineDrawing.config.iconOnly ?? false,
         }})
         setLineDrawing(null)
         return
@@ -596,7 +651,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           x: cx, y: cy, rotation: rot,
           shape: 'line', radius: 0.08, angle: 60,
           length: fixLen, width: 0.02,
-          thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: false,
+          thickness: lineDrawing.config.thickness ?? 0.003, iconOnly: lineDrawing.config.iconOnly ?? false,
         }})
         setLineDrawing(null)
         return
@@ -608,37 +663,51 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           x: cx, y: cy, rotation: rot,
           shape: 'line', radius: 0.08, angle: 60,
           length: Math.max(len, 0.02), width: 0.02,
-          thickness: lineDrawing.config.thickness ?? 0.004, iconOnly: false,
+          thickness: lineDrawing.config.thickness ?? 0.004, iconOnly: lineDrawing.config.iconOnly ?? false,
         }})
         setLineDrawing(null)
         return
       }
-      // Miks X 锥形拖拽
+      // 铁臂C：锥形固定20m，起点为锥尖，终点决定方向
+      if (lineDrawing.abilityId === 'breach-aftershock') {
+        const fixLen = lineDrawing.config.length ?? (20 * 7 / 1800)
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
+          x: lineDrawing.startX, y: lineDrawing.startY, rotation: rot,
+          shape: 'cone', radius: 0.08, angle: lineDrawing.config.angle ?? 50,
+          length: fixLen, width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.008, iconOnly: lineDrawing.config.iconOnly ?? false,
+        }})
+        setLineDrawing(null)
+        return
+      }
+      // Miks X 锥形拖拽（固定长度）
       if (lineDrawing.abilityId === 'miks-x') {
         dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
           id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
           x: lineDrawing.startX, y: lineDrawing.startY, rotation: rot,
-          shape: 'cone', radius: 0.08, angle: lineDrawing.config.angle ?? 80,
-          length: Math.max(len, 0.02), width: 0.02,
-          thickness: lineDrawing.config.thickness ?? 0.008, iconOnly: false,
+          shape: 'cone', radius: 0.08, angle: lineDrawing.config.angle ?? 55,
+          length: lineDrawing.config.length ?? 55 * M, width: 0.02,
+          thickness: lineDrawing.config.thickness ?? 0.008, iconOnly: lineDrawing.config.iconOnly ?? false,
         }})
         setLineDrawing(null)
         return
       }
-      const isBreachRect = lineDrawing.abilityId === 'breach-fault-line' || lineDrawing.abilityId === 'breach-rolling-thunder' || lineDrawing.abilityId === 'vyse-shear'
-      const rw = lineDrawing.abilityId === 'breach-fault-line' ? 8 : lineDrawing.abilityId === 'vyse-shear' ? 3 : 40
+      const isBreachRect = lineDrawing.abilityId === 'breach-fault-line' || lineDrawing.abilityId === 'breach-rolling-thunder' || lineDrawing.abilityId === 'fade-nightfall' || lineDrawing.abilityId === 'vyse-shear' || lineDrawing.abilityId === 'deadlock-sonic-sensor' || lineDrawing.abilityId === 'tejo-x'
+      const rw = lineDrawing.abilityId === 'breach-fault-line' ? 15 : lineDrawing.abilityId === 'breach-rolling-thunder' ? 30 : lineDrawing.abilityId === 'fade-nightfall' ? 30 : lineDrawing.abilityId === 'vyse-shear' ? 3 : lineDrawing.abilityId === 'deadlock-sonic-sensor' ? 13 : lineDrawing.abilityId === 'tejo-x' ? 20 : 40
       dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
         id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
         x: cx, y: cy, rotation: lineDrawing.abilityId === 'harbor-reckoning' ? hxRot : isBreachRect ? (rot - 90) : rot,
         shape: isBreachRect ? 'rect' : 'line',
-        radius: 0.08,
+        radius: lineDrawing.abilityId === 'tejo-x' ? (rw * 7 / 1800) / 2 : 0.08,
         angle: 60,
         length: lineDrawing.abilityId === 'omen-shrouded-step' ? Math.max(actualLen, 0.02)
               : lineDrawing.abilityId === 'harbor-reckoning' ? Math.max(hxLen, 0.02)
+              : lineDrawing.abilityId === 'sova-hunters-fury' ? Math.max(furyLen, 0.02)
               : Math.max(len, 0.02),
         width: isBreachRect ? (rw * 7 / 1800) : 0.02,
         thickness: lineDrawing.config.thickness ?? 0.008,
-        iconOnly: false,
+        iconOnly: lineDrawing.config.iconOnly ?? false,
       }})
       setLineDrawing(null)
       return
@@ -666,8 +735,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       let ey = (e.clientY - rect.top - offsetY) / (displayScale * mapH)
       setLineDrawing(prev => {
         if (!prev) return null
-        // 欧门C：限制终点在20m范围内
-        if (prev.abilityId === 'omen-shrouded-step' && prev.startX >= 0) {
+        // 欧门C/猎枭X/铁臂C/铁臂E：限制终点在固定范围内
+        if ((prev.abilityId === 'omen-shrouded-step' || prev.abilityId === 'sova-hunters-fury' || prev.abilityId === 'breach-aftershock' || prev.abilityId === 'breach-fault-line' || prev.abilityId === 'breach-rolling-thunder' || prev.abilityId === 'fade-nightfall' || prev.abilityId === 'deadlock-sonic-sensor' || prev.abilityId === 'vyse-shear' || prev.abilityId === 'tejo-x' || prev.abilityId === 'miks-x') && prev.startX >= 0) {
           const maxLen = prev.config.length ?? (20 * 7 / 1800)
           const dx = (ex - prev.startX)
           const dy = (ey - prev.startY)
@@ -773,6 +842,35 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }
   }, [displayScale, dispatch])
 
+  // 钛狐Q右键=两段模式（原生contextmenu事件阻止菜单+处理逻辑）
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const handler = (e: MouseEvent) => {
+      if (lineDrawing && (lineDrawing.abilityId === 'tejo-q' || lineDrawing.abilityId === 'waylay-q') && lineDrawing.startX >= 0) {
+        e.preventDefault()
+        const rr = el.getBoundingClientRect()
+        const ex2 = (e.clientX - rr.left - offsetX) / (displayScale * mapW)
+        const ey2 = (e.clientY - rr.top - offsetY) / (displayScale * mapH)
+        // waylay-q：固定段长
+        const isWL = lineDrawing.abilityId === 'waylay-q'
+        const segLen = isWL ? (lineDrawing.config.length ?? (15 * 7 / 1800)) : 0
+        let nx = ex2, ny = ey2
+        if (isWL) {
+          const dxW = ex2 - lineDrawing.startX, dyW = ey2 - lineDrawing.startY
+          const distW = Math.sqrt(dxW * dxW + dyW * dyW) || 1
+          nx = lineDrawing.startX + (dxW / distW) * segLen
+          ny = lineDrawing.startY + (dyW / distW) * segLen
+        }
+        multiLineRef.current.pts = [{ x: lineDrawing.startX, y: lineDrawing.startY }, { x: nx, y: ny }]
+        multiLineRef.current.count = 1
+        setLineDrawing(prev => prev ? { ...prev, startX: nx, startY: ny, currentX: nx, currentY: ny } : null)
+      }
+    }
+    el.addEventListener('contextmenu', handler)
+    return () => el.removeEventListener('contextmenu', handler)
+  }, [lineDrawing, offsetX, offsetY, displayScale, mapW, mapH])
+
   return (
     <div
       ref={(node) => { containerRef.current = node }}
@@ -851,7 +949,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             )}
             {/* 直线模式预览 */}
             {!isFreehand && (() => {
-              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q' || lineDrawing.abilityId === 'waylay-x' || lineDrawing.abilityId === 'harbor-reckoning' || lineDrawing.abilityId === 'omen-paranoia'
+              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q' || lineDrawing.abilityId === 'waylay-x' || lineDrawing.abilityId === 'harbor-reckoning' || lineDrawing.abilityId === 'omen-paranoia' || lineDrawing.abilityId === 'sova-hunters-fury' || lineDrawing.abilityId === 'breach-aftershock' || lineDrawing.abilityId === 'breach-fault-line' || lineDrawing.abilityId === 'breach-rolling-thunder' || lineDrawing.abilityId === 'fade-nightfall' || lineDrawing.abilityId === 'deadlock-sonic-sensor' || lineDrawing.abilityId === 'vyse-shear' || lineDrawing.abilityId === 'tejo-x' || lineDrawing.abilityId === 'miks-x'
               const previewEx = isFixedLen && lineDrawing.startX >= 0
                 ? (() => {
                     const fixLenPx = (lineDrawing.config.length ?? 0.10) * mapW * displayScale
@@ -868,6 +966,20 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
                     strokeDasharray="10 6" />
                   <circle cx={previewEx.x} cy={previewEx.y} r={5} fill="#fff" stroke={color} strokeWidth={2} opacity={0.8} />
                 </>
+              )
+            })()}
+            {/* 迷核X锥形预览 */}
+            {!isFreehand && lineDrawing.abilityId === 'miks-x' && lineDrawing.startX >= 0 && (() => {
+              const coneLen = (lineDrawing.config.length ?? 0.3) * mapW * displayScale
+              const coneAngle = (lineDrawing.config.angle ?? 55) * Math.PI / 180
+              const dir = Math.atan2(ex - sx, -(ey - sy)) - Math.PI / 2
+              const leftX = sx + coneLen * Math.cos(dir - coneAngle / 2)
+              const leftY = sy + coneLen * Math.sin(dir - coneAngle / 2)
+              const rightX = sx + coneLen * Math.cos(dir + coneAngle / 2)
+              const rightY = sy + coneLen * Math.sin(dir + coneAngle / 2)
+              return (
+                <path d={`M ${sx} ${sy} L ${leftX} ${leftY} A ${coneLen} ${coneLen} 0 0 1 ${rightX} ${rightY} Z`}
+                  fill={color + '15'} stroke={color} strokeWidth={2} strokeDasharray="8 4" opacity={0.6} />
               )
             })()}
             {/* 起点标记（所有模式） */}
@@ -1043,6 +1155,11 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         <span className={styles.zoomLabel}>{Math.round(scale * 100)}%</span>
         <button className={styles.zoomBtn} onClick={() => setScale(s => Math.max(0.5, s * 0.8))}>-</button>
         <button className={styles.zoomBtn} onClick={() => setScale(1)}>重置</button>
+        <button className={styles.zoomBtn} style={{ marginLeft: 8, background: showAllRanges ? '#fff3' : 'transparent' }}
+          onClick={() => dispatch({ type: 'TOGGLE_SHOW_ALL_RANGES' })}
+          title={showAllRanges ? '隐藏技能范围' : '显示全部技能范围'}>
+          {showAllRanges ? '👁' : '👁‍🗨'}
+        </button>
       </div>
     </div>
   )
