@@ -687,7 +687,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
           x: lineDrawing.startX, y: lineDrawing.startY, rotation: rot,
           shape: 'cone', radius: 0.08, angle: lineDrawing.config.angle ?? 55,
-          length: lineDrawing.config.length ?? 55 * M, width: 0.02,
+          length: lineDrawing.config.length ?? (55 * 7 / 1800), width: 0.02,
           thickness: lineDrawing.config.thickness ?? 0.008, iconOnly: lineDrawing.config.iconOnly ?? false,
         }})
         setLineDrawing(null)
