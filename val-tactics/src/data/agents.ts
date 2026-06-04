@@ -55,8 +55,9 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'jett-cloudburst':          { shape: 'circle', radius: 4.5 * M },    // 4.5m 瞬发烟
   'harbor-cove':              { shape: 'circle', radius: 4.5 * M },    // 4.5m 护盾
   'harbor-reckoning':         { shape: 'line', length: 50 * M, thickness: 0.006 },
-  'sova-owl-drone':           { shape: 'line', length: 40 * M, thickness: 0.004 },
-  'clove-ruse':               { radius: 4.1 * M },    // 4.1m
+  'sova-owl-drone':           { shape: 'line', length: 55 * M, thickness: 0.004 },
+  'clove-ruse':               { radius: 5.5 * M },    // 5.5m
+  'clove-meddle':              { radius: 5.5 * M },
   'cypher-cyber-cage':        { radius: 3.5 * M },    // 3.5m 网牢
 
   // === 燃烧弹/伤害 ===
@@ -68,7 +69,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'kayo-frag':                { radius: 3.0 * M },
   'tejo-c':                    { shape: 'line', length: 35 * M, thickness: 0.004 },
   'tejo-q':                    { shape: 'line', length: 25 * M, thickness: 0.005 },
-  'sova-shock-bolt':          { shape: 'circle', radius: 3.5 * M },
+  'sova-shock-bolt':          { shape: 'circle', radius: 5.5 * M },
   'vyse-razorvine':           { radius: 3.0 * M },
   'vyse-steel-garden':         { radius: 45 * M },
   'vyse-arc-rose':             { shape: 'circle', radius: 1.2 * M },

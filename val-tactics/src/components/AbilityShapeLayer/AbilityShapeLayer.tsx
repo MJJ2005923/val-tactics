@@ -343,6 +343,11 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
           }
           return (
             <div key={s.id} data-shape={s.id} className={isAnimating ? styles.shapeReveal : undefined} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+              {t === 'recon' && (
+                <div style={{ position: 'absolute', left: cx - r, top: cy - r, width: r*2, height: r*2,
+                  borderRadius: '50%', background: `radial-gradient(circle, ${color}30, ${color}10 60%, ${color}04 100%)`,
+                  pointerEvents: 'none' }} />
+              )}
               {t === 'smoke' && (
                 <>
                   <div style={{ position: 'absolute', left: cx - r*1.3, top: cy - r*1.3, width: r*2.6, height: r*2.6,
