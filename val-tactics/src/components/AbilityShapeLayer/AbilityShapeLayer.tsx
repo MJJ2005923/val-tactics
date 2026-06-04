@@ -4,9 +4,11 @@ import agents from '../../data/agents'
 import type { AbilityShape } from '../../types'
 import styles from './AbilityShapeLayer.module.css'
 
-// 海神X波浪动画 (简化版 — 使用SVG内相对坐标)
-function HarborWave({ pathPts, color, thickness }: {
+// 海神X波浪动画
+function HarborWave({ pathPts, color, thickness, mapW, mapH, scale, svgCenterX, svgCenterY }: {
   pathPts: { x: number; y: number }[]; color: string; thickness: number
+  mapW: number; mapH: number; scale: number
+  svgCenterX: number; svgCenterY: number
 }) {
   const [t, setT] = useState(0)
   useEffect(() => {
@@ -16,42 +18,47 @@ function HarborWave({ pathPts, color, thickness }: {
 
   if (pathPts.length < 2) return null
 
-  // 构建路径字符串和计算总长
+  // 转为SVG像素坐标 (相对形状中心)
+  const pts = pathPts.map(p => ({
+    x: (p.x - svgCenterX) * mapW * scale,
+    y: (p.y - svgCenterY) * mapH * scale,
+  }))
+
+  // 计算总长
   let totalLen = 0
   const segLens: number[] = []
-  for (let i = 1; i < pathPts.length; i++) {
-    const d = Math.sqrt((pathPts[i].x - pathPts[i-1].x) ** 2 + (pathPts[i].y - pathPts[i-1].y) ** 2)
+  for (let i = 1; i < pts.length; i++) {
+    const d = Math.sqrt((pts[i].x - pts[i-1].x) ** 2 + (pts[i].y - pts[i-1].y) ** 2)
     segLens.push(d)
     totalLen += d
   }
   if (totalLen === 0) return null
 
-  // 当前进度位置 (标准化坐标 0-1)
+  // 当前进度位置
   const target = t * totalLen
-  let acc = 0
-  let segIdx = 0
+  let acc = 0, segIdx = 0
   for (let i = 0; i < segLens.length; i++) {
     if (acc + segLens[i] >= target) { segIdx = i; break }
     acc += segLens[i]
   }
   const segFrac = segLens[segIdx] > 0 ? (target - acc) / segLens[segIdx] : 0
-  const a = pathPts[segIdx], b = pathPts[segIdx + 1]
-  const px2 = a.x + (b.x - a.x) * segFrac
-  const py2 = a.y + (b.y - a.y) * segFrac
+  const a = pts[segIdx], b = pts[segIdx + 1]
+  const x = a.x + (b.x - a.x) * segFrac
+  const y = a.y + (b.y - a.y) * segFrac
 
-  // 方向向量 (标准化坐标)
+  // 垂直线方向
   const dx2 = b.x - a.x, dy2 = b.y - a.y
   const n = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
-  const perpX = -dy2 / n * 0.015
-  const perpY = dx2 / n * 0.015
+  const perpX = -dy2 / n * 30
+  const perpY = dx2 / n * 30
 
   return (
     <line
-      x1={px2 - perpX} y1={py2 - perpY}
-      x2={px2 + perpX} y2={py2 + perpY}
-      stroke={color} strokeWidth={thickness * 0.6} opacity={0.7}
+      x1={x - perpX} y1={y - perpY}
+      x2={x + perpX} y2={y + perpY}
+      stroke={color} strokeWidth={thickness * 0.8} opacity={0.6}
       strokeLinecap="round"
-      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 4px ${color})` }}
+      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 6px ${color})` }}
     />
   )
 }
@@ -601,7 +608,9 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       style={{ pointerEvents: 'none' }} />
                     {/* 海神X波浪动画 */}
                     {s.abilityId === 'harbor-reckoning' && s.path && s.path.length > 1 && (
-                      <HarborWave pathPts={s.path} color={color} thickness={sw} />
+                      <HarborWave pathPts={s.path} color={color} thickness={sw}
+                        mapW={mapW} mapH={mapH} scale={scale}
+                        svgCenterX={s.x} svgCenterY={s.y} />
                     )}
                     <image href={'/images/abilities/' + s.abilityId + '.png'}
                       x={svgW / 2 - 14} y={svgH / 2 - 14}
