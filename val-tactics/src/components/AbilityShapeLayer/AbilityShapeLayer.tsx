@@ -605,12 +605,17 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
                       style={{ pointerEvents: 'none' }} />
                     {/* 海神X波浪动画 */}
-                    {s.abilityId === 'harbor-reckoning' && s.path && s.path.length > 1 && (
-                      <HarborWave pathPts={s.path} color={color}
+                    {s.abilityId === 'harbor-reckoning' && (() => {
+                      const rad2 = s.rotation * Math.PI / 180
+                      const hl2 = s.length / 2
+                      const wavePath = s.path && s.path.length > 1 ? s.path
+                        : [{ x: s.x + hl2 * Math.sin(rad2), y: s.y - hl2 * Math.cos(rad2) },
+                           { x: s.x - hl2 * Math.sin(rad2), y: s.y + hl2 * Math.cos(rad2) }]
+                      return <HarborWave pathPts={wavePath} color={color}
                         mapW={mapW} mapH={mapH} scale={scale}
                         svgCenterX={s.x} svgCenterY={s.y}
                         svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
-                    )}
+                    })()}
                     <image href={'/images/abilities/' + s.abilityId + '.png'}
                       x={svgW / 2 - 14} y={svgH / 2 - 14}
                       width={28} height={28} style={{ pointerEvents: 'none' }} />
