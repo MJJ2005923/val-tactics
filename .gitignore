@@ -1,0 +1,9 @@
+.wrangler/
+.claude/
+plans/
+*.env
+.env.*
+.DS_Store
+Thumbs.db
+.desktop.ini
+start-server.bat
