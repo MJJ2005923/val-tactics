@@ -708,6 +708,17 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     <polygon points={`${sx2},${sy2} ${ax1},${ay1} ${ax2},${ay2}`}
                       fill={color} opacity={0.85} style={{ pointerEvents: 'none' }} />
                   )}
+                  {/* 海神X波浪动画(直线模式) */}
+                  {s.abilityId === 'harbor-reckoning' && (() => {
+                    const rad3 = s.rotation * Math.PI / 180
+                    const hl3 = s.length / 2
+                    const p1 = { x: s.x + hl3 * Math.sin(rad3), y: s.y - hl3 * Math.cos(rad3) }
+                    const p2 = { x: s.x - hl3 * Math.sin(rad3), y: s.y + hl3 * Math.cos(rad3) }
+                    return <HarborWave pathPts={[p1, p2]} color={color}
+                      mapW={mapW} mapH={mapH} scale={scale}
+                      svgCenterX={s.x} svgCenterY={s.y}
+                      svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
+                  })()}
                   {/* 标签 */}
                   <image href={'/images/abilities/' + s.abilityId + '.png'}
                     x={svgW / 2 - 14} y={svgH / 2 - 14}
