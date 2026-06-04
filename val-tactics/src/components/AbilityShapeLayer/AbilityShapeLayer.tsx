@@ -244,7 +244,8 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
   }, [])
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', overflow: 'hidden' }}>
+    <div className={styles.shapeLayer} onDragStart={(e) => e.preventDefault()}
+      style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', overflow: 'hidden' }}>
       {/* SVG 图案定义 */}
       <svg width={0} height={0} style={{ position: 'absolute' }}>
         <defs>
