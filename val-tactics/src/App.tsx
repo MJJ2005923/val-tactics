@@ -229,7 +229,7 @@ function AppInner() {
           <button className="btn" onClick={handleShareLink}>分享链接</button>
           <button className="btn" onClick={handleSaveProgress}>保存进度</button>
           <button className="btn" onClick={() => setShowHelp(true)}>使用手册</button>
-          <a className="btn btn--donate" href="https://afdian.com/a/val-tactics" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>❤️ 爱发电</a>
+          <a className="btn btn--donate" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>❤️ 爱发电</a>
         </div>
       </nav>
 
