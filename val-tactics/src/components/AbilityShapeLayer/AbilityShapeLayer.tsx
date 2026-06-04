@@ -30,7 +30,7 @@ function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY,
     let rafId: number
     const animate = () => {
       t += 0.004
-      if (t >= 1) t = 0
+      if (t >= 1) return // 停在终点
       const target = t * totalLen
       let acc = 0, segIdx = 0
       for (let i = 0; i < segLens.length; i++) {
