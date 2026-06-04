@@ -406,8 +406,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         freehandRef.current.drawing = false
         // 触发保存
         const pts = [...freehandRef.current.path]
-        setLineDrawing(prev => {
-          if (!prev) return null
+        const prev = lineDrawing
+        setLineDrawing(null)
+        if (prev) {
           let sumX = 0, sumY = 0
           for (const p of pts) { sumX += p.x; sumY += p.y }
           dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
@@ -421,8 +422,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             iconOnly: false,
             path: pts,
           }})
-          return null
-        })
+        }
         return
       }
       setLineDrawing(prev => prev ? { ...prev, currentX: w.x, currentY: w.y, path: [...freehandRef.current.path] } : null)
@@ -432,28 +432,25 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       if (!freehandRef.current.drawing) return
       freehandRef.current.drawing = false
       const pts = freehandRef.current.path
-      setLineDrawing(prev => {
-        if (!prev) return null
-        if (pts.length > 1) {
-          let sumX = 0, sumY = 0
-          for (const p of pts) { sumX += p.x; sumY += p.y }
-          const cx = sumX / pts.length
-          const cy = sumY / pts.length
-          dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
-            id: '', abilityId: prev.abilityId, agentId: prev.agentId,
-            x: cx, y: cy, rotation: 0,
-            shape: 'line',
-            radius: 0.08, angle: 60,
-            length: pathLen(pts),
-            width: 0.02,
-            thickness: prev.config.thickness ?? 0.008,
-            iconOnly: false,
-            path: pts,
-          }})
-          return null
-        }
-        return null
-      })
+      const prev2 = lineDrawing
+      setLineDrawing(null)
+      if (prev2 && pts.length > 1) {
+        let sumX = 0, sumY = 0
+        for (const p of pts) { sumX += p.x; sumY += p.y }
+        const cx = sumX / pts.length
+        const cy = sumY / pts.length
+        dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
+          id: '', abilityId: prev2.abilityId, agentId: prev2.agentId,
+          x: cx, y: cy, rotation: 0,
+          shape: 'line',
+          radius: 0.08, angle: 60,
+          length: pathLen(pts),
+          width: 0.02,
+          thickness: prev2.config.thickness ?? 0.008,
+          iconOnly: false,
+          path: pts,
+        }})
+      }
     }
 
     el.addEventListener('mousedown', down)

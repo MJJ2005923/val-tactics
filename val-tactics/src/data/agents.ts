@@ -49,8 +49,8 @@ const typeDefaults: Record<AbilityType, AbilityShapeConfig> = {
 const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 烟雾 (半径单位: 米) ===
   'brimstone-sky-smoke':      { radius: 5.5 * M },   // 5.5m
-  'omen-dark-cover':          { radius: 4.1 * M },    // 4.1m
-  'astra-nebula':             { radius: 4.75 * M },   // 4.75m 最大
+  'omen-dark-cover':          { radius: 5.5 * M },    // 5.5m
+  'astra-nebula':             { radius: 6 * M },   // 6m
   'viper-poison-cloud':       { radius: 6 * M },    // 6m
   'jett-cloudburst':          { shape: 'circle', radius: 4.5 * M },    // 4.5m 瞬发烟
   'harbor-cove':              { shape: 'circle', radius: 4.5 * M },    // 4.5m 护盾
@@ -95,8 +95,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'phoenix-hot-hands':        { shape: 'circle', radius: 6.5 * M },
   'phoenix-curveball':        { shape: 'line', length: 6 * M, thickness: 0.004 },
   'astra-astral-form':        { shape: 'line', length: 150 * M, thickness: 0.003 },
-  'harbor-high-tide':         { shape: 'line', length: 100 * M, thickness: 0.003 },
-  'harbor-cascade':           { shape: 'circle', radius: 3.5 * M },
+  'harbor-high-tide':         { shape: 'line', length: 90 * M, thickness: 2 * M },
+  'harbor-cascade':           { shape: 'circle', radius: 6.5 * M },
   'deadlock-barrier-mesh':    { shape: 'circle', radius: 6 * M },
   'neon-relay-bolt':          { shape: 'circle', radius: 7 * M },
   'neon-fast-lane':           { shape: 'line', length: 70 * M, thickness: 0.003 },
@@ -126,8 +126,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
 
   // === 减速/控制 ===
   'sage-slow-orb':             { shape: 'circle', radius: 7 * M },
-  'astra-gravity-well':        { radius: 3.5 * M },
-  'astra-nova-pulse':          { radius: 4.0 * M },
+  'astra-gravity-well':        { radius: 6 * M },
+  'astra-nova-pulse':          { radius: 6 * M },
   'fade-seize':                { radius: 4 * M },
   'breach-aftershock':         { shape: 'cone', angle: 80, length: 11 * M },
   'breach-fault-line':         { shape: 'line', length: 18 * M, thickness: 0.01 },
@@ -158,7 +158,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'yoru-gatecrash':            { shape: 'circle', radius: 2.5 * M },
   'yoru-dimensional-drift':    { shape: 'circle', radius: 2.5 * M },
   'omen-shrouded-step':        { shape: 'line', length: 20 * M, thickness: 0.003 },
-  'omen-paranoia':             { shape: 'rect', length: 40 * M, width: 10 * M },
+  'omen-paranoia':             { shape: 'rect', length: 40 * M, width: 15 * M },
   'omen-from-the-shadows':     { shape: 'circle', radius: 2 * M },
   'chamber-trademark':         { shape: 'circle', radius: 1.2 * M },
   'chamber-rendezvous':        { shape: 'circle', radius: 20 * M },
