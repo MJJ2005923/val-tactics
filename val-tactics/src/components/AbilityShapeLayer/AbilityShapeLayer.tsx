@@ -17,7 +17,7 @@ function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY,
     // 预计算SVG路径点
     const pts = pathPts.map(p => ({
       x: svgHalfW + (p.x - svgCenterX) * mapW * scale,
-      y: svgHalfH + (p.y - svgCenterY) * mapH * scale,
+      y: svgHalfH + (p.y - svgCenterY) * mapW * scale,
     }))
     const segLens: number[] = []
     for (let i = 1; i < pts.length; i++) {
