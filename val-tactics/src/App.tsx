@@ -8,6 +8,7 @@ import Timeline from './components/Timeline/Timeline'
 import TemplateManager from './components/TemplateManager/TemplateManager'
 import ToolPalette from './components/ToolPalette/ToolPalette'
 import SplashScreen from './components/SplashScreen/SplashScreen'
+import HelpPanel from './components/HelpPanel/HelpPanel'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 
@@ -15,6 +16,7 @@ function AppInner() {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
   const toast = useToast()
 
@@ -226,6 +228,7 @@ function AppInner() {
           <button className="btn" onClick={handleExportImage}>导出图片</button>
           <button className="btn" onClick={handleShareLink}>分享链接</button>
           <button className="btn" onClick={handleSaveProgress}>保存进度</button>
+          <button className="btn" onClick={() => setShowHelp(true)}>使用手册</button>
         </div>
       </nav>
 
@@ -242,6 +245,7 @@ function AppInner() {
 
       <Timeline />
       {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} />}
+      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
     </div>
   )
 }
