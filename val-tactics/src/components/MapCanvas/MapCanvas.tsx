@@ -506,7 +506,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           ey = lineDrawing.startY + dry * ratio
         }
         hxLen = Math.sqrt((ex - lineDrawing.startX) ** 2 + (ey - lineDrawing.startY) ** 2)
-        hxRot = Math.atan2(ex - lineDrawing.startX, -(ey - lineDrawing.startY)) * 180 / Math.PI
+        hxRot = Math.atan2(-(ex - lineDrawing.startX), ey - lineDrawing.startY) * 180 / Math.PI
       }
       const cx = (lineDrawing.startX + ex) / 2
       const cy = (lineDrawing.startY + ey) / 2
