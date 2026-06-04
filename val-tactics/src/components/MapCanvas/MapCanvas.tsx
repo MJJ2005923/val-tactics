@@ -497,7 +497,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       // 海神X：限制终点在45m范围内
       let hxLen = 0
       if (lineDrawing.abilityId === 'harbor-reckoning') {
-        const maxLen = lineDrawing.config.length ?? (45 * 7 / 1800)
+        const maxLen = lineDrawing.config.length ?? (40 * 7 / 1800)
         const drx = ex - lineDrawing.startX, dry = ey - lineDrawing.startY
         const dist = Math.sqrt(drx * drx + dry * dry)
         if (dist > maxLen && dist > 0) {
@@ -849,7 +849,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             )}
             {/* 直线模式预览 */}
             {!isFreehand && (() => {
-              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q' || lineDrawing.abilityId === 'waylay-x' || lineDrawing.abilityId === 'omen-paranoia'
+              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q' || lineDrawing.abilityId === 'waylay-x' || lineDrawing.abilityId === 'harbor-reckoning' || lineDrawing.abilityId === 'omen-paranoia'
               const previewEx = isFixedLen && lineDrawing.startX >= 0
                 ? (() => {
                     const fixLenPx = (lineDrawing.config.length ?? 0.10) * mapW * displayScale
