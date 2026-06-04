@@ -1,8 +1,64 @@
-import { useRef, useCallback, useEffect } from 'react'
+import { useRef, useCallback, useEffect, useState } from 'react'
 import { useTactics } from '../../store/TacticsContext'
 import agents from '../../data/agents'
 import type { AbilityShape } from '../../types'
 import styles from './AbilityShapeLayer.module.css'
+
+// 海神X波浪动画
+function HarborWave({ pathPts, color, svgW, svgH, mapW, mapH, scale, offset, cx, cy, thickness }: {
+  pathPts: { x: number; y: number }[]; color: string; svgW: number; svgH: number;
+  mapW: number; mapH: number; scale: number; offset: { x: number; y: number }; cx: number; cy: number; thickness: number
+}) {
+  const [t, setT] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => setT(prev => prev >= 1 ? 0 : prev + 0.01), 25)
+    return () => clearInterval(interval)
+  }, [])
+
+  // 将路径点转为SVG内坐标
+  const pts = pathPts.map(p => ({
+    x: offset.x + p.x * mapW * scale - (cx - svgW / 2),
+    y: offset.y + p.y * mapH * scale - (cy - svgH / 2),
+  }))
+
+  // 计算总长度和各段信息
+  let total = 0
+  const segs: { sx: number; sy: number; ex: number; ey: number; len: number }[] = []
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i - 1].x, dy = pts[i].y - pts[i - 1].y
+    const len = Math.sqrt(dx * dx + dy * dy)
+    segs.push({ sx: pts[i - 1].x, sy: pts[i - 1].y, ex: pts[i].x, ey: pts[i].y, len })
+    total += len
+  }
+  if (total === 0) return null
+
+  // 当前进度位置
+  let target = t * total, acc = 0
+  let px2 = segs[0].sx, py2 = segs[0].sy, dx2 = 1, dy2 = 0
+  for (const seg of segs) {
+    if (acc + seg.len >= target) {
+      const f = (target - acc) / seg.len
+      px2 = seg.sx + (seg.ex - seg.sx) * f
+      py2 = seg.sy + (seg.ey - seg.sy) * f
+      dx2 = seg.ex - seg.sx; dy2 = seg.ey - seg.sy
+      break
+    }
+    acc += seg.len
+  }
+  const norm = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
+  const perpX = -(dy2 / norm), perpY = dx2 / norm
+  const halfW = 50 * scale
+
+  return (
+    <line
+      x1={px2 - perpX * halfW} y1={py2 - perpY * halfW}
+      x2={px2 + perpX * halfW} y2={py2 + perpY * halfW}
+      stroke={color} strokeWidth={thickness * 1.5} opacity={0.65}
+      strokeLinecap="round"
+      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 6px ${color})` }}
+    />
+  )
+}
 
 interface Props {
   offset: { x: number; y: number }
@@ -547,6 +603,10 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     <polyline points={pts} fill="none" stroke={color} strokeWidth={sw}
                       strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
                       style={{ pointerEvents: 'none' }} />
+                    {/* 海神X波浪动画 */}
+                    {s.abilityId === 'harbor-reckoning' && s.path && s.path.length > 1 && (
+                      <HarborWave pathPts={s.path} color={color} svgW={svgW} svgH={svgH} mapW={mapW} mapH={mapH} scale={scale} offset={offset} cx={cx} cy={cy} thickness={sw} />
+                    )}
                     <image href={'/images/abilities/' + s.abilityId + '.png'}
                       x={svgW / 2 - 14} y={svgH / 2 - 14}
                       width={28} height={28} style={{ pointerEvents: 'none' }} />
