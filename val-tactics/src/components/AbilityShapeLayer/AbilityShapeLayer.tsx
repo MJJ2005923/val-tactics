@@ -1,64 +1,64 @@
-import { useRef, useCallback, useEffect, useState } from 'react'
+import { useRef, useCallback, useEffect } from 'react'
 import { useTactics } from '../../store/TacticsContext'
 import agents from '../../data/agents'
 import type { AbilityShape } from '../../types'
 import styles from './AbilityShapeLayer.module.css'
 
-// 海神X波浪动画
-function HarborWave({ pathPts, color, thickness, mapW, mapH, scale, svgCenterX, svgCenterY, svgHalfW, svgHalfH }: {
-  pathPts: { x: number; y: number }[]; color: string; thickness: number
+// 海神X波浪 — 直接用ref+RAF避免React重渲染
+function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY, svgHalfW, svgHalfH }: {
+  pathPts: { x: number; y: number }[]; color: string
   mapW: number; mapH: number; scale: number
   svgCenterX: number; svgCenterY: number; svgHalfW: number; svgHalfH: number
 }) {
-  const [t, setT] = useState(0)
+  const lineRef = useRef<SVGLineElement>(null)
+
   useEffect(() => {
-    const interval = setInterval(() => setT(prev => prev >= 1 ? 0 : prev + 0.015), 30)
-    return () => clearInterval(interval)
-  }, [])
+    if (pathPts.length < 2) return
+    // 预计算SVG路径点
+    const pts = pathPts.map(p => ({
+      x: svgHalfW + (p.x - svgCenterX) * mapW * scale,
+      y: svgHalfH + (p.y - svgCenterY) * mapH * scale,
+    }))
+    const segLens: number[] = []
+    for (let i = 1; i < pts.length; i++) {
+      segLens.push(Math.sqrt((pts[i].x - pts[i-1].x) ** 2 + (pts[i].y - pts[i-1].y) ** 2))
+    }
+    const totalLen = segLens.reduce((a, b) => a + b, 0)
+    if (totalLen === 0) return
 
-  if (pathPts.length < 2) return null
+    let t = 0
+    let rafId: number
+    const animate = () => {
+      t += 0.004
+      if (t >= 1) t = 0
+      const target = t * totalLen
+      let acc = 0, segIdx = 0
+      for (let i = 0; i < segLens.length; i++) {
+        if (acc + segLens[i] >= target) { segIdx = i; break }
+        acc += segLens[i]
+      }
+      const segFrac = segLens[segIdx] > 0 ? (target - acc) / segLens[segIdx] : 0
+      const a = pts[segIdx], b = pts[segIdx + 1]
+      const x = a.x + (b.x - a.x) * segFrac
+      const y = a.y + (b.y - a.y) * segFrac
+      const dx2 = b.x - a.x, dy2 = b.y - a.y
+      const n = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
+      const pw = 25 * scale
+      const px = -dy2 / n * pw, py = dx2 / n * pw
+      if (lineRef.current) {
+        lineRef.current.setAttribute('x1', String(x - px))
+        lineRef.current.setAttribute('y1', String(y - py))
+        lineRef.current.setAttribute('x2', String(x + px))
+        lineRef.current.setAttribute('y2', String(y + py))
+      }
+      rafId = requestAnimationFrame(animate)
+    }
+    rafId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafId)
+  }, [pathPts, svgHalfW, svgHalfH, svgCenterX, svgCenterY, mapW, mapH, scale])
 
-  // 转为SVG坐标系：svgHalf + (p - center) * mapW * scale
-  const pts = pathPts.map(p => ({
-    x: svgHalfW + (p.x - svgCenterX) * mapW * scale,
-    y: svgHalfH + (p.y - svgCenterY) * mapH * scale,
-  }))
-
-  let totalLen = 0
-  const segLens: number[] = []
-  for (let i = 1; i < pts.length; i++) {
-    const d = Math.sqrt((pts[i].x - pts[i-1].x) ** 2 + (pts[i].y - pts[i-1].y) ** 2)
-    segLens.push(d)
-    totalLen += d
-  }
-  if (totalLen === 0) return null
-
-  const target = t * totalLen
-  let acc = 0, segIdx = 0
-  for (let i = 0; i < segLens.length; i++) {
-    if (acc + segLens[i] >= target) { segIdx = i; break }
-    acc += segLens[i]
-  }
-  const segFrac = segLens[segIdx] > 0 ? (target - acc) / segLens[segIdx] : 0
-  const a = pts[segIdx], b = pts[segIdx + 1]
-  const x = a.x + (b.x - a.x) * segFrac
-  const y = a.y + (b.y - a.y) * segFrac
-
-  const dx2 = b.x - a.x, dy2 = b.y - a.y
-  const n = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
-  const pw = 30 * scale
-  const perpX = -dy2 / n * pw
-  const perpY = dx2 / n * pw
-
-  return (
-    <line
-      x1={x - perpX} y1={y - perpY}
-      x2={x + perpX} y2={y + perpY}
-      stroke={color} strokeWidth={thickness * 0.8} opacity={0.6}
-      strokeLinecap="round"
-      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 6px ${color})` }}
-    />
-  )
+  return <line ref={lineRef} stroke={color} strokeWidth={2} opacity={0.6}
+    strokeLinecap="round" style={{ pointerEvents: 'none' }} />
 }
 
 interface Props {
@@ -606,7 +606,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       style={{ pointerEvents: 'none' }} />
                     {/* 海神X波浪动画 */}
                     {s.abilityId === 'harbor-reckoning' && s.path && s.path.length > 1 && (
-                      <HarborWave pathPts={s.path} color={color} thickness={sw}
+                      <HarborWave pathPts={s.path} color={color}
                         mapW={mapW} mapH={mapH} scale={scale}
                         svgCenterX={s.x} svgCenterY={s.y}
                         svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
