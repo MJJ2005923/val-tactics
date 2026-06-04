@@ -604,14 +604,14 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     <polyline points={pts} fill="none" stroke={color} strokeWidth={sw}
                       strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
                       style={{ pointerEvents: 'none' }} />
-                    {/* 海神X波浪动画 */}
+                    {/* 海神X波浪动画 — 通过线两端生成路径 */}
                     {s.abilityId === 'harbor-reckoning' && (() => {
-                      const rad2 = s.rotation * Math.PI / 180
-                      const hl2 = s.length / 2
-                      const wavePath = s.path && s.path.length > 1 ? s.path
-                        : [{ x: s.x + hl2 * Math.sin(rad2), y: s.y - hl2 * Math.cos(rad2) },
-                           { x: s.x - hl2 * Math.sin(rad2), y: s.y + hl2 * Math.cos(rad2) }]
-                      return <HarborWave pathPts={wavePath} color={color}
+                      const rad3 = s.rotation * Math.PI / 180
+                      const hl3 = s.length / 2
+                      // 计算线两端（标准化坐标）
+                      const p1 = { x: s.x + hl3 * Math.sin(rad3), y: s.y - hl3 * Math.cos(rad3) }
+                      const p2 = { x: s.x - hl3 * Math.sin(rad3), y: s.y + hl3 * Math.cos(rad3) }
+                      return <HarborWave pathPts={[p1, p2]} color={color}
                         mapW={mapW} mapH={mapH} scale={scale}
                         svgCenterX={s.x} svgCenterY={s.y}
                         svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
