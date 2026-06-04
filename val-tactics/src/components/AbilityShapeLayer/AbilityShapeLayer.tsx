@@ -5,10 +5,10 @@ import type { AbilityShape } from '../../types'
 import styles from './AbilityShapeLayer.module.css'
 
 // 海神X波浪动画
-function HarborWave({ pathPts, color, thickness, mapW, mapH, scale, svgCenterX, svgCenterY }: {
+function HarborWave({ pathPts, color, thickness, mapW, mapH, scale, svgCenterX, svgCenterY, svgHalfW, svgHalfH }: {
   pathPts: { x: number; y: number }[]; color: string; thickness: number
   mapW: number; mapH: number; scale: number
-  svgCenterX: number; svgCenterY: number
+  svgCenterX: number; svgCenterY: number; svgHalfW: number; svgHalfH: number
 }) {
   const [t, setT] = useState(0)
   useEffect(() => {
@@ -18,13 +18,12 @@ function HarborWave({ pathPts, color, thickness, mapW, mapH, scale, svgCenterX, 
 
   if (pathPts.length < 2) return null
 
-  // 转为SVG像素坐标 (相对形状中心)
+  // 转为SVG坐标系：svgHalf + (p - center) * mapW * scale
   const pts = pathPts.map(p => ({
-    x: (p.x - svgCenterX) * mapW * scale,
-    y: (p.y - svgCenterY) * mapH * scale,
+    x: svgHalfW + (p.x - svgCenterX) * mapW * scale,
+    y: svgHalfH + (p.y - svgCenterY) * mapH * scale,
   }))
 
-  // 计算总长
   let totalLen = 0
   const segLens: number[] = []
   for (let i = 1; i < pts.length; i++) {
@@ -34,7 +33,6 @@ function HarborWave({ pathPts, color, thickness, mapW, mapH, scale, svgCenterX, 
   }
   if (totalLen === 0) return null
 
-  // 当前进度位置
   const target = t * totalLen
   let acc = 0, segIdx = 0
   for (let i = 0; i < segLens.length; i++) {
@@ -46,11 +44,11 @@ function HarborWave({ pathPts, color, thickness, mapW, mapH, scale, svgCenterX, 
   const x = a.x + (b.x - a.x) * segFrac
   const y = a.y + (b.y - a.y) * segFrac
 
-  // 垂直线方向
   const dx2 = b.x - a.x, dy2 = b.y - a.y
   const n = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
-  const perpX = -dy2 / n * 30
-  const perpY = dx2 / n * 30
+  const pw = 30 * scale
+  const perpX = -dy2 / n * pw
+  const perpY = dx2 / n * pw
 
   return (
     <line
@@ -610,7 +608,8 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     {s.abilityId === 'harbor-reckoning' && s.path && s.path.length > 1 && (
                       <HarborWave pathPts={s.path} color={color} thickness={sw}
                         mapW={mapW} mapH={mapH} scale={scale}
-                        svgCenterX={s.x} svgCenterY={s.y} />
+                        svgCenterX={s.x} svgCenterY={s.y}
+                        svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
                     )}
                     <image href={'/images/abilities/' + s.abilityId + '.png'}
                       x={svgW / 2 - 14} y={svgH / 2 - 14}
