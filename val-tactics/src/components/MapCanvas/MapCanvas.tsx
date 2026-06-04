@@ -495,7 +495,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         actualLen = Math.sqrt((ex - lineDrawing.startX) ** 2 + (ey - lineDrawing.startY) ** 2)
       }
       // 海神X：限制终点在45m范围内
-      let hxLen = 0
+      let hxLen = 0, hxRot = 0
       if (lineDrawing.abilityId === 'harbor-reckoning') {
         const maxLen = lineDrawing.config.length ?? (50 * 7 / 1800)
         const drx = ex - lineDrawing.startX, dry = ey - lineDrawing.startY
@@ -506,6 +506,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           ey = lineDrawing.startY + dry * ratio
         }
         hxLen = Math.sqrt((ex - lineDrawing.startX) ** 2 + (ey - lineDrawing.startY) ** 2)
+        // 用标准坐标算旋转，避免mapW≠mapH扭曲
+        hxRot = Math.atan2(ex - lineDrawing.startX, -(ey - lineDrawing.startY)) * 180 / Math.PI
       }
       const cx = (lineDrawing.startX + ex) / 2
       const cy = (lineDrawing.startY + ey) / 2
@@ -627,7 +629,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       const rw = lineDrawing.abilityId === 'breach-fault-line' ? 8 : lineDrawing.abilityId === 'vyse-shear' ? 3 : 40
       dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
         id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
-        x: cx, y: cy, rotation: isBreachRect ? (rot - 90) : rot,
+        x: cx, y: cy, rotation: lineDrawing.abilityId === 'harbor-reckoning' ? hxRot : isBreachRect ? (rot - 90) : rot,
         shape: isBreachRect ? 'rect' : 'line',
         radius: 0.08,
         angle: 60,
