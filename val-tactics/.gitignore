@@ -24,3 +24,10 @@ dist-ssr
 *.sw?
 
 .vercel
+.wrangler
+.claude
+plans
+*.env
+.env.*
+.env.local
+.env.production
