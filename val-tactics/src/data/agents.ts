@@ -157,7 +157,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'yoru-fakeout':              { shape: 'circle', radius: 2.5 * M },
   'yoru-gatecrash':            { shape: 'circle', radius: 2.5 * M },
   'yoru-dimensional-drift':    { shape: 'circle', radius: 2.5 * M },
-  'omen-shrouded-step':        { shape: 'line', length: 16 * M, thickness: 0.003 },
+  'omen-shrouded-step':        { shape: 'line', length: 20 * M, thickness: 0.003 },
   'omen-paranoia':             { shape: 'rect', length: 40 * M, width: 10 * M },
   'omen-from-the-shadows':     { shape: 'circle', radius: 2 * M },
   'chamber-trademark':         { shape: 'circle', radius: 1.2 * M },

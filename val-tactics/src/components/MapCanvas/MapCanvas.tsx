@@ -325,6 +325,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     } else if (data.type === 'ability' && data.abilityId) {
       const shapeConfig = getAbilityShapeConfig(data.abilityId)
       if (shapeConfig) {
+        if (data.abilityId === 'omen-shrouded-step') {
+          console.log('OmenC config length:', JSON.stringify(shapeConfig.length), 'meters:', Math.round((shapeConfig.length ?? 0) / (7/1800)))
+        }
         // 矩形拖拽绘制
         if (data.abilityId === 'breach-rolling-thunder' || data.abilityId === 'fade-nightfall' || data.abilityId === 'tejo-x') {
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
@@ -473,12 +476,24 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       const rect = t.container.getBoundingClientRect()
       const sx = e.clientX - rect.left
       const sy = e.clientY - rect.top
-      const ex = (sx - offsetX) / (displayScale * mapW)
-      const ey = (sy - offsetY) / (displayScale * mapH)
+      let ex = (sx - offsetX) / (displayScale * mapW)
+      let ey = (sy - offsetY) / (displayScale * mapH)
       // 两步点击：先设起点
       if (lineDrawing.startX < 0) {
         setLineDrawing(prev => prev ? { ...prev, startX: ex, startY: ey, currentX: ex, currentY: ey } : null)
         return
+      }
+      // 欧门C：限制终点在20m范围内
+      if (lineDrawing.abilityId === 'omen-shrouded-step') {
+        const maxLen = lineDrawing.config.length ?? (20 * 7 / 1800)
+        const drx = ex - lineDrawing.startX
+        const dry = ey - lineDrawing.startY
+        const dist = Math.sqrt(drx * drx + dry * dry)
+        if (dist > maxLen && dist > 0) {
+          const ratio = maxLen / dist
+          ex = lineDrawing.startX + drx * ratio
+          ey = lineDrawing.startY + dry * ratio
+        }
       }
       const cx = (lineDrawing.startX + ex) / 2
       const cy = (lineDrawing.startY + ey) / 2
@@ -631,9 +646,24 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       const t = transformRef.current
       if (!t.container) return
       const rect = t.container.getBoundingClientRect()
-      const ex = (e.clientX - rect.left - offsetX) / (displayScale * mapW)
-      const ey = (e.clientY - rect.top - offsetY) / (displayScale * mapH)
-      setLineDrawing(prev => prev ? { ...prev, currentX: ex, currentY: ey } : null)
+      let ex = (e.clientX - rect.left - offsetX) / (displayScale * mapW)
+      let ey = (e.clientY - rect.top - offsetY) / (displayScale * mapH)
+      setLineDrawing(prev => {
+        if (!prev) return null
+        // 欧门C：限制终点在20m范围内
+        if (prev.abilityId === 'omen-shrouded-step' && prev.startX >= 0) {
+          const maxLen = prev.config.length ?? (20 * 7 / 1800)
+          const dx = (ex - prev.startX)
+          const dy = (ey - prev.startY)
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist > maxLen && dist > 0) {
+            const ratio = maxLen / dist
+            ex = prev.startX + dx * ratio
+            ey = prev.startY + dy * ratio
+          }
+        }
+        return { ...prev, currentX: ex, currentY: ey }
+      })
     }
     const keydown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.preventDefault(); freehandRef.current.drawing = false; setLineDrawing(null) }
