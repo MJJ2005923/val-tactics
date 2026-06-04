@@ -4,58 +4,54 @@ import agents from '../../data/agents'
 import type { AbilityShape } from '../../types'
 import styles from './AbilityShapeLayer.module.css'
 
-// 海神X波浪动画
-function HarborWave({ pathPts, color, svgW, svgH, mapW, mapH, scale, offset, cx, cy, thickness }: {
-  pathPts: { x: number; y: number }[]; color: string; svgW: number; svgH: number;
-  mapW: number; mapH: number; scale: number; offset: { x: number; y: number }; cx: number; cy: number; thickness: number
+// 海神X波浪动画 (简化版 — 使用SVG内相对坐标)
+function HarborWave({ pathPts, color, thickness }: {
+  pathPts: { x: number; y: number }[]; color: string; thickness: number
 }) {
   const [t, setT] = useState(0)
   useEffect(() => {
-    const interval = setInterval(() => setT(prev => prev >= 1 ? 0 : prev + 0.01), 25)
+    const interval = setInterval(() => setT(prev => prev >= 1 ? 0 : prev + 0.015), 30)
     return () => clearInterval(interval)
   }, [])
 
-  // 将路径点转为SVG内坐标
-  const pts = pathPts.map(p => ({
-    x: offset.x + p.x * mapW * scale - (cx - svgW / 2),
-    y: offset.y + p.y * mapH * scale - (cy - svgH / 2),
-  }))
+  if (pathPts.length < 2) return null
 
-  // 计算总长度和各段信息
-  let total = 0
-  const segs: { sx: number; sy: number; ex: number; ey: number; len: number }[] = []
-  for (let i = 1; i < pts.length; i++) {
-    const dx = pts[i].x - pts[i - 1].x, dy = pts[i].y - pts[i - 1].y
-    const len = Math.sqrt(dx * dx + dy * dy)
-    segs.push({ sx: pts[i - 1].x, sy: pts[i - 1].y, ex: pts[i].x, ey: pts[i].y, len })
-    total += len
+  // 构建路径字符串和计算总长
+  let totalLen = 0
+  const segLens: number[] = []
+  for (let i = 1; i < pathPts.length; i++) {
+    const d = Math.sqrt((pathPts[i].x - pathPts[i-1].x) ** 2 + (pathPts[i].y - pathPts[i-1].y) ** 2)
+    segLens.push(d)
+    totalLen += d
   }
-  if (total === 0) return null
+  if (totalLen === 0) return null
 
-  // 当前进度位置
-  let target = t * total, acc = 0
-  let px2 = segs[0].sx, py2 = segs[0].sy, dx2 = 1, dy2 = 0
-  for (const seg of segs) {
-    if (acc + seg.len >= target) {
-      const f = (target - acc) / seg.len
-      px2 = seg.sx + (seg.ex - seg.sx) * f
-      py2 = seg.sy + (seg.ey - seg.sy) * f
-      dx2 = seg.ex - seg.sx; dy2 = seg.ey - seg.sy
-      break
-    }
-    acc += seg.len
+  // 当前进度位置 (标准化坐标 0-1)
+  const target = t * totalLen
+  let acc = 0
+  let segIdx = 0
+  for (let i = 0; i < segLens.length; i++) {
+    if (acc + segLens[i] >= target) { segIdx = i; break }
+    acc += segLens[i]
   }
-  const norm = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
-  const perpX = -(dy2 / norm), perpY = dx2 / norm
-  const halfW = 50 * scale
+  const segFrac = segLens[segIdx] > 0 ? (target - acc) / segLens[segIdx] : 0
+  const a = pathPts[segIdx], b = pathPts[segIdx + 1]
+  const px2 = a.x + (b.x - a.x) * segFrac
+  const py2 = a.y + (b.y - a.y) * segFrac
+
+  // 方向向量 (标准化坐标)
+  const dx2 = b.x - a.x, dy2 = b.y - a.y
+  const n = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
+  const perpX = -dy2 / n * 0.015
+  const perpY = dx2 / n * 0.015
 
   return (
     <line
-      x1={px2 - perpX * halfW} y1={py2 - perpY * halfW}
-      x2={px2 + perpX * halfW} y2={py2 + perpY * halfW}
-      stroke={color} strokeWidth={thickness * 1.5} opacity={0.65}
+      x1={px2 - perpX} y1={py2 - perpY}
+      x2={px2 + perpX} y2={py2 + perpY}
+      stroke={color} strokeWidth={thickness * 0.6} opacity={0.7}
       strokeLinecap="round"
-      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 6px ${color})` }}
+      style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 4px ${color})` }}
     />
   )
 }
@@ -605,7 +601,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       style={{ pointerEvents: 'none' }} />
                     {/* 海神X波浪动画 */}
                     {s.abilityId === 'harbor-reckoning' && s.path && s.path.length > 1 && (
-                      <HarborWave pathPts={s.path} color={color} svgW={svgW} svgH={svgH} mapW={mapW} mapH={mapH} scale={scale} offset={offset} cx={cx} cy={cy} thickness={sw} />
+                      <HarborWave pathPts={s.path} color={color} thickness={sw} />
                     )}
                     <image href={'/images/abilities/' + s.abilityId + '.png'}
                       x={svgW / 2 - 14} y={svgH / 2 - 14}
