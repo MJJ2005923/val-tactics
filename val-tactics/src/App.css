@@ -178,6 +178,16 @@
   background: var(--color-bg-hover);
 }
 
+.btn--donate {
+  background: linear-gradient(135deg, #ff6b7a, #e0485f);
+  color: #fff;
+  font-weight: 600;
+}
+.btn--donate:hover {
+  background: linear-gradient(135deg, #ff7b8a, #f0586f);
+  box-shadow: 0 2px 12px rgba(255,70,85,0.3);
+}
+
 .btn--attack {
   background: rgba(255, 70, 85, 0.15);
   border-color: rgba(255, 70, 85, 0.3);
