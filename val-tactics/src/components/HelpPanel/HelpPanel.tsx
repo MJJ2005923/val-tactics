@@ -23,6 +23,15 @@ export default function HelpPanel({ onClose }: Props) {
         </div>
         <div className={styles.body}>
 
+          <a href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" className={styles.donateCard}>
+            <div className={styles.donateIcon}>❤️</div>
+            <div className={styles.donateText}>
+              <strong>支持创作者</strong>
+              <p>如果你喜欢这个战术板，希望能得到您的一点点支持。这对我很重要，让我能持续改进，创作更好的工具。</p>
+            </div>
+            <span className={styles.donateArrow}>→</span>
+          </a>
+
           <div className={styles.section}>
             <h3>🎯 这个网站是干什么的？</h3>
             <p>这是一个让你在网页上<strong>画战术</strong>的工具。你可以像用战术白板一样，在地图上标出每个队友的技能往哪放、烟雾封哪里、闪光丢哪里。</p>

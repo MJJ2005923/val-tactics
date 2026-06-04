@@ -65,6 +65,65 @@
 .body::-webkit-scrollbar-track { background: transparent; }
 .body::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
 
+.donateCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(255,107,122,0.12), rgba(240,72,95,0.06));
+  border: 1px solid rgba(255,107,122,0.2);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.donateCard:hover {
+  background: linear-gradient(135deg, rgba(255,107,122,0.2), rgba(240,72,95,0.1));
+  border-color: rgba(255,107,122,0.4);
+}
+
+.donateIcon {
+  font-size: 28px;
+  flex-shrink: 0;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.15); }
+  50% { transform: scale(1); }
+}
+
+.donateText {
+  flex: 1;
+  min-width: 0;
+}
+
+.donateText strong {
+  display: block;
+  font-size: 14px;
+  color: #e0e0e0;
+  margin-bottom: 4px;
+}
+
+.donateText p {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.donateArrow {
+  font-size: 18px;
+  color: rgba(255,107,122,0.6);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.donateCard:hover .donateArrow {
+  transform: translateX(3px);
+}
+
 .section {
   margin-bottom: 24px;
 }
