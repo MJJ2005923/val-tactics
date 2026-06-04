@@ -483,18 +483,6 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         setLineDrawing(prev => prev ? { ...prev, startX: ex, startY: ey, currentX: ex, currentY: ey } : null)
         return
       }
-      // 欧门C：限制终点在20m范围内
-      if (lineDrawing.abilityId === 'omen-shrouded-step') {
-        const maxLen = lineDrawing.config.length ?? (20 * 7 / 1800)
-        const drx = ex - lineDrawing.startX
-        const dry = ey - lineDrawing.startY
-        const dist = Math.sqrt(drx * drx + dry * dry)
-        if (dist > maxLen && dist > 0) {
-          const ratio = maxLen / dist
-          ex = lineDrawing.startX + drx * ratio
-          ey = lineDrawing.startY + dry * ratio
-        }
-      }
       const cx = (lineDrawing.startX + ex) / 2
       const cy = (lineDrawing.startY + ey) / 2
       const dx = (ex - lineDrawing.startX) * mapW
@@ -575,7 +563,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         return
       }
       // Neon C 固定长度：中点居中，方向由终点决定
-      if (lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'viper-toxic-screen') {
+      if (lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'omen-shrouded-step') {
         const fixLen = lineDrawing.config.length ?? 0.10
         dispatch({ type: 'ADD_ABILITY_SHAPE', shape: {
           id: '', abilityId: lineDrawing.abilityId, agentId: lineDrawing.agentId,
@@ -835,7 +823,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
             )}
             {/* 直线模式预览 */}
             {!isFreehand && (() => {
-              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q' || lineDrawing.abilityId === 'waylay-x'
+              const isFixedLen = lineDrawing.abilityId === 'neon-fast-lane' || lineDrawing.abilityId === 'neon-high-gear' || lineDrawing.abilityId === 'iso-contingency' || lineDrawing.abilityId === 'iso-undercut' || lineDrawing.abilityId === 'viper-toxic-screen' || lineDrawing.abilityId === 'iso-kill-contract' || lineDrawing.abilityId === 'waylay-q' || lineDrawing.abilityId === 'waylay-x' || lineDrawing.abilityId === 'omen-shrouded-step'
               const previewEx = isFixedLen && lineDrawing.startX >= 0
                 ? (() => {
                     const fixLenPx = (lineDrawing.config.length ?? 0.10) * mapW * displayScale
