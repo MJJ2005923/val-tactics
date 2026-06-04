@@ -333,7 +333,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           setRectDrawing({ startX: x, startY: y, currentX: x, currentY: y, abilityId: data.abilityId, agentId: data.agentId, config: shapeConfig, drawing: false })
         } else if ((shapeConfig.shape === 'line' && data.abilityId !== 'sova-hunters-fury') || data.abilityId === 'miks-x' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q' || data.abilityId === 'waylay-e' || data.abilityId === 'waylay-x' || data.abilityId === 'omen-paranoia') {
           // 线型技能进入画线模式：先放起点，再拖终点
-          const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c' || data.abilityId === 'harbor-reckoning' || data.abilityId === 'waylay-e'
+          const isFH = data.abilityId === 'harbor-high-tide' || data.abilityId === 'phoenix-blaze' || data.abilityId === 'sova-owl-drone' || data.abilityId === 'fade-prowler' || data.abilityId === 'gekko-thrash' || data.abilityId === 'skye-trailblazer' || data.abilityId === 'skye-guiding-light' || data.abilityId === 'tejo-c' || data.abilityId === 'waylay-e'
           setLineDrawing({
             mode: isFH ? 'freehand' : 'line',
             startX: isFH ? x : -1, startY: isFH ? y : -1,
@@ -494,6 +494,19 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         }
         actualLen = Math.sqrt((ex - lineDrawing.startX) ** 2 + (ey - lineDrawing.startY) ** 2)
       }
+      // 海神X：限制终点在45m范围内
+      let hxLen = 0
+      if (lineDrawing.abilityId === 'harbor-reckoning') {
+        const maxLen = lineDrawing.config.length ?? (45 * 7 / 1800)
+        const drx = ex - lineDrawing.startX, dry = ey - lineDrawing.startY
+        const dist = Math.sqrt(drx * drx + dry * dry)
+        if (dist > maxLen && dist > 0) {
+          const ratio = maxLen / dist
+          ex = lineDrawing.startX + drx * ratio
+          ey = lineDrawing.startY + dry * ratio
+        }
+        hxLen = Math.sqrt((ex - lineDrawing.startX) ** 2 + (ey - lineDrawing.startY) ** 2)
+      }
       const cx = (lineDrawing.startX + ex) / 2
       const cy = (lineDrawing.startY + ey) / 2
       const dx = (ex - lineDrawing.startX) * mapW
@@ -618,7 +631,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         shape: isBreachRect ? 'rect' : 'line',
         radius: 0.08,
         angle: 60,
-        length: lineDrawing.abilityId === 'omen-shrouded-step' ? Math.max(actualLen, 0.02) : Math.max(len, 0.02),
+        length: lineDrawing.abilityId === 'omen-shrouded-step' ? Math.max(actualLen, 0.02)
+              : lineDrawing.abilityId === 'harbor-reckoning' ? Math.max(hxLen, 0.02)
+              : Math.max(len, 0.02),
         width: isBreachRect ? (rw * 7 / 1800) : 0.02,
         thickness: lineDrawing.config.thickness ?? 0.008,
         iconOnly: false,
