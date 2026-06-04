@@ -497,7 +497,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       // 海神X：限制终点在45m范围内
       let hxLen = 0
       if (lineDrawing.abilityId === 'harbor-reckoning') {
-        const maxLen = lineDrawing.config.length ?? (40 * 7 / 1800)
+        const maxLen = lineDrawing.config.length ?? (50 * 7 / 1800)
         const drx = ex - lineDrawing.startX, dry = ey - lineDrawing.startY
         const dist = Math.sqrt(drx * drx + dry * dry)
         if (dist > maxLen && dist > 0) {

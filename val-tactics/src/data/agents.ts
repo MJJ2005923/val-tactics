@@ -54,7 +54,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'viper-poison-cloud':       { radius: 6 * M },    // 6m
   'jett-cloudburst':          { shape: 'circle', radius: 4.5 * M },    // 4.5m 瞬发烟
   'harbor-cove':              { shape: 'circle', radius: 4.5 * M },    // 4.5m 护盾
-  'harbor-reckoning':         { shape: 'line', length: 40 * M, thickness: 0.006 },
+  'harbor-reckoning':         { shape: 'line', length: 50 * M, thickness: 0.006 },
   'sova-owl-drone':           { shape: 'line', length: 40 * M, thickness: 0.004 },
   'clove-ruse':               { radius: 4.1 * M },    // 4.1m
   'cypher-cyber-cage':        { radius: 3.5 * M },    // 3.5m 网牢

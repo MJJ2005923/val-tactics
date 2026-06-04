@@ -611,7 +611,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       // 计算线两端（标准化坐标）
                       const p1 = { x: s.x + hl3 * Math.sin(rad3), y: s.y - hl3 * Math.cos(rad3) }
                       const p2 = { x: s.x - hl3 * Math.sin(rad3), y: s.y + hl3 * Math.cos(rad3) }
-                      return <HarborWave pathPts={[p1, p2]} color={color}
+                      return <HarborWave pathPts={[p2, p1]} color={color}
                         mapW={mapW} mapH={mapH} scale={scale}
                         svgCenterX={s.x} svgCenterY={s.y}
                         svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
@@ -714,7 +714,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     const hl3 = s.length / 2
                     const p1 = { x: s.x + hl3 * Math.sin(rad3), y: s.y - hl3 * Math.cos(rad3) }
                     const p2 = { x: s.x - hl3 * Math.sin(rad3), y: s.y + hl3 * Math.cos(rad3) }
-                    return <HarborWave pathPts={[p1, p2]} color={color}
+                    return <HarborWave pathPts={[p2, p1]} color={color}
                       mapW={mapW} mapH={mapH} scale={scale}
                       svgCenterX={s.x} svgCenterY={s.y}
                       svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
