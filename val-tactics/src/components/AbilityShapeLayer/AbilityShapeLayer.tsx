@@ -43,7 +43,7 @@ function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY,
       const y = a.y + (b.y - a.y) * segFrac
       const dx2 = b.x - a.x, dy2 = b.y - a.y
       const n = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
-      const pw = 25 * scale
+      const pw = 45 * scale
       const px = -dy2 / n * pw, py = dx2 / n * pw
       if (lineRef.current) {
         lineRef.current.setAttribute('x1', String(x - px))
@@ -57,8 +57,8 @@ function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY,
     return () => cancelAnimationFrame(rafId)
   }, [pathPts, svgHalfW, svgHalfH, svgCenterX, svgCenterY, mapW, mapH, scale])
 
-  return <line ref={lineRef} stroke={color} strokeWidth={2} opacity={0.6}
-    strokeLinecap="round" style={{ pointerEvents: 'none' }} />
+  return <line ref={lineRef} stroke={color} strokeWidth={4} opacity={0.7}
+    strokeLinecap="round" style={{ pointerEvents: 'none', filter: `drop-shadow(0 0 8px ${color})` }} />
 }
 
 interface Props {
