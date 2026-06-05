@@ -3,16 +3,40 @@
  * 部署时自动随 Cloudflare Pages 上线
  */
 
-const ANTHROPIC_MODELS = [
-  { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5' },
-  { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
-  { id: 'claude-opus-4-7-20250416', name: 'Claude Opus 4.7' },
-]
+// 预置模型列表（所有厂商）
+const PRESET_MODELS = {
+  anthropic: [
+    { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', tier: '经济' },
+    { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', tier: '均衡' },
+    { id: 'claude-opus-4-7-20250416', name: 'Claude Opus 4.7', tier: '旗舰' },
+  ],
+  openai: [
+    { id: 'gpt-4.1-mini', name: 'GPT-4.1 mini', tier: '经济' },
+    { id: 'gpt-4.1', name: 'GPT-4.1', tier: '均衡' },
+    { id: 'gpt-5.3-instant', name: 'GPT-5.3 Instant', tier: '均衡' },
+    { id: 'gpt-5.4-thinking', name: 'GPT-5.4 Thinking', tier: '旗舰' },
+    { id: 'gpt-5.5-instant', name: 'GPT-5.5 Instant', tier: '最新' },
+    { id: 'o4-mini', name: 'o4-mini (推理)', tier: '推理' },
+  ],
+  google: [
+    { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash-Lite', tier: '经济' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', tier: '均衡' },
+    { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', tier: '均衡' },
+    { id: 'gemini-3.1-pro', name: 'Gemini 3.1 Pro', tier: '旗舰' },
+    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', tier: '旗舰' },
+  ],
+  deepseek: [
+    { id: 'deepseek-chat', name: 'DeepSeek-V3 (通用)', tier: '旗舰' },
+    { id: 'deepseek-reasoner', name: 'DeepSeek-R1 (推理)', tier: '推理' },
+    { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', tier: '经济' },
+    { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', tier: '旗舰' },
+  ],
+}
 
 const PROVIDERS = {
   anthropic: {
     chatUrl: 'https://api.anthropic.com/v1/messages',
-    listModels: async () => ANTHROPIC_MODELS,
+    listModels: async () => PRESET_MODELS.anthropic,
     chatHeaders: (key) => ({ 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }),
     chatBody: (model, messages) => ({ model, max_tokens: 2048, messages }),
   },
@@ -42,10 +66,7 @@ const PROVIDERS = {
   },
   deepseek: {
     chatUrl: 'https://api.deepseek.com/v1/chat/completions',
-    listModels: async () => [
-      { id: 'deepseek-chat', name: 'DeepSeek Chat (V3)' },
-      { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner (R1)' },
-    ],
+    listModels: async () => PRESET_MODELS.deepseek,
     chatHeaders: (key) => ({ Authorization: `Bearer ${key}`, 'content-type': 'application/json' }),
     chatBody: (model, messages) => ({ model, max_tokens: 2048, messages }),
   },

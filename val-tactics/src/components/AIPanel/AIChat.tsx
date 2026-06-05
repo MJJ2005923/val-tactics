@@ -108,7 +108,16 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
 
       setMessages(prev => [...prev, { role: 'assistant', content, model: config.model }])
     } catch (err: any) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${err.message}` }])
+      const msg = err.message || ''
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '❌ 网络连接失败' }])
+      } else if (msg.includes('401') || msg.includes('403')) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '❌ API Key 无效' }])
+      } else if (msg.includes('model') || msg.includes('404')) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '❌ 模型名无效，请检查' }])
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${msg || '请求失败'}` }])
+      }
     } finally {
       setLoading(false)
     }
