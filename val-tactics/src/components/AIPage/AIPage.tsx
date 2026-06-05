@@ -120,7 +120,18 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
         || data.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(data)
       setMessages(prev => [...prev, { role: 'assistant', content }])
     } catch (err: any) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${err.message}` }])
+      const msg = err.message || ''
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '❌ 网络连接失败，请检查网络或稍后重试。' }])
+      } else if (msg.includes('401') || msg.includes('403')) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '❌ API Key 无效或已过期，请检查后重新输入。' }])
+      } else if (msg.includes('404') || msg.includes('model')) {
+        setMessages(prev => [...prev, { role: 'assistant', content: `❌ 模型 "${config.model}" 不存在或不可用。请在左侧切换模型后重试。` }])
+      } else if (msg.includes('429')) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '❌ API 调用频率超限，请稍后重试。' }])
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${msg || '请求失败，请检查 API Key 和模型名是否正确'}` }])
+      }
     } finally {
       setLoading(false)
     }
