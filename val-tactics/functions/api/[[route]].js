@@ -26,10 +26,10 @@ const PRESET_MODELS = {
     { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', tier: '旗舰' },
   ],
   deepseek: [
-    { id: 'deepseek-chat', name: 'DeepSeek-V3 (通用)', tier: '旗舰' },
-    { id: 'deepseek-reasoner', name: 'DeepSeek-R1 (推理)', tier: '推理' },
-    { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', tier: '经济' },
-    { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', tier: '旗舰' },
+    { id: 'deepseek-v4-flash', name: '⚡ 快速模式', tier: '经济', perf: '日常问答 · 极速响应 · 战术速查', cost: '¥0.002/次' },
+    { id: 'deepseek-chat', name: '⚖️ 均衡模式', tier: '标准', perf: '战术分析 · 阵容推荐 · 综合能力强', cost: '¥0.004/次' },
+    { id: 'deepseek-v4-pro', name: '🧠 深度模式', tier: '旗舰', perf: '深度策略 · 复杂推演 · 顶级智能', cost: '¥0.07/次' },
+    { id: 'deepseek-reasoner', name: '💭 推理模式', tier: '最强', perf: '极致推理 · 职业级分析 · 慢但精准', cost: '¥0.10/次' },
   ],
 }
 
@@ -72,8 +72,22 @@ const PROVIDERS = {
   },
 }
 
+// 服务端 API Keys — 从环境变量读取
+function getServerKey(provider) {
+  switch (provider) {
+    case 'deepseek': return context.env.DEEPSEEK_KEY || ''
+    case 'anthropic': return context.env.ANTHROPIC_KEY || ''
+    case 'openai': return context.env.OPENAI_KEY || ''
+    case 'google': return context.env.GOOGLE_KEY || ''
+    default: return ''
+  }
+}
+
+// 免费额度限制
+const FREE_LIMIT = 10 // 每天每人免费 10 次
+
 export async function onRequest(context) {
-  const { request } = context
+  const { request, env } = context
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -91,22 +105,39 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
-  const { apiKey, provider, model, messages } = await request.json()
+  let { apiKey, provider, model, messages, userId } = await request.json()
 
   const p = PROVIDERS[provider]
   if (!p) return new Response(JSON.stringify({ error: '未知厂商' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+  // 如果没有用户 Key，用服务端 Key（免费模式）
+  const isFree = !apiKey
+  if (isFree) {
+    apiKey = getServerKey(provider)
+    if (!apiKey) return new Response(JSON.stringify({ error: '该厂商暂不支持免费使用，请自备 API Key' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+  }
 
   // 模型列表
   if (url.pathname === '/api/models') {
     try {
       const models = await p.listModels(apiKey)
-      return new Response(JSON.stringify({ models }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ models, freeMode: isFree }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }
   }
 
-  // AI 对话
+  // AI 对话 — 免费额度检查
+  if (isFree && userId) {
+    const today = new Date().toISOString().slice(0, 10)
+    const key = `usage:${userId}:${today}`
+    const count = parseInt(await env.AI_USAGE.get(key) || '0')
+    if (count >= FREE_LIMIT) {
+      return new Response(JSON.stringify({ error: 'free_limit', message: `今日免费次数已用完（${FREE_LIMIT}次/天），请自备 API Key 或明天再来` }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    ctx.waitUntil(env.AI_USAGE.put(key, String(count + 1), { expirationTtl: 86400 }))
+  }
+
   try {
     let chatUrl = typeof p.chatUrl === 'function' ? p.chatUrl(model) : p.chatUrl
     if (p.keyInQuery) chatUrl += `?key=${encodeURIComponent(apiKey)}`
@@ -118,6 +149,8 @@ export async function onRequest(context) {
     })
 
     const data = await resp.json()
+    // 注入免费模式标识
+    if (isFree) data._free = true
     return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })

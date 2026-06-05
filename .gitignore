@@ -3,6 +3,7 @@
 plans/
 *.env
 .env.*
+.dev.vars
 .DS_Store
 Thumbs.db
 .desktop.ini

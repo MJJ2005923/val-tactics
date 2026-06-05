@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://val-tactics.pages.dev',
+        target: 'http://localhost:8787',
         changeOrigin: true,
       },
     },

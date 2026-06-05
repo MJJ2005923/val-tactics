@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { getAIConfig } from './AISettings'
+import { getAIConfig, getUserId } from './AISettings'
 import { useTactics } from '../../store/TacticsContext'
 import agents from '../../data/agents'
 import styles from './AIPanel.module.css'
@@ -50,8 +50,14 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
     if (!text || loading) return
 
     const config = getAIConfig()
-    if (!config.apiKey) {
-      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ 请先在「AI 设置」里填入你的 API Key。' }])
+    const isFree = !config.apiKey
+    if (!config.apiKey && !isFree) {
+      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ 请先填入 API Key 或使用免费模式。' }])
+      return
+    }
+
+    if (!config.model) {
+      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ 请先选择一个模型。' }])
       return
     }
 
@@ -84,6 +90,7 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
           apiKey: config.apiKey,
           provider: config.provider,
           model: config.model,
+          userId: isFree ? getUserId() : undefined,
           messages: allMessages,
         }),
       })

@@ -90,6 +90,18 @@
   text-decoration: none;
 }
 
+.freeBadge {
+  font-size: 13px;
+  color: #4ade80;
+  font-weight: 600;
+  padding: 8px 12px;
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
 /* ====== 对话面板 ====== */
 .chat {
   flex: 1;

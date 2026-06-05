@@ -29,5 +29,6 @@ dist-ssr
 plans
 *.env
 .env.*
+.dev.vars
 .env.local
 .env.production
