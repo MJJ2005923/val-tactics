@@ -4,11 +4,18 @@ import agents from '../../data/agents'
 import styles from './AIPage.module.css'
 
 interface Message { role: 'user' | 'assistant'; content: string }
-interface AIModel { id: string; name: string; tier?: string; perf?: string }
+interface AIModel { id: string; name: string; tier?: string; perf?: string; limit?: string; unlock?: string }
 interface AIConfig { apiKey: string; provider: string; model: string }
 
 const API_BASE = '/api'
-const PROVIDER = 'deepseek' // 后端固定用 DeepSeek
+const PROVIDER = 'deepseek'
+
+const PLANS = [
+  { icon: '⚡', name: '免费', detail: '快速模式 · 2 次 / 天', price: '¥0', color: '#05F8F8' },
+  { icon: '⚖️', name: '基础', detail: '快速 & 均衡 · 30 次 / 天', price: '¥24.9', color: '#e8b0f8' },
+  { icon: '💭', name: '进阶', detail: '推理 5 & 深度 3 · 40 次 / 天', price: '¥39.9', color: '#e090f0' },
+  { icon: '🧠', name: '专业', detail: '全解锁 · 60 次 / 天', price: '¥49.9', color: '#d870e8' },
+]
 
 function uid() {
   let id = localStorage.getItem('val-tactics-uid')
@@ -63,13 +70,13 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
     } catch { /* ok */ }
   }, [config.apiKey])
 
+  useEffect(() => { fetchModels() }, [fetchModels])
+
   const saveKey = () => {
     setConfig((c: AIConfig) => ({ ...c, apiKey: keyInput }))
     setShowKeyInput(false)
     setTimeout(() => fetchModels(), 100)
   }
-
-  useEffect(() => { fetchModels() }, [fetchModels])
 
   const send = async () => {
     const text = input.trim()
@@ -114,53 +121,62 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
     } finally { setLoading(false) }
   }
 
-  const quickPrompts = [
-    '分析我现在的战术布局有什么问题',
-    '推荐一个适合这张地图的进攻阵容',
-    '怎么防守 B 点？给三个方案',
-    '当前版本最强的双烟组合是什么',
-  ]
+  const quickPrompts = ['分析我现在的战术布局有什么问题', '推荐一个适合这张地图的进攻阵容', '怎么防守 B 点？给三个方案', '当前版本最强的双烟组合是什么']
 
   return (
     <div className={styles.page}>
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <h1 className={styles.logo}>⚡ AI 战术教练</h1>
+          <div className="brand" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div className={styles.brandDot} />
+            <h1 className={styles.logo}>AI 战术教练</h1>
+          </div>
           <button className={styles.backBtn} onClick={onBack}>← 返回战术板</button>
         </div>
 
         <div className={styles.sidebarSection}>
+          <h3>套餐方案</h3>
+          <div className={styles.plansList}>
+            {PLANS.map((p, i) => (
+              <div key={i} className={styles.planCard}>
+                <div className={styles.planIcon}>{p.icon}</div>
+                <div className={styles.planInfo}>
+                  <div className={styles.planName} style={i === 0 ? { color: '#05F8F8' } : i === 1 ? { color: '#e8b0f8' } : i === 2 ? { color: '#e090f0' } : { color: '#d870e8' }}>{p.name}</div>
+                  <div className={styles.planDetail}>{p.detail}</div>
+                </div>
+                <div className={styles.planPrice}>{p.price}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.sidebarSection}>
           <h3>智能模式</h3>
-          {models.length > 0 ? (
-            <div className={styles.modelList}>
-              {models.map(m => {
-                const isFreeModel = m.tier === '免费可用'
-                const locked = isFreeModel ? false : isFree
-                return (
-                  <button key={m.id}
-                    className={`${styles.modelCard} ${config.model === m.id ? styles.modelCardActive : ''} ${locked ? styles.modelCardLocked : ''}`}
-                    style={{ borderColor: config.model === m.id ? '#ff4655' : 'transparent' }}
-                    onClick={() => !locked && setConfig((c: AIConfig) => ({ ...c, model: m.id }))}>
-                    <div className={styles.modelName}>
-                      {m.name}
-                      {isFreeModel && <span className={styles.freeBadge}>免费</span>}
-                      {locked && <span className={styles.lockBadge}>🔒 付费</span>}
-                    </div>
-                    {m.perf && <div className={styles.modelPerf}>{m.perf}</div>}
-                  </button>
-                )
-              })}
-            </div>
-          ) : (
-            <p className={styles.hint}>加载中...</p>
-          )}
+          <div className={styles.modelList}>
+            {models.map(m => {
+              const locked = isFree && m.tier !== '免费'
+              return (
+                <button key={m.id}
+                  className={`${styles.modelCard} ${config.model === m.id ? styles.modelCardActive : ''} ${locked ? styles.modelCardLocked : ''}`}
+                  onClick={() => !locked && setConfig((c: AIConfig) => ({ ...c, model: m.id }))}>
+                  <div className={styles.modelIcon}>{m.name?.includes('快速') ? '⚡' : m.name?.includes('均衡') ? '⚖️' : m.name?.includes('推理') ? '💭' : '🧠'}</div>
+                  <div className={styles.modelInfo}>
+                    <div className={styles.modelName}>{m.name}</div>
+                    <div className={styles.modelDesc}>{m.perf}</div>
+                    <div className={styles.modelLimit}>{m.limit}{locked ? ' 🔒' : ''}</div>
+                  </div>
+                  <span className={`${styles.unlockBadge} ${m.tier === '免费' ? styles.unlockFree : styles.unlockPaid}`}>{m.unlock}</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {isFree ? (
           <div className={styles.sidebarSection}>
-            <div className={styles.freeBanner}>🎉 免费使用 · 快速模式 · 每天 3 次</div>
+            <div className={styles.freeBanner}>🎉 免费使用中 · 快速模式 · 2 次 / 天</div>
             <button className={styles.keyBtn} onClick={() => setShowKeyInput(!showKeyInput)}>
-              🔑 自备 Key 解锁全部模式
+              🔑 自备 API Key 解锁全部模式
             </button>
             {showKeyInput && (
               <div className={styles.keyEdit} style={{ marginTop: 8 }}>
@@ -173,36 +189,37 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
           </div>
         ) : (
           <div className={styles.sidebarSection}>
-            <div className={styles.freeBanner} style={{ background: 'rgba(255,70,85,0.08)', borderColor: 'rgba(255,70,85,0.2)', color: '#ff4655' }}>
-              🔑 自备 Key · 全部模式已解锁
+            <div className={styles.freeBanner} style={{ background: 'rgba(227,73,237,.08)', borderColor: 'rgba(227,73,237,.2)', color: '#f0a0f0' }}>
+              🔑 自备 Key · 全部已解锁
             </div>
-            <button className={styles.keyBtn} onClick={() => { setConfig((c: AIConfig) => ({ ...c, apiKey: '' })); setModels([]); setTimeout(() => fetchModels(), 100) }}>
-              ← 切换回免费模式
+            <button className={styles.keyBtn} onClick={() => { setConfig((c: AIConfig) => ({ ...c, apiKey: '' })); setTimeout(() => fetchModels(), 100) }}>
+              ← 切换免费模式
             </button>
           </div>
         )}
 
         <div className={styles.sidebarSection}>
-          <h3>当前</h3>
           <div className={styles.context}>
             <span>🗺️ {mapName}</span>
             <span>⚔️ {side === 'attack' ? '进攻方' : '防守方'}</span>
-            <span>📐 {abilityShapes.length} 技能</span>
           </div>
         </div>
       </aside>
 
       <main className={styles.chatArea}>
         <div className={styles.chatHeader}>
-          <span className={styles.chatModel}>⚡ AI 战术教练{config.model ? ` · ${models.find(m => m.id === config.model)?.name || ''}` : ''}</span>
-          <span className={styles.chatStatus}>{isFree ? '🆓 免费模式' : '🔓 已解锁'}</span>
+          <div className={styles.chatModel}>
+            <div className={styles.eqBar}><span /><span /><span /><span /></div>
+            AI 战术教练{config.model ? ` · ${models.find(m => m.id === config.model)?.name || ''}` : ''}
+          </div>
+          <div className={styles.chatStatus}>● 在线</div>
         </div>
         <div className={styles.messages} ref={scrollRef}>
           {messages.length === 0 ? (
             <div className={styles.welcome}>
               <div className={styles.welcomeIcon}>⚡</div>
-              <h2>AI 战术教练</h2>
-              <p>{isFree ? '免费使用快速模式，每天 3 次。输入 Key 解锁全部智能模式。' : '已解锁全部智能模式，尽情使用。'}试试问我：</p>
+              <h2>你好，我是你的 AI 战术教练</h2>
+              <p>{isFree ? '免费使用快速模式，输入 Key 解锁全部智能模式。' : '全部模式已解锁，尽情使用。'}试试问我：</p>
               <div className={styles.quickPrompts}>
                 {quickPrompts.map((p, i) => (
                   <button key={i} className={styles.quickBtn} onClick={() => { setInput(p); inputRef.current?.focus() }}>{p}</button>
@@ -212,15 +229,19 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
           ) : (
             messages.map((m, i) => (
               <div key={i} className={m.role === 'user' ? styles.userMsg : styles.aiMsg}>
-                <div className={styles.msgAvatar}>{m.role === 'user' ? '👤' : '⚡'}</div>
+                <div className={styles.msgAvatar}>{m.role === 'user' ? '👤' : '🤖'}</div>
                 <div className={styles.msgContent}>{m.content}</div>
               </div>
             ))
           )}
           {loading && (
             <div className={styles.aiMsg}>
-              <div className={styles.msgAvatar}>⚡</div>
-              <div className={styles.msgContent}><span className={styles.typing}>分析中</span></div>
+              <div className={styles.msgAvatar}>🤖</div>
+              <div className={styles.msgContent}>
+                <div className={styles.typing}>
+                  分析中<div className={styles.typingDots}><span /><span /><span /></div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -230,7 +251,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
             placeholder={config.model ? '输入你的战术问题...' : '请先在左侧选择智能模式'}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
-          <button className={styles.sendBtn} onClick={send} disabled={loading || !input.trim() || !config.model}>发送</button>
+          <button className={styles.sendBtn} onClick={send} disabled={loading || !input.trim() || !config.model}>发送消息</button>
         </div>
       </main>
     </div>

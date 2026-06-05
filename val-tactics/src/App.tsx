@@ -248,9 +248,10 @@ function AppInner() {
           <ToolPalette />
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
+        <aside className="sidebar sidebar--right">
+          <Timeline />
+        </aside>
       </div>
-
-      <Timeline />
       {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} />}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showAIPanel && <AIPanel mapId={selectedMap.id} mapName={selectedMap.name} onClose={() => setShowAIPanel(false)} />}

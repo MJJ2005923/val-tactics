@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import styles from './AIPanel.module.css'
 
-interface AIModel { id: string; name: string; tier?: string; perf?: string }
+interface AIModel { id: string; name: string; tier?: string; perf?: string; limit?: string; unlock?: string }
 interface AIConfig { apiKey: string; provider: string; model: string }
 
 const PROVIDER = 'deepseek'
@@ -61,13 +61,12 @@ export default function AISettings() {
     <div className={styles.settings}>
       <h3 className={styles.title}>⚡ 智能模式</h3>
 
-      {isFree && <div className={styles.freeBadge}>🎉 免费 · 快速模式 · 每天 3 次</div>}
+      {isFree && <div className={styles.freeBadge}>🎉 免费 · 快速模式 · 2次/天</div>}
 
       {models.length > 0 ? (
         <div style={{ marginBottom: 12 }}>
           {models.map(m => {
-            const isFreeModel = m.tier === '免费可用'
-            const locked = isFreeModel ? false : isFree
+            const locked = isFree && m.tier !== '免费'
             return (
               <button key={m.id}
                 onClick={() => !locked && setConfig((c: AIConfig) => ({ ...c, model: m.id }))}
@@ -80,10 +79,20 @@ export default function AISettings() {
                   opacity: locked ? 0.45 : 1,
                   color: '#ddd', fontSize: 13,
                 }}>
-                {m.name}
-                {isFreeModel && <span style={{ color: '#4ade80', marginLeft: 6, fontSize: 11 }}>免费</span>}
-                {locked && <span style={{ color: '#f0c850', marginLeft: 6, fontSize: 11 }}>🔒</span>}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{m.name}</span>
+                  {m.unlock && (
+                    <span style={{
+                      fontSize: 10, padding: '1px 6px', borderRadius: 4,
+                      background: m.tier === '免费' ? 'rgba(74,222,128,0.15)' : 'rgba(255,70,85,0.12)',
+                      color: m.tier === '免费' ? '#4ade80' : '#ff4655',
+                    }}>{m.unlock}</span>
+                  )}
+                </div>
                 {m.perf && <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>{m.perf}</div>}
+                <div style={{ fontSize: 10, color: '#555', marginTop: 2 }}>
+                  {m.limit}{locked && ' 🔒'}
+                </div>
               </button>
             )
           })}
@@ -112,7 +121,7 @@ export default function AISettings() {
           <div className={styles.freeBadge} style={{ color: '#ff4655', background: 'rgba(255,70,85,0.08)', borderColor: 'rgba(255,70,85,0.2)' }}>
             🔑 自备 Key · 已解锁
           </div>
-          <button className={styles.toggleBtn} onClick={() => { setConfig((c: AIConfig) => ({ ...c, apiKey: '' })); setModels([]); setTimeout(() => fetchModels(), 100) }}
+          <button className={styles.toggleBtn} onClick={() => { setConfig((c: AIConfig) => ({ ...c, apiKey: '' })); setTimeout(() => fetchModels(), 100) }}
             style={{ width: '100%', padding: 8, fontSize: 12, marginTop: 6 }}>
             ← 切换免费模式
           </button>

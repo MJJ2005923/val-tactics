@@ -238,3 +238,10 @@
   opacity: 0.5;
   cursor: default;
 }
+
+/* ══════ 旗舰版覆盖 ══════ */
+.settings { background: transparent }
+.settings .title { background: linear-gradient(135deg,#f0a0ff,#E349ED,#d870e8); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 16px; font-weight: 800 }
+.freeBadge { background: linear-gradient(135deg,rgba(5,248,248,.08),rgba(227,73,237,.04)); border: 1px solid rgba(5,248,248,.2); color: #05F8F8; border-radius: 10px }
+.toggleBtn { border-color: rgba(5,248,248,.2); color: rgba(5,248,248,.4); transition: all .25s }
+.toggleBtn:hover { border-color: #05F8F8; color: #05F8F8; box-shadow: 0 0 20px rgba(5,248,248,.1) }

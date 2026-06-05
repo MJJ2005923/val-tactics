@@ -248,50 +248,102 @@
 }
 
 /* 阵容 */
+.rosterRow {
+  display: flex;
+  border-bottom: 1px solid rgba(227,73,237,.15);
+}
 .rosterGroup {
-  padding: 4px 8px;
+  flex: 1;
+  padding: 10px 8px;
+  text-align: center;
 }
 
 .rosterLabel {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  margin-bottom: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
 }
 
 .rosterSlots {
   display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 
 .rosterSlot {
-  width: 36px;
-  height: 36px;
-  border: 1.5px dashed var(--color-border);
-  border-radius: 50%;
+  width: 100%;
+  height: 40px;
+  border: 1.5px dashed rgba(227,73,237,.12);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color var(--transition-fast);
+  transition: all .3s cubic-bezier(.16,1,.3,1);
+  position: relative;
+  overflow: hidden;
 }
 
+.rosterSlot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,transparent,rgba(227,73,237,.04));
+  opacity: 0;
+  transition: opacity .3s;
+}
+.rosterSlot:hover::before { opacity: 1 }
+
 .rosterSlot:hover {
-  border-color: var(--color-border-light);
+  border-color: rgba(227,73,237,.4);
+  background: rgba(227,73,237,.06);
+  box-shadow: 0 0 20px rgba(227,73,237,.08);
+  transform: translateY(-1px);
+}
+
+.rosterSlot[style*="filled"], .rosterSlot:has(img) {
+  background: rgba(227,73,237,.12);
+  border: 1px solid rgba(227,73,237,.28);
+  box-shadow: 0 2px 14px rgba(227,73,237,.08);
 }
 
 .rosterEmpty {
-  font-size: 16px;
-  color: var(--color-text-muted);
+  font-size: 14px;
+  color: rgba(227,73,237,.2);
   line-height: 1;
 }
 
 .rosterAvatar {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--color-border);
+  border: 2px solid rgba(227,73,237,.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+
+.rosterFilled {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 4px;
+  width: 100%;
+}
+
+.rosterName {
+  font-size: 11px;
+  font-weight: 600;
+  color: #dcc8ec;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rosterNameEn {
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(227,73,237,.4);
 }
 
 .emptySearch {
@@ -300,3 +352,11 @@
   font-size: 13px;
   color: var(--color-text-muted);
 }
+
+/* ══════ 旗舰版覆盖 ══════ */
+.panel { background: transparent }
+.header { color: rgba(227,73,237,.4); border-color: rgba(227,73,237,.12); font-size: 11px; letter-spacing: 2px }
+.searchBox { border-color: rgba(227,73,237,.08) }
+.searchInput { background: rgba(227,73,237,.03); border-color: rgba(227,73,237,.12); border-radius: 10px; padding: 9px 14px; color: #c0b0d0; transition: all .25s }
+.searchInput:focus { border-color: rgba(5,248,248,.35); box-shadow: 0 0 0 3px rgba(5,248,248,.04),0 0 20px rgba(5,248,248,.06) }
+.searchInput::placeholder { color: rgba(227,73,237,.3) }

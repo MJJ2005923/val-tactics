@@ -557,3 +557,6 @@
   outline: none;
   min-width: 60px;
 }
+
+/* ══════ 旗舰版覆盖 ══════ */
+.timeline { background: linear-gradient(180deg,rgba(16,10,30,.97),rgba(10,6,20,.98)); border-left: 1px solid rgba(227,73,237,.16); box-shadow: -3px 0 50px rgba(0,0,0,.25) }

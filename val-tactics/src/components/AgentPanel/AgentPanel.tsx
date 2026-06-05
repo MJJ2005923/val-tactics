@@ -91,10 +91,12 @@ function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAge
                 } catch {}
               }}>
               {agent
-                ? <img src={getAgentImage(agent)} alt={agent.name} className={styles.rosterAvatar}
-                    onClick={() => onAgentClick(agent.id)}
+                ? <div className={styles.rosterFilled} onClick={() => onAgentClick(agent.id)}
                     onContextMenu={e => { e.preventDefault(); dispatch({ type: 'REMOVE_FROM_ROSTER', team, agentId: agent.id }) }}
-                    title="左键查看 · 右键移除" />
+                    title="左键查看 · 右键移除">
+                    <img src={getAgentImage(agent)} alt={agent.name} className={styles.rosterAvatar} />
+                    <span className={styles.rosterName}>{agent.name}<span className={styles.rosterNameEn}>/{agent.nameEn}</span></span>
+                  </div>
                 : <span className={styles.rosterEmpty}>+</span>}
             </div>
           )
@@ -169,10 +171,11 @@ function AgentPanel() {
   return (
     <>
       <div className={styles.panel}>
-        <div className={styles.header}>阵容</div>
-        <RosterSlots team="attack" onAgentClick={handleRosterClick} />
-        <RosterSlots team="defense" onAgentClick={handleRosterClick} />
-        <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
+        <div className={styles.rosterRow}>
+          <RosterSlots team="attack" onAgentClick={handleRosterClick} />
+          <RosterSlots team="defense" onAgentClick={handleRosterClick} />
+        </div>
+        <div style={{ height: 1, background: 'rgba(227,73,237,.15)', margin: '4px 0' }} />
         <div className={styles.searchBox}>
           <input className={styles.searchInput} type="text" placeholder="搜索特工..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
