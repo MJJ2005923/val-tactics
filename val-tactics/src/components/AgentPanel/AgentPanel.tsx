@@ -48,6 +48,7 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
   const overrideColor = isJett ? '#ffffff' : isSage ? '#50b4f0' : undefined
   const c = overrideColor || typeColors[ability.type]
   const label = typeLabels[ability.type]
+  const iconSrc = `/images/abilities/${ability.id}.png`
   return (
     <div
       className={`${styles.abilityBtn} ${!isDraggable ? styles.abilityBtnDisabled : ''}`}
@@ -59,9 +60,15 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
         setPendingDragData(dragData)
       } : undefined}
     >
-      <span className={styles.abilityKeyBadge} style={{ background: c }}>{ability.key}</span>
-      <span className={styles.abilityName}>{ability.name}</span>
-      <span className={styles.abilityType} style={{ color: c }}>{label}</span>
+      <div className={styles.abilityIconWrap} style={{ background: `linear-gradient(135deg, ${c}, ${c}cc)` }}>
+        <img src={iconSrc} alt="" style={{ width: 20, height: 20 }}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+        <span className={styles.abilityKeyBadge}>{ability.key}</span>
+      </div>
+      <div className={styles.abilityInfo}>
+        <div className={styles.abilityName}>{ability.name}</div>
+        <div className={styles.abilityType} style={{ color: c }}>{label}</div>
+      </div>
     </div>
   )
 }
@@ -160,9 +167,8 @@ function AgentPanel({ animate }: { animate?: boolean }) {
               <div className={styles.abilities}>
                 <div className={styles.dragHint}>拖拽头像放置位置 · 拖拽技能布置战术</div>
                 {sorted.map(ab => (
-                  <div key={ab.id} className={styles.abilityRow}>
+                  <div key={ab.id} className={styles.abilityRow} onClick={() => setSelectedAbility({ ability: ab, agent })} title="点击查看技能详情">
                     <DraggableAbility ability={ab} agent={agent} />
-                    <button className={styles.infoBtn} onClick={() => setSelectedAbility({ ability: ab, agent })} title="详情">?</button>
                   </div>
                 ))}
               </div>

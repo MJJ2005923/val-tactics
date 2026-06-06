@@ -1,0 +1,148 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>技能按钮方案</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;color:#b8b0c8;padding:40px;display:flex;gap:40px;justify-content:center}
+.panel{width:275px;background:linear-gradient(180deg,rgba(18,12,32,.97),rgba(12,8,24,.98));border:1px solid rgba(227,73,237,.16);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:16px}
+.title{font-size:10px;font-weight:700;color:rgba(227,73,237,.2);text-transform:uppercase;letter-spacing:3px}
+
+/* 方案A: 横排4个图标按钮 */
+.abilityRow{display:flex;gap:6px}
+.abilityBtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1px solid rgba(227,73,237,.12);border-radius:10px;background:rgba(227,73,237,.03);cursor:pointer;transition:all .25s cubic-bezier(.16,1,.3,1)}
+.abilityBtn:hover{border-color:rgba(227,73,237,.3);background:rgba(227,73,237,.08);transform:translateY(-2px);box-shadow:0 4px 16px rgba(227,73,237,.1)}
+.abilityIcon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:800;position:relative}
+.abilityKey{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2)}
+.abilityLabel{font-size:9px;color:rgba(227,73,237,.35);text-align:center;line-height:1.2}
+
+/* 方案B: 竖排卡片 */
+.abilityCard{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid rgba(227,73,237,.1);border-radius:10px;background:rgba(227,73,237,.02);cursor:pointer;transition:all .25s cubic-bezier(.16,1,.3,1)}
+.abilityCard:hover{border-color:rgba(227,73,237,.3);background:rgba(227,73,237,.06);transform:translateX(3px);box-shadow:0 0 14px rgba(227,73,237,.06)}
+.abilityCardIcon{width:32px;height:32px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
+.abilityCardInfo{flex:1;min-width:0}
+.abilityCardName{font-size:12px;font-weight:500;color:#c0b0d0}
+.abilityCardType{font-size:10px;color:rgba(227,73,237,.3)}
+.abilityCardKey{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+
+.hint{font-size:9px;color:rgba(227,73,237,.15);text-align:center;padding:6px 0}
+.divider{height:1px;background:rgba(227,73,237,.1)}
+.agentName{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#d0b8e0}
+.agentName img{width:32px;height:32px;border-radius:50%;border:2px solid rgba(5,248,248,.3);box-shadow:0 0 10px rgba(5,248,248,.2)}
+
+.typeColors{display:flex;gap:6px;margin-top:4px}
+.typeDot{width:8px;height:8px;border-radius:2px}
+</style></head><body>
+
+<!-- 方案A：横排 -->
+<div class="panel">
+  <div class="title">方案 A · 横排图标</div>
+  <div class="agentName">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23E349ED'/%3E%3C/svg%3E" onerror="this.style.background='#E349ED'">
+    贤者 / Sage
+  </div>
+  <div class="divider"></div>
+  <div class="abilityRow">
+    <div class="abilityBtn" draggable="true">
+      <div class="abilityIcon" style="background:linear-gradient(135deg,#a070d8,#7a50b8)">
+        <span style="font-size:22px;">🧱</span>
+        <span class="abilityKey">C</span>
+      </div>
+      <div class="abilityLabel">玉城</div>
+    </div>
+    <div class="abilityBtn" draggable="true">
+      <div class="abilityIcon" style="background:linear-gradient(135deg,#a070d8,#7a50b8)">
+        <span style="font-size:22px;">❄️</span>
+        <span class="abilityKey">Q</span>
+      </div>
+      <div class="abilityLabel">薄冰</div>
+    </div>
+    <div class="abilityBtn" draggable="true">
+      <div class="abilityIcon" style="background:linear-gradient(135deg,#50e890,#30c870)">
+        <span style="font-size:22px;">💚</span>
+        <span class="abilityKey">E</span>
+      </div>
+      <div class="abilityLabel">逢春</div>
+    </div>
+    <div class="abilityBtn" draggable="true">
+      <div class="abilityIcon" style="background:linear-gradient(135deg,#50e890,#30c870)">
+        <span style="font-size:22px;">✨</span>
+        <span class="abilityKey">X</span>
+      </div>
+      <div class="abilityLabel">再起</div>
+    </div>
+  </div>
+  <div class="hint">拖拽技能图标布置战术</div>
+</div>
+
+<!-- 方案B：竖排 -->
+<div class="panel">
+  <div class="title">方案 B · 竖排卡片</div>
+  <div class="agentName">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23E349ED'/%3E%3C/svg%3E" onerror="this.style.background='#E349ED'">
+    贤者 / Sage
+  </div>
+  <div class="divider"></div>
+  <div class="abilityCard" draggable="true">
+    <div class="abilityCardIcon" style="background:linear-gradient(135deg,#a070d8,#7a50b8)">🧱</div>
+    <div class="abilityCardInfo">
+      <div class="abilityCardName">玉城 · Barrier Orb</div>
+      <div class="abilityCardType">控制</div>
+    </div>
+    <div class="abilityCardKey" style="background:#a070d8">C</div>
+  </div>
+  <div class="abilityCard" draggable="true">
+    <div class="abilityCardIcon" style="background:linear-gradient(135deg,#a070d8,#7a50b8)">❄️</div>
+    <div class="abilityCardInfo">
+      <div class="abilityCardName">薄冰 · Slow Orb</div>
+      <div class="abilityCardType">控制</div>
+    </div>
+    <div class="abilityCardKey" style="background:#a070d8">Q</div>
+  </div>
+  <div class="abilityCard" draggable="true">
+    <div class="abilityCardIcon" style="background:linear-gradient(135deg,#50e890,#30c870)">💚</div>
+    <div class="abilityCardInfo">
+      <div class="abilityCardName">逢春 · Healing Orb</div>
+      <div class="abilityCardType">治疗</div>
+    </div>
+    <div class="abilityCardKey" style="background:#50e890">E</div>
+  </div>
+  <div class="abilityCard" draggable="true">
+    <div class="abilityCardIcon" style="background:linear-gradient(135deg,#50e890,#30c870)">✨</div>
+    <div class="abilityCardInfo">
+      <div class="abilityCardName">再起 · Resurrection</div>
+      <div class="abilityCardType">治疗</div>
+    </div>
+    <div class="abilityCardKey" style="background:#50e890">X</div>
+  </div>
+  <div class="hint">拖拽技能图标布置战术</div>
+</div>
+
+<!-- 方案C：迷你图标行 -->
+<div class="panel">
+  <div class="title">方案 C · 迷你图标+文字</div>
+  <div class="agentName">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23E349ED'/%3E%3C/svg%3E" onerror="this.style.background='#E349ED'">
+    贤者 / Sage
+  </div>
+  <div class="divider"></div>
+  <div class="abilityCard" draggable="true" style="padding:6px 8px;gap:6px">
+    <div style="width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,#a070d8,#7a50b8);display:flex;align-items:center;justify-content:center;font-size:14px">🧱</div>
+    <span style="font-size:11px;font-weight:600;color:#c0b0d0;flex:1">C · 玉城</span>
+    <span style="font-size:9px;color:#a070d8">控制</span>
+  </div>
+  <div class="abilityCard" draggable="true" style="padding:6px 8px;gap:6px">
+    <div style="width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,#a070d8,#7a50b8);display:flex;align-items:center;justify-content:center;font-size:14px">❄️</div>
+    <span style="font-size:11px;font-weight:600;color:#c0b0d0;flex:1">Q · 薄冰</span>
+    <span style="font-size:9px;color:#a070d8">控制</span>
+  </div>
+  <div class="abilityCard" draggable="true" style="padding:6px 8px;gap:6px">
+    <div style="width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,#50e890,#30c870);display:flex;align-items:center;justify-content:center;font-size:14px">💚</div>
+    <span style="font-size:11px;font-weight:600;color:#c0b0d0;flex:1">E · 逢春</span>
+    <span style="font-size:9px;color:#50e890">治疗</span>
+  </div>
+  <div class="abilityCard" draggable="true" style="padding:6px 8px;gap:6px">
+    <div style="width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,#50e890,#30c870);display:flex;align-items:center;justify-content:center;font-size:14px">✨</div>
+    <span style="font-size:11px;font-weight:600;color:#c0b0d0;flex:1">X · 再起</span>
+    <span style="font-size:9px;color:#50e890">治疗</span>
+  </div>
+  <div class="hint">拖拽技能图标布置战术</div>
+</div>
+</body></html>
