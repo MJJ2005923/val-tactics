@@ -15,7 +15,7 @@ function getInfo(abilityId: string, agentId: string) {
 }
 
 export default function Timeline() {
-  const { markers, abilityShapes, tracks, currentTrackId, recording, replaying, replayIndex, dispatch } = useTactics()
+  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, tracks, currentTrackId, recording, replaying, replayIndex, strategyName, strategyDescription, roster, dispatch } = useTactics()
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameText, setRenameText] = useState('')
@@ -38,8 +38,69 @@ export default function Timeline() {
   const timeStr = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`
 
   const trackId = activeTrackId || currentTrackId
+  const activeTrack = tracks.find(t => t.id === trackId)
   const trackMarkers = markers.filter(m => m.trackId === trackId)
   const sorted = [...trackMarkers].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
+
+  // 导出轨道
+  const handleExportTrack = () => {
+    if (!activeTrack) return
+    const data = {
+      version: 1,
+      type: 'val-tactics-track',
+      exportedAt: Date.now(),
+      track: {
+        name: activeTrack.name,
+        markers: sorted.map(m => ({
+          abilityId: m.abilityId, agentId: m.agentId,
+          x: Math.round(m.x * 1e4) / 1e4, y: Math.round(m.y * 1e4) / 1e4,
+          step: m.step, time: m.time, duration: m.duration, note: m.note || undefined,
+        })),
+      },
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `track-${activeTrack.name}-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
+  // 导入轨道
+  const handleImportTrack = () => {
+    const input = document.createElement('input')
+    input.type = 'file'; input.accept = '.json'
+    input.onchange = async () => {
+      const file = input.files?.[0]
+      if (!file) return
+      try {
+        const text = await file.text()
+        const data = JSON.parse(text)
+        if (data.type !== 'val-tactics-track' || !data.track?.markers) return
+        const trackId = 'tr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+        const newMarkers = data.track.markers.map((m: any, i: number) => ({
+          id: 'mk_' + Date.now() + '_' + i + '_' + Math.random().toString(36).slice(2, 6),
+          trackId,
+          abilityId: m.abilityId, agentId: m.agentId,
+          x: m.x, y: m.y, step: m.step || i + 1, time: m.time || i * 5,
+          duration: m.duration, note: m.note || '', createdAt: Date.now() + i,
+        }))
+        dispatch({
+          type: 'LOAD_ALL',
+          markers: [...markers, ...newMarkers],
+          drawings,
+          texts: textAnnotations,
+          agents: agentPositions,
+          shapes: abilityShapes,
+          name: strategyName,
+          desc: strategyDescription,
+          roster,
+          tracks: [...tracks, { id: trackId, name: data.track.name || '导入轨道', createdAt: Date.now() }],
+        })
+      } catch {}
+    }
+    input.click()
+  }
 
   // 回放引擎（实时计时）
   useEffect(() => {
@@ -91,6 +152,8 @@ export default function Timeline() {
             {recording ? `⏹ ${timeStr}` : '⏺ 录制'}
           </button>
           <button className={styles.recBtn} title="回放">{replaying ? `⏹ ${timeStr}` : '▶'}</button>
+          <div className={styles.headerDivider} />
+          <button className={styles.recBtn} onClick={handleImportTrack} title="导入轨道">📥</button>
         </div>
       </div>
     )
@@ -111,6 +174,13 @@ export default function Timeline() {
           title={replaying ? '停止回放' : '回放'}>
           {replaying ? `⏹ ${timeStr}` : '▶'}
         </button>
+        {activeTrack && sorted.length > 0 && (
+          <>
+            <div className={styles.headerDivider} />
+            <button className={styles.recBtn} onClick={handleExportTrack} title="导出轨道">📤</button>
+          </>
+        )}
+        <button className={styles.recBtn} onClick={handleImportTrack} title="导入轨道">📥</button>
       </div>
       <div className={styles.trackList}>
         {tracks.map(t => {
