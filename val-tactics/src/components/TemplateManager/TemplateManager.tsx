@@ -92,13 +92,6 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
     input.click()
   }
 
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
-
-  const handleClear = () => {
-    if (markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0) return
-    setShowClearConfirm(true)
-  }
-
   const formatDate = (ts: number) => {
     const d = new Date(ts)
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
@@ -128,15 +121,6 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
             <div className={styles.actionRow}>
               <button className={styles.btn} onClick={handleExport} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>导出 JSON</button>
               <button className={styles.btn} onClick={handleImport}>导入 JSON</button>
-              {showClearConfirm ? (
-                <div className={styles.confirmRow}>
-                  <span className={styles.confirmText}>确定清空？</span>
-                  <button className={styles.btnDanger} onClick={() => { dispatch({ type: 'CLEAR_ALL' }); setShowClearConfirm(false); toast('已清空') }}>确定</button>
-                  <button className={styles.btnSm} onClick={() => setShowClearConfirm(false)}>取消</button>
-                </div>
-              ) : (
-                <button className={styles.btnDanger} onClick={handleClear} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>清空画布</button>
-              )}
             </div>
           </div>
 
