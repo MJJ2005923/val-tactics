@@ -261,8 +261,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     const img = new Image()
     img.onload = () => {
       imageRef.current = img
-      // 固定拉伸到 1800×1200 比例
-      setMapSize({ w: 1800, h: 1200 })
+      // 使用图片原始比例
+      setMapSize({ w: img.naturalWidth, h: img.naturalHeight })
       setMapImgLoaded(true)
     }
     img.onerror = () => { imageRef.current = null; setMapImgLoaded(false) }
