@@ -13,6 +13,7 @@ export default function TemplateManager({ onClose, mapId, onLoadMap, onExportIma
   const [templates, setTemplates] = useState<Template[]>([])
   const [name, setName] = useState(strategyName)
   const [desc, setDesc] = useState(strategyDescription)
+  const hasContent = markers.length > 0 || drawings.length > 0 || abilityShapes.length > 0 || textAnnotations.length > 0 || agentPositions.length > 0
   const refresh = useCallback(async () => {
     const all = await db.templates.orderBy('updatedAt').reverse().toArray()
     setTemplates(all)
@@ -119,9 +120,9 @@ export default function TemplateManager({ onClose, mapId, onLoadMap, onExportIma
           <div className={styles.section}>
             <div className={styles.sectionTitle}>导入 / 导出 / 分享</div>
             <div className={styles.actionRow}>
-              <button className={styles.btn} onClick={handleExport} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>导出 JSON</button>
+              <button className={styles.btn} onClick={handleExport} disabled={!hasContent}>导出 JSON</button>
               <button className={styles.btn} onClick={handleImport}>导入 JSON</button>
-              <button className={styles.btn} onClick={onExportImage} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>导出图片</button>
+              <button className={styles.btn} onClick={onExportImage} disabled={!hasContent}>导出图片</button>
               <button className={styles.btn} onClick={onShareLink}>分享链接</button>
             </div>
           </div>
