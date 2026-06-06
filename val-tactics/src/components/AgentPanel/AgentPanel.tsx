@@ -70,7 +70,7 @@ function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAge
   const { roster, dispatch } = useTactics()
   const ids = roster[team]
   const color = team === 'attack' ? '#ff4655' : '#50b4f0'
-  const label = team === 'attack' ? '进攻方' : '防守方'
+  const label = team === 'attack' ? 'Ω 欧米茄' : 'α 阿尔法'
   return (
     <div className={styles.rosterGroup}>
       <div className={styles.rosterLabel} style={{ color }}>{label}</div>
