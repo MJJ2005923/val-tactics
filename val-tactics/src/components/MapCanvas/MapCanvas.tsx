@@ -1166,8 +1166,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       <SelectionInspector />
 
       {/* 显示全部范围 */}
-      <button className={styles.showAllBtn} onClick={() => dispatch({ type: 'TOGGLE_SHOW_ALL_RANGES' })}
-        style={showAllRanges ? { background: 'rgba(5,248,248,.1)', borderColor: 'rgba(5,248,248,.4)', color: '#05F8F8' } : undefined}>
+      <button className={`${styles.showAllBtn} ${showAllRanges ? styles.showAllBtnActive : ''}`}
+        onClick={() => dispatch({ type: 'TOGGLE_SHOW_ALL_RANGES' })}>
         👁 {showAllRanges ? '隐藏范围' : '显示全部'}
       </button>
 
