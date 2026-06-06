@@ -21,6 +21,7 @@ function AppInner() {
   const [showHelp, setShowHelp] = useState(false)
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [showAIPage, setShowAIPage] = useState(false)
+  const [showAIDropdown, setShowAIDropdown] = useState(false)
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
   const toast = useToast()
 
@@ -239,8 +240,24 @@ function AppInner() {
           <button className="btn" onClick={handleExportImage}>导出图片</button>
           <button className="btn" onClick={handleShareLink}>分享链接</button>
           <button className="btn" onClick={handleSaveProgress}>保存进度</button>
-          <button className="btn" onClick={() => setShowAIPage(true)}>🤖 T教练</button>
-          <button className="btn" onClick={() => setShowAIPanel(true)}>💬 快速问答</button>
+          <div className="navbar__aiDropdown" style={{ position: 'relative' }}>
+            <button className="btn" onClick={() => setShowAIDropdown(v => !v)}>🤖 T教练 ▾</button>
+            {showAIDropdown && (
+              <>
+                <div className="navbar__aiDropdownOverlay" onClick={() => setShowAIDropdown(false)} />
+                <div className="navbar__aiDropdownMenu">
+                  <button className="navbar__aiDropdownItem" onClick={() => { setShowAIPanel(true); setShowAIDropdown(false) }}>
+                    <span className="navbar__aiDropdownItemIcon">💬</span>
+                    <span>侧边栏问答</span>
+                  </button>
+                  <button className="navbar__aiDropdownItem" onClick={() => { setShowAIPage(true); setShowAIDropdown(false) }}>
+                    <span className="navbar__aiDropdownItemIcon">🧠</span>
+                    <span>完整页面</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <button className="btn" onClick={() => setShowHelp(true)}>使用手册</button>
           <a className="btn btn--donate" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>❤️ 爱发电</a>
         </div>

@@ -32,5 +32,11 @@
 .btn--attack{background:rgba(255,70,85,.12);border-color:rgba(255,70,85,.25);color:#ff6b7a}.btn--attack:hover{background:rgba(255,70,85,.2)}
 .btn--defense{background:rgba(5,248,248,.08);border-color:rgba(5,248,248,.2);color:var(--cyan)}.btn--defense:hover{background:rgba(5,248,248,.12)}
 
+/* ══════ T教练下拉菜单 ══════ */
+.navbar__aiDropdownOverlay{position:fixed;inset:0;z-index:99}
+.navbar__aiDropdownMenu{position:absolute;top:calc(100% + 6px);right:0;z-index:100;background:linear-gradient(180deg,rgba(18,12,32,.98),rgba(14,10,28,.99));border:1px solid rgba(227,73,237,.16);border-radius:10px;padding:4px;min-width:150px;box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 30px rgba(227,73,237,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:appFadeIn .2s cubic-bezier(.16,1,.3,1)}
+.navbar__aiDropdownItem{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:none;border-radius:7px;background:transparent;color:#b8b0c8;font-size:13px;cursor:pointer;transition:all .2s;text-align:left;font-family:inherit}.navbar__aiDropdownItem:hover{background:rgba(227,73,237,.08);color:#e0d0f0}
+.navbar__aiDropdownItemIcon{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+
 @media(max-width:768px){.sidebar{position:fixed;left:0;top:var(--navbar-height);bottom:var(--timeline-height);z-index:50;width:240px;transform:translateX(-100%);transition:transform .25s ease}.sidebar.mobile-open{transform:translateX(0)}.canvas-area{width:100%}.mobile-menu-btn{display:flex!important;align-items:center;justify-content:center;width:36px;height:36px;font-size:18px}.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49}}
 
