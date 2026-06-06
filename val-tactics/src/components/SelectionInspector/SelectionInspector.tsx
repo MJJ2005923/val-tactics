@@ -2,7 +2,7 @@ import { useTactics } from '../../store/TacticsContext'
 import agents from '../../data/agents'
 import styles from './SelectionInspector.module.css'
 
-const M = 7 / 1800
+const M = 7 / 1600
 
 function fmt(n: number): string {
   const m = n / M
