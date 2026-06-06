@@ -21,7 +21,6 @@ function AppInner() {
   const [showHelp, setShowHelp] = useState(false)
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [showAIPage, setShowAIPage] = useState(false)
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
   const toast = useToast()
 
@@ -236,10 +235,6 @@ function AppInner() {
           style={{ display: 'none' }}>☰</button>
         <div className="navbar__actions">
           <button className="btn" onClick={() => setShowTemplates(true)}>模板管理</button>
-          <button className="btn" onClick={() => {
-            if (markers.length === 0 && drawings.length === 0 && textAnnotations.length === 0 && agentPositions.length === 0 && abilityShapes.length === 0) return
-            setShowClearConfirm(true)
-          }}>清空画布</button>
           <button className="btn btn--primary" onClick={handleDirectExport}>导出 JSON</button>
           <button className="btn" onClick={handleExportImage}>导出图片</button>
           <button className="btn" onClick={handleShareLink}>分享链接</button>
@@ -268,18 +263,6 @@ function AppInner() {
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showAIPanel && <AIPanel mapId={selectedMap.id} mapName={selectedMap.name} onClose={() => setShowAIPanel(false)} />}
       {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => setShowAIPage(false)} />}
-      {showClearConfirm && (
-        <div className="clear-confirm-overlay" onClick={() => setShowClearConfirm(false)}>
-          <div className="clear-confirm-box" onClick={e => e.stopPropagation()}>
-            <div className="clear-confirm-title">确定清空画布？</div>
-            <div className="clear-confirm-desc">所有标记、绘图、文字、特工位置和技能图形将被清除，此操作不可撤销。</div>
-            <div className="clear-confirm-actions">
-              <button className="btn" onClick={() => setShowClearConfirm(false)}>取消</button>
-              <button className="btn btn--primary" onClick={() => { dispatch({ type: 'CLEAR_ALL' }); setShowClearConfirm(false); toast('画布已清空') }}>确定清空</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

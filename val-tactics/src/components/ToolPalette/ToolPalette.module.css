@@ -30,4 +30,15 @@
 .fontBtn:hover{border-color:rgba(227,73,237,.3);color:#dcb8ec;background:rgba(227,73,237,.06)}
 .fontBtnActive{border-color:rgba(5,248,248,.4);color:#05F8F8;background:rgba(5,248,248,.08)}
 
+/* 清空按钮 */
+.clearBtn{color:rgba(227,73,237,.22)}.clearBtn:hover{color:#ff6b7a;border-color:rgba(255,70,85,.35);background:rgba(255,70,85,.06);box-shadow:0 4px 18px rgba(255,70,85,.1)}
+
+/* 清空确认弹窗 */
+.clearConfirm{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;border-top:1px solid rgba(227,73,237,.1);animation:slideDown .25s ease}
+.clearConfirmText{font-size:11px;color:rgba(227,73,237,.35);white-space:nowrap;letter-spacing:.3px}
+.clearConfirmBtn{padding:5px 12px;font-size:11px;font-weight:600;border:1px solid rgba(255,70,85,.3);border-radius:6px;background:rgba(255,70,85,.08);color:#ff6b7a;cursor:pointer;transition:all .25s;font-family:inherit}
+.clearConfirmBtn:hover{background:rgba(255,70,85,.16);border-color:#ff6b7a;box-shadow:0 0 14px rgba(255,70,85,.15)}
+.clearConfirmCancel{padding:5px 12px;font-size:11px;border:1px solid rgba(227,73,237,.12);border-radius:6px;background:transparent;color:rgba(227,73,237,.3);cursor:pointer;transition:all .25s;font-family:inherit}
+.clearConfirmCancel:hover{border-color:rgba(227,73,237,.3);color:#c0b0d0;background:rgba(227,73,237,.04)}
+
 @media(max-width:768px){.palette{border-radius:20px;padding:5px 8px}.toolBtn{width:32px;height:32px;font-size:14px}}

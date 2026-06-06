@@ -18,10 +18,22 @@ const drawColors = ['#ff4655', '#f0c850', '#7ec868', '#50b4f0', '#a070d8', '#ff8
 const fontSizes = [14, 18, 24, 32, 48]
 
 export default function ToolPalette() {
-  const { toolMode, drawColor, drawWidth, fontSize, dispatch } = useTactics()
+  const { toolMode, drawColor, drawWidth, fontSize, markers, drawings, textAnnotations, agentPositions, abilityShapes, dispatch } = useTactics()
   const [showExtras, setShowExtras] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   const isDrawTool = toolMode === 'freehand' || toolMode === 'line' || toolMode === 'arrow' || toolMode === 'rect' || toolMode === 'circle'
+  const isEmpty = markers.length === 0 && drawings.length === 0 && textAnnotations.length === 0 && agentPositions.length === 0 && abilityShapes.length === 0
+
+  const handleClear = () => {
+    if (isEmpty) return
+    setShowClearConfirm(true)
+  }
+
+  const confirmClear = () => {
+    dispatch({ type: 'CLEAR_ALL' })
+    setShowClearConfirm(false)
+  }
 
   return (
     <div className={`${styles.palette} ${showExtras ? styles.paletteOpen : ''}`}>
@@ -38,6 +50,8 @@ export default function ToolPalette() {
         <div className={styles.divider} />
         <button className={styles.toolBtn} onClick={() => dispatch({ type: 'UNDO' })} title="撤销 Ctrl+Z">↩</button>
         <button className={styles.toolBtn} onClick={() => dispatch({ type: 'REDO' })} title="重做 Ctrl+Y">↪</button>
+        <div className={styles.divider} />
+        <button className={`${styles.toolBtn} ${styles.clearBtn}`} onClick={handleClear} title="清空画布">🗑️</button>
         {(isDrawTool || toolMode === 'text') && (
           <>
             <div className={styles.divider} />
@@ -82,6 +96,15 @@ export default function ToolPalette() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* 清空确认弹窗 */}
+      {showClearConfirm && (
+        <div className={styles.clearConfirm}>
+          <span className={styles.clearConfirmText}>确定清空画布？</span>
+          <button className={styles.clearConfirmBtn} onClick={confirmClear}>确定</button>
+          <button className={styles.clearConfirmCancel} onClick={() => setShowClearConfirm(false)}>取消</button>
         </div>
       )}
     </div>
