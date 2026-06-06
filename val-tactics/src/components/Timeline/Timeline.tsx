@@ -97,6 +97,7 @@ export default function Timeline() {
           roster,
           tracks: [...tracks, { id: trackId, name: data.track.name || '导入轨道', createdAt: Date.now() }],
         })
+        setActiveTrackId(trackId)
       } catch {}
     }
     input.click()
