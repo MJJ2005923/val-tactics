@@ -326,6 +326,16 @@
   box-shadow: 0 0 16px rgba(227,73,237,.12);
 }
 
+.agentItemExpanded .agentAvatar {
+  border-color: #05F8F8 !important;
+  box-shadow: 0 0 14px rgba(5,248,248,.3), 0 0 28px rgba(227,73,237,.15) !important;
+  animation: avatarGlow 2.5s ease-in-out infinite;
+}
+@keyframes avatarGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(5,248,248,.25), 0 0 20px rgba(227,73,237,.1); }
+  50% { box-shadow: 0 0 20px rgba(5,248,248,.5), 0 0 36px rgba(227,73,237,.25); }
+}
+
 /* 英雄信息按钮 */
 .agentBtn {
   flex: 1;
