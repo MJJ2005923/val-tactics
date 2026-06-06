@@ -10,16 +10,38 @@
 
 .trackList{flex:1;overflow-y:auto}.trackList::-webkit-scrollbar{width:3px}.trackList::-webkit-scrollbar-thumb{background:rgba(227,73,237,.15);border-radius:2px}
 
-.trackItem{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid rgba(227,73,237,.06);cursor:pointer;transition:all .25s;position:relative;border-left:2px solid transparent}.trackItem:hover{background:rgba(227,73,237,.04)}.trackItemActive{background:rgba(227,73,237,.06);border-left-color:#05F8F8}.trackItemActive::after{content:'';position:absolute;left:0;top:4px;bottom:4px;width:2px;background:#05F8F8;box-shadow:0 0 10px #05F8F8}.trackItemRecording{border-left-color:#ff6b7a}.trackItemRecording::after{background:#ff6b7a;box-shadow:0 0 10px rgba(255,70,85,.5)}
+/* 轨道项 */
+.trackItem{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid rgba(227,73,237,.06);cursor:pointer;transition:all .25s;position:relative;border-left:2px solid transparent}.trackItem:hover{background:rgba(227,73,237,.04)}.trackItemActive{background:rgba(227,73,237,.06);border-left-color:#05F8F8}.trackItemActive::after{content:'';position:absolute;left:0;top:4px;bottom:4px;width:2px;background:#05F8F8;box-shadow:0 0 12px #05F8F8,0 0 28px rgba(5,248,248,.35)}.trackItemRecording{border-left-color:#ff6b7a}.trackItemRecording::after{background:#ff6b7a;box-shadow:0 0 12px rgba(255,70,85,.5)}
 
 .trackName{flex:1;font-size:12px;font-weight:600;color:#c0b0d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.trackCount{font-size:10px;color:rgba(227,73,237,.22);white-space:nowrap}.trackPlayBtn,.trackDelBtn{width:26px;height:26px;border:1px solid rgba(227,73,237,.1);border-radius:6px;background:transparent;color:rgba(227,73,237,.3);font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;padding:0}.trackPlayBtn:hover{border-color:rgba(5,248,248,.35);color:#05F8F8;background:rgba(5,248,248,.06)}.trackPlayBtnActive{color:#05F8F8!important;border-color:rgba(5,248,248,.4)!important;background:rgba(5,248,248,.1)!important}.trackDelBtn:hover{border-color:rgba(255,70,85,.3);color:#ff6b7a;background:rgba(255,70,85,.05)}
 .renameInput{flex:1;padding:4px 8px;background:rgba(227,73,237,.06);border:1px solid rgba(5,248,248,.3);border-radius:4px;color:#c0b0d0;font-size:12px;outline:none;font-family:inherit}
 
+/* 步骤列表 */
 .trackSteps{padding:4px 0;border-top:1px solid rgba(227,73,237,.06)}
-.stepItem{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:11px;color:rgba(227,73,237,.3);cursor:pointer;transition:all .25s}.stepItem:hover{background:rgba(5,248,248,.06);color:#05F8F8;box-shadow:inset 0 0 12px rgba(5,248,248,.04)}.stepItemPlaying{color:#ccc0d8;background:rgba(5,248,248,.05)}
-.stepNum{width:26px;height:26px;border-radius:50%;background:rgba(227,73,237,.12);border:1px solid rgba(227,73,237,.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;transition:all .28s}.stepItemPlaying .stepNum{background:rgba(5,248,248,.16);border-color:rgba(5,248,248,.4);color:#05F8F8;box-shadow:0 0 16px rgba(5,248,248,.18)}
+
+.stepItem{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:11px;color:rgba(227,73,237,.3);cursor:pointer;transition:all .25s}.stepItem:hover{background:rgba(5,248,248,.06);color:#05F8F8;box-shadow:inset 0 0 12px rgba(5,248,248,.04)}
+
+/* 当前播放的步骤 */
+.stepItemPlaying{color:#e0d0f0;background:rgba(5,248,248,.06);box-shadow:inset 0 0 20px rgba(5,248,248,.06),0 0 8px rgba(5,248,248,.04)}
+
+/* 已播放的步骤 */
+.stepItemPast{color:rgba(227,73,237,.15);opacity:.55}
+.stepItemPast:hover{color:rgba(227,73,237,.25)}
+
+/* 步骤编号 */
+.stepNum{width:26px;height:26px;border-radius:50%;background:rgba(227,73,237,.12);border:1px solid rgba(227,73,237,.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;transition:all .28s cubic-bezier(.16,1,.3,1)}
+.stepItemPlaying .stepNum{background:rgba(5,248,248,.2);border-color:#05F8F8;color:#05F8F8;box-shadow:0 0 20px rgba(5,248,248,.3),0 0 36px rgba(5,248,248,.12);animation:stepGlow 1.5s ease-in-out infinite}
+.stepItemPast .stepNum{background:rgba(227,73,237,.06);border-color:rgba(227,73,237,.12);color:rgba(227,73,237,.18)}
+@keyframes stepGlow{0%,100%{box-shadow:0 0 16px rgba(5,248,248,.25),0 0 30px rgba(5,248,248,.08)}50%{box-shadow:0 0 28px rgba(5,248,248,.45),0 0 50px rgba(5,248,248,.18)}}
+
+/* 技能类型色点 */
+.stepColorDot{width:8px;height:8px;border-radius:50%;flex-shrink:0;box-shadow:0 0 4px currentColor;opacity:.8}
+.stepItemPast .stepColorDot{opacity:.3;box-shadow:none}
+
 .stepText{flex:1;font-size:11px;letter-spacing:.3px;color:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.durationWrap{display:flex;align-items:center;gap:2px;flex-shrink:0;margin-left:auto}
+.stepTime{font-size:10px;color:rgba(227,73,237,.2);flex-shrink:0;min-width:32px;text-align:right;font-weight:500;letter-spacing:.3px}
+.stepItemPlaying .stepTime{color:rgba(5,248,248,.4)}
+
 .durationWrap{display:flex;align-items:center;gap:3px;flex-shrink:0;margin-left:auto}
 .durationInput{width:34px;padding:3px 4px;background:rgba(227,73,237,.06);border:1px solid rgba(227,73,237,.15);border-radius:5px;color:#c0b0d0;font-size:11px;text-align:center;outline:none;font-family:inherit;-moz-appearance:textfield}.durationInput::-webkit-outer-spin-button,.durationInput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .durationInput:focus{border-color:rgba(5,248,248,.35);box-shadow:0 0 8px rgba(5,248,248,.1)}

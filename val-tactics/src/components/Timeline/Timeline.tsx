@@ -153,11 +153,14 @@ export default function Timeline() {
                 const info = getInfo(marker.abilityId, marker.agentId)
                 const isPlaying = replaying && idx === replayIndex
                 const isPast = replaying && idx <= replayIndex
+                const stepTime = marker.time != null ? `${Math.floor(marker.time / 60)}:${String(marker.time % 60).padStart(2, '0')}` : ''
                 return (
                   <div key={marker.id}
                     className={`${styles.stepItem} ${isPlaying ? styles.stepItemPlaying : ''} ${isPast ? styles.stepItemPast : ''}`}>
                     <span className={styles.stepNum}>{idx + 1}</span>
+                    <span className={styles.stepColorDot} style={{ color: info.color, background: info.color }} />
                     <span className={styles.stepText}>{info.agentName}/{info.agentNameEn} {info.abilityKey} · {info.abilityName}</span>
+                    {stepTime && <span className={styles.stepTime}>{stepTime}</span>}
                     <div className={styles.durationWrap} onClick={e => e.stopPropagation()}>
                       <input className={styles.durationInput} type="number" min={0} max={99}
                         value={marker.duration ?? ''} placeholder="s"
