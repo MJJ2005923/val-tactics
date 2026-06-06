@@ -116,9 +116,12 @@ function AgentPanel() {
   const handleRosterClick = (agentId: string) => {
     setExpandedId(agentId)
     setTimeout(() => {
-      const el = listRef.current?.querySelector(`[data-agent-id="${agentId}"]`)
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 50)
+      const listEl = listRef.current
+      const el = listEl?.querySelector(`[data-agent-id="${agentId}"]`) as HTMLElement | null
+      if (el && listEl) {
+        listEl.scrollTo({ top: el.offsetTop - listEl.offsetTop - 8, behavior: 'smooth' })
+      }
+    }, 80)
   }
 
   useEffect(() => {
