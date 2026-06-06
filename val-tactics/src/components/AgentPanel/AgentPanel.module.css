@@ -36,6 +36,11 @@
 .panelEnter .agentItem:nth-child(10) { animation-delay: .69s }
 @keyframes apFadeUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
 
+.rosterRow {
+  display: flex;
+  flex-shrink: 0;
+}
+
 .rosterGroup {
   flex: 1;
   padding: 14px 10px;
