@@ -241,18 +241,27 @@ function AppInner() {
           <button className="btn" onClick={handleShareLink}>分享链接</button>
           <button className="btn" onClick={handleSaveProgress}>保存进度</button>
           <div className="navbar__aiDropdown" style={{ position: 'relative' }}>
-            <button className="btn" onClick={() => setShowAIDropdown(v => !v)}>🤖 T教练 ▾</button>
+            <button className="btn" onClick={() => setShowAIDropdown(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="18" height="18" style={{ flexShrink: 0 }}>
+                <defs><linearGradient id="navLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#navLogoGrad)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+                <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#navLogoGrad)" opacity="0.25" transform="rotate(5,53,35)"/>
+                <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#navLogoGrad)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+                <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#navLogoGrad)" opacity="0.35" transform="rotate(10,61,51)"/>
+                <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#navLogoGrad)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+                <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+              </svg>
+              T教练 ▾
+            </button>
             {showAIDropdown && (
               <>
                 <div className="navbar__aiDropdownOverlay" onClick={() => setShowAIDropdown(false)} />
                 <div className="navbar__aiDropdownMenu">
                   <button className="navbar__aiDropdownItem" onClick={() => { setShowAIPanel(true); setShowAIDropdown(false) }}>
-                    <span className="navbar__aiDropdownItemIcon">💬</span>
-                    <span>侧边栏问答</span>
+                    <span>侧边栏</span>
                   </button>
                   <button className="navbar__aiDropdownItem" onClick={() => { setShowAIPage(true); setShowAIDropdown(false) }}>
-                    <span className="navbar__aiDropdownItemIcon">🧠</span>
-                    <span>完整页面</span>
+                    <span>主页面</span>
                   </button>
                 </div>
               </>
