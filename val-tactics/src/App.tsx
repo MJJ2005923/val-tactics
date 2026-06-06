@@ -14,7 +14,7 @@ import AIPage from './components/AIPage/AIPage'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 
-function AppInner() {
+function AppInner({ navbarAnimate }: { navbarAnimate: boolean }) {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -223,7 +223,7 @@ function AppInner() {
 
   return (
     <div className="app-container">
-      <nav className="navbar">
+      <nav className={`navbar ${navbarAnimate ? 'navbar--enter' : ''}`}>
         <span className="navbar__dot" />
         <span className="navbar__logo">TACTICS</span>
         <div className="navbar__divider" />
@@ -297,6 +297,7 @@ function AppInner() {
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true)
+  const [navbarAnimate, setNavbarAnimate] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -306,11 +307,16 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  const handleSplashEnter = () => {
+    setShowSplash(false)
+    setTimeout(() => setNavbarAnimate(true), 50)
+  }
+
   return (
     <TacticsProvider>
       <ToastProvider>
-        {showSplash && <SplashScreen onEnter={() => setShowSplash(false)} />}
-        <AppInner />
+        {showSplash && <SplashScreen onEnter={handleSplashEnter} />}
+        <AppInner navbarAnimate={navbarAnimate} />
       </ToastProvider>
     </TacticsProvider>
   )
