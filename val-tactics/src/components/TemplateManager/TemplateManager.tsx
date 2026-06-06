@@ -5,9 +5,9 @@ import { useTactics } from '../../store/TacticsContext'
 import { useToast } from '../Toast/Toast'
 import styles from './TemplateManager.module.css'
 
-interface Props { onClose: () => void; mapId: string; onLoadMap: (mapId: string) => void }
+interface Props { onClose: () => void; mapId: string; onLoadMap: (mapId: string) => void; onExportImage: () => void; onShareLink: () => void }
 
-export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
+export default function TemplateManager({ onClose, mapId, onLoadMap, onExportImage, onShareLink }: Props) {
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks, dispatch } = useTactics()
   const toast = useToast()
   const [templates, setTemplates] = useState<Template[]>([])
@@ -115,12 +115,14 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
             <input className={`${styles.input} ${styles.inputMt}`} value={desc} onChange={e => setDesc(e.target.value)} placeholder="策略描述（可选）..." />
           </div>
 
-          {/* 导入导出 */}
+          {/* 导入导出分享 */}
           <div className={styles.section}>
-            <div className={styles.sectionTitle}>导入 / 导出</div>
+            <div className={styles.sectionTitle}>导入 / 导出 / 分享</div>
             <div className={styles.actionRow}>
               <button className={styles.btn} onClick={handleExport} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>导出 JSON</button>
               <button className={styles.btn} onClick={handleImport}>导入 JSON</button>
+              <button className={styles.btn} onClick={onExportImage} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>导出图片</button>
+              <button className={styles.btn} onClick={onShareLink}>分享链接</button>
             </div>
           </div>
 

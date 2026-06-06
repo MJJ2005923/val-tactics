@@ -54,22 +54,6 @@ function AppInner() {
     } catch {}
   }, [])
 
-  const handleDirectExport = () => {
-    const data = {
-      version: 2, exportedAt: Date.now(),
-      strategyName, strategyDescription,
-      markers: markers.map(m => ({ abilityId: m.abilityId, agentId: m.agentId, x: m.x, y: m.y, step: m.step, time: m.time, note: m.note })),
-      drawings: drawings.map(d => ({ ...d })),
-      textAnnotations: textAnnotations.map(t => ({ ...t })),
-      agentPositions: agentPositions.map(a => ({ ...a })),
-      abilityShapes: abilityShapes.map(s => ({ ...s })),
-    }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob); a.download = `tactics-${Date.now()}.json`; a.click()
-    URL.revokeObjectURL(a.href)
-  }
-
   const handleExportImage = async () => {
     const mapImg = selectedMap.id
     const cw = 1800, ch = 1200
@@ -236,9 +220,6 @@ function AppInner() {
           style={{ display: 'none' }}>☰</button>
         <div className="navbar__actions">
           <button className="btn" onClick={() => setShowTemplates(true)}>模板管理</button>
-          <button className="btn btn--primary" onClick={handleDirectExport}>导出 JSON</button>
-          <button className="btn" onClick={handleExportImage}>导出图片</button>
-          <button className="btn" onClick={handleShareLink}>分享链接</button>
           <button className="btn" onClick={handleSaveProgress}>保存进度</button>
           <div className="navbar__aiDropdown" style={{ position: 'relative' }}>
             <button className="btn" onClick={() => setShowAIDropdown(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -285,7 +266,7 @@ function AppInner() {
           <Timeline />
         </aside>
       </div>
-      {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} />}
+      {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} onExportImage={handleExportImage} onShareLink={handleShareLink} />}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showAIPanel && <AIPanel mapId={selectedMap.id} mapName={selectedMap.name} onClose={() => setShowAIPanel(false)} />}
       {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => setShowAIPage(false)} />}
