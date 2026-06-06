@@ -14,7 +14,7 @@ function getInfo(abilityId: string, agentId: string) {
   return { agentName: agent?.name || '?', agentNameEn: agent?.nameEn || '', abilityName: ability?.name || '?', abilityKey: ability?.key || '?', color: ability ? typeColors[ability.type] || '#888' : '#888' }
 }
 
-export default function Timeline() {
+export default function Timeline({ animate }: { animate?: boolean }) {
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, tracks, currentTrackId, recording, replaying, replayIndex, strategyName, strategyDescription, roster, dispatch } = useTactics()
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
@@ -147,7 +147,7 @@ export default function Timeline() {
 
   if (totalItems === 0) {
     return (
-      <div className={`${styles.wrapper} ${styles.empty}`}>
+      <div className={`${styles.wrapper} ${styles.empty} ${animate ? styles.timelineEnter : ''}`}>
         <div className={styles.header}>
           <button className={`${styles.recBtn} ${recording ? styles.recordingActive : ''}`}
             onClick={() => dispatch({ type: recording ? 'RECORDING_STOP' : 'RECORDING_START' })}
@@ -163,7 +163,7 @@ export default function Timeline() {
   }
 
   return (
-    <div className={styles.wrapper}>
+    <div className={`${styles.wrapper} ${animate ? styles.timelineEnter : ''}`}>
       <div className={styles.header}>
         <button className={`${styles.recBtn} ${recording ? styles.recordingActive : ''}`}
           onClick={() => dispatch({ type: recording ? 'RECORDING_STOP' : 'RECORDING_START' })}

@@ -14,7 +14,7 @@ import AIPage from './components/AIPage/AIPage'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 
-function AppInner({ navbarAnimate, panelAnimate, canvasAnimate }: { navbarAnimate: boolean; panelAnimate: boolean; canvasAnimate: boolean }) {
+function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate }: { navbarAnimate: boolean; panelAnimate: boolean; canvasAnimate: boolean; timelineAnimate: boolean }) {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -302,7 +302,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate }: { navbarAnimat
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
         <aside className="sidebar sidebar--right">
-          <Timeline />
+          <Timeline animate={timelineAnimate} />
         </aside>
       </div>
       {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} onExportImage={handleExportImage} onShareLink={handleShareLink} />}
@@ -318,6 +318,7 @@ export default function App() {
   const [navbarAnimate, setNavbarAnimate] = useState(false)
   const [panelAnimate, setPanelAnimate] = useState(false)
   const [canvasAnimate, setCanvasAnimate] = useState(false)
+  const [timelineAnimate, setTimelineAnimate] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -332,13 +333,14 @@ export default function App() {
     setNavbarAnimate(true)
     setPanelAnimate(true)
     setCanvasAnimate(true)
+    setTimelineAnimate(true)
   }
 
   return (
     <TacticsProvider>
       <ToastProvider>
         {showSplash && <SplashScreen onEnter={handleSplashEnter} />}
-        <AppInner navbarAnimate={navbarAnimate} panelAnimate={panelAnimate} canvasAnimate={canvasAnimate} />
+        <AppInner navbarAnimate={navbarAnimate} panelAnimate={panelAnimate} canvasAnimate={canvasAnimate} timelineAnimate={timelineAnimate} />
       </ToastProvider>
     </TacticsProvider>
   )
