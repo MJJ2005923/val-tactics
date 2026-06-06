@@ -281,19 +281,12 @@
   box-shadow: 0 0 12px #05F8F8, 0 0 24px rgba(5,248,248,.35);
   animation: selectBarIn .25s cubic-bezier(.16,1,.3,1);
 }
-.agentItemExpanded {
-  background: rgba(5,248,248,.03);
-  box-shadow: inset 0 0 30px rgba(5,248,248,.02), 0 0 12px rgba(5,248,248,.04);
-  animation: agentGlowPulse 3s ease-in-out infinite;
-}
 @keyframes selectBarIn { from { opacity: 0; transform: scaleY(0) } to { opacity: 1; transform: scaleY(1) } }
-@keyframes agentGlowPulse {
-  0%, 100% { box-shadow: inset 0 0 20px rgba(5,248,248,.01), 0 0 6px rgba(5,248,248,.02); }
-  50% { box-shadow: inset 0 0 40px rgba(5,248,248,.04), 0 0 16px rgba(5,248,248,.08); }
-}
 
 .agentItem:hover {
-  background: rgba(227,73,237,.04);
+  background: rgba(5,248,248,.04);
+  box-shadow: inset 0 0 30px rgba(5,248,248,.03), 0 0 16px rgba(5,248,248,.08);
+  border-bottom-color: rgba(5,248,248,.15);
 }
 
 .agentRow {
