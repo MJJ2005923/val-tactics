@@ -32,7 +32,7 @@ export const agentImages: Record<string, string> = {
   tejo: 'tejo', vyse: 'vyse', veto: 'pine', miks: 'iris', waylay: 'terra'
 }
 
-// 游戏内技能范围 (新地图 2048x2048, 1m≈7px, norm=0.0034)
+// 游戏内技能范围 (新地图 2048px, 1m≈7px)
 const M = 7 / 2048 // 1米对应的标准化坐标
 
 const typeDefaults: Record<AbilityType, AbilityShapeConfig> = {
