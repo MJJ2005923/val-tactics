@@ -222,6 +222,20 @@
   pointer-events: none;
 }
 
+/* 地图切换过渡 */
+.mapTransition {
+  position: absolute; inset: 0;
+  background: rgba(5,2,12,.7);
+  z-index: 15;
+  pointer-events: none;
+  animation: mapFadeOverlay .6s ease forwards;
+}
+@keyframes mapFadeOverlay {
+  0% { opacity: 0; }
+  40% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ══════ 旗舰版覆盖 ══════ */
 .container { background: radial-gradient(ellipse 600px 400px at 50% 45%,rgba(227,73,237,.03),transparent) }
 .controls { background: rgba(14,8,26,.9); border: 1px solid rgba(227,73,237,.14); border-radius: 10px; padding: 6px 10px; backdrop-filter: blur(14px); box-shadow: 0 4px 24px rgba(0,0,0,.35) }

@@ -167,6 +167,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [scale, setScale] = useState(1)
   const [mapSize, setMapSize] = useState({ w: 1800, h: 1200 })
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
+  const [mapSwitching, setMapSwitching] = useState(false)
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
   const toast = useToast()
   const [isOver, setIsOver] = useState(false)
@@ -237,6 +238,13 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       container: containerRef.current
     }
   })
+
+  // 地图切换过渡动画
+  useEffect(() => {
+    setMapSwitching(true)
+    const timer = setTimeout(() => setMapSwitching(false), 600)
+    return () => clearTimeout(timer)
+  }, [mapId])
 
   // 地图图片缓存加载（仅在地图切换时加载）+ 按图片比例调整 mapW/mapH
   useEffect(() => {
@@ -1188,6 +1196,9 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         <div className={styles.statusDot} />
         <span>在线</span>
       </div>
+
+      {/* 地图切换过渡遮罩 */}
+      {mapSwitching && <div className={styles.mapTransition} />}
     </div>
   )
 }
