@@ -12,53 +12,56 @@
   transition: opacity .6s ease, transform .6s cubic-bezier(.16,1,.3,1);
 }
 
-/* ====== 入场交错动画 ====== */
-.panelEnter .sectionLabel { animation: apFadeUp .5s cubic-bezier(.16,1,.3,1) .1s both }
-.panelEnter .rosterRow { animation: apFadeUp .5s cubic-bezier(.16,1,.3,1) .15s both }
-.panelEnter .rosterSlot { opacity: 0; animation: slotRevealDown .45s cubic-bezier(.16,1,.3,1) forwards }
+/* ====== 入场交错动画（transition方案，无卡顿）====== */
+.sectionLabel { opacity: 0; transform: translateY(8px) }
+.panelEnter .sectionLabel { opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1); transition-delay: .1s }
+.rosterRow { opacity: 0; transform: translateY(8px) }
+.panelEnter .rosterRow { opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1); transition-delay: .15s }
+.rosterSlot { opacity: 0; transform: translateY(-10px) }
+.panelEnter .rosterSlot { opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1) }
 .panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(1),
-.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(1) { animation-delay: .16s }
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(1) { transition-delay: .16s }
 .panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(2),
-.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(2) { animation-delay: .22s }
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(2) { transition-delay: .22s }
 .panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(3),
-.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(3) { animation-delay: .28s }
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(3) { transition-delay: .28s }
 .panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(4),
-.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(4) { animation-delay: .34s }
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(4) { transition-delay: .34s }
 .panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(5),
-.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(5) { animation-delay: .40s }
-@keyframes slotRevealDown { from { opacity: 0; transform: translateY(-12px) } to { opacity: 1; transform: translateY(0) } }
-.panelEnter .divider { animation: apFadeUp .4s cubic-bezier(.16,1,.3,1) .28s both }
-.panelEnter .searchBox { animation: apFadeUp .4s cubic-bezier(.16,1,.3,1) .4s both }
-.panelEnter .agentItem { opacity: 0; animation: agentSlideLeft .45s cubic-bezier(.16,1,.3,1) forwards }
-.panelEnter .agentItem:nth-child(1) { animation-delay: .40s }
-.panelEnter .agentItem:nth-child(2) { animation-delay: .44s }
-.panelEnter .agentItem:nth-child(3) { animation-delay: .48s }
-.panelEnter .agentItem:nth-child(4) { animation-delay: .52s }
-.panelEnter .agentItem:nth-child(5) { animation-delay: .56s }
-.panelEnter .agentItem:nth-child(6) { animation-delay: .60s }
-.panelEnter .agentItem:nth-child(7) { animation-delay: .64s }
-.panelEnter .agentItem:nth-child(8) { animation-delay: .68s }
-.panelEnter .agentItem:nth-child(9) { animation-delay: .72s }
-.panelEnter .agentItem:nth-child(10) { animation-delay: .76s }
-.panelEnter .agentItem:nth-child(11) { animation-delay: .80s }
-.panelEnter .agentItem:nth-child(12) { animation-delay: .84s }
-.panelEnter .agentItem:nth-child(13) { animation-delay: .88s }
-.panelEnter .agentItem:nth-child(14) { animation-delay: .92s }
-.panelEnter .agentItem:nth-child(15) { animation-delay: .96s }
-.panelEnter .agentItem:nth-child(16) { animation-delay: 1.00s }
-.panelEnter .agentItem:nth-child(17) { animation-delay: 1.04s }
-.panelEnter .agentItem:nth-child(18) { animation-delay: 1.08s }
-.panelEnter .agentItem:nth-child(19) { animation-delay: 1.12s }
-.panelEnter .agentItem:nth-child(20) { animation-delay: 1.16s }
-.panelEnter .agentItem:nth-child(21) { animation-delay: 1.20s }
-.panelEnter .agentItem:nth-child(22) { animation-delay: 1.24s }
-.panelEnter .agentItem:nth-child(23) { animation-delay: 1.28s }
-.panelEnter .agentItem:nth-child(24) { animation-delay: 1.32s }
-.panelEnter .agentItem:nth-child(25) { animation-delay: 1.36s }
-.panelEnter .agentItem:nth-child(26) { animation-delay: 1.40s }
-.panelEnter .agentItem:nth-child(27) { animation-delay: 1.44s }
-.panelEnter .agentItem:nth-child(28) { animation-delay: 1.48s }
-@keyframes agentSlideLeft { from { opacity: 0; transform: translateX(-24px) } to { opacity: 1; transform: translateX(0) } }
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(5) { transition-delay: .40s }
+.divider { opacity: 0 }
+.panelEnter .divider { opacity: 1; transition: opacity .3s; transition-delay: .28s }
+.searchBox { opacity: 0; transform: translateY(8px) }
+.panelEnter .searchBox { opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1); transition-delay: .4s }
+.panelEnter .agentItem { transition: opacity .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1) }
+.panelEnter .agentItem:nth-child(1) { transition-delay: .38s }
+.panelEnter .agentItem:nth-child(2) { transition-delay: .41s }
+.panelEnter .agentItem:nth-child(3) { transition-delay: .44s }
+.panelEnter .agentItem:nth-child(4) { transition-delay: .47s }
+.panelEnter .agentItem:nth-child(5) { transition-delay: .50s }
+.panelEnter .agentItem:nth-child(6) { transition-delay: .53s }
+.panelEnter .agentItem:nth-child(7) { transition-delay: .56s }
+.panelEnter .agentItem:nth-child(8) { transition-delay: .59s }
+.panelEnter .agentItem:nth-child(9) { transition-delay: .62s }
+.panelEnter .agentItem:nth-child(10) { transition-delay: .65s }
+.panelEnter .agentItem:nth-child(11) { transition-delay: .68s }
+.panelEnter .agentItem:nth-child(12) { transition-delay: .71s }
+.panelEnter .agentItem:nth-child(13) { transition-delay: .74s }
+.panelEnter .agentItem:nth-child(14) { transition-delay: .77s }
+.panelEnter .agentItem:nth-child(15) { transition-delay: .80s }
+.panelEnter .agentItem:nth-child(16) { transition-delay: .83s }
+.panelEnter .agentItem:nth-child(17) { transition-delay: .86s }
+.panelEnter .agentItem:nth-child(18) { transition-delay: .89s }
+.panelEnter .agentItem:nth-child(19) { transition-delay: .92s }
+.panelEnter .agentItem:nth-child(20) { transition-delay: .95s }
+.panelEnter .agentItem:nth-child(21) { transition-delay: .98s }
+.panelEnter .agentItem:nth-child(22) { transition-delay: 1.01s }
+.panelEnter .agentItem:nth-child(23) { transition-delay: 1.04s }
+.panelEnter .agentItem:nth-child(24) { transition-delay: 1.07s }
+.panelEnter .agentItem:nth-child(25) { transition-delay: 1.10s }
+.panelEnter .agentItem:nth-child(26) { transition-delay: 1.13s }
+.panelEnter .agentItem:nth-child(27) { transition-delay: 1.16s }
+.panelEnter .agentItem:nth-child(28) { transition-delay: 1.19s }
 @keyframes apFadeUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
 
 .rosterRow {
@@ -237,6 +240,11 @@
 .agentItem {
   border-bottom: 1px solid rgba(227,73,237,.06);
   transition: background .2s;
+  opacity: 0; transform: translateX(-16px);
+}
+.panelEnter .agentItem {
+  opacity: 1; transform: translateX(0);
+  transition: opacity .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1);
 }
 
 .agentItem:hover {
