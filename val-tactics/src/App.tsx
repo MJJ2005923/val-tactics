@@ -227,12 +227,17 @@ function AppInner({ navbarAnimate }: { navbarAnimate: boolean }) {
         <span className="navbar__dot" />
         <span className="navbar__logo">TACTICS</span>
         <div className="navbar__divider" />
-        <select className="btn navbar__mapSelect" value={selectedMap.id} onChange={(e) => {
-          const map = maps.find(m => m.id === e.target.value)
-          if (map) setSelectedMap(map)
-        }}>
-          {maps.map(m => <option key={m.id} value={m.id}>{m.name} · {m.nameEn}</option>)}
-        </select>
+        <div className="navbar__mapBar">
+          {maps.map((m, i) => (
+            <button key={m.id}
+              className={`navbar__mapPill ${selectedMap.id === m.id ? 'navbar__mapPillActive' : ''}`}
+              onClick={() => setSelectedMap(m)}
+              title={`${m.name} · ${m.nameEn}`}
+              style={{ animationDelay: `${i * .04}s` }}>
+              {m.name}
+            </button>
+          ))}
+        </div>
         <button className={`navbar__sideBtn ${side === 'attack' ? 'navbar__sideBtnAttack' : 'navbar__sideBtnDefense'}`}
           onClick={() => dispatch({ type: 'SET_SIDE', side: side === 'attack' ? 'defense' : 'attack' })}>
           {side === 'attack' ? 'Ω 欧米茄' : 'α 阿尔法'}
