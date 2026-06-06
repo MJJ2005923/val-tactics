@@ -239,14 +239,19 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     }
   })
 
-  // 地图切换过渡动画 — 等新地图加载完再淡出
+  // 地图切换过渡动画 — 至少暗屏800ms再渐亮
+  const switchRef = useRef({ loaded: false, elapsed: false })
   useEffect(() => {
     setMapSwitching(true)
+    switchRef.current = { loaded: false, elapsed: false }
+    const tryFade = () => { if (switchRef.current.loaded && switchRef.current.elapsed) setMapSwitching(false) }
+    const t1 = window.setTimeout(() => { switchRef.current.elapsed = true; tryFade() }, 800)
+    return () => clearTimeout(t1)
   }, [mapId])
   useEffect(() => {
     if (mapImgLoaded && mapSwitching) {
-      const timer = setTimeout(() => setMapSwitching(false), 500)
-      return () => clearTimeout(timer)
+      switchRef.current.loaded = true
+      if (switchRef.current.elapsed) setMapSwitching(false)
     }
   }, [mapImgLoaded, mapSwitching])
 
