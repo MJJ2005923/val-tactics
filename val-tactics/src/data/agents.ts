@@ -58,23 +58,23 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'jett-tailwind':             { shape: 'line', length: 18 * M, thickness: 0.003, iconOnly: true },
   'harbor-cove':              { shape: 'circle', radius: 7 * M },    // 7m 护盾
   'harbor-reckoning':         { shape: 'line', length: 55 * M, thickness: 0.006 },
-  'sova-owl-drone':           { shape: 'line', length: 55 * M, thickness: 0.004, iconOnly: true },
-  'clove-ruse':               { radius: 5.5 * M },    // 5.5m
-  'clove-meddle':              { radius: 5.5 * M, iconOnly: true },
+  'sova-owl-drone':           { shape: 'line', length: 50 * M, thickness: 0.004, iconOnly: true },
+  'clove-ruse':               { radius: 6.5 * M },    // 6.5m
+  'clove-meddle':              { radius: 6.5 * M, iconOnly: true },
   'cypher-cyber-cage':        { radius: 5.5 * M, iconOnly: true },    // 5.5m 网牢
 
   // === 燃烧弹/伤害 ===
   'brimstone-incendiary':     { radius: 6.5 * M, iconOnly: true },
   'killjoy-nanoswarm':        { radius: 6 * M, iconOnly: true },
   'raze-paint-shells':        { shape: 'circle', radius: 8 * M, iconOnly: true },
-  'gekko-mosh-pit':           { radius: 7 * M, iconOnly: true },
+  'gekko-mosh-pit':           { radius: 7.5 * M, iconOnly: true },
   'raze-boom-bot':            { radius: 2.0 * M },
   'kayo-frag':                { radius: 5.5 * M, iconOnly: true },
   'tejo-c':                    { shape: 'line', length: 35 * M, thickness: 0.004, radius: 22 * M, iconOnly: true },
   'tejo-q':                    { shape: 'line', length: 25 * M, thickness: 0.005, radius: 7 * M, iconOnly: true },
   'tejo-e':                    { shape: 'circle', radius: 7 * M, iconOnly: true },
   'tejo-x':                    { shape: 'line', length: 45 * M, width: 20 * M, radius: 5 * M, iconOnly: true },
-  'sova-shock-bolt':          { shape: 'circle', radius: 5.5 * M, iconOnly: true },
+  'sova-shock-bolt':          { shape: 'circle', radius: 6.5 * M, iconOnly: true },
   'vyse-razorvine':           { radius: 8 * M, iconOnly: true },
   'vyse-steel-garden':         { radius: 40 * M, iconOnly: true },
   'vyse-arc-rose':             { shape: 'circle', radius: 1.2 * M, iconOnly: true },
@@ -91,8 +91,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'deadlock-gravnet':          { shape: 'circle', radius: 10 * M },
   'deadlock-sonic-sensor':     { shape: 'line', length: 13 * M, width: 13 * M, iconOnly: true },
   'deadlock-annihilation':     { shape: 'line', length: 50 * M, thickness: 0.006, radius: 8 * M, iconOnly: true },
-  'breach-rolling-thunder':    { shape: 'line', length: 45 * M, width: 30 * M, thickness: 0.015, iconOnly: true },
-  'fade-nightfall':            { shape: 'line', length: 55 * M, width: 30 * M, thickness: 0.015, iconOnly: true },
+  'breach-rolling-thunder':    { shape: 'line', length: 50 * M, width: 28 * M, thickness: 0.015, iconOnly: true },
+  'fade-nightfall':            { shape: 'line', length: 63 * M, width: 35 * M, thickness: 0.015, iconOnly: true },
 
   // === 墙体 ===
   'viper-toxic-screen':       { shape: 'line', length: 100 * M, thickness: 2 * M },
@@ -109,22 +109,22 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'neon-high-gear':           { shape: 'line', length: 11 * M, thickness: 0.003, iconOnly: true },
 
   // === 侦查 ===
-  'sova-recon-bolt':           { shape: 'circle', radius: 40 * M, iconOnly: true },
-  'sova-hunters-fury':         { shape: 'line', length: 90 * M, thickness: 0.015, iconOnly: true },
-  'fade-prowler':              { shape: 'line', length: 50 * M, thickness: 0.004, iconOnly: true },
-  'fade-haunt':                { shape: 'circle', radius: 40 * M, iconOnly: true },
+  'sova-recon-bolt':           { shape: 'circle', radius: 45 * M, iconOnly: true },
+  'sova-hunters-fury':         { shape: 'line', length: 100 * M, thickness: 0.015, iconOnly: true },
+  'fade-prowler':              { shape: 'line', length: 45 * M, thickness: 0.004, iconOnly: true },
+  'fade-haunt':                { shape: 'circle', radius: 45 * M, iconOnly: true },
   'killjoy-turret':            { shape: 'cone', angle: 100, length: 55 * M, iconOnly: true },
   'killjoy-alarmbot':          { shape: 'circle', radius: 7 * M, outerRadius: 55 * M, iconOnly: true },
   'cypher-tripwire':           { shape: 'line', length: 15 * M, thickness: 0.003 },
   'cypher-spycam':             { shape: 'circle', radius: 1.2 * M },
-  'gekko-thrash':              { shape: 'line', length: 80 * M, thickness: 0.005, radius: 17 * M, iconOnly: true },
+  'gekko-thrash':              { shape: 'line', length: 90 * M, thickness: 0.005, radius: 13 * M, iconOnly: true },
   'gekko-wingman':             { angle: 30, length: 12 * M, iconOnly: true },
-  'skye-trailblazer':          { shape: 'line', length: 40 * M, thickness: 0.005, radius: 20 * M, iconOnly: true },
+  'skye-trailblazer':          { shape: 'line', length: 40 * M, thickness: 0.005, radius: 15 * M, iconOnly: true },
   'skye-seekers':              { shape: 'circle', radius: 1.2 * M },
 
   // === 闪光 ===
   'breach-flashpoint':         { angle: 70, length: 18 * M, iconOnly: true },
-  'skye-guiding-light':        { shape: 'line', length: 40 * M, thickness: 0.005, iconOnly: true },
+  'skye-guiding-light':        { shape: 'line', length: 60 * M, thickness: 0.005, iconOnly: true },
   'kayo-flash':                { shape: 'circle', radius: 1.2 * M },
   'yoru-blindside':            { angle: 50, length: 12 * M, iconOnly: true },
   'gekko-dizzy':               { shape: 'circle', radius: 50 * M, iconOnly: true },
@@ -134,9 +134,9 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'sage-slow-orb':             { shape: 'circle', radius: 7 * M, iconOnly: true },
   'astra-gravity-well':        { radius: 7 * M, iconOnly: true },
   'astra-nova-pulse':          { radius: 7 * M, iconOnly: true },
-  'fade-seize':                { radius: 8 * M, iconOnly: true },
+  'fade-seize':                { radius: 8.5 * M, iconOnly: true },
   'breach-aftershock':         { shape: 'cone', angle: 50, length: 20 * M, iconOnly: true },
-  'breach-fault-line':         { shape: 'line', length: 70 * M, width: 15 * M, thickness: 0.01, iconOnly: true },
+  'breach-fault-line':         { shape: 'line', length: 75 * M, width: 14 * M, thickness: 0.01, iconOnly: true },
   'brimstone-stim-beacon':     { shape: 'circle', radius: 8 * M, iconOnly: true },
   'waylay-c':                  { shape: 'circle', radius: 7.5 * M, iconOnly: true },
   'waylay-q':                  { shape: 'line', length: 15 * M, thickness: 0.003, iconOnly: true },
@@ -155,7 +155,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 治疗 ===
   'sage-healing-orb':          { shape: 'circle', radius: 3 * M },
   'sage-resurrection':         { radius: 2 * M },
-  'skye-regrowth':             { radius: 24 * M, iconOnly: true },
+  'skye-regrowth':             { radius: 27 * M, iconOnly: true },
   'reyna-devour':              { radius: 1 * M },
   'clove-pick-me-up':          { radius: 3 * M },
 
