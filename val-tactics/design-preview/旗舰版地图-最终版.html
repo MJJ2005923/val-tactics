@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>旗舰版地图 · 最终版</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;color:#b8b0c8;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:20px}
+h2{font-size:13px;letter-spacing:3px;color:rgba(5,248,248,.35)}
+.row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.card{text-align:center}.card p{font-size:10px;color:rgba(227,73,237,.25);margin-top:6px}
+canvas{border:1px solid rgba(227,73,237,.18);border-radius:10px;box-shadow:0 0 30px rgba(227,73,237,.06)}
+</style></head><body>
+<h2>旗舰版战术地图</h2>
+<div class="row" id="r"></div>
+<script>
+const maps=['ascent','bind','sunset','split','pearl']
+const names={ascent:'亚海悬城',bind:'源工重镇',sunset:'日落之城',split:'霓虹町',pearl:'深海明珠'}
+
+maps.forEach(id=>{
+  const img=new Image()
+  img.onload=()=>{
+    const iw=img.naturalWidth,ih=img.naturalHeight,W=1800,H=1200
+    const tc=document.createElement('canvas');tc.width=iw;tc.height=ih;const tctx=tc.getContext('2d');tctx.drawImage(img,0,0)
+    const src=tctx.getImageData(0,0,iw,ih).data
+
+    const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d')
+    const out=ctx.createImageData(W,H)
+    const sx=iw/W,sy=ih/H
+
+    // ══ 简洁方案：原图 + 暗底 ══
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high'
+
+    // 暗底
+    ctx.fillStyle='#060210';ctx.fillRect(0,0,W,H)
+
+    // 原图叠加——保留全部细节
+    ctx.globalAlpha=.6;ctx.drawImage(img,0,0,W,H);ctx.globalAlpha=1
+
+    // 旗舰色调层
+    ctx.fillStyle='rgba(10,5,25,.25)';ctx.fillRect(0,0,W,H)
+
+    // 暗角
+    const grd=ctx.createRadialGradient(W*.5,H*.5,W*.08,W*.5,H*.5,W*.72)
+    grd.addColorStop(0,'transparent');grd.addColorStop(.5,'transparent');grd.addColorStop(1,'rgba(5,2,14,.55)')
+    ctx.fillStyle=grd;ctx.fillRect(0,0,W,H)
+
+    // 暗角
+    const g=ctx.createRadialGradient(W*.5,H*.5,W*.08,W*.5,H*.5,W*.78)
+    g.addColorStop(0,'transparent');g.addColorStop(.55,'transparent');g.addColorStop(1,'rgba(5,2,14,.6)')
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
+
+    // 网格（很淡）
+    ctx.strokeStyle='rgba(227,73,237,.025)';ctx.lineWidth=0.5
+    for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let y=0;y<H;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+    // 外框
+    ctx.strokeStyle='rgba(227,73,237,.2)';ctx.lineWidth=2;ctx.strokeRect(2,2,W-4,H-4)
+    ctx.strokeStyle='rgba(5,248,248,.06)';ctx.lineWidth=1;ctx.strokeRect(7,7,W-14,H-14)
+
+    // 底部
+    ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,H-24,W,24)
+    ctx.strokeStyle='rgba(227,73,237,.08)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H-24);ctx.lineTo(W,H-24);ctx.stroke()
+    ctx.fillStyle='rgba(5,248,248,.3)';ctx.font='11px "PingFang SC"';ctx.textAlign='left';ctx.fillText(names[id]+' · '+id.toUpperCase(),12,H-7)
+    ctx.fillStyle='rgba(227,73,237,.12)';ctx.textAlign='right';ctx.fillText('旗舰版',W-12,H-7)
+
+    const wrap=document.createElement('div');wrap.className='card';wrap.appendChild(c)
+    const p=document.createElement('p');p.textContent=names[id];wrap.appendChild(p)
+    document.getElementById('r').appendChild(wrap)
+  }
+  img.src='/images/maps-clean/'+id+'.png'
+})
+</script></body></html>

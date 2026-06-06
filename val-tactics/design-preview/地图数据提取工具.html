@@ -1,0 +1,115 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>地图数据提取</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:monospace;background:#05020c;color:#b8b0c8;padding:16px}
+h2{font-size:13px;color:rgba(5,248,248,.4);margin-bottom:10px}
+.row{display:flex;gap:20px;flex-wrap:wrap}
+canvas{border:1px solid rgba(227,73,237,.2);border-radius:6px}
+#grid{font-size:6px;line-height:1;white-space:pre;color:rgba(227,73,237,.5);overflow:auto;max-height:90vh}
+button{padding:6px 14px;border:1px solid rgba(5,248,248,.3);border-radius:6px;background:rgba(5,248,248,.06);color:#05F8F8;cursor:pointer;font-family:inherit;margin:6px 4px}
+button:hover{background:rgba(5,248,248,.12)}
+select{padding:6px 10px;background:rgba(227,73,237,.04);border:1px solid rgba(227,73,237,.15);border-radius:6px;color:#c0b0d0;font-family:inherit}
+</style></head><body>
+<h2>地图数据提取工具 · 像素→网格</h2>
+<select id="sel">
+  <option value="ascent">亚海悬城</option><option value="bind">源工重镇</option><option value="sunset">日落之城</option>
+  <option value="split">霓虹町</option><option value="pearl">深海明珠</option><option value="haven">隐士修所</option>
+  <option value="lotus">莲华古城</option><option value="breeze">微风岛屿</option><option value="icebox">森寒冬港</option>
+  <option value="fracture">裂变峡谷</option><option value="abyss">幽邃地窖</option><option value="saltmine">盐海矿镇</option>
+</select>
+<button onclick="loadMap()">加载地图</button>
+<button onclick="exportWalls()">导出墙体坐标</button>
+<div class="row">
+  <div><p style="font-size:10px;color:rgba(227,73,237,.3)">原始图</p><canvas id="orig"></canvas></div>
+  <div><p style="font-size:10px;color:rgba(227,73,237,.3)">边缘检测</p><canvas id="edge"></canvas></div>
+  <div><p style="font-size:10px;color:rgba(227,73,237,.3)">网格视图 (100×70)</p><canvas id="thumb"></canvas></div>
+</div>
+<pre id="grid"></pre>
+<script>
+let imgData=null,iw=0,ih=0
+
+function loadMap(){
+  const id=document.getElementById('sel').value
+  const img=new Image()
+  img.onload=()=>{
+    iw=img.naturalWidth;ih=img.naturalHeight
+    // 原始图
+    const oc=document.getElementById('orig');oc.width=iw;oc.height=ih
+    oc.getContext('2d').drawImage(img,0,0)
+    // 获取像素
+    const c2=document.createElement('canvas');c2.width=iw;c2.height=ih
+    const ctx2=c2.getContext('2d');ctx2.drawImage(img,0,0)
+    imgData=ctx2.getImageData(0,0,iw,ih).data
+    // 边缘检测
+    detectEdges(img,iw,ih)
+    // 网格缩略图
+    drawThumb(imgData,iw,ih)
+    // 文字网格
+    drawTextGrid(imgData,iw,ih)
+  }
+  img.src='/images/maps/'+id+'.png'
+}
+
+// 边缘检测 (Sobel简化)
+function detectEdges(img,iw,ih){
+  const c=document.getElementById('edge');c.width=iw;c.height=ih
+  const ctx=c.getContext('2d'),out=ctx.createImageData(iw,ih)
+  const d=[-1,0,1],get=(x,y)=>{if(x<0||x>=iw||y<0||y>=ih)return 0;const i2=(y*iw+x)*4;return imgData[i2]*.299+imgData[i2+1]*.587+imgData[i2+2]*.114}
+  for(let y=0;y<ih;y++)for(let x=0;x<iw;x++){
+    let gx=0,gy=0
+    for(let ky=-1;ky<=1;ky++)for(let kx=-1;kx<=1;kx++){
+      const v=get(x+kx,y+ky),w=kx===0&&ky===0?0:(Math.abs(kx)+Math.abs(ky)===2?.7:1)
+      gx+=v*d[kx+1]*w;gy+=v*d[ky+1]*w
+    }
+    const mag=Math.min(255,Math.sqrt(gx*gx+gy*gy)*2)
+    const i2=(y*iw+x)*4;out.data[i2]=mag;out.data[i2+1]=mag;out.data[i2+2]=mag;out.data[i2+3]=255
+  }
+  ctx.putImageData(out,0,0)
+}
+
+// 缩略图 100x70
+function drawThumb(data,iw,ih){
+  const tw=100,th=70,c=document.getElementById('thumb');c.width=tw;c.height=th
+  const ctx=c.getContext('2d')
+  for(let ty=0;ty<th;ty++)for(let tx=0;tx<tw;tx++){
+    const sx=Math.floor(tx*iw/tw),sy=Math.floor(ty*ih/th),i2=(sy*iw+sx)*4
+    const r=data[i2],g=data[i2+1],b=data[i2+2]
+    ctx.fillStyle=`rgb(${r},${g},${b})`;ctx.fillRect(tx,ty,1,1)
+  }
+}
+
+// 文字网格 50x35
+function drawTextGrid(data,iw,ih){
+  const gw=50,gh=35,bx=iw/gw,by=ih/gh,rows=[]
+  for(let gy=0;gy<gh;gy++){
+    let row=''
+    for(let gx=0;gx<gw;gx++){
+      const sx=Math.floor(gx*bx),sy=Math.floor(gy*by),i2=(sy*iw+sx)*4
+      const r=data[i2],g=data[i2+1],b=data[i2+2]
+      const brightness=(r+g+b)/3
+      if(brightness<40)row+='▓'       // 极暗 = 墙体
+      else if(brightness<70)row+='▒'  // 暗 = 建筑
+      else if(brightness<100)row+='░' // 灰 = 走廊
+      else if(brightness<140)row+='·' // 浅灰
+      else row+=' '                    // 亮 = 空地
+    }
+    rows.push(row)
+  }
+  document.getElementById('grid').textContent=rows.join('\n')
+}
+
+// 导出墙体坐标
+function exportWalls(){
+  if(!imgData)return alert('先加载地图')
+  const steps=30,cells=[]
+  for(let gy=0;gy<steps;gy++){
+    for(let gx=0;gx<steps;gx++){
+      const sx=Math.floor(gx*iw/steps),sy=Math.floor(gy*ih/steps),i2=(sy*iw+sx)*4
+      const brightness=(imgData[i2]+imgData[i2+1]+imgData[i2+2])/3
+      if(brightness<50)cells.push({x:Math.round(gx*1800/steps),y:Math.round(gy*1200/steps)})
+    }
+  }
+  console.log('墙体单元格 ('+cells.length+'):',JSON.stringify(cells))
+  alert('导出了 '+cells.length+' 个墙体坐标点，打开控制台查看')
+}
+</script></body></html>

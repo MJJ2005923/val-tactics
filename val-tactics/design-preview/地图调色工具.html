@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>地图调色工具</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;color:#b8b0c8;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px}
+h2{font-size:12px;letter-spacing:3px;color:rgba(5,248,248,.35)}
+canvas{border:1px solid rgba(227,73,237,.18);border-radius:10px;box-shadow:0 0 30px rgba(227,73,237,.06)}
+.ctls{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:800px}
+.ctl{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:100px}
+.ctl label{font-size:9px;color:rgba(227,73,237,.35);letter-spacing:1px}
+.ctl input[type=range]{width:100px;accent-color:#E349ED}
+.ctl input[type=color]{width:40px;height:24px;border:none;background:transparent;cursor:pointer}
+.ctl span{font-size:9px;color:rgba(5,248,248,.3)}
+button{padding:6px 14px;border:1px solid rgba(5,248,248,.3);border-radius:6px;background:rgba(5,248,248,.06);color:#05F8F8;cursor:pointer;font-family:inherit;font-size:11px}
+button:hover{background:rgba(5,248,248,.12)}
+.row{display:flex;gap:8px;align-items:center}
+</style></head><body>
+<h2>地图调色工具 · 实时预览</h2>
+<canvas id="c" width="900" height="600"></canvas>
+<div class="ctls">
+  <div class="ctl"><label>暗区色</label><input type="color" id="dark" value="#060212" oninput="render()"><span id="vd">#060212</span></div>
+  <div class="ctl"><label>墙面线色</label><input type="color" id="wall" value="#f550c8" oninput="render()"><span id="vw">#f550c8</span></div>
+  <div class="ctl"><label>地形色</label><input type="color" id="land" value="#053750" oninput="render()"><span id="vl">#053750</span></div>
+  <div class="ctl"><label>高亮色</label><input type="color" id="high" value="#087890" oninput="render()"><span id="vh">#087890</span></div>
+  <div class="ctl"><label>原图透明度</label><input type="range" id="alpha" min="0" max="100" value="50" oninput="render()"><span id="va">50%</span></div>
+  <div class="ctl"><label>边缘阈值</label><input type="range" id="edge" min="5" max="50" value="18" oninput="render()"><span id="ve">18</span></div>
+  <div class="ctl"><label>线宽</label><input type="range" id="lw" min="1" max="6" value="2" oninput="render()"><span id="vw2">2</span></div>
+</div>
+<div class="row">
+  <button onclick="exportConfig()">导出当前配色</button>
+  <span style="font-size:10px;color:rgba(227,73,237,.2)">调好后截图或导出发给我</span>
+</div>
+<script>
+var img=new Image(),edgeData=null,srcData=null,iw,ih
+img.onload=function(){
+  iw=img.naturalWidth;ih=img.naturalHeight
+  // 预计算边缘
+  var tc=document.createElement('canvas');tc.width=iw;tc.height=ih;var tctx=tc.getContext('2d');tctx.drawImage(img,0,0)
+  var data=tctx.getImageData(0,0,iw,ih).data
+  function B(x,y){if(x<0||x>=iw||y<0||y>=ih)return 0;var i=(y*iw+x)*4;return data[i]*.299+data[i+1]*.587+data[i+2]*.114}
+  edgeData=new Float32Array(iw*ih)
+  for(var y=1;y<ih-1;y++)for(var x=1;x<iw-1;x++){
+    var tl=B(x-1,y-1),tc=B(x,y-1),tr=B(x+1,y-1),ml=B(x-1,y),mr=B(x+1,y),bl=B(x-1,y+1),bc=B(x,y+1),br=B(x+1,y+1)
+    edgeData[y*iw+x]=Math.sqrt(Math.pow(-tl+tr-2*ml+2*mr-bl+br,2)+Math.pow(-tl-2*tc-tr+bl+2*bc+br,2))
+  }
+  srcData=data
+  render()
+}
+
+function hex2rgb(h){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return[r,g,b]}
+function render(){
+  if(!edgeData)return
+  var W=900,H=600,ctx=document.getElementById('c').getContext('2d')
+  var dark=hex2rgb(document.getElementById('dark').value)
+  var wall=hex2rgb(document.getElementById('wall').value)
+  var land=hex2rgb(document.getElementById('land').value)
+  var high=hex2rgb(document.getElementById('high').value)
+  var alpha=parseInt(document.getElementById('alpha').value)/100
+  var th=parseInt(document.getElementById('edge').value)/100
+  var lw=parseInt(document.getElementById('lw').value)
+  document.getElementById('va').textContent=Math.round(alpha*100)+'%'
+  document.getElementById('ve').textContent=th
+  document.getElementById('vw2').textContent=lw
+
+  // 找出最大边缘值做阈值基准
+  var maxE=0;for(var i=0;i<edgeData.length;i++)if(edgeData[i]>maxE)maxE=edgeData[i]
+  var threshold=maxE*th,scale=Math.min(W/iw,H/ih)*.85
+  var MX=(W-iw*scale)/2,MY=(H-ih*scale)/2
+
+  // 背景
+  ctx.fillStyle='#050210';ctx.fillRect(0,0,W,H)
+
+  // 像素渲染
+  var out=ctx.createImageData(W,H)
+  for(var y=0;y<H;y++)for(var x=0;x<W;x++){
+    var di=(y*W+x)*4,sx=Math.floor((x-MX)/scale),sy=Math.floor((y-MY)/scale)
+    if(sx<0||sx>=iw||sy<0||sy>=ih){out.data[di]=dark[0];out.data[di+1]=dark[1];out.data[di+2]=dark[2];out.data[di+3]=255;continue}
+    var idx=sy*iw+sx,e=edgeData[idx]
+    if(e>threshold*2){out.data[di]=wall[0];out.data[di+1]=wall[1];out.data[di+2]=wall[2];out.data[di+3]=255}
+    else if(e>threshold){out.data[di]=Math.floor(wall[0]*.6);out.data[di+1]=Math.floor(wall[1]*.6);out.data[di+2]=Math.floor(wall[2]*.6);out.data[di+3]=255}
+    else{
+      var gray=(srcData[idx*4]+srcData[idx*4+1]+srcData[idx*4+2])/3
+      if(gray<40){var t=gray/40;out.data[di]=Math.floor(dark[0]*(1-t)+land[0]*t);out.data[di+1]=Math.floor(dark[1]*(1-t)+land[1]*t);out.data[di+2]=Math.floor(dark[2]*(1-t)+land[2]*t)}
+      else if(gray<140){var t=(gray-40)/100;out.data[di]=Math.floor(land[0]*(1-t)+high[0]*t);out.data[di+1]=Math.floor(land[1]*(1-t)+high[1]*t);out.data[di+2]=Math.floor(land[2]*(1-t)+high[2]*t)}
+      else{var t=(gray-140)/115;out.data[di]=Math.floor(high[0]*(1-t)+high[0]*t);out.data[di+1]=Math.floor(high[1]*(1-t)+Math.min(255,high[1]*1.3)*t);out.data[di+2]=Math.floor(high[2]*(1-t)+Math.min(255,high[2]*1.3)*t)}
+      out.data[di+3]=255
+    }
+  }
+  ctx.putImageData(out,0,0)
+
+  // 外框
+  ctx.strokeStyle='rgba(227,73,237,.2)';ctx.lineWidth=2;ctx.strokeRect(MX-2,MY-2,iw*scale+4,ih*scale+4)
+}
+
+function exportConfig(){var s=[];['dark','wall','land','high'].forEach(function(id){s.push(id+':'+document.getElementById(id).value)});s.push('alpha:'+document.getElementById('alpha').value);s.push('edge:'+document.getElementById('edge').value);s.push('lw:'+document.getElementById('lw').value);alert('配色参数:\n'+s.join('\n'))}
+img.src='/images/maps-clean/ascent.png'
+</script></body></html>

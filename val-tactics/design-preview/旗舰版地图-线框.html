@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>旗舰版地图 · 线框提取</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;color:#b8b0c8;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:10px;padding:20px}
+h2{font-size:13px;letter-spacing:3px;color:rgba(5,248,248,.35)}p{font-size:10px;color:rgba(227,73,237,.2)}
+.row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+canvas{border:1px solid rgba(227,73,237,.18);border-radius:10px;box-shadow:0 0 30px rgba(227,73,237,.06)}
+</style></head><body>
+<h2>旗舰版 · 亚海悬城 · 边缘检测线框</h2>
+<div class="row">
+<div><p style="color:rgba(227,73,237,.25)">原图</p><canvas id="orig"></canvas></div>
+<div><p style="color:rgba(227,73,237,.25)">边缘检测</p><canvas id="edge"></canvas></div>
+<div><p style="color:rgba(5,248,248,.3)">旗舰版线框重建</p><canvas id="out" width="1800" height="1200"></canvas></div>
+</div>
+<script>
+const mapId='ascent'
+const img=new Image()
+img.onload=()=>{
+  const iw=img.naturalWidth,ih=img.naturalHeight
+
+  // 1. 原图
+  const oc=document.getElementById('orig');oc.width=iw;oc.height=ih;oc.getContext('2d').drawImage(img,0,0)
+
+  // 2. 提取像素
+  const tc=document.createElement('canvas');tc.width=iw;tc.height=ih;const tctx=tc.getContext('2d');tctx.drawImage(img,0,0)
+  const data=tctx.getImageData(0,0,iw,ih).data
+
+  // 3. 边缘检测 + 画线框
+  const ec=document.getElementById('edge');ec.width=iw;ec.height=ih;const ectx=ec.getContext('2d')
+  const edges=ectx.createImageData(iw,ih)
+
+  // Sobel 边缘检测
+  function bright(x,y){if(x<0||x>=iw||y<0||y>=ih)return 0;const i=(y*iw+x)*4;return data[i]*.299+data[i+1]*.587+data[i+2]*.114}
+  const edgePoints=[]
+  for(let y=0;y<ih;y+=1){
+    for(let x=0;x<iw;x+=1){
+      const tl=bright(x-1,y-1),tc2=bright(x,y-1),tr=bright(x+1,y-1)
+      const ml=bright(x-1,y),mr=bright(x+1,y)
+      const bl=bright(x-1,y+1),bc2=bright(x,y+1),br=bright(x+1,y+1)
+      const gx=-tl+tr-2*ml+2*mr-bl+br
+      const gy=-tl-2*tc2-tr+bl+2*bc2+br
+      const mag=Math.sqrt(gx*gx+gy*gy)
+      const v=Math.min(255,Math.floor(mag*2.5))
+      const i2=(y*iw+x)*4;edges.data[i2]=v;edges.data[i2+1]=v;edges.data[i2+2]=v;edges.data[i2+3]=255
+      if(v>80)edgePoints.push({x,y,mag:v}) // 收集强边缘点
+    }
+  }
+  ectx.putImageData(edges,0,0)
+
+  // 4. 旗舰版线框渲染
+  const W=1800,H=1200,ctx=document.getElementById('out').getContext('2d')
+  const sx=W/iw,sy=H/ih
+
+  // 暗底+网格
+  ctx.fillStyle='#060210';ctx.fillRect(0,0,W,H)
+  ctx.strokeStyle='rgba(227,73,237,.018)';ctx.lineWidth=0.5
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  // 画边缘作为墙体线条
+  // 对每个边缘点，映射到画布坐标并画微小线段
+  // 使用 canvas path 批处理优化性能
+  ctx.strokeStyle='rgba(180,100,230,.4)';ctx.lineWidth=1.5;ctx.lineCap='round'
+  ctx.beginPath()
+  for(const p of edgePoints){
+    const cx=p.x*sx,cy=p.y*sy
+    ctx.moveTo(cx,cy);ctx.lineTo(cx+0.5,cy+0.5)
+  }
+  ctx.stroke()
+
+  // 增强：对强边缘画更粗的线
+  const strongEdges=edgePoints.filter(p=>p.mag>150)
+  ctx.strokeStyle='rgba(227,73,237,.6)';ctx.lineWidth=2.5
+  ctx.beginPath()
+  for(const p of strongEdges){
+    const cx=p.x*sx,cy=p.y*sy
+    ctx.moveTo(cx,cy);ctx.lineTo(cx+0.5,cy+0.5)
+  }
+  ctx.stroke()
+
+  // 外框
+  ctx.strokeStyle='rgba(227,73,237,.22)';ctx.lineWidth=2;ctx.strokeRect(3,3,W-6,H-6)
+  ctx.strokeStyle='rgba(5,248,248,.07)';ctx.lineWidth=1;ctx.strokeRect(8,8,W-16,H-16)
+  // 底部
+  ctx.fillStyle='rgba(0,0,0,.65)';ctx.fillRect(0,H-28,W,28)
+  ctx.strokeStyle='rgba(227,73,237,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H-28);ctx.lineTo(W,H-28);ctx.stroke()
+  ctx.fillStyle='rgba(5,248,248,.35)';ctx.font='11px "PingFang SC"';ctx.textAlign='left';ctx.fillText('亚海悬城 ASCENT · 边缘检测线框重建',14,H-7)
+}
+img.src='/images/maps/'+mapId+'.png'
+</script></body></html>

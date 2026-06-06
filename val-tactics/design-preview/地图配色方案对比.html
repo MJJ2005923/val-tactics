@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>配色方案对比 · 亚海悬城</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;color:#b8b0c8;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:10px;padding:20px}
+h2{font-size:13px;letter-spacing:3px;color:rgba(5,248,248,.35)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:1400px}
+.card{text-align:center}.card p{font-size:10px;color:rgba(227,73,237,.25);margin-top:4px}
+canvas{border:1px solid rgba(227,73,237,.16);border-radius:8px;box-shadow:0 0 20px rgba(227,73,237,.06)}
+</style></head><body>
+<h2>亚海悬城 ASCENT · 6 种粉/青配色方案</h2>
+<div class="grid" id="g"></div>
+<script>
+const img=new Image()
+img.onload=()=>{
+  const iw=img.naturalWidth,ih=img.naturalHeight,W=900,H=600
+  const tc=document.createElement('canvas');tc.width=iw;tc.height=ih;tctx=tc.getContext('2d');tctx.drawImage(img,0,0)
+  const src=tctx.getImageData(0,0,iw,ih).data
+
+  // ══ 6套配色方案 ══
+  const schemes=[
+    {
+      name:'方案A · 粉墙+青底',
+      map(gray,di,out){
+        if(gray<60){out.data[di]=30;out.data[di+1]=10;out.data[di+2]=45;out.data[di+3]=255}      //暗=深紫
+        else if(gray<130){const t=(gray-60)/70;out.data[di]=Math.floor(200+t*30);out.data[di+1]=Math.floor(80+t*40);out.data[di+2]=Math.floor(200+t*30);out.data[di+3]=255} //粉墙
+        else{const t=(gray-130)/125;out.data[di]=Math.floor(10+t*20);out.data[di+1]=Math.floor(120+t*80);out.data[di+2]=Math.floor(140+t*80);out.data[di+3]=255} //青底
+      }
+    },{
+      name:'方案B · 青墙+粉底',
+      map(gray,di,out){
+        if(gray<60){out.data[di]=5;out.data[di+1]=12;out.data[di+2]=25;out.data[di+3]=255}
+        else if(gray<130){const t=(gray-60)/70;out.data[di]=Math.floor(20+t*30);out.data[di+1]=Math.floor(180+t*50);out.data[di+2]=Math.floor(200+t*30);out.data[di+3]=255}
+        else{const t=(gray-130)/125;out.data[di]=Math.floor(180+t*50);out.data[di+1]=Math.floor(60+t*30);out.data[di+2]=Math.floor(180+t*30);out.data[di+3]=255}
+      }
+    },{
+      name:'方案C · 纯暗底+粉线+青区',
+      map(gray,di,out){
+        if(gray<40){out.data[di]=4;out.data[di+1]=2;out.data[di+2]=10;out.data[di+3]=255}
+        else if(gray<100){const t=(gray-40)/60;out.data[di]=Math.floor(220+t*25);out.data[di+1]=Math.floor(60+t*40);out.data[di+2]=Math.floor(200+t*30);out.data[di+3]=255}
+        else if(gray<180){const t=(gray-100)/80;out.data[di]=Math.floor(5+t*15);out.data[di+1]=Math.floor(60+t*100);out.data[di+2]=Math.floor(80+t*120);out.data[di+3]=255}
+        else{const t=(gray-180)/75;out.data[di]=Math.floor(10+t*15);out.data[di+1]=Math.floor(180+t*50);out.data[di+2]=Math.floor(200+t*40);out.data[di+3]=255}
+      }
+    },{
+      name:'方案D · 灰黑底+粉边+青高亮',
+      map(gray,di,out){
+        if(gray<50){out.data[di]=6;out.data[di+1]=3;out.data[di+2]=14;out.data[di+3]=255}
+        else if(gray<100){const t=(gray-50)/50;out.data[di]=Math.floor(180+t*40);out.data[di+1]=Math.floor(50+t*50);out.data[di+2]=Math.floor(220+t*30);out.data[di+3]=255}
+        else if(gray<170){const t=(gray-100)/70;out.data[di]=Math.floor(8+t*6);out.data[di+1]=Math.floor(20+t*10);out.data[di+2]=Math.floor(35+t*15);out.data[di+3]=255}
+        else{const t=(gray-170)/85;out.data[di]=Math.floor(5+t*10);out.data[di+1]=Math.floor(160+t*60);out.data[di+2]=Math.floor(180+t*50);out.data[di+3]=255}
+      }
+    },{
+      name:'方案E · 粉紫暗底+粉边+青标记',
+      map(gray,di,out){
+        if(gray<70){const t=gray/70;out.data[di]=Math.floor(15+t*20);out.data[di+1]=Math.floor(5+t*5);out.data[di+2]=Math.floor(25+t*15);out.data[di+3]=255}
+        else if(gray<140){const t=(gray-70)/70;out.data[di]=Math.floor(190+t*40);out.data[di+1]=Math.floor(70+t*50);out.data[di+2]=Math.floor(210+t*20);out.data[di+3]=255}
+        else{const t=(gray-140)/115;out.data[di]=Math.floor(8+t*12);out.data[di+1]=Math.floor(140+t*60);out.data[di+2]=Math.floor(160+t*60);out.data[di+3]=255}
+      }
+    },{
+      name:'方案F · 深暗底+粉紫墙+青色空地',
+      map(gray,di,out){
+        if(gray<45){out.data[di]=4;out.data[di+1]=1;out.data[di+2]=12;out.data[di+3]=255}
+        else if(gray<110){const t=(gray-45)/65;out.data[di]=Math.floor(210+t*30);out.data[di+1]=Math.floor(90+t*50);out.data[di+2]=Math.floor(230+t*15);out.data[di+3]=255}
+        else{const t=(gray-110)/145;out.data[di]=Math.floor(5+t*15);out.data[di+1]=Math.floor(100+t*100);out.data[di+2]=Math.floor(110+t*100);out.data[di+3]=255}
+      }
+    }
+  ]
+
+  schemes.forEach((s,i)=>{
+    const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d')
+    const out=ctx.createImageData(W,H)
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+      const sx=Math.floor(x*iw/W),sy=Math.floor(y*ih/H),si=(sy*iw+sx)*4,di=(y*W+x)*4
+      const gray=(src[si]+src[si+1]+src[si+2])/3,t=(gray-50)/50
+      s.map(gray,di,out)
+    }
+    ctx.putImageData(out,0,0)
+    // 暗角
+    const g=ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.7)
+    g.addColorStop(0,'transparent');g.addColorStop(.5,'transparent');g.addColorStop(1,'rgba(5,2,14,.5)')
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
+    ctx.strokeStyle='rgba(227,73,237,.2)';ctx.lineWidth=1.5;ctx.strokeRect(1,1,W-2,H-2)
+
+    const wrap=document.createElement('div');wrap.className='card';wrap.appendChild(c)
+    const p=document.createElement('p');p.textContent=s.name;wrap.appendChild(p)
+    document.getElementById('g').appendChild(wrap)
+  })
+}
+img.src='/images/maps-clean/ascent.png'
+</script></body></html>

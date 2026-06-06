@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>旗舰版 · 真实布局矢量</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:10px;padding:20px}
+h2{font-size:13px;letter-spacing:3px;color:rgba(5,248,248,.35)}
+canvas{border:1px solid rgba(227,73,237,.18);border-radius:12px;box-shadow:0 0 40px rgba(227,73,237,.08)}
+</style></head><body>
+<h2>旗舰版 · 亚海悬城 ASCENT · 基于真实布局</h2>
+<canvas id="c" width="1800" height="1200"></canvas>
+<script>
+const W=1800,H=1200,ctx=document.getElementById('c').getContext('2d')
+
+// ══ 背景 ══
+ctx.fillStyle='#060210';ctx.fillRect(0,0,W,H)
+ctx.strokeStyle='rgba(227,73,237,.018)';ctx.lineWidth=0.5
+for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+for(let y=0;y<H;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+// ══ 工具函数 ══
+function wall(x,y,w,h,r=3){ctx.fillStyle='rgba(35,14,55,.7)';rect(x,y,w,h,r);ctx.fill();ctx.strokeStyle='rgba(200,140,230,.35)';ctx.lineWidth=1.5;rect(x,y,w,h,r);ctx.stroke()}
+function corridor(x,y,w,h){ctx.fillStyle='rgba(10,4,22,.35)';ctx.fillRect(x,y,w,h);ctx.strokeStyle='rgba(227,73,237,.06)';ctx.lineWidth=0.8;ctx.strokeRect(x,y,w,h)}
+function openArea(x,y,w,h,label){ctx.fillStyle='rgba(8,3,18,.25)';ctx.fillRect(x,y,w,h);if(label){ctx.fillStyle='rgba(227,73,237,.12)';ctx.font='11px "PingFang SC"';ctx.textAlign='center';ctx.fillText(label,x+w/2,y+h/2)}}
+function site(x,y,letter,color){ctx.fillStyle=color+'0a';ctx.beginPath();ctx.arc(x,y,48,0,Math.PI*2);ctx.fill();ctx.strokeStyle=color+'35';ctx.lineWidth=2;ctx.setLineDash([8,4]);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=color;ctx.font='bold 30px "PingFang SC"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(letter,x,y)}
+function cover(x,y,r){ctx.fillStyle='rgba(30,12,50,.8)';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(180,120,220,.35)';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.arc(x,y,r*.3,0,Math.PI*2);ctx.fill()}
+function box(x,y,w,h){ctx.fillStyle='rgba(50,20,80,.5)';rect(x,y,w,h,3);ctx.fill();ctx.strokeStyle='rgba(180,140,220,.3)';ctx.lineWidth=1;ctx.stroke()}
+function spawn(x,y,label,color){ctx.fillStyle=color+'10';ctx.beginPath();ctx.arc(x,y,22,0,Math.PI*2);ctx.fill();ctx.strokeStyle=color+'25';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle=color+'40';ctx.font='10px "PingFang SC"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x,y)}
+function label(t,x,y){const m=ctx.measureText(t).width;ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(x-m/2-6,y-7,m+12,16);ctx.fillStyle='rgba(5,248,248,.32)';ctx.font='10px "PingFang SC"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,x,y+1)}
+function rect(x,y,w,h,r){ctx.beginPath();if(r){ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r)}else ctx.rect(x,y,w,h);ctx.closePath()}
+
+// ══ 亚海悬城真实布局 ══
+// 基于 AI 放大截图的墙体/通道结构
+
+// --- 外围墙体 ---
+wall(0,0,W,40,0)      // 上边界
+wall(0,H-40,W,40,0)   // 下边界
+wall(0,0,30,H,0)      // 左边界
+wall(W-30,0,30,H,0)   // 右边界
+
+// --- A 区 (右上) ---
+// A 据点外墙
+wall(W*.58,H*.02,W*.04,H*.32)    // A 左外墙
+wall(W*.72,H*.02,W*.04,H*.20)    // A 右外墙
+wall(W*.58,H*.32,W*.18,H*.03)    // A 横墙
+// A 内部
+corridor(W*.62,H*.05,W*.10,H*.12) // A 通道
+corridor(W*.72,H*.05,W*.08,H*.12) // A 侧道
+box(W*.66,H*.12,18,40)            // A 箱1
+box(W*.73,H*.10,28,18)            // A 箱2
+cover(W*.68,H*.22,16)             // A 掩体
+site(W*.76,H*.22,'A','#ff4655')
+
+// --- B 区 (左下) ---
+wall(W*.12,H*.54,W*.10,H*.03)    // B 上墙
+wall(W*.10,H*.54,W*.03,H*.40)    // B 左墙
+wall(W*.22,H*.56,W*.03,H*.38)    // B 右墙
+corridor(W*.14,H*.56,W*.08,H*.14) // B 通道
+corridor(W*.24,H*.62,W*.10,H*.12) // B 侧道
+box(W*.18,H*.62,20,38)            // B 箱1
+box(W*.28,H*.66,28,20)            // B 箱2
+cover(W*.22,H*.68,16)             // B 掩体
+site(W*.25,H*.70,'B','#50b4f0')
+
+// --- 中路 ---
+wall(W*.50,H*.15,W*.04,H*.24)    // 中路上墙
+wall(W*.50,H*.45,W*.04,H*.28)    // 中路下墙
+openArea(W*.36,H*.28,W*.14,H*.16,'中厅')
+box(W*.46,H*.34,24,14)            // 中路箱
+cover(W*.48,H*.48,14)             // 中路掩体
+box(W*.44,H*.55,22,32)            // 中路大箱
+
+// --- A/B 连接 ---
+wall(W*.30,H*.38,W*.08,H*.03)    // A连墙
+wall(W*.30,H*.58,W*.08,H*.03)    // B连墙
+corridor(W*.31,H*.32,W*.07,H*.14) // A连接
+corridor(W*.31,H*.52,W*.07,H*.16) // B连接
+
+// --- 侧边通道 ---
+openArea(W*.10,H*.16,W*.08,H*.12,'A塔')
+corridor(W*.12,H*.30,W*.06,H*.10) // 左中通道
+openArea(W*.78,H*.55,W*.08,H*.12,'B塔')
+
+// --- 出生点 ---
+spawn(W*.46,H*.04,'Ω 进攻方出生','rgba(255,70,85,.5)')
+spawn(W*.48,H*.94,'α 防守方出生','rgba(5,248,248,.4)')
+spawn(W*.72,H*.90,'α 防守方','rgba(5,248,248,.35)')
+spawn(W*.20,H*.90,'α 防守方','rgba(5,248,248,.35)')
+
+// --- 标注 ---
+label('A 门',W*.60,H*.36)
+label('中门',W*.34,H*.44)
+label('B 门',W*.40,H*.60)
+label('中路',W*.48,H*.50)
+label('阁楼',W*.36,H*.28)
+label('A 塔',W*.14,H*.22)
+label('市场',W*.28,H*.66)
+label('B 厅',W*.82,H*.60)
+
+// --- 外框 ---
+ctx.strokeStyle='rgba(227,73,237,.22)';ctx.lineWidth=2.5;ctx.strokeRect(3,3,W-6,H-6)
+ctx.strokeStyle='rgba(5,248,248,.07)';ctx.lineWidth=1;ctx.strokeRect(8,8,W-16,H-16)
+
+// 底部条
+ctx.fillStyle='rgba(0,0,0,.65)';ctx.fillRect(0,H-28,W,28)
+ctx.strokeStyle='rgba(227,73,237,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H-28);ctx.lineTo(W,H-28);ctx.stroke()
+ctx.fillStyle='rgba(5,248,248,.35)';ctx.font='11px "PingFang SC"';ctx.textAlign='left';ctx.fillText('亚海悬城 ASCENT · 旗舰版矢量战术地图 · 基于真实布局',14,H-7)
+</script></body></html>

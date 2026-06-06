@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>极简旗舰版地图</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:10px;padding:20px}
+h2{font-size:12px;letter-spacing:3px;color:rgba(5,248,248,.35)}
+canvas{border:1px solid rgba(227,73,237,.18);border-radius:10px;box-shadow:0 0 30px rgba(227,73,237,.06)}
+</style></head><body><h2>旗舰版 · 亚海悬城 · 极简线稿</h2>
+<canvas id="c" width="1800" height="1200"></canvas>
+<script>
+var W=1800,H=1200,img=new Image()
+img.onload=function(){
+  var iw=img.naturalWidth,ih=img.naturalHeight
+  // 1. 提取像素
+  var tc=document.createElement('canvas');tc.width=iw;tc.height=ih;var tctx=tc.getContext('2d');tctx.drawImage(img,0,0)
+  var data=tctx.getImageData(0,0,iw,ih).data
+  function B(x,y){if(x<0||x>=iw||y<0||y>=ih)return 0;var i=(y*iw+x)*4;return data[i]*.299+data[i+1]*.587+data[i+2]*.114}
+
+  // 2. Sobel边缘检测
+  var edge=new Float32Array(iw*ih),maxE=0,minE=Infinity
+  for(var y=1;y<ih-1;y++)for(var x=1;x<iw-1;x++){
+    var tl=B(x-1,y-1),tc=B(x,y-1),tr=B(x+1,y-1),ml=B(x-1,y),mr=B(x+1,y),bl=B(x-1,y+1),bc=B(x,y+1),br=B(x+1,y+1)
+    var gx=-tl+tr-2*ml+2*mr-bl+br,gy=-tl-2*tc-tr+bl+2*bc+br
+    var e=Math.sqrt(gx*gx+gy*gy);edge[y*iw+x]=e;if(e>maxE)maxE=e;if(e<minE)minE=e
+  }
+
+  // 3. 检测青色区域(原图蓝色区域)
+  var cyanMask=new Float32Array(iw*ih)
+  for(var y=0;y<ih;y++)for(var x=0;x<iw;x++){var i=(y*iw+x)*4;cyanMask[y*iw+x]=(data[i+2]>data[i]&&data[i+2]>data[i+1]&&data[i+2]>80)?1:0}
+
+  // 3. 检测红色区域(原图红色区域)
+  var redMask=new Float32Array(iw*ih)
+  for(var y=0;y<ih;y++)for(var x=0;x<iw;x++){var i=(y*iw+x)*4;redMask[y*iw+x]=(data[i]>data[i+1]+30&&data[i]>data[i+2]+30&&data[i]>100)?1:0}
+
+  // 4. 计算地图渲染区域 (正方形，居中)
+  var mapSize=Math.min(W*.85,H*.85) // 地图占画布85%
+  var mx=(W-mapSize)/2,my=(H-mapSize)/2
+  var ctx=document.getElementById('c').getContext('2d')
+
+  // 画布背景
+  ctx.fillStyle='#060210';ctx.fillRect(0,0,W,H)
+  ctx.strokeStyle='rgba(227,73,237,.02)';ctx.lineWidth=0.5
+  for(var x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(var y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  // 渲染地图
+  var out=ctx.createImageData(mapSize,mapSize)
+  var th=maxE*.12
+
+  for(var y=0;y<mapSize;y++)for(var x=0;x<mapSize;x++){
+    var sx=Math.floor(x*iw/mapSize),sy=Math.floor(y*ih/mapSize),idx=sy*iw+sx
+    var e=edge[idx],di=(y*mapSize+x)*4
+
+    if(e>th*2.0){
+      out.data[di]=250;out.data[di+1]=60;out.data[di+2]=200;out.data[di+3]=255
+    }else if(e>th*1.0){
+      out.data[di]=180;out.data[di+1]=30;out.data[di+2]=140;out.data[di+3]=255
+    }else if(e>th*0.5){
+      out.data[di]=100;out.data[di+1]=15;out.data[di+2]=80;out.data[di+3]=255
+    }else if(cyanMask[idx]){
+      out.data[di]=5;out.data[di+1]=180;out.data[di+2]=200;out.data[di+3]=255
+    }else if(redMask[idx]){
+      out.data[di]=200;out.data[di+1]=50;out.data[di+2]=100;out.data[di+3]=255
+    }else{
+      var gray=(data[idx*4]+data[idx*4+1]+data[idx*4+2])/3
+      if(gray<20){out.data[di]=4;out.data[di+1]=25;out.data[di+2]=35}
+      else if(gray<60){out.data[di]=6;out.data[di+1]=40;out.data[di+2]=55}
+      else{out.data[di]=10;out.data[di+1]=55;out.data[di+2]=70}
+      out.data[di+3]=255
+    }
+  }
+
+  // 离线canvas画地图
+  var mc=document.createElement('canvas');mc.width=mapSize;mc.height=mapSize
+  mc.getContext('2d').putImageData(out,0,0)
+  ctx.drawImage(mc,mx,my)
+
+  // 地图外框
+  ctx.strokeStyle='rgba(227,73,237,.3)';ctx.lineWidth=2;ctx.strokeRect(mx-3,my-3,mapSize+6,mapSize+6)
+  ctx.strokeStyle='rgba(5,248,248,.08)';ctx.lineWidth=1;ctx.strokeRect(mx-6,my-6,mapSize+12,mapSize+12)
+
+  // 底部
+  ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,H-26,W,26)
+  ctx.strokeStyle='rgba(227,73,237,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H-26);ctx.lineTo(W,H-26);ctx.stroke()
+  ctx.fillStyle='rgba(5,248,248,.35)';ctx.font='11px "PingFang SC"';ctx.textAlign='left';ctx.fillText('亚海悬城 ASCENT',14,H-7)
+  ctx.fillStyle='rgba(227,73,237,.15)';ctx.textAlign='right';ctx.fillText('旗舰版战术地图',W-14,H-7)
+}
+img.src='/images/maps-clean/ascent.png'
+</script></body></html>

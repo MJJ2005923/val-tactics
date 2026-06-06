@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>旗舰版精细地图 · 亚海悬城</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px}
+h2{font-size:13px;letter-spacing:3px;color:rgba(227,73,237,.35)}
+canvas{border:1px solid rgba(227,73,237,.18);border-radius:12px;box-shadow:0 0 50px rgba(227,73,237,.1)}
+</style></head><body>
+<h2>旗舰版战术地图 · 亚海悬城 ASCENT</h2>
+<canvas id="m" width="1800" height="1200"></canvas>
+<script>
+const c=document.getElementById('m'),ctx=c.getContext('2d'),W=1800,H=1200
+
+// ══ 调色板 ══
+const bg='#060210',
+  wall='rgba(227,73,237,.35)',wallFill='rgba(30,12,50,.6)',
+  floor='rgba(12,4,28,.5)',floorLight='rgba(18,8,35,.3)',
+  grid='rgba(227,73,237,.025)',
+  siteA='#ff4655',siteB='#50b4f0',
+  coverFill='rgba(227,73,237,.2)',coverStroke='rgba(227,73,237,.35)',
+  text1='rgba(227,73,237,.25)',text2='rgba(5,248,248,.3)',
+  spawnA='rgba(255,70,85,.15)',spawnD='rgba(5,248,248,.12)'
+
+// ══ 工具函数 ══
+function R(x,y,w2,h2,r){ctx.beginPath();if(r){ctx.moveTo(x+r,y);ctx.lineTo(x+w2-r,y);ctx.quadraticCurveTo(x+w2,y,x+w2,y+r);ctx.lineTo(x+w2,y+h2-r);ctx.quadraticCurveTo(x+w2,y+h2,x+w2-r,y+h2);ctx.lineTo(x+r,y+h2);ctx.quadraticCurveTo(x,y+h2,x,y+h2-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}else ctx.rect(x,y,w2,h2)}
+// 墙体
+function wall2(x,y,w2,h2,r){
+  ctx.fillStyle=wallFill;R(x,y,w2,h2,r||0);ctx.fill()
+  ctx.strokeStyle=wall;ctx.lineWidth=1.5;ctx.stroke()
+}
+// 内部区域
+function room(x,y,w2,h2,label){
+  ctx.fillStyle=floorLight;R(x,y,w2,h2,4);ctx.fill()
+  ctx.strokeStyle='rgba(227,73,237,.12)';ctx.lineWidth=1;ctx.stroke()
+  if(label){ctx.fillStyle=text1;ctx.font='11px "PingFang SC"';ctx.textAlign='center';ctx.fillText(label,x+w2/2,y+h2/2+4)}
+}
+// 走廊
+function corridor(x,y,w2,h2){
+  ctx.fillStyle=floor;R(x,y,w2,h2,0);ctx.fill()
+  ctx.strokeStyle='rgba(227,73,237,.08)';ctx.lineWidth=0.5;ctx.strokeRect(x,y,w2,h2)
+}
+// 障碍物
+function cover(cx,cy,r){
+  ctx.fillStyle=coverFill;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill()
+  ctx.strokeStyle=coverStroke;ctx.lineWidth=1.5;ctx.stroke()
+  // 内圈
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.arc(cx,cy,r*.35,0,Math.PI*2);ctx.fill()
+}
+// 箱子
+function box(x,y,w2,h2){
+  ctx.fillStyle='rgba(227,73,237,.15)';R(x,y,w2,h2,3);ctx.fill()
+  ctx.strokeStyle='rgba(227,73,237,.25)';ctx.lineWidth=1.2;ctx.stroke()
+}
+// 据点
+function site(cx,cy,letter,color){
+  const r=50
+  ctx.fillStyle=color+'08';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill()
+  ctx.strokeStyle=color+'35';ctx.lineWidth=2;ctx.setLineDash([8,4]);ctx.stroke();ctx.setLineDash([])
+  // 内环
+  ctx.strokeStyle=color+'15';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,r*.5,0,Math.PI*2);ctx.stroke()
+  ctx.fillStyle=color;ctx.font='bold 32px "PingFang SC"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(letter,cx,cy)
+}
+// 出生点
+function spawn(x,y,side){
+  const r=20
+  ctx.fillStyle=side==='a'?spawnA:spawnD;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()
+  ctx.strokeStyle=side==='a'?'rgba(255,70,85,.25)':'rgba(5,248,248,.2)';ctx.lineWidth=1.5;ctx.stroke()
+  ctx.fillStyle=side==='a'?'rgba(255,70,85,.35)':'rgba(5,248,248,.3)';ctx.font='8px "PingFang SC"';ctx.textAlign='center';ctx.textBaseline='middle'
+  ctx.fillText(side==='a'?'进攻':'防守',x,y)
+}
+// 标注
+function label(x,y,t){
+  ctx.fillStyle='rgba(0,0,0,.4)';R(x-30,y-7,60,16,3);ctx.fill()
+  ctx.fillStyle=text2;ctx.font='10px "PingFang SC"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,x,y+1)
+}
+
+// ═══ 亚海悬城精细布局 ═══
+
+// 底色 + 网格
+ctx.fillStyle=bg;ctx.fillRect(0,0,W,H)
+ctx.strokeStyle=grid;ctx.lineWidth=0.5
+for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+// === A 区（上方右） ===
+// A 据点区域
+corridor(W*.60,0,W*.10,H*.35)       // A 长通道
+corridor(W*.72,0,W*.08,H*.35)       // A 短通道
+room(W*.62,H*.08,W*.16,H*.12,'A 大厅')
+room(W*.62,H*.22,W*.16,H*.12,'A 后点')
+wall2(W*.58,0,W*.04,H*.35)          // 隔墙
+wall2(W*.70,0,W*.04,H*.20)          // A 短墙
+
+// A 点掩体
+box(W*.66,H*.16,20,40)
+box(W*.73,H*.12,30,20)
+cover(W*.68,H*.26,16)
+
+site(W*.75,H*.25,'A',siteA)
+
+// === B 区（下方左） ===
+corridor(W*.10,H*.50,W*.10,H*.50)   // B 长通道
+corridor(W*.22,H*.55,W*.12,H*.45)   // B 短通道
+room(W*.12,H*.55,W*.12,H*.15,'B 后点')
+room(W*.22,H*.62,W*.12,H*.12,'市场')
+
+// B 点掩体
+box(W*.18,H*.65,20,40)
+box(W*.28,H*.68,30,20)
+cover(W*.22,H*.72,18)
+
+site(W*.25,H*.72,'B',siteB)
+
+// === 中路 ===
+corridor(W*.44,0,W*.08,H)           // 中路主通道
+room(W*.36,H*.30,W*.14,H*.15,'中路大厅')
+wall2(W*.50,H*.20,W*.04,H*.15)      // 中路隔墙
+wall2(W*.50,H*.45,W*.04,H*.15)
+
+// 中路掩体
+box(W*.46,H*.38,25,15)
+cover(W*.48,H*.50,14)
+box(W*.46,H*.60,20,30)
+
+// 中路门/连接
+wall2(W*.30,H*.42,W*.08,H*.04)      // A连门
+wall2(W*.30,H*.60,W*.08,H*.04)      // B连门
+
+// === 连接通道 ===
+corridor(W*.30,H*.35,W*.08,H*.15)   // A连接
+corridor(W*.30,H*.55,W*.08,H*.15)   // B连接
+
+// === 更多建筑 ===
+room(W*.10,H*.20,W*.10,H*.10,'A 塔')
+room(W*.80,H*.55,W*.10,H*.10,'B 塔')
+box(W*.72,H*.45,30,30)
+box(W*.15,H*.38,25,25)
+
+// === 出生点 ===
+spawn(W*.48,H*.05,'a')
+spawn(W*.48,H*.95,'a')
+spawn(W*.70,H*.92,'d')
+spawn(W*.20,H*.92,'d')
+
+// === 标注 ===
+label(W*.60,H*.42,'A 门')
+label(W*.35,H*.48,'中门')
+label(W*.42,H*.65,'B 门')
+label(W*.78,H*.22,'A 点')
+label(W*.20,H*.68,'B 点')
+label(W*.48,H*.45,'中路')
+label(W*.68,H*.08,'A 大厅')
+label(W*.15,H*.60,'市场')
+label(W*.38,H*.32,'阁楼')
+
+// === 外框 ===
+ctx.strokeStyle='rgba(227,73,237,.2)';ctx.lineWidth=2;ctx.strokeRect(2,2,W-4,H-4)
+ctx.strokeStyle='rgba(5,248,248,.06)';ctx.lineWidth=1;ctx.strokeRect(6,6,W-12,H-12)
+
+// === 底部栏 ===
+ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,H-28,W,28)
+ctx.strokeStyle='rgba(227,73,237,.12)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H-28);ctx.lineTo(W,H-28);ctx.stroke()
+ctx.fillStyle='rgba(5,248,248,.35)';ctx.font='12px "PingFang SC"';ctx.textAlign='left';ctx.fillText('亚海悬城 · Ascent · 旗舰版战术地图',20,H-8)
+ctx.fillStyle='rgba(227,73,237,.2)';ctx.textAlign='right';ctx.fillText('1800×1200 · 1:1 比例',W-20,H-8)
+</script></body></html>

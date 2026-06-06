@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>旗舰版地图方案 V2</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;color:#b8b0c8;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:20px;padding:20px}
+h2{font-size:14px;letter-spacing:2px;color:rgba(227,73,237,.4)}
+.row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+.card{text-align:center}
+.card canvas{border:1px solid rgba(227,73,237,.16);border-radius:10px;box-shadow:0 0 30px rgba(227,73,237,.06)}
+.card p{font-size:10px;color:rgba(227,73,237,.25);margin-top:6px;letter-spacing:.5px}
+</style></head><body>
+<h2>旗舰版地图 · 三种滤镜方案对比</h2>
+<div class="row" id="row"></div>
+<script>
+const maps=[
+  {id:'ascent',name:'亚海悬城'},
+  {id:'bind',name:'源工重镇'},
+  {id:'sunset',name:'日落之城'},
+]
+
+// 方案1: 暗色叠加
+function style1(ctx,w,h,img){
+  // 暗底
+  ctx.fillStyle='#080510';ctx.fillRect(0,0,w,h)
+  // 画原图降低亮度
+  ctx.globalAlpha=.45
+  ctx.drawImage(img,0,0,w,h)
+  ctx.globalAlpha=1
+  // 紫色滤镜层
+  ctx.fillStyle='rgba(30,10,50,.25)';ctx.fillRect(0,0,w,h)
+  // 边框发光
+  ctx.strokeStyle='rgba(227,73,237,.2)';ctx.lineWidth=2;ctx.strokeRect(2,2,w-4,h-4)
+}
+
+// 方案2: 高对比暗色
+function style2(ctx,w,h,img){
+  ctx.fillStyle='#05020c';ctx.fillRect(0,0,w,h)
+  // 原图
+  ctx.globalAlpha=.35
+  ctx.drawImage(img,0,0,w,h)
+  ctx.globalAlpha=1
+  // 蓝紫渐变叠加
+  const g=ctx.createRadialGradient(w*.5,h*.3,w*.1,w*.5,h*.5,w*.8)
+  g.addColorStop(0,'rgba(5,248,248,.04)')
+  g.addColorStop(.5,'rgba(227,73,237,.08)')
+  g.addColorStop(1,'rgba(0,0,0,.6)')
+  ctx.fillStyle=g;ctx.fillRect(0,0,w,h)
+  // 网格
+  ctx.strokeStyle='rgba(227,73,237,.04)';ctx.lineWidth=0.5
+  for(let x=0;x<w;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+  for(let y=0;y<h;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+  // 边框
+  ctx.strokeStyle='rgba(227,73,237,.18)';ctx.lineWidth=2;ctx.strokeRect(2,2,w-4,h-4)
+}
+
+// 方案3: 紫青色调
+function style3(ctx,w,h,img){
+  ctx.fillStyle='#060210';ctx.fillRect(0,0,w,h)
+  // 原图低透明度保留轮廓
+  ctx.globalAlpha=.3
+  ctx.drawImage(img,0,0,w,h)
+  ctx.globalAlpha=1
+  // 暗角
+  const g=ctx.createRadialGradient(w*.5,h*.5,w*.15,w*.5,h*.5,w*.75)
+  g.addColorStop(0,'transparent')
+  g.addColorStop(.7,'rgba(8,2,20,.5)')
+  g.addColorStop(1,'rgba(8,2,20,.85)')
+  ctx.fillStyle=g;ctx.fillRect(0,0,w,h)
+  // 细网格
+  ctx.strokeStyle='rgba(5,248,248,.03)';ctx.lineWidth=0.3
+  for(let x=0;x<w;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+  for(let y=0;y<h;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+  // 外框
+  ctx.strokeStyle='rgba(227,73,237,.15)';ctx.lineWidth=2.5;ctx.strokeRect(2,2,w-4,h-4)
+  ctx.strokeStyle='rgba(5,248,248,.08)';ctx.lineWidth=1;ctx.strokeRect(5,5,w-10,h-10)
+}
+
+const styles=[style1,style2,style3]
+const names=['方案1 · 暗色叠加','方案2 · 高对比','方案3 · 紫青暗角']
+
+const row=document.getElementById('row')
+maps.forEach(m=>{
+  const img=new Image()
+  img.onload=()=>{
+    styles.forEach((fn,i)=>{
+      const wrap=document.createElement('div');wrap.className='card'
+      const c=document.createElement('canvas')
+      const w=900,h=600;c.width=w;c.height=h
+      const ctx=c.getContext('2d')
+      fn(ctx,w,h,img)
+      const p=document.createElement('p')
+      p.textContent=m.name+' · '+names[i]
+      wrap.appendChild(c);wrap.appendChild(p);row.appendChild(wrap)
+    })
+  }
+  img.src='../public/images/maps/'+m.id+'.png'
+})
+</script></body></html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>旗舰版地图 · 真实截图+旗舰滤镜</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;color:#b8b0c8;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:20px;padding:20px}
+h2{font-size:13px;letter-spacing:3px;color:rgba(227,73,237,.35)}
+.row{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.col{display:flex;flex-direction:column;align-items:center;gap:6px}
+.col .label{font-size:10px;color:rgba(227,73,237,.2);letter-spacing:1px}
+canvas{border:1px solid rgba(227,73,237,.16);border-radius:10px;box-shadow:0 0 40px rgba(227,73,237,.08)}
+</style></head><body>
+<h2>旗舰版战术地图 · 基于真实截图</h2>
+<div class="row">
+  <div class="col"><div class="label">原始截图</div><canvas id="orig" width="857" height="706"></canvas></div>
+  <div class="col"><div class="label">旗舰版渲染</div><canvas id="map" width="1800" height="1200"></canvas></div>
+</div>
+<script>
+const maps=['ascent','bind','sunset']
+const names={ascent:'亚海悬城',bind:'源工重镇',sunset:'日落之城'}
+let done=0
+
+function drawFlagshipMap(canvas,img){
+  const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d')
+  // 1. 暗底
+  ctx.fillStyle='#050210';ctx.fillRect(0,0,W,H)
+
+  // 2. 画原始截图 - 1:1像素不拉伸，保持锐利
+  ctx.imageSmoothingEnabled=false
+  const iw=img.naturalWidth,ih=img.naturalHeight
+  // 居中放置，不缩放
+  const dx=(W-iw)/2,dy=(H-ih)/2
+  ctx.drawImage(img,dx,dy)
+  // 暗色填充剩余区域
+  if(dx>0){ctx.fillStyle='#050210';ctx.fillRect(0,0,dx,H);ctx.fillRect(W-dx,0,dx,H)}
+  if(dy>0){ctx.fillStyle='#050210';ctx.fillRect(0,0,W,dy);ctx.fillRect(0,H-dy,W,dy)}
+
+  // 3. 暗角
+  const g=ctx.createRadialGradient(W*.5,H*.5,W*.05,W*.5,H*.5,W*.72)
+  g.addColorStop(0,'transparent');g.addColorStop(.5,'transparent');g.addColorStop(1,'rgba(5,2,16,.78)')
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
+
+  // 4. 紫色微染
+  ctx.fillStyle='rgba(15,5,35,.12)';ctx.fillRect(0,0,W,H)
+
+  // 5. 网格
+  ctx.strokeStyle='rgba(227,73,237,.03)';ctx.lineWidth=0.5
+  for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  // 6. 外框
+  ctx.strokeStyle='rgba(227,73,237,.2)';ctx.lineWidth=2;ctx.strokeRect(3,3,W-6,H-6)
+  ctx.strokeStyle='rgba(5,248,248,.06)';ctx.lineWidth=1;ctx.strokeRect(8,8,W-16,H-16)
+
+  // 7. 底部条
+  ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,H-28,W,28)
+  ctx.strokeStyle='rgba(227,73,237,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H-28);ctx.lineTo(W,H-28);ctx.stroke()
+  ctx.fillStyle='rgba(5,248,248,.3)';ctx.font='11px "PingFang SC"';ctx.textAlign='left';ctx.fillText(names[id]+' · '+id.toUpperCase()+' · 旗舰版战术地图',14,H-8)
+  ctx.fillStyle='rgba(227,73,237,.15)';ctx.textAlign='right';ctx.fillText('1800×1200',W-14,H-8)
+}
+
+maps.forEach(id=>{
+  const img=new Image()
+  img.onload=()=>{
+    // 原图
+    if(id==='ascent'){
+      const oc=document.getElementById('orig'),octx=oc.getContext('2d')
+      oc.width=img.naturalWidth;oc.height=img.naturalHeight
+      octx.drawImage(img,0,0)
+      // 旗舰版
+      drawFlagshipMap(document.getElementById('map'),img)
+    }
+  }
+  img.src='/images/maps-hq/'+id+'.png'
+})
+</script></body></html>

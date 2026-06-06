@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>旗舰版地图 · 色调映射</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;color:#b8b0c8;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:20px}
+h2{font-size:13px;letter-spacing:3px;color:rgba(5,248,248,.35)}
+.row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.card{text-align:center}
+.card p{font-size:10px;color:rgba(227,73,237,.25);margin-top:6px}
+canvas{border:1px solid rgba(227,73,237,.18);border-radius:10px;box-shadow:0 0 30px rgba(227,73,237,.06)}
+</style></head><body>
+<h2>旗舰版战术地图 · 像素级色调映射</h2>
+<div class="row" id="r"></div>
+<script>
+const maps=['ascent','bind','sunset']
+const names={ascent:'亚海悬城',bind:'源工重镇',sunset:'日落之城'}
+
+maps.forEach(id=>{
+  const img=new Image()
+  img.onload=()=>{
+    const iw=img.naturalWidth,ih=img.naturalHeight,W=1800,H=1200
+    const tc=document.createElement('canvas');tc.width=iw;tc.height=ih;const tctx=tc.getContext('2d');tctx.drawImage(img,0,0)
+    const src=tctx.getImageData(0,0,iw,ih).data
+
+    const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d')
+
+    // 背景
+    ctx.fillStyle='#060210';ctx.fillRect(0,0,W,H)
+
+    // 创建目标 ImageData
+    const out=ctx.createImageData(W,H)
+    const sx=iw/W,sy=ih/H
+
+    // 像素级色调映射：亮→旗舰色，暗→背景
+    for(let y=0;y<H;y++){
+      for(let x=0;x<W;x++){
+        const si=Math.floor(y*sy),sj=Math.floor(x*sx)
+        const si2=(si*iw+sj)*4
+        const r=src[si2],g=src[si2+1],b=src[si2+2]
+        const gray=(r+g+b)/3
+        const di=(y*W+x)*4
+
+        if(gray<15){ // 极暗 → 背景
+          out.data[di]=6;out.data[di+1]=2;out.data[di+2]=16;out.data[di+3]=255
+        }else if(gray<50){ // 暗 → 深紫墙
+          const t=gray/50
+          out.data[di]=Math.floor(20+t*10);out.data[di+1]=Math.floor(6+t*3);out.data[di+2]=Math.floor(35+t*15);out.data[di+3]=255
+        }else if(gray<100){ // 中灰 → 紫色建筑
+          const t=(gray-50)/50
+          out.data[di]=Math.floor(40+t*30);out.data[di+1]=Math.floor(12+t*8);out.data[di+2]=Math.floor(60+t*25);out.data[di+3]=255
+        }else if(gray<160){ // 浅灰 → 通道
+          const t=(gray-100)/60
+          out.data[di]=Math.floor(80+t*40);out.data[di+1]=Math.floor(25+t*15);out.data[di+2]=Math.floor(100+t*30);out.data[di+3]=255
+        }else{ // 亮 → 空地高亮
+          const t=(gray-160)/95
+          out.data[di]=Math.floor(130+t*40);out.data[di+1]=Math.floor(50+t*20);out.data[di+2]=Math.floor(150+t*20);out.data[di+3]=255
+        }
+
+        // 青色通道叠加（高亮白色区域）
+        if(gray>200){
+          const t2=(gray-200)/55
+          out.data[di]=Math.min(255,out.data[di]+Math.floor(t2*20))
+          out.data[di+1]=Math.min(255,out.data[di+1]+Math.floor(t2*80))
+          out.data[di+2]=Math.min(255,out.data[di+2]+Math.floor(t2*50))
+        }
+      }
+    }
+    ctx.putImageData(out,0,0)
+
+    // 网格叠加
+    ctx.strokeStyle='rgba(227,73,237,.03)';ctx.lineWidth=0.5
+    for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+    // 暗角
+    const g=ctx.createRadialGradient(W*.5,H*.5,W*.05,W*.5,H*.5,W*.72)
+    g.addColorStop(0,'transparent');g.addColorStop(.6,'transparent');g.addColorStop(1,'rgba(6,2,16,.65)')
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
+
+    // 外框
+    ctx.strokeStyle='rgba(227,73,237,.2)';ctx.lineWidth=2;ctx.strokeRect(3,3,W-6,H-6)
+    ctx.strokeStyle='rgba(5,248,248,.06)';ctx.lineWidth=1;ctx.strokeRect(8,8,W-16,H-16)
+
+    // 添加到页面
+    const wrap=document.createElement('div');wrap.className='card'
+    wrap.appendChild(c)
+    const p=document.createElement('p');p.textContent=names[id];wrap.appendChild(p)
+    document.getElementById('r').appendChild(wrap)
+  }
+  img.src='/images/maps-clean/'+id+'.png'
+})
+</script></body></html>

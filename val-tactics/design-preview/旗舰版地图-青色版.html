@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>旗舰版地图 · 青色版</title>
+<style>*{margin:0;padding:0}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:8px;padding:20px}
+canvas{border:1px solid rgba(227,73,237,.16);border-radius:10px;box-shadow:0 0 30px rgba(5,248,248,.06)}
+p{font-size:10px;color:rgba(5,248,248,.25)}
+</style></head><body>
+<canvas id="c" width="1800" height="1200"></canvas>
+<p>亚海悬城 ASCENT · 青色旗舰版</p>
+<script>
+var W=1800,H=1200,img=new Image()
+img.onload=function(){
+  var iw=img.naturalWidth,ih=img.naturalHeight,ctx=document.getElementById('c').getContext('2d')
+
+  // 提取像素
+  var tc=document.createElement('canvas');tc.width=iw;tc.height=ih;var tctx=tc.getContext('2d');tctx.drawImage(img,0,0)
+  var data=tctx.getImageData(0,0,iw,ih).data
+  function B(x,y){if(x<0||x>=iw||y<0||y>=ih)return 0;var i=(y*iw+x)*4;return data[i]*.299+data[i+1]*.587+data[i+2]*.114}
+
+  // 地图区域
+  var S=Math.min(W,H)*.82,MX=(W-S)/2,MY=(H-S)/2,scale=S/iw
+
+  // 画布背景
+  ctx.fillStyle='#050210';ctx.fillRect(0,0,W,H)
+  ctx.strokeStyle='rgba(5,248,248,.03)';ctx.lineWidth=0.5
+  for(var x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(var y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  // 1. 原图→青色调色
+  var mc=document.createElement('canvas');mc.width=S;mc.height=S;var mctx=mc.getContext('2d'),mout=mctx.createImageData(S,S)
+  for(var y=0;y<S;y++)for(var x=0;x<S;x++){
+    var si=(Math.floor(y/scale)*iw+Math.floor(x/scale))*4,r=data[si],g=data[si+1],b=data[si+2],di=(y*S+x)*4
+
+    // 灰度→青色深度
+    var gray=(r+g+b)/3
+    if(gray<30){mout.data[di]=4;mout.data[di+1]=18;mout.data[di+2]=28}
+    else if(gray<80){mout.data[di]=5;mout.data[di+1]=35;mout.data[di+2]=55}
+    else if(gray<140){mout.data[di]=8;mout.data[di+1]=55;mout.data[di+2]=85}
+    else{var t2=(gray-140)/115;mout.data[di]=Math.floor(10+t2*15);mout.data[di+1]=Math.floor(75+t2*100);mout.data[di+2]=Math.floor(100+t2*120)}
+    mout.data[di+3]=255
+  }
+  mctx.putImageData(mout,0,0)
+  ctx.drawImage(mc,MX,MY)
+
+  // 2. 边缘检测→青色墙线
+  var edge=new Float32Array(iw*ih),maxE=0
+  for(var y=1;y<ih-1;y++)for(var x=1;x<iw-1;x++){
+    var tl=B(x-1,y-1),tc=B(x,y-1),tr=B(x+1,y-1),ml=B(x-1,y),mr=B(x+1,y),bl=B(x-1,y+1),bc=B(x,y+1),br=B(x+1,y+1)
+    var e=Math.sqrt(Math.pow(-tl+tr-2*ml+2*mr-bl+br,2)+Math.pow(-tl-2*tc-tr+bl+2*bc+br,2))
+    edge[y*iw+x]=e;if(e>maxE)maxE=e
+  }
+  var th=maxE*.18
+  ctx.strokeStyle='rgba(245,80,200,.6)';ctx.lineWidth=2;ctx.lineCap='round'
+  for(var y=0;y<ih;y+=2){ctx.beginPath();var d=false;for(var x=0;x<iw;x+=2){if(edge[y*iw+x]>th*2&&!d){ctx.moveTo(MX+x*scale,MY+y*scale);d=true}else if(edge[y*iw+x]<=th&&d){ctx.lineTo(MX+x*scale,MY+y*scale);d=false}}if(d)ctx.lineTo(MX+iw*scale,MY+y*scale);ctx.stroke()}
+  for(var x=0;x<iw;x+=2){ctx.beginPath();var d=false;for(var y=0;y<ih;y+=2){if(edge[y*iw+x]>th*2&&!d){ctx.moveTo(MX+x*scale,MY+y*scale);d=true}else if(edge[y*iw+x]<=th&&d){ctx.lineTo(MX+x*scale,MY+y*scale);d=false}}if(d)ctx.lineTo(MX+x*scale,MY+ih*scale);ctx.stroke()}
+
+  // 3. 暗角
+  var g=ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.72)
+  g.addColorStop(0,'transparent');g.addColorStop(.5,'transparent');g.addColorStop(1,'rgba(5,2,14,.6)')
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
+
+  // 4. 外框
+  ctx.strokeStyle='rgba(5,248,248,.22)';ctx.lineWidth=2;ctx.strokeRect(MX-2,MY-2,S+4,S+4)
+  ctx.strokeStyle='rgba(227,73,237,.06)';ctx.lineWidth=1;ctx.strokeRect(MX+2,MY+2,S-4,S-4)
+
+  // 5. 底部条
+  ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,H-28,W,28)
+  ctx.strokeStyle='rgba(5,248,248,.08)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H-28);ctx.lineTo(W,H-28);ctx.stroke()
+  ctx.fillStyle='rgba(5,248,248,.35)';ctx.font='11px "PingFang SC"';ctx.textAlign='left';ctx.fillText('亚海悬城 ASCENT · 青色旗舰版',14,H-7)
+}
+img.src='/images/maps-clean/ascent.png'
+</script></body></html>
