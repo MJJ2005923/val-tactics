@@ -253,7 +253,7 @@ function AppInner({ navbarAnimate }: { navbarAnimate: boolean }) {
         </div>
         <button className={`navbar__sideBtn ${side === 'attack' ? 'navbar__sideBtnAttack' : 'navbar__sideBtnDefense'}`}
           onClick={() => dispatch({ type: 'SET_SIDE', side: side === 'attack' ? 'defense' : 'attack' })}>
-          <span className="navbar__sideBtnText">{side === 'attack' ? 'Ω 欧米茄' : 'α 阿尔法'}</span>
+          <span className="navbar__sideBtnText" key={side}>{side === 'attack' ? 'Ω 欧米茄' : 'α 阿尔法'}</span>
         </button>
         <button className="btn mobile-menu-btn" onClick={() => setMobileSidebarOpen(v => !v)}
           style={{ display: 'none' }}>☰</button>
