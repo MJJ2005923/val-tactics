@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import maps, { type MapData } from './data/maps'
-import agents from './data/agents'
+import agents, { agentImages } from './data/agents'
 import MapCanvas from './components/MapCanvas/MapCanvas'
 import AgentPanel from './components/AgentPanel/AgentPanel'
 import Timeline from './components/Timeline/Timeline'
@@ -115,10 +115,37 @@ function AppInner() {
       ctx.fillStyle = t.color; ctx.fillText(t.text, t.x * cw, t.y * ch)
     }
 
-    // 5. 特工
+    // 5. 特工头像
     for (const ap of agentPositions) {
-      ctx.fillStyle = ap.team === 'attack' ? '#ff4655' : '#50b4f0'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2
-      ctx.beginPath(); ctx.arc(ap.x * cw, ap.y * ch, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke()
+      const agent = agents.find(a => a.id === ap.agentId)
+      if (!agent) continue
+      const devName = agentImages[agent.id] || agent.id
+      const avatarImg = new Image()
+      avatarImg.src = `/images/agents/${devName}.png`
+      const ax = ap.x * cw, ay = ap.y * ch, ar = 16
+      try {
+        await new Promise<void>((resolve, reject) => {
+          avatarImg.onload = () => resolve()
+          avatarImg.onerror = () => reject()
+        })
+        // 圆形裁剪
+        ctx.save()
+        ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.closePath()
+        ctx.clip()
+        ctx.drawImage(avatarImg, ax - ar, ay - ar, ar * 2, ar * 2)
+        ctx.restore()
+        // 边框
+        const borderColor = ap.team === 'attack' ? '#ff4655' : '#50b4f0'
+        ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2)
+        ctx.strokeStyle = borderColor; ctx.lineWidth = 3; ctx.stroke()
+        // 外发光
+        ctx.beginPath(); ctx.arc(ax, ay, ar + 2, 0, Math.PI * 2)
+        ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = 1; ctx.stroke()
+      } catch {
+        // 加载失败时画彩色圆点兜底
+        ctx.fillStyle = ap.team === 'attack' ? '#ff4655' : '#50b4f0'
+        ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.fill()
+      }
     }
 
     // 下载
