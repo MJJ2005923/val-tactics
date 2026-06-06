@@ -62,12 +62,12 @@
 .btnPrimary { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
 .btnPrimary:hover { background: var(--color-accent-hover); }
 
-.btnDanger { background: transparent; border-color: rgba(255,70,85,0.3); color: var(--color-accent); }
-.btnDanger:hover { background: rgba(255,70,85,0.1); border-color: var(--color-accent); }
+.btnDanger { background: transparent; border-color: rgba(227,73,237,.3); color: var(--color-accent); }
+.btnDanger:hover { background: rgba(227,73,237,.08); border-color: var(--color-accent); box-shadow: 0 0 20px rgba(227,73,237,.1); }
 
 .btnSm, .btnSmDanger { padding: 3px 10px; font-size: 12px; }
 .btnSmDanger { background: transparent; border-color: transparent; color: var(--color-text-muted); }
-.btnSmDanger:hover { background: rgba(255,70,85,0.1); color: var(--color-accent); }
+.btnSmDanger:hover { background: rgba(227,73,237,.08); color: var(--color-accent); }
 
 .btn:disabled, .btnDanger:disabled { opacity: 0.4; cursor: default; }
 .btn:disabled:hover, .btnDanger:disabled:hover { background: var(--color-bg-tertiary); border-color: var(--color-border); }

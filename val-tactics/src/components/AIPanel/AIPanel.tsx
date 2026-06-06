@@ -14,33 +14,18 @@ export default function AIPanel({ mapId, mapName, onClose }: Props) {
 
   return (
     <div className={styles.panel}>
-      <div style={{ display: 'flex', borderBottom: '1px solid #1e1e2e', flexShrink: 0 }}>
+      <div className={styles.tabBar}>
         <button
           onClick={() => setTab('chat')}
-          style={{
-            flex: 1, padding: '10px', border: 'none', cursor: 'pointer',
-            background: tab === 'chat' ? '#1a1a24' : 'transparent',
-            color: tab === 'chat' ? '#fff' : '#666', fontSize: 13, fontWeight: 600,
-          }}>
+          className={`${styles.tabBtn} ${tab === 'chat' ? styles.tabBtnActive : ''}`}>
           💬 AI 对话
         </button>
         <button
           onClick={() => setTab('settings')}
-          style={{
-            flex: 1, padding: '10px', border: 'none', cursor: 'pointer',
-            background: tab === 'settings' ? '#1a1a24' : 'transparent',
-            color: tab === 'settings' ? '#fff' : '#666', fontSize: 13, fontWeight: 600,
-          }}>
+          className={`${styles.tabBtn} ${tab === 'settings' ? styles.tabBtnActive : ''}`}>
           ⚙️ 设置
         </button>
-        <button
-          onClick={onClose}
-          style={{
-            width: 36, border: 'none', cursor: 'pointer',
-            background: 'transparent', color: '#666', fontSize: 16,
-          }}>
-          ✕
-        </button>
+        <button onClick={onClose} className={styles.tabClose}>✕</button>
       </div>
 
       {tab === 'settings' && <AISettings />}

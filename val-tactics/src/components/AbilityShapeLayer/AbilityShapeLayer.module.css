@@ -8,7 +8,7 @@
 }
 
 .shapeSelected {
-  filter: drop-shadow(0 0 4px rgba(255,255,255,0.5));
+  filter: drop-shadow(0 0 6px rgba(227,73,237,.5)) drop-shadow(0 0 14px rgba(227,73,237,.2));
 }
 
 .shapeHover {
