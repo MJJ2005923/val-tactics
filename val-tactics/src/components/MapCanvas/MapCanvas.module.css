@@ -244,7 +244,8 @@
 .showAllBtn{position:absolute;bottom:28px;right:190px;padding:8px 16px;border:1px solid rgba(5,248,248,.18);border-radius:9px;background:rgba(10,5,20,.88);color:rgba(5,248,248,.45);font-size:11px;cursor:pointer;font-family:inherit;transition:all .25s;backdrop-filter:blur(10px);z-index:25;font-weight:500;letter-spacing:.3px;box-shadow:0 2px 12px rgba(0,0,0,.25)}
 .showAllBtn:hover{border-color:rgba(5,248,248,.45);color:#05F8F8;box-shadow:0 0 30px rgba(5,248,248,.15);background:rgba(5,248,248,.04)}
 .showAllBtnActive{background:rgba(5,248,248,.1)!important;border-color:rgba(5,248,248,.4)!important;color:#05F8F8!important;box-shadow:0 0 24px rgba(5,248,248,.15)}
-.controls{background:rgba(14,8,26,.9);border:1px solid rgba(227,73,237,.14);border-radius:10px;padding:6px 10px;gap:5px;backdrop-filter:blur(14px);box-shadow:0 2px 20px rgba(0,0,0,.3);display:flex;align-items:center}
+.controls{background:rgba(14,8,26,.9);border:1px solid rgba(227,73,237,.14);border-radius:10px;padding:6px 10px;gap:5px;backdrop-filter:blur(14px);box-shadow:0 2px 20px rgba(0,0,0,.3);display:flex;align-items:center;opacity:0;transform:translateY(12px);animation:controlsIn .5s cubic-bezier(.16,1,.3,1) 2s forwards}
+@keyframes controlsIn{to{opacity:1;transform:translateY(0)}}
 .zoomBtn{width:30px;height:30px;border:1px solid rgba(227,73,237,.1);border-radius:7px;background:transparent;color:rgba(227,73,237,.35);font-size:16px;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;font-family:inherit;padding:0}
 .zoomBtn:hover{border-color:rgba(5,248,248,.35);color:#05F8F8;background:rgba(5,248,248,.05);box-shadow:0 0 16px rgba(5,248,248,.08);transform:translateY(-1px)}
 .zoomBtn:active{transform:scale(.85);transition:all .05s}
