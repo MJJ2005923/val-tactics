@@ -293,8 +293,9 @@
   background: linear-gradient(135deg,transparent,rgba(227,73,237,.04));
   opacity: 0;
   transition: opacity .3s;
+  pointer-events: none;
 }
-.rosterSlot:hover::before { opacity: 1 }
+.rosterSlot:hover::before { opacity: 1; pointer-events: none }
 
 .rosterSlot:hover {
   border-color: rgba(227,73,237,.4);

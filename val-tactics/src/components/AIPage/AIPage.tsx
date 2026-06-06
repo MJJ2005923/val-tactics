@@ -128,8 +128,17 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <div className="brand" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <div className={styles.brandDot} />
-            <h1 className={styles.logo}>AI 战术教练</h1>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="36" height="36" style={{flexShrink:0}}>
+              <defs><linearGradient id="aig" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+              <rect width="120" height="120" rx="26" fill="none"/>
+              <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#aig)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+              <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#aig)" opacity="0.25" transform="rotate(5,53,35)"/>
+              <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#aig)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+              <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#aig)" opacity="0.35" transform="rotate(10,61,51)"/>
+              <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#aig)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+              <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+            </svg>
+            <h1 className={styles.logo}>T教练</h1>
           </div>
           <button className={styles.backBtn} onClick={onBack}>← 返回战术板</button>
         </div>
@@ -210,7 +219,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
         <div className={styles.chatHeader}>
           <div className={styles.chatModel}>
             <div className={styles.eqBar}><span /><span /><span /><span /></div>
-            AI 战术教练{config.model ? ` · ${models.find(m => m.id === config.model)?.name || ''}` : ''}
+            T教练{config.model ? ` · ${models.find(m => m.id === config.model)?.name || ''}` : ''}
           </div>
           <div className={styles.chatStatus}>● 在线</div>
         </div>
@@ -218,7 +227,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
           {messages.length === 0 ? (
             <div className={styles.welcome}>
               <div className={styles.welcomeIcon}>⚡</div>
-              <h2>你好，我是你的 AI 战术教练</h2>
+              <h2>你好，我是你的 T教练</h2>
               <p>{isFree ? '免费使用快速模式，输入 Key 解锁全部智能模式。' : '全部模式已解锁，尽情使用。'}试试问我：</p>
               <div className={styles.quickPrompts}>
                 {quickPrompts.map((p, i) => (

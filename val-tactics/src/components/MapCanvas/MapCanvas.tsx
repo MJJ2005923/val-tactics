@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { useTactics } from '../../store/TacticsContext'
+import { useToast } from '../Toast/Toast'
 import agents, { getAbilityShapeConfig, agentImages } from '../../data/agents'
 import type { AbilityShapeConfig } from '../../types'
 import DrawingLayer from '../DrawingLayer/DrawingLayer'
@@ -167,6 +168,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [mapSize, setMapSize] = useState({ w: 1800, h: 1200 })
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
+  const toast = useToast()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
   const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
@@ -192,6 +194,20 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
 
   const mapW = mapSize.w
   const mapH = mapSize.h
+
+  // 技能放置通知
+  const prevShapeCount = useRef(abilityShapes.length)
+  useEffect(() => {
+    if (abilityShapes.length > prevShapeCount.current) {
+      const latest = abilityShapes[abilityShapes.length - 1]
+      const agent = agents.find(a => a.id === latest.agentId)
+      const ab = agent?.abilities.find(a => a.id === latest.abilityId)
+      if (agent && ab) {
+        toast(`${agent.name}/${agent.nameEn} · ${ab.key} ${ab.name}`)
+      }
+    }
+    prevShapeCount.current = abilityShapes.length
+  }, [abilityShapes.length])
 
   // 计算使地图填充容器的基准缩放
   const fitScale = Math.min(containerSize.w / mapW, containerSize.h / mapH)
@@ -1149,17 +1165,28 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       {/* 选中对象属性面板 */}
       <SelectionInspector />
 
+      {/* 显示全部范围 */}
+      <button className={styles.showAllBtn} onClick={() => dispatch({ type: 'TOGGLE_SHOW_ALL_RANGES' })}
+        style={showAllRanges ? { background: 'rgba(5,248,248,.1)', borderColor: 'rgba(5,248,248,.4)', color: '#05F8F8' } : undefined}>
+        👁 {showAllRanges ? '隐藏范围' : '显示全部'}
+      </button>
+
       {/* 缩放控件 */}
       <div className={styles.controls}>
         <button className={styles.zoomBtn} onClick={() => setScale(s => Math.min(3, s * 1.25))}>+</button>
         <span className={styles.zoomLabel}>{Math.round(scale * 100)}%</span>
-        <button className={styles.zoomBtn} onClick={() => setScale(s => Math.max(0.5, s * 0.8))}>-</button>
+        <button className={styles.zoomBtn} onClick={() => setScale(s => Math.max(0.5, s * 0.8))}>−</button>
         <button className={styles.zoomBtn} onClick={() => setScale(1)}>重置</button>
-        <button className={styles.zoomBtn} style={{ marginLeft: 8, background: showAllRanges ? '#fff3' : 'transparent' }}
-          onClick={() => dispatch({ type: 'TOGGLE_SHOW_ALL_RANGES' })}
-          title={showAllRanges ? '隐藏技能范围' : '显示全部技能范围'}>
-          {showAllRanges ? '👁' : '👁‍🗨'}
-        </button>
+      </div>
+
+      {/* 底部状态栏 */}
+      <div className={styles.statusBar}>
+        <div className={styles.statusEq}>
+          <span /><span /><span /><span />
+        </div>
+        <span>就绪 · {_mapName} · {side === 'attack' ? '进攻方' : '防守方'}</span>
+        <div className={styles.statusDot} />
+        <span>在线</span>
       </div>
     </div>
   )

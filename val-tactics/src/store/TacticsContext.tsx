@@ -26,6 +26,7 @@ export interface TacticsState {
   tracks: RecordedTrack[]
   currentTrackId: string | null
   recording: boolean
+  recordingStartAt: number
   replaying: boolean
   replayIndex: number
   revealedShapeIds: string[]
@@ -108,6 +109,7 @@ type Action =
   | { type: 'RECORDING_STOP' }
   | { type: 'REPLAY_START'; markers: Marker[] }
   | { type: 'REPLAY_STEP'; shapeId: string }
+  | { type: 'HIDE_REPLAY_SHAPE'; shapeId: string }
   | { type: 'REPLAY_STOP' }
   | { type: 'TOGGLE_SHOW_ALL_RANGES' }
 
@@ -133,6 +135,7 @@ const initialState: TacticsState = {
   tracks: [],
   currentTrackId: null,
   recording: false,
+  recordingStartAt: 0,
   replaying: false,
   replayIndex: -1,
   revealedShapeIds: [],
@@ -227,7 +230,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
         agentId: action.shape.agentId,
         x: action.shape.x, y: action.shape.y,
         step: state.recording ? maxStep + 1 : maxStep + 1,
-        time: state.recording ? Math.round((now - (state.markers[0]?.createdAt ?? now)) / 1000) : (maxStep + 1) * 5,
+        time: state.recording ? Math.round((now - (state.recordingStartAt || now)) / 1000) : (maxStep + 1) * 5,
         note: '',
         createdAt: state.recording ? now : undefined,
         shapeId,
@@ -307,8 +310,9 @@ function reducer(state: TacticsState, action: Action, history: History): { state
 
     // 录制
     case 'RECORDING_START': {
-      const newTrack: RecordedTrack = { id: genId('tr'), name: `录制 ${state.tracks.length + 1}`, createdAt: Date.now() }
-      return { state: { ...state, tracks: [...state.tracks, newTrack], currentTrackId: newTrack.id, recording: true, replaying: false }, history: newHistory }
+      const now = Date.now()
+      const newTrack: RecordedTrack = { id: genId('tr'), name: `录制 ${state.tracks.length + 1}`, createdAt: now }
+      return { state: { ...state, tracks: [...state.tracks, newTrack], currentTrackId: newTrack.id, recording: true, replaying: false, recordingStartAt: now }, history: newHistory }
     }
     case 'RECORDING_STOP':
       return { state: { ...state, recording: false }, history: newHistory }
@@ -320,6 +324,8 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       const revealed = [...state.revealedShapeIds, action.shapeId]
       return { state: { ...state, revealedShapeIds: revealed, animatingShapeId: action.shapeId, replayIndex: state.replayIndex + 1 }, history: newHistory }
     }
+    case 'HIDE_REPLAY_SHAPE':
+      return { state: { ...state, revealedShapeIds: state.revealedShapeIds.filter(id => id !== action.shapeId) }, history: newHistory }
     case 'REPLAY_STOP':
       return { state: { ...state, replaying: false, replayIndex: -1 }, history: newHistory }
     case 'TOGGLE_SHOW_ALL_RANGES':

@@ -212,15 +212,22 @@ function AppInner() {
   return (
     <div className="app-container">
       <nav className="navbar">
+        <span className="navbar__dot" />
         <span className="navbar__logo">TACTICS</span>
         <div className="navbar__divider" />
-        <select className="btn" value={selectedMap.id} onChange={(e) => {
+        <select className="btn navbar__mapSelect" value={selectedMap.id} onChange={(e) => {
           const map = maps.find(m => m.id === e.target.value)
           if (map) setSelectedMap(map)
         }}>
-          {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          {maps.map(m => <option key={m.id} value={m.id}>{m.name} · {m.nameEn}</option>)}
         </select>
-        <button className={`btn ${side === 'attack' ? 'btn--attack' : 'btn--defense'}`}
+        <button className="navbar__sideBtn"
+          style={{
+            color: side === 'attack' ? '#ff6b7a' : '#05F8F8',
+            background: side === 'attack' ? 'rgba(255,70,85,.12)' : 'rgba(5,248,248,.08)',
+            borderColor: side === 'attack' ? 'rgba(255,70,85,.35)' : 'rgba(5,248,248,.25)',
+            ['--glow' as string]: side === 'attack' ? 'rgba(255,70,85,.35)' : 'rgba(5,248,248,.3)',
+          }}
           onClick={() => dispatch({ type: 'SET_SIDE', side: side === 'attack' ? 'defense' : 'attack' })}>
           {side === 'attack' ? '进攻方' : '防守方'}
         </button>
@@ -232,7 +239,7 @@ function AppInner() {
           <button className="btn" onClick={handleExportImage}>导出图片</button>
           <button className="btn" onClick={handleShareLink}>分享链接</button>
           <button className="btn" onClick={handleSaveProgress}>保存进度</button>
-          <button className="btn" onClick={() => setShowAIPage(true)}>🤖 AI 教练</button>
+          <button className="btn" onClick={() => setShowAIPage(true)}>🤖 T教练</button>
           <button className="btn" onClick={() => setShowAIPanel(true)}>💬 快速问答</button>
           <button className="btn" onClick={() => setShowHelp(true)}>使用手册</button>
           <a className="btn btn--donate" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>❤️ 爱发电</a>

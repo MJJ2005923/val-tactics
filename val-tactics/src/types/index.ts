@@ -12,6 +12,7 @@ export interface Marker {
   createdAt?: number  // 录制时间戳
   shapeId?: string  // 关联的技能形状ID
   trackId?: string  // 所属录制轨道ID
+  duration?: number  // 技能持续时间(秒)，回放时到期自动隐藏
 }
 
 // 录制轨道

@@ -114,10 +114,9 @@ function AgentPanel() {
 
   const handleRosterClick = (agentId: string) => {
     setExpandedId(agentId)
-    // 滚动到该特工
     setTimeout(() => {
       const el = listRef.current?.querySelector(`[data-agent-id="${agentId}"]`)
-      el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 50)
   }
 
