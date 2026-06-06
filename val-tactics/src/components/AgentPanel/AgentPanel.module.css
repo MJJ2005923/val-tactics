@@ -33,35 +33,35 @@
 .panelEnter .divider { opacity: 1; transition: opacity .3s; transition-delay: .28s }
 .searchBox { opacity: 0; transform: translateY(8px) }
 .panelEnter .searchBox { opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1); transition-delay: .4s }
-.panelEnter .agentItem { transition: opacity .35s ease, transform .35s cubic-bezier(.16,1,.3,1) }
-.panelEnter .agentItem:nth-child(1) { transition-delay: .38s }
-.panelEnter .agentItem:nth-child(2) { transition-delay: .43s }
-.panelEnter .agentItem:nth-child(3) { transition-delay: .48s }
-.panelEnter .agentItem:nth-child(4) { transition-delay: .53s }
-.panelEnter .agentItem:nth-child(5) { transition-delay: .58s }
-.panelEnter .agentItem:nth-child(6) { transition-delay: .63s }
-.panelEnter .agentItem:nth-child(7) { transition-delay: .68s }
-.panelEnter .agentItem:nth-child(8) { transition-delay: .73s }
-.panelEnter .agentItem:nth-child(9) { transition-delay: .78s }
-.panelEnter .agentItem:nth-child(10) { transition-delay: .83s }
-.panelEnter .agentItem:nth-child(11) { transition-delay: .88s }
-.panelEnter .agentItem:nth-child(12) { transition-delay: .93s }
-.panelEnter .agentItem:nth-child(13) { transition-delay: .98s }
-.panelEnter .agentItem:nth-child(14) { transition-delay: 1.03s }
-.panelEnter .agentItem:nth-child(15) { transition-delay: 1.08s }
-.panelEnter .agentItem:nth-child(16) { transition-delay: 1.13s }
-.panelEnter .agentItem:nth-child(17) { transition-delay: 1.18s }
-.panelEnter .agentItem:nth-child(18) { transition-delay: 1.23s }
-.panelEnter .agentItem:nth-child(19) { transition-delay: 1.28s }
-.panelEnter .agentItem:nth-child(20) { transition-delay: 1.33s }
-.panelEnter .agentItem:nth-child(21) { transition-delay: 1.38s }
-.panelEnter .agentItem:nth-child(22) { transition-delay: 1.43s }
-.panelEnter .agentItem:nth-child(23) { transition-delay: 1.48s }
-.panelEnter .agentItem:nth-child(24) { transition-delay: 1.53s }
-.panelEnter .agentItem:nth-child(25) { transition-delay: 1.58s }
-.panelEnter .agentItem:nth-child(26) { transition-delay: 1.63s }
-.panelEnter .agentItem:nth-child(27) { transition-delay: 1.68s }
-.panelEnter .agentItem:nth-child(28) { transition-delay: 1.73s }
+.panelEnter .agentItem:nth-child(1) { animation-delay: .38s }
+.panelEnter .agentItem:nth-child(2) { animation-delay: .43s }
+.panelEnter .agentItem:nth-child(3) { animation-delay: .48s }
+.panelEnter .agentItem:nth-child(4) { animation-delay: .53s }
+.panelEnter .agentItem:nth-child(5) { animation-delay: .58s }
+.panelEnter .agentItem:nth-child(6) { animation-delay: .63s }
+.panelEnter .agentItem:nth-child(7) { animation-delay: .68s }
+.panelEnter .agentItem:nth-child(8) { animation-delay: .73s }
+.panelEnter .agentItem:nth-child(9) { animation-delay: .78s }
+.panelEnter .agentItem:nth-child(10) { animation-delay: .83s }
+.panelEnter .agentItem:nth-child(11) { animation-delay: .88s }
+.panelEnter .agentItem:nth-child(12) { animation-delay: .93s }
+.panelEnter .agentItem:nth-child(13) { animation-delay: .98s }
+.panelEnter .agentItem:nth-child(14) { animation-delay: 1.03s }
+.panelEnter .agentItem:nth-child(15) { animation-delay: 1.08s }
+.panelEnter .agentItem:nth-child(16) { animation-delay: 1.13s }
+.panelEnter .agentItem:nth-child(17) { animation-delay: 1.18s }
+.panelEnter .agentItem:nth-child(18) { animation-delay: 1.23s }
+.panelEnter .agentItem:nth-child(19) { animation-delay: 1.28s }
+.panelEnter .agentItem:nth-child(20) { animation-delay: 1.33s }
+.panelEnter .agentItem:nth-child(21) { animation-delay: 1.38s }
+.panelEnter .agentItem:nth-child(22) { animation-delay: 1.43s }
+.panelEnter .agentItem:nth-child(23) { animation-delay: 1.48s }
+.panelEnter .agentItem:nth-child(24) { animation-delay: 1.53s }
+.panelEnter .agentItem:nth-child(25) { animation-delay: 1.58s }
+.panelEnter .agentItem:nth-child(26) { animation-delay: 1.63s }
+.panelEnter .agentItem:nth-child(27) { animation-delay: 1.68s }
+.panelEnter .agentItem:nth-child(28) { animation-delay: 1.73s }
+@keyframes agentSlideLeft { from { opacity: 0; transform: translateX(-16px) } to { opacity: 1; transform: translateX(0) } }
 @keyframes apFadeUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
 
 .rosterRow {
@@ -240,11 +240,9 @@
 .agentItem {
   border-bottom: 1px solid rgba(227,73,237,.06);
   transition: background .2s;
-  opacity: 0; transform: translateX(-16px);
 }
 .panelEnter .agentItem {
-  opacity: 1; transform: translateX(0);
-  transition: opacity .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1);
+  animation: agentSlideLeft .4s cubic-bezier(.16,1,.3,1) backwards;
 }
 
 .agentItem:hover {
