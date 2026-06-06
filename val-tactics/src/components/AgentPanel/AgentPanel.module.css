@@ -213,8 +213,8 @@
   animation: searchPulse 4s ease-in-out infinite;
 }
 @keyframes searchPulse {
-  0%, 100% { border-color: rgba(227,73,237,.12); box-shadow: none; }
-  50% { border-color: rgba(227,73,237,.22); box-shadow: 0 0 6px rgba(227,73,237,.04); }
+  0%, 100% { border-color: rgba(227,73,237,.1); box-shadow: 0 0 0 rgba(227,73,237,0); }
+  50% { border-color: rgba(5,248,248,.25); box-shadow: 0 0 12px rgba(5,248,248,.08), 0 0 24px rgba(227,73,237,.04); }
 }
 
 .searchInput:focus {
