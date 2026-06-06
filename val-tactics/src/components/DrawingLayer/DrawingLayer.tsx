@@ -73,14 +73,7 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
       // 如果没命中绘图，穿透到下方让 AbilityShapeLayer 处理技能形状
       return
     }
-    if (toolMode === 'select') {
-      const p = screenToWorld(e.clientX, e.clientY)
-      const hit = drawings.find(d => hitTest(d, p))
-      if (hit) { dispatch({ type: 'SELECT', id: hit.id, selType: 'drawing' }); return }
-      dispatch({ type: 'SELECT', id: null, selType: null })
-      return
-    }
-    if (toolMode === 'text' || toolMode === 'agent') return
+    if (toolMode === 'select' || toolMode === 'text' || toolMode === 'agent') return
     e.stopPropagation()
     drawingRef.current = true
     const p = screenToWorld(e.clientX, e.clientY)
@@ -192,8 +185,7 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
 
   const isDrawing = toolMode === 'freehand' || toolMode === 'line' || toolMode === 'arrow' || toolMode === 'rect' || toolMode === 'circle'
   const isEraser = toolMode === 'eraser'
-  const isSelect = toolMode === 'select'
-  const svgActive = isDrawing || isEraser || isSelect
+  const svgActive = isDrawing || isEraser
 
   return (
     <svg

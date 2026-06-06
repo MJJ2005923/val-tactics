@@ -914,6 +914,43 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onMouseDown={(e) => {
+        // 选择模式：判断是否点击了绘图
+        if (toolMode === 'select') {
+          const t3 = transformRef.current
+          if (!t3.container) return
+          if ((e.target as HTMLElement).closest?.('[data-shape]')) return
+          const rr = t3.container.getBoundingClientRect()
+          const cx = (e.clientX - rr.left - offsetX) / (displayScale * mapW)
+          const cy = (e.clientY - rr.top - offsetY) / (displayScale * mapH)
+          // 命中测试绘图
+          const hit = drawings.find(d => {
+            switch (d.type) {
+              case 'line': case 'arrow': {
+                const [a, b] = d.points
+                const dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy
+                if (len2 === 0) return Math.sqrt((cx - a.x) ** 2 + (cy - a.y) ** 2) < 0.02
+                let t = ((cx - a.x) * dx + (cy - a.y) * dy) / len2
+                t = Math.max(0, Math.min(1, t))
+                return Math.sqrt((cx - (a.x + t * dx)) ** 2 + (cy - (a.y + t * dy)) ** 2) < 0.02
+              }
+              case 'freehand': {
+                for (let i = 1; i < d.points.length; i++) {
+                  const [a2, b2] = [d.points[i - 1], d.points[i]]
+                  const dx2 = b2.x - a2.x, dy2 = b2.y - a2.y, len22 = dx2 * dx2 + dy2 * dy2
+                  if (len22 === 0) continue
+                  let t2 = ((cx - a2.x) * dx2 + (cy - a2.y) * dy2) / len22
+                  t2 = Math.max(0, Math.min(1, t2))
+                  if (Math.sqrt((cx - (a2.x + t2 * dx2)) ** 2 + (cy - (a2.y + t2 * dy2)) ** 2) < 0.02) return true
+                }
+                return false
+              }
+              default: return false
+            }
+          })
+          if (hit) { dispatch({ type: 'SELECT', id: hit.id, selType: 'drawing' }); return }
+          dispatch({ type: 'SELECT', id: null, selType: null })
+          return
+        }
         if (!rectDrawing || rectDrawing.drawing) return
         const t3 = transformRef.current
         if (!t3.container) return
