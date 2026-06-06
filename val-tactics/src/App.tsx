@@ -14,7 +14,7 @@ import AIPage from './components/AIPage/AIPage'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 
-function AppInner({ navbarAnimate, panelAnimate }: { navbarAnimate: boolean; panelAnimate: boolean }) {
+function AppInner({ navbarAnimate, panelAnimate, canvasAnimate }: { navbarAnimate: boolean; panelAnimate: boolean; canvasAnimate: boolean }) {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -297,7 +297,7 @@ function AppInner({ navbarAnimate, panelAnimate }: { navbarAnimate: boolean; pan
         <aside className={`sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
           <AgentPanel animate={panelAnimate} />
         </aside>
-        <div className="canvas-area">
+        <div className={`canvas-area ${canvasAnimate ? 'canvas-area--enter' : ''}`}>
           <ToolPalette />
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
@@ -317,6 +317,7 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true)
   const [navbarAnimate, setNavbarAnimate] = useState(false)
   const [panelAnimate, setPanelAnimate] = useState(false)
+  const [canvasAnimate, setCanvasAnimate] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -330,13 +331,14 @@ export default function App() {
     setShowSplash(false)
     setNavbarAnimate(true)
     setPanelAnimate(true)
+    setCanvasAnimate(true)
   }
 
   return (
     <TacticsProvider>
       <ToastProvider>
         {showSplash && <SplashScreen onEnter={handleSplashEnter} />}
-        <AppInner navbarAnimate={navbarAnimate} panelAnimate={panelAnimate} />
+        <AppInner navbarAnimate={navbarAnimate} panelAnimate={panelAnimate} canvasAnimate={canvasAnimate} />
       </ToastProvider>
     </TacticsProvider>
   )
