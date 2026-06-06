@@ -63,12 +63,12 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
       <div className={styles.abilityIconWrap} style={{ background: `linear-gradient(135deg, ${c}, ${c}cc)` }}>
         <img src={iconSrc} alt="" style={{ width: 20, height: 20 }}
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-        <span className={styles.abilityKeyBadge}>{ability.key}</span>
       </div>
       <div className={styles.abilityInfo}>
         <div className={styles.abilityName}>{ability.name}</div>
         <div className={styles.abilityType} style={{ color: c }}>{label}</div>
       </div>
+      <span className={styles.abilityKeyBadge} style={{ background: c }}>{ability.key}</span>
     </div>
   )
 }
