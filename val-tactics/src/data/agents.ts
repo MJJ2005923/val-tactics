@@ -32,8 +32,8 @@ export const agentImages: Record<string, string> = {
   tejo: 'tejo', vyse: 'vyse', veto: 'pine', miks: 'iris', waylay: 'terra'
 }
 
-// 游戏内技能范围 (新地图 2048px, 1m≈7px)
-const M = 7 / 2048 // 1米对应的标准化坐标
+// 游戏内技能范围 (新地图2048px, 微调补偿)
+const M = 7 / 1600 // 1米对应的标准化坐标
 
 const typeDefaults: Record<AbilityType, AbilityShapeConfig> = {
   smoke:   { shape: 'circle', radius: 4.5 * M },     // 烟雾 ~4-5m
