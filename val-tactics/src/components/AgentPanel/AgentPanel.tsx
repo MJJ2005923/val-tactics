@@ -104,7 +104,7 @@ function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAge
                     title="左键查看 · 右键移除"
                     key={agent.id}>
                     <img src={getAgentImage(agent)} alt={agent.name} className={styles.rosterAvatar}
-                      style={{ borderColor: typeColors[agent.abilities[0]?.type] || 'rgba(227,73,237,.3)', boxShadow: `0 0 8px ${typeColors[agent.abilities[0]?.type] || 'rgba(227,73,237,.3)'}40` }} />
+                      style={{ borderColor: color, boxShadow: `0 0 8px ${color}60` }} />
                     <span className={styles.rosterName}>{agent.name}<span className={styles.rosterNameEn}>{agent.nameEn}</span></span>
                   </div>
                 : <span className={styles.rosterEmpty}>+</span>}
