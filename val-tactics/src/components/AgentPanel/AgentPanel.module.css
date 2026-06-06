@@ -359,7 +359,7 @@
 /* ====== 技能展开区 ====== */
 .abilities {
   overflow: hidden;
-  animation: expandIn .25s cubic-bezier(.16,1,.3,1);
+  animation: expandIn .3s cubic-bezier(.16,1,.3,1);
 }
 
 @keyframes expandIn {
@@ -372,12 +372,21 @@
   color: rgba(227,73,237,.18);
   padding: 4px 16px 8px 48px;
   letter-spacing: .3px;
+  animation: fadeIn .25s ease .1s both;
 }
 
 .abilityRow {
   display: flex;
   align-items: center;
+  opacity: 0; transform: translateX(20px);
+  animation: abilitySlideRight .35s cubic-bezier(.16,1,.3,1) forwards;
 }
+.abilityRow:nth-child(2) { animation-delay: .08s }
+.abilityRow:nth-child(3) { animation-delay: .14s }
+.abilityRow:nth-child(4) { animation-delay: .20s }
+.abilityRow:nth-child(5) { animation-delay: .26s }
+@keyframes abilitySlideRight { to { opacity: 1; transform: translateX(0) } }
+@keyframes fadeIn { to { opacity: 1 } }
 
 .abilityBtn {
   position: relative;
@@ -391,15 +400,17 @@
   color: rgba(227,73,237,.35);
   font-size: 12px;
   cursor: grab;
-  transition: all .2s;
+  transition: all .25s cubic-bezier(.16,1,.3,1);
   text-align: left;
   font-family: inherit;
   border-radius: 0 8px 8px 0;
 }
 
 .abilityBtn:hover {
-  background: rgba(227,73,237,.05);
-  color: #c0b0d0;
+  background: rgba(227,73,237,.08);
+  color: #e0d0f0;
+  transform: translateX(3px);
+  box-shadow: 0 0 14px rgba(227,73,237,.06);
 }
 
 .abilityBtn:active {
@@ -414,6 +425,8 @@
 .abilityBtnDisabled:hover {
   background: transparent;
   color: rgba(227,73,237,.35);
+  transform: none;
+  box-shadow: none;
 }
 
 .abilityKeyBadge {
