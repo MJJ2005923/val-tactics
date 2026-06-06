@@ -114,17 +114,17 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
         <div className={styles.body}>
           {/* 保存 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>保存当前战术</h4>
+            <div className={styles.sectionTitle}>保存当前战术</div>
             <div className={styles.saveRow}>
               <input className={styles.input} value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSave()} placeholder="策略名称..." />
               <button className={styles.btnPrimary} onClick={handleSave}>保存</button>
             </div>
-            <input className={styles.input} value={desc} onChange={e => setDesc(e.target.value)} placeholder="策略描述（可选）..." style={{ marginTop: 6 }} />
+            <input className={`${styles.input} ${styles.inputMt}`} value={desc} onChange={e => setDesc(e.target.value)} placeholder="策略描述（可选）..." />
           </div>
 
           {/* 导入导出 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>导入 / 导出</h4>
+            <div className={styles.sectionTitle}>导入 / 导出</div>
             <div className={styles.actionRow}>
               <button className={styles.btn} onClick={handleExport} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>导出 JSON</button>
               <button className={styles.btn} onClick={handleImport}>导入 JSON</button>
@@ -142,7 +142,7 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
 
           {/* 模板列表 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>已保存的模板 ({templates.length})</h4>
+            <div className={styles.sectionTitle}>已保存的模板 ({templates.length})</div>
             {templates.length === 0 && <p className={styles.emptyText}>暂无保存的模板</p>}
             <div className={styles.templateList}>
               {templates.map(tpl => (
