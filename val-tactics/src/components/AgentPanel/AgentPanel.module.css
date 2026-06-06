@@ -264,10 +264,24 @@
 .agentItem {
   border-bottom: 1px solid rgba(227,73,237,.06);
   transition: background .2s;
+  position: relative;
 }
 .panelEnter .agentItem {
   animation: agentSlideLeft .4s cubic-bezier(.16,1,.3,1) backwards;
 }
+
+/* 选中指示条 */
+.agentItemExpanded::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 6px; bottom: 6px;
+  width: 2.5px;
+  background: #05F8F8;
+  border-radius: 2px;
+  box-shadow: 0 0 12px #05F8F8, 0 0 24px rgba(5,248,248,.35);
+  animation: selectBarIn .25s cubic-bezier(.16,1,.3,1);
+}
+@keyframes selectBarIn { from { opacity: 0; transform: scaleY(0) } to { opacity: 1; transform: scaleY(1) } }
 
 .agentItem:hover {
   background: rgba(227,73,237,.04);

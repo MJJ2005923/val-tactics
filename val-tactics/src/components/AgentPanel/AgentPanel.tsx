@@ -144,7 +144,7 @@ function AgentPanel({ animate }: { animate?: boolean }) {
         const isExpanded = expandedId === agent.id
         const sorted = [...agent.abilities].sort((a, b) => abilityKeyOrder[a.key] - abilityKeyOrder[b.key])
         return (
-          <div key={agent.id} className={styles.agentItem} data-agent-id={agent.id}>
+          <div key={agent.id} className={`${styles.agentItem} ${isExpanded ? styles.agentItemExpanded : ''}`} data-agent-id={agent.id}>
             <div className={styles.agentRow}>
               <DraggableAgentHeader agent={agent} />
               <button
