@@ -309,7 +309,7 @@ export default function App() {
 
   const handleSplashEnter = () => {
     setShowSplash(false)
-    setTimeout(() => setNavbarAnimate(true), 50)
+    setNavbarAnimate(true)
   }
 
   return (
