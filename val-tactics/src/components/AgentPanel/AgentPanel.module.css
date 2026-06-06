@@ -38,7 +38,7 @@
 
 .rosterGroup {
   flex: 1;
-  padding: 10px 6px;
+  padding: 14px 10px;
   text-align: center;
 }
 
@@ -53,12 +53,12 @@
 .rosterSlots {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .rosterSlot {
   width: 100%;
-  height: 38px;
+  height: 42px;
   border: 1.5px dashed rgba(227,73,237,.12);
   border-radius: 10px;
   display: flex;
