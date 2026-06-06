@@ -55,6 +55,7 @@ export default function Timeline() {
           abilityId: m.abilityId, agentId: m.agentId,
           x: Math.round(m.x * 1e4) / 1e4, y: Math.round(m.y * 1e4) / 1e4,
           step: m.step, time: m.time, duration: m.duration, note: m.note || undefined,
+          shapeId: m.shapeId || undefined,
         })),
       },
     }
@@ -83,7 +84,8 @@ export default function Timeline() {
           trackId,
           abilityId: m.abilityId, agentId: m.agentId,
           x: m.x, y: m.y, step: m.step || i + 1, time: m.time || i * 5,
-          duration: m.duration, note: m.note || '', createdAt: Date.now() + i,
+          duration: m.duration, note: m.note || '', shapeId: m.shapeId || undefined,
+          createdAt: Date.now() + i,
         }))
         dispatch({
           type: 'LOAD_ALL',
