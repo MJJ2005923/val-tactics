@@ -107,7 +107,7 @@ function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAge
   )
 }
 
-function AgentPanel() {
+function AgentPanel({ animate }: { animate?: boolean }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [selectedAbility, setSelectedAbility] = useState<{ ability: Ability; agent: Agent } | null>(null)
   const [search, setSearch] = useState('')
@@ -173,7 +173,7 @@ function AgentPanel() {
 
   return (
     <>
-      <div className={styles.panel}>
+      <div className={`${styles.panel} ${animate ? styles.panelEnter : ''}`}>
         <div className={styles.sectionLabel}>阵容构建</div>
         <div className={styles.rosterRow}>
           <RosterSlots team="attack" onAgentClick={handleRosterClick} />

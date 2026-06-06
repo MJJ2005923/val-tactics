@@ -14,7 +14,7 @@ import AIPage from './components/AIPage/AIPage'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 
-function AppInner({ navbarAnimate }: { navbarAnimate: boolean }) {
+function AppInner({ navbarAnimate, panelAnimate }: { navbarAnimate: boolean; panelAnimate: boolean }) {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -295,7 +295,7 @@ function AppInner({ navbarAnimate }: { navbarAnimate: boolean }) {
       <div className="main-area">
         {mobileSidebarOpen && <div className="sidebar-overlay" onClick={() => setMobileSidebarOpen(false)} />}
         <aside className={`sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
-          <AgentPanel />
+          <AgentPanel animate={panelAnimate} />
         </aside>
         <div className="canvas-area">
           <ToolPalette />
@@ -316,6 +316,7 @@ function AppInner({ navbarAnimate }: { navbarAnimate: boolean }) {
 export default function App() {
   const [showSplash, setShowSplash] = useState(true)
   const [navbarAnimate, setNavbarAnimate] = useState(false)
+  const [panelAnimate, setPanelAnimate] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -328,13 +329,14 @@ export default function App() {
   const handleSplashEnter = () => {
     setShowSplash(false)
     setNavbarAnimate(true)
+    setPanelAnimate(true)
   }
 
   return (
     <TacticsProvider>
       <ToastProvider>
         {showSplash && <SplashScreen onEnter={handleSplashEnter} />}
-        <AppInner navbarAnimate={navbarAnimate} />
+        <AppInner navbarAnimate={navbarAnimate} panelAnimate={panelAnimate} />
       </ToastProvider>
     </TacticsProvider>
   )
