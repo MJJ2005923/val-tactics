@@ -239,12 +239,16 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     }
   })
 
-  // 地图切换过渡动画
+  // 地图切换过渡动画 — 等新地图加载完再淡出
   useEffect(() => {
     setMapSwitching(true)
-    const timer = setTimeout(() => setMapSwitching(false), 600)
-    return () => clearTimeout(timer)
   }, [mapId])
+  useEffect(() => {
+    if (mapImgLoaded && mapSwitching) {
+      const timer = setTimeout(() => setMapSwitching(false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [mapImgLoaded, mapSwitching])
 
   // 地图图片缓存加载（仅在地图切换时加载）+ 按图片比例调整 mapW/mapH
   useEffect(() => {
@@ -1198,7 +1202,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       </div>
 
       {/* 地图切换过渡遮罩 */}
-      {mapSwitching && <div className={styles.mapTransition} />}
+      <div className={`${styles.mapTransition} ${!mapSwitching ? styles.mapTransitionOut : ''}`} />
     </div>
   )
 }

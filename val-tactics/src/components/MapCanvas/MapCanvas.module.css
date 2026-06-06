@@ -225,15 +225,14 @@
 /* 地图切换过渡 */
 .mapTransition {
   position: absolute; inset: 0;
-  background: rgba(5,2,12,.7);
+  background: #05020c;
   z-index: 15;
   pointer-events: none;
-  animation: mapFadeOverlay .6s ease forwards;
+  opacity: 1;
 }
-@keyframes mapFadeOverlay {
-  0% { opacity: 0; }
-  40% { opacity: 1; }
-  100% { opacity: 0; }
+.mapTransitionOut {
+  opacity: 0;
+  transition: opacity .35s ease .1s;
 }
 
 /* ══════ 旗舰版覆盖 ══════ */
