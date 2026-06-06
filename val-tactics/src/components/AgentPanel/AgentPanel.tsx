@@ -167,7 +167,7 @@ function AgentPanel({ animate }: { animate?: boolean }) {
               <div className={styles.abilities}>
                 <div className={styles.dragHint}>拖拽头像放置位置 · 拖拽技能布置战术</div>
                 {sorted.map(ab => (
-                  <div key={ab.id} className={styles.abilityRow} onClick={() => setSelectedAbility({ ability: ab, agent })} title="点击查看技能详情">
+                  <div key={ab.id} className={styles.abilityRow} onClick={() => setSelectedAbility({ ability: ab, agent })} data-tooltip="点击查看详情">
                     <DraggableAbility ability={ab} agent={agent} />
                   </div>
                 ))}
