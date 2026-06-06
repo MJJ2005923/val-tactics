@@ -256,6 +256,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
 
     // Clear / Load
     case 'CLEAR_ALL':
+      localStorage.removeItem('val-tactics-autosave')
       return { state: { ...initialState, toolMode: state.toolMode, drawColor: state.drawColor, drawWidth: state.drawWidth, side: state.side }, history: newHistory }
     case 'LOAD_ALL':
       return { state: { ...state, markers: action.markers, drawings: action.drawings, textAnnotations: action.texts, agentPositions: action.agents, abilityShapes: action.shapes, strategyName: action.name, strategyDescription: action.desc, selectedId: null, selectedType: null, roster: action.roster, tracks: action.tracks }, history: newHistory }
