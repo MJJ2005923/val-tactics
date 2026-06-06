@@ -22,6 +22,7 @@ function AppInner({ navbarAnimate }: { navbarAnimate: boolean }) {
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [showAIPage, setShowAIPage] = useState(false)
   const [showAIDropdown, setShowAIDropdown] = useState(false)
+  const [showMapDropdown, setShowMapDropdown] = useState(false)
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
   const toast = useToast()
 
@@ -227,16 +228,28 @@ function AppInner({ navbarAnimate }: { navbarAnimate: boolean }) {
         <span className="navbar__dot" />
         <span className="navbar__logo">TACTICS</span>
         <div className="navbar__divider" />
-        <div className="navbar__mapBar">
-          {maps.map((m, i) => (
-            <button key={m.id}
-              className={`navbar__mapPill ${selectedMap.id === m.id ? 'navbar__mapPillActive' : ''}`}
-              onClick={() => setSelectedMap(m)}
-              title={`${m.name} · ${m.nameEn}`}
-              style={{ animationDelay: `${i * .04}s` }}>
-              {m.name}
-            </button>
-          ))}
+        <div className="navbar__mapTrigger" style={{ position: 'relative' }}>
+          <button className="navbar__mapBtn" onClick={() => setShowMapDropdown(v => !v)}>
+            <span className="navbar__mapBtnDot" />
+            {selectedMap.name}
+            <span className={`navbar__mapBtnArrow ${showMapDropdown ? 'navbar__mapBtnArrowOpen' : ''}`}>▾</span>
+          </button>
+          {showMapDropdown && (
+            <>
+              <div className="navbar__mapOverlay" onClick={() => setShowMapDropdown(false)} />
+              <div className="navbar__mapDropdown">
+                {maps.map((m, i) => (
+                  <button key={m.id}
+                    className={`navbar__mapItem ${selectedMap.id === m.id ? 'navbar__mapItemActive' : ''}`}
+                    onClick={() => { setSelectedMap(m); setShowMapDropdown(false) }}
+                    style={{ animationDelay: `${i * .04}s` }}>
+                    <span className="navbar__mapItemName">{m.name}</span>
+                    <span className="navbar__mapItemEn">{m.nameEn}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         <button className={`navbar__sideBtn ${side === 'attack' ? 'navbar__sideBtnAttack' : 'navbar__sideBtnDefense'}`}
           onClick={() => dispatch({ type: 'SET_SIDE', side: side === 'attack' ? 'defense' : 'attack' })}>
