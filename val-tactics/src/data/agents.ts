@@ -48,25 +48,25 @@ const typeDefaults: Record<AbilityType, AbilityShapeConfig> = {
 // 每个技能根据游戏内实际数据的精确覆盖
 const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 烟雾 (半径单位: 米) ===
-  'brimstone-sky-smoke':      { radius: 5.5 * M },   // 5.5m
-  'omen-dark-cover':          { radius: 5.5 * M },    // 5.5m
-  'omen-shrouded-step':        { shape: 'line', length: 20 * M, thickness: 0.003, iconOnly: true },
-  'omen-paranoia':             { shape: 'rect', length: 40 * M, width: 15 * M, iconOnly: true },
-  'astra-nebula':             { radius: 6 * M },   // 6m
-  'viper-poison-cloud':       { radius: 6 * M },    // 6m
+  'brimstone-sky-smoke':      { radius: 6.5 * M },   // 6.5m
+  'omen-dark-cover':          { radius: 6.5 * M },    // 6.5m
+  'omen-shrouded-step':        { shape: 'line', length: 25 * M, thickness: 0.003, iconOnly: true },
+  'omen-paranoia':             { shape: 'rect', length: 43 * M, width: 15 * M, iconOnly: true },
+  'astra-nebula':             { radius: 7 * M },   // 7m
+  'viper-poison-cloud':       { radius: 7 * M },    // 7m
   'jett-cloudburst':          { shape: 'circle', radius: 4.5 * M },    // 4.5m 瞬发烟
   'jett-tailwind':             { shape: 'line', length: 18 * M, thickness: 0.003, iconOnly: true },
-  'harbor-cove':              { shape: 'circle', radius: 6.5 * M },    // 6.5m 护盾
-  'harbor-reckoning':         { shape: 'line', length: 50 * M, thickness: 0.006 },
+  'harbor-cove':              { shape: 'circle', radius: 7 * M },    // 7m 护盾
+  'harbor-reckoning':         { shape: 'line', length: 55 * M, thickness: 35 * M },
   'sova-owl-drone':           { shape: 'line', length: 55 * M, thickness: 0.004, iconOnly: true },
   'clove-ruse':               { radius: 5.5 * M },    // 5.5m
   'clove-meddle':              { radius: 5.5 * M, iconOnly: true },
   'cypher-cyber-cage':        { radius: 5.5 * M, iconOnly: true },    // 5.5m 网牢
 
   // === 燃烧弹/伤害 ===
-  'brimstone-incendiary':     { radius: 6 * M, iconOnly: true },
+  'brimstone-incendiary':     { radius: 6.5 * M, iconOnly: true },
   'killjoy-nanoswarm':        { radius: 6 * M, iconOnly: true },
-  'raze-paint-shells':        { shape: 'circle', radius: 6.5 * M, iconOnly: true },
+  'raze-paint-shells':        { shape: 'circle', radius: 8 * M, iconOnly: true },
   'gekko-mosh-pit':           { radius: 7 * M, iconOnly: true },
   'raze-boom-bot':            { radius: 2.0 * M },
   'kayo-frag':                { radius: 5.5 * M, iconOnly: true },
@@ -81,10 +81,10 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'vyse-shear':                { shape: 'line', length: 15 * M, thickness: 0.01 },
 
   // === 终极技能 ===
-  'brimstone-orbital-strike': { radius: 12.0 * M, iconOnly: true },
+  'brimstone-orbital-strike': { radius: 14 * M, iconOnly: true },
   'viper-snake-bite':         { radius: 6 * M, iconOnly: true },
   'viper-pit':                { radius: 12.0 * M },
-  'raze-showstopper':         { radius: 5.5 * M, iconOnly: true },
+  'raze-showstopper':         { radius: 7 * M, iconOnly: true },
   'kayo-null-cmd':             { radius: 60 * M, iconOnly: true },
   'kayo-zero-point':           { radius: 20 * M, iconOnly: true },
   'killjoy-lockdown':          { radius: 45 * M, iconOnly: true },
@@ -95,18 +95,18 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'fade-nightfall':            { shape: 'line', length: 55 * M, width: 30 * M, thickness: 0.015, iconOnly: true },
 
   // === 墙体 ===
-  'viper-toxic-screen':       { shape: 'line', length: 90 * M, thickness: 2 * M },
+  'viper-toxic-screen':       { shape: 'line', length: 100 * M, thickness: 2 * M },
   'sage-barrier-orb':         { shape: 'rect', length: 17 * M, width: 3 * M },
-  'phoenix-blaze':            { shape: 'line', length: 37 * M, thickness: 0.006, iconOnly: true },
+  'phoenix-blaze':            { shape: 'line', length: 35 * M, thickness: 0.006, iconOnly: true },
   'phoenix-hot-hands':        { shape: 'circle', radius: 6.5 * M, iconOnly: true },
   'phoenix-curveball':        { shape: 'line', length: 6 * M, thickness: 0.004 },
   'astra-astral-form':        { shape: 'line', length: 150 * M, thickness: 0.003 },
-  'harbor-high-tide':         { shape: 'line', length: 90 * M, thickness: 2 * M },
-  'harbor-cascade':           { shape: 'circle', radius: 6.5 * M, iconOnly: true },
+  'harbor-high-tide':         { shape: 'line', length: 100 * M, thickness: 2 * M },
+  'harbor-cascade':           { shape: 'circle', radius: 7.5 * M, iconOnly: true },
   'deadlock-barrier-mesh':    { shape: 'circle', radius: 8 * M, iconOnly: true },
   'neon-relay-bolt':          { shape: 'circle', radius: 7 * M, iconOnly: true },
-  'neon-fast-lane':           { shape: 'line', length: 70 * M, thickness: 0.003, iconOnly: true },
-  'neon-high-gear':           { shape: 'line', length: 10 * M, thickness: 0.003, iconOnly: true },
+  'neon-fast-lane':           { shape: 'line', length: 75 * M, thickness: 0.003, iconOnly: true },
+  'neon-high-gear':           { shape: 'line', length: 11 * M, thickness: 0.003, iconOnly: true },
 
   // === 侦查 ===
   'sova-recon-bolt':           { shape: 'circle', radius: 40 * M, iconOnly: true },
@@ -132,8 +132,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
 
   // === 减速/控制 ===
   'sage-slow-orb':             { shape: 'circle', radius: 7 * M, iconOnly: true },
-  'astra-gravity-well':        { radius: 6 * M, iconOnly: true },
-  'astra-nova-pulse':          { radius: 6 * M, iconOnly: true },
+  'astra-gravity-well':        { radius: 7 * M, iconOnly: true },
+  'astra-nova-pulse':          { radius: 7 * M, iconOnly: true },
   'fade-seize':                { radius: 8 * M, iconOnly: true },
   'breach-aftershock':         { shape: 'cone', angle: 50, length: 20 * M, iconOnly: true },
   'breach-fault-line':         { shape: 'line', length: 70 * M, width: 15 * M, thickness: 0.01, iconOnly: true },
@@ -148,9 +148,9 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'miks-c':                    { shape: 'circle', radius: 7 * M, iconOnly: true },
   'miks-e':                    { shape: 'circle', radius: 5.5 * M },
   'miks-x':                    { shape: 'cone', angle: 55, length: 55 * M, iconOnly: true },
-  'iso-contingency':           { shape: 'line', length: 40 * M, thickness: 0.003, iconOnly: true },
-  'iso-undercut':              { shape: 'rect', length: 50 * M, width: 10 * M, iconOnly: true },
-  'iso-kill-contract':         { shape: 'rect', length: 51.5 * M, width: 25 * M, iconOnly: true },
+  'iso-contingency':           { shape: 'line', length: 43 * M, thickness: 0.003, iconOnly: true },
+  'iso-undercut':              { shape: 'rect', length: 55 * M, width: 10 * M, iconOnly: true },
+  'iso-kill-contract':         { shape: 'rect', length: 57 * M, width: 24 * M, iconOnly: true },
 
   // === 治疗 ===
   'sage-healing-orb':          { shape: 'circle', radius: 3 * M },

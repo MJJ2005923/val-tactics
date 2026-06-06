@@ -5,10 +5,11 @@ import type { AbilityShape } from '../../types'
 import styles from './AbilityShapeLayer.module.css'
 
 // 海神X波浪 — 直接用ref+RAF避免React重渲染
-function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY, svgHalfW, svgHalfH }: {
+function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY, svgHalfW, svgHalfH, waveWidth }: {
   pathPts: { x: number; y: number }[]; color: string
   mapW: number; mapH: number; scale: number
   svgCenterX: number; svgCenterY: number; svgHalfW: number; svgHalfH: number
+  waveWidth?: number
 }) {
   const lineRef = useRef<SVGLineElement>(null)
 
@@ -43,7 +44,7 @@ function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY,
       const y = a.y + (b.y - a.y) * segFrac
       const dx2 = b.x - a.x, dy2 = b.y - a.y
       const n = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
-      const pw = 45 * scale
+      const pw = (waveWidth || 45) * scale
       const px = -dy2 / n * pw, py = dx2 / n * pw
       if (lineRef.current) {
         lineRef.current.setAttribute('x1', String(x - px))
@@ -691,7 +692,8 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       return <HarborWave pathPts={[p2, p1]} color={color}
                         mapW={mapW} mapH={mapH} scale={scale}
                         svgCenterX={s.x} svgCenterY={s.y}
-                        svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
+                        svgHalfW={svgW / 2} svgHalfH={svgH / 2}
+                        waveWidth={s.thickness * mapW} />
                     })()}
                     {/* 斯凯E：图标显示在终点 */}
                     {s.abilityId === 'skye-guiding-light' ? (() => {
@@ -804,7 +806,8 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     return <HarborWave pathPts={[p2, p1]} color={color}
                       mapW={mapW} mapH={mapH} scale={scale}
                       svgCenterX={s.x} svgCenterY={s.y}
-                      svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
+                      svgHalfW={svgW / 2} svgHalfH={svgH / 2}
+                      waveWidth={s.thickness * mapW} />
                   })()}
                   {/* 标签 */}
                   <image href={'/images/abilities/' + s.abilityId + '.png'}
