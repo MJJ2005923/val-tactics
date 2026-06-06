@@ -232,7 +232,7 @@
 }
 .mapTransitionOut {
   opacity: 0;
-  transition: opacity .35s ease .1s;
+  transition: opacity .6s ease;
 }
 
 /* ══════ 旗舰版覆盖 ══════ */

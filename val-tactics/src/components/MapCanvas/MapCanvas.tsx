@@ -245,7 +245,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   }, [mapId])
   useEffect(() => {
     if (mapImgLoaded && mapSwitching) {
-      const timer = setTimeout(() => setMapSwitching(false), 300)
+      const timer = setTimeout(() => setMapSwitching(false), 500)
       return () => clearTimeout(timer)
     }
   }, [mapImgLoaded, mapSwitching])
