@@ -57,7 +57,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'jett-cloudburst':          { shape: 'circle', radius: 4.5 * M },    // 4.5m 瞬发烟
   'jett-tailwind':             { shape: 'line', length: 18 * M, thickness: 0.003, iconOnly: true },
   'harbor-cove':              { shape: 'circle', radius: 7 * M },    // 7m 护盾
-  'harbor-reckoning':         { shape: 'line', length: 55 * M, thickness: 35 * M },
+  'harbor-reckoning':         { shape: 'line', length: 55 * M, thickness: 0.006 },
   'sova-owl-drone':           { shape: 'line', length: 55 * M, thickness: 0.004, iconOnly: true },
   'clove-ruse':               { radius: 5.5 * M },    // 5.5m
   'clove-meddle':              { radius: 5.5 * M, iconOnly: true },

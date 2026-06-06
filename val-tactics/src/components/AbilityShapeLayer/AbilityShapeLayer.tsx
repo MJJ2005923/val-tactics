@@ -693,7 +693,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                         mapW={mapW} mapH={mapH} scale={scale}
                         svgCenterX={s.x} svgCenterY={s.y}
                         svgHalfW={svgW / 2} svgHalfH={svgH / 2}
-                        waveWidth={s.thickness * mapW} />
+                        waveWidth={35 * 7 / 1600 * mapW} />
                     })()}
                     {/* 斯凯E：图标显示在终点 */}
                     {s.abilityId === 'skye-guiding-light' ? (() => {
@@ -807,7 +807,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       mapW={mapW} mapH={mapH} scale={scale}
                       svgCenterX={s.x} svgCenterY={s.y}
                       svgHalfW={svgW / 2} svgHalfH={svgH / 2}
-                      waveWidth={s.thickness * mapW} />
+                      waveWidth={35 * 7 / 1600 * mapW} />
                   })()}
                   {/* 标签 */}
                   <image href={'/images/abilities/' + s.abilityId + '.png'}
