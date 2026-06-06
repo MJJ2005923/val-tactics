@@ -209,16 +209,28 @@
   color: #c0b0d0;
   outline: none;
   font-family: inherit;
-  transition: all .25s cubic-bezier(.16,1,.3,1);
+  transition: all .3s cubic-bezier(.16,1,.3,1);
+  animation: searchPulse 4s ease-in-out infinite;
+}
+@keyframes searchPulse {
+  0%, 100% { border-color: rgba(227,73,237,.12); box-shadow: none; }
+  50% { border-color: rgba(227,73,237,.22); box-shadow: 0 0 6px rgba(227,73,237,.04); }
 }
 
 .searchInput:focus {
-  border-color: rgba(5,248,248,.35);
-  box-shadow: 0 0 0 3px rgba(5,248,248,.04), 0 0 20px rgba(5,248,248,.06);
+  border-color: #05F8F8;
+  box-shadow: 0 0 0 4px rgba(5,248,248,.06), 0 0 30px rgba(5,248,248,.12);
+  background: rgba(5,248,248,.03);
+  animation: none;
+  color: #e0d0f0;
 }
 
 .searchInput::placeholder {
   color: rgba(227,73,237,.25);
+  transition: color .3s;
+}
+.searchInput:focus::placeholder {
+  color: rgba(5,248,248,.2);
 }
 
 /* ====== 特工列表 ====== */
