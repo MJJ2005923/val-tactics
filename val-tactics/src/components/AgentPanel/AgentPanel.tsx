@@ -65,7 +65,7 @@ function DraggableAbility({ ability, agent }: { ability: Ability; agent: Agent }
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
       </div>
       <div className={styles.abilityInfo}>
-        <div className={styles.abilityName}>{ability.name}</div>
+        <div className={styles.abilityName}>{ability.name} · {ability.nameEn}</div>
         <div className={styles.abilityType} style={{ color: c }}>{label}</div>
       </div>
       <span className={styles.abilityKeyBadge} style={{ background: c }}>{ability.key}</span>
