@@ -1,260 +1,21 @@
+/* ══════ 旗舰版特工面板 ══════ */
 .panel {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-}
-
-.header {
-  padding: 12px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-}
-
-.searchBox {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-}
-
-.searchInput {
-  width: 100%;
-  padding: 6px 10px;
-  font-size: 13px;
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-primary);
-  outline: none;
-  transition: border-color var(--transition-fast);
-}
-
-.searchInput:focus {
-  border-color: var(--color-border-light);
-}
-
-.searchInput::placeholder {
-  color: var(--color-text-muted);
-}
-
-.list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 4px 0;
-}
-
-.agentItem {
-  border-bottom: 1px solid var(--color-border);
-}
-
-.agentRow {
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-
-/* 英雄头像（可拖拽） */
-.agentDragArea {
-  flex-shrink: 0;
-  padding: 4px 0 4px 8px;
-  cursor: grab;
-  display: flex;
-  align-items: center;
-}
-
-.agentDragArea:active {
-  cursor: grabbing;
-}
-
-.agentDragging {
-  opacity: 0.5;
-}
-
-.agentAvatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid var(--color-border);
-  object-fit: cover;
-  transition: border-color var(--transition-fast);
-}
-
-.agentDragArea:hover .agentAvatar {
-  border-color: var(--color-border-light);
-}
-
-/* 英雄信息按钮 */
-.agentBtn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px 8px 8px;
   background: transparent;
-  border: none;
-  color: var(--color-text-primary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background var(--transition-fast);
-  text-align: left;
-  min-width: 0;
 }
 
-.agentBtn:hover {
-  background: var(--color-bg-hover);
-}
-
-.agentBtnActive {
-  background: var(--color-bg-active);
-}
-
-.agentRole {
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 2px;
-  background: var(--color-bg-primary);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.agentName {
-  font-weight: 500;
-  flex: 1;
-}
-
-.arrow {
-  color: var(--color-text-muted);
-  font-size: 10px;
-  transition: transform var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.abilities {
-  padding: 0 0 8px;
-}
-
-.dragHint {
-  font-size: 10px;
-  color: var(--color-text-muted);
-  padding: 2px 16px 6px 48px;
-}
-
-.abilityRow {
-  display: flex;
-  align-items: center;
-}
-
-.abilityBtn {
-  position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 4px 5px 48px;
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  cursor: grab;
-  transition: background var(--transition-fast), color var(--transition-fast);
-  text-align: left;
-}
-
-.abilityBtn:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-primary);
-}
-
-.abilityBtn:active {
-  cursor: grabbing;
-}
-
-.abilityBtnDragging {
-  opacity: 0.5;
-  background: var(--color-bg-active);
-}
-
-.abilityBtnDisabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.abilityKeyBadge {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-  position: absolute;
-  left: 8px;
-}
-
-.abilityKey {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  color: var(--color-text-secondary);
-  flex-shrink: 0;
-}
-
-.abilityName {
-  flex: 1;
-  font-weight: 500;
-}
-
-.abilityType {
-  font-size: 11px;
-  flex-shrink: 0;
-}
-
-.infoBtn {
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  color: var(--color-text-muted);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-right: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  transition: all var(--transition-fast);
-}
-
-.infoBtn:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-primary);
-}
-
-/* 阵容 */
+/* ====== 阵容构建区 ====== */
 .rosterRow {
   display: flex;
-  border-bottom: 1px solid rgba(227,73,237,.15);
+  flex-shrink: 0;
 }
+
 .rosterGroup {
   flex: 1;
-  padding: 10px 8px;
+  padding: 10px 6px;
   text-align: center;
 }
 
@@ -269,12 +30,12 @@
 .rosterSlots {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .rosterSlot {
   width: 100%;
-  height: 40px;
+  height: 38px;
   border: 1.5px dashed rgba(227,73,237,.12);
   border-radius: 10px;
   display: flex;
@@ -290,12 +51,11 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg,transparent,rgba(227,73,237,.04));
+  background: linear-gradient(135deg, transparent, rgba(227,73,237,.04));
   opacity: 0;
   transition: opacity .3s;
   pointer-events: none;
 }
-.rosterSlot:hover::before { opacity: 1; pointer-events: none }
 
 .rosterSlot:hover {
   border-color: rgba(227,73,237,.4);
@@ -304,60 +64,341 @@
   transform: translateY(-1px);
 }
 
-.rosterSlot[style*="filled"], .rosterSlot:has(img) {
-  background: rgba(227,73,237,.12);
-  border: 1px solid rgba(227,73,237,.28);
-  box-shadow: 0 2px 14px rgba(227,73,237,.08);
-}
-
-.rosterEmpty {
-  font-size: 14px;
-  color: rgba(227,73,237,.2);
-  line-height: 1;
-}
-
-.rosterAvatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(227,73,237,.3);
-  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+.rosterSlot:hover::before {
+  opacity: 1;
 }
 
 .rosterFilled {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 4px 8px 4px 4px;
   width: 100%;
+  background: rgba(227,73,237,.08);
+  border-radius: 9px;
+  border: 1px solid rgba(227,73,237,.2);
+  transition: all .25s;
+}
+
+.rosterFilled:hover {
+  background: rgba(227,73,237,.14);
+  border-color: rgba(227,73,237,.35);
+  box-shadow: 0 0 12px rgba(227,73,237,.1);
+}
+
+.rosterAvatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(227,73,237,.3);
+  flex-shrink: 0;
 }
 
 .rosterName {
   font-size: 11px;
   font-weight: 600;
-  color: #dcc8ec;
+  color: #d0b8e0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
+
 .rosterNameEn {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 400;
-  color: rgba(227,73,237,.4);
+  color: rgba(227,73,237,.3);
+  display: block;
 }
 
-.emptySearch {
-  padding: 24px 16px;
-  text-align: center;
+.rosterEmpty {
+  font-size: 16px;
+  color: rgba(227,73,237,.15);
+  line-height: 1;
+  transition: all .25s;
+}
+
+.rosterSlot:hover .rosterEmpty {
+  color: rgba(227,73,237,.35);
+}
+
+/* ====== 分隔线 ====== */
+.divider {
+  height: 1px;
+  background: rgba(227,73,237,.12);
+  margin: 2px 0;
+  flex-shrink: 0;
+}
+
+/* ====== 搜索区 ====== */
+.searchBox {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(227,73,237,.08);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 12px;
+  background: rgba(227,73,237,.03);
+  border: 1px solid rgba(227,73,237,.12);
+  border-radius: 10px;
+  color: #c0b0d0;
+  outline: none;
+  font-family: inherit;
+  transition: all .25s cubic-bezier(.16,1,.3,1);
+}
+
+.searchInput:focus {
+  border-color: rgba(5,248,248,.35);
+  box-shadow: 0 0 0 3px rgba(5,248,248,.04), 0 0 20px rgba(5,248,248,.06);
+}
+
+.searchInput::placeholder {
+  color: rgba(227,73,237,.25);
+}
+
+/* ====== 特工列表 ====== */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: rgba(227,73,237,.15);
+  border-radius: 2px;
+}
+
+.agentItem {
+  border-bottom: 1px solid rgba(227,73,237,.06);
+  transition: background .2s;
+}
+
+.agentItem:hover {
+  background: rgba(227,73,237,.02);
+}
+
+.agentRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* 英雄头像拖拽区 */
+.agentDragArea {
+  flex-shrink: 0;
+  padding: 4px 0 4px 10px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+}
+
+.agentDragArea:active {
+  cursor: grabbing;
+}
+
+.agentAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(227,73,237,.12);
+  object-fit: cover;
+  transition: border-color .25s, box-shadow .25s;
+}
+
+.agentDragArea:hover .agentAvatar {
+  border-color: rgba(227,73,237,.35);
+  box-shadow: 0 0 16px rgba(227,73,237,.12);
+}
+
+/* 英雄信息按钮 */
+.agentBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 10px 10px;
+  background: transparent;
+  border: none;
+  color: #b8b0c8;
   font-size: 13px;
-  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all .2s;
+  text-align: left;
+  min-width: 0;
+  font-family: inherit;
 }
 
-/* ══════ 旗舰版覆盖 ══════ */
-.panel { background: transparent }
-.header { color: rgba(227,73,237,.4); border-color: rgba(227,73,237,.12); font-size: 11px; letter-spacing: 2px }
-.searchBox { border-color: rgba(227,73,237,.08) }
-.searchInput { background: rgba(227,73,237,.03); border-color: rgba(227,73,237,.12); border-radius: 10px; padding: 9px 14px; color: #c0b0d0; transition: all .25s }
-.searchInput:focus { border-color: rgba(5,248,248,.35); box-shadow: 0 0 0 3px rgba(5,248,248,.04),0 0 20px rgba(5,248,248,.06) }
-.searchInput::placeholder { color: rgba(227,73,237,.3) }
+.agentBtn:hover {
+  background: rgba(227,73,237,.04);
+}
+
+.agentBtnActive {
+  background: rgba(227,73,237,.06);
+  color: #d0b8e0;
+}
+
+.agentRole {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(227,73,237,.06);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: .3px;
+  font-weight: 500;
+}
+
+.agentName {
+  font-weight: 500;
+  flex: 1;
+}
+
+.arrow {
+  color: rgba(227,73,237,.2);
+  font-size: 10px;
+  transition: transform .25s cubic-bezier(.16,1,.3,1);
+  flex-shrink: 0;
+}
+
+/* ====== 技能展开区 ====== */
+.abilities {
+  overflow: hidden;
+  animation: expandIn .25s cubic-bezier(.16,1,.3,1);
+}
+
+@keyframes expandIn {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 300px; }
+}
+
+.dragHint {
+  font-size: 10px;
+  color: rgba(227,73,237,.18);
+  padding: 4px 16px 8px 48px;
+  letter-spacing: .3px;
+}
+
+.abilityRow {
+  display: flex;
+  align-items: center;
+}
+
+.abilityBtn {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px 6px 48px;
+  background: transparent;
+  border: none;
+  color: rgba(227,73,237,.35);
+  font-size: 12px;
+  cursor: grab;
+  transition: all .2s;
+  text-align: left;
+  font-family: inherit;
+  border-radius: 0 8px 8px 0;
+}
+
+.abilityBtn:hover {
+  background: rgba(227,73,237,.05);
+  color: #c0b0d0;
+}
+
+.abilityBtn:active {
+  cursor: grabbing;
+}
+
+.abilityBtnDisabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.abilityBtnDisabled:hover {
+  background: transparent;
+  color: rgba(227,73,237,.35);
+}
+
+.abilityKeyBadge {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  position: absolute;
+  left: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+
+.abilityName {
+  flex: 1;
+  font-weight: 500;
+}
+
+.abilityType {
+  font-size: 10px;
+  flex-shrink: 0;
+  font-weight: 500;
+  letter-spacing: .3px;
+}
+
+/* 信息按钮 */
+.infoBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(227,73,237,.08);
+  border-radius: 50%;
+  color: rgba(227,73,237,.18);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 10px;
+  flex-shrink: 0;
+  transition: all .25s;
+  font-family: inherit;
+}
+
+.infoBtn:hover {
+  background: rgba(227,73,237,.08);
+  border-color: rgba(227,73,237,.25);
+  color: #d0b8e0;
+  box-shadow: 0 0 12px rgba(227,73,237,.08);
+}
+
+/* 空状态 */
+.emptySearch {
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(227,73,237,.18);
+  letter-spacing: .5px;
+}
+
+/* 阵容区标签 */
+.sectionLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: rgba(227,73,237,.18);
+  padding: 6px 12px 4px;
+  flex-shrink: 0;
+}

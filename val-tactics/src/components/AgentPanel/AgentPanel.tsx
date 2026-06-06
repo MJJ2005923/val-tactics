@@ -79,7 +79,8 @@ function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAge
           const agentId = ids[i]
           const agent = agentId ? agents.find(a => a.id === agentId) : null
           return (
-            <div key={i} className={styles.rosterSlot} style={{ borderColor: color }}
+            <div key={i} className={styles.rosterSlot}
+              style={agent ? { borderStyle: 'solid', borderColor: color + '60', background: color + '10' } : { borderColor: color + '20' }}
               onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
               onDrop={e => {
                 e.preventDefault()
@@ -95,7 +96,7 @@ function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAge
                     onContextMenu={e => { e.preventDefault(); dispatch({ type: 'REMOVE_FROM_ROSTER', team, agentId: agent.id }) }}
                     title="左键查看 · 右键移除">
                     <img src={getAgentImage(agent)} alt={agent.name} className={styles.rosterAvatar} />
-                    <span className={styles.rosterName}>{agent.name}<span className={styles.rosterNameEn}>/{agent.nameEn}</span></span>
+                    <span className={styles.rosterName}>{agent.name}<span className={styles.rosterNameEn}>{agent.nameEn}</span></span>
                   </div>
                 : <span className={styles.rosterEmpty}>+</span>}
             </div>
@@ -138,43 +139,45 @@ function AgentPanel() {
         const isExpanded = expandedId === agent.id
         const sorted = [...agent.abilities].sort((a, b) => abilityKeyOrder[a.key] - abilityKeyOrder[b.key])
         return (
-              <div key={agent.id} className={styles.agentItem} data-agent-id={agent.id}>
-                <div className={styles.agentRow}>
-                  <DraggableAgentHeader agent={agent} />
-                  <button
-                    className={`${styles.agentBtn} ${isExpanded ? styles.agentBtnActive : ''}`}
-                    onClick={() => setExpandedId(isExpanded ? null : agent.id)}
-                  >
-                    <span className={styles.agentRole} style={{ color: typeColors[agent.abilities[0]?.type] || '#888' }}>{agent.role}</span>
-                    <span className={styles.agentName}>{agent.name}</span>
-                    <span className={styles.arrow} style={{ transform: isExpanded ? 'rotate(90deg)' : undefined }}>▸</span>
-                  </button>
-                </div>
-                {isExpanded && (
-                  <div className={styles.abilities}>
-                    <div className={styles.dragHint}>拖拽头像放位置 · 拖拽技能放技能</div>
-                    {sorted.map(ab => (
-                      <div key={ab.id} className={styles.abilityRow}>
-                        <DraggableAbility ability={ab} agent={agent} />
-                        <button className={styles.infoBtn} onClick={() => setSelectedAbility({ ability: ab, agent })} title="详情">?</button>
-                      </div>
-                    ))}
+          <div key={agent.id} className={styles.agentItem} data-agent-id={agent.id}>
+            <div className={styles.agentRow}>
+              <DraggableAgentHeader agent={agent} />
+              <button
+                className={`${styles.agentBtn} ${isExpanded ? styles.agentBtnActive : ''}`}
+                onClick={() => setExpandedId(isExpanded ? null : agent.id)}
+              >
+                <span className={styles.agentRole} style={{ color: typeColors[agent.abilities[0]?.type] || '#888' }}>{agent.role}</span>
+                <span className={styles.agentName}>{agent.name}</span>
+                <span className={styles.arrow} style={{ transform: isExpanded ? 'rotate(90deg)' : undefined }}>▸</span>
+              </button>
+            </div>
+            {isExpanded && (
+              <div className={styles.abilities}>
+                <div className={styles.dragHint}>拖拽头像放置位置 · 拖拽技能布置战术</div>
+                {sorted.map(ab => (
+                  <div key={ab.id} className={styles.abilityRow}>
+                    <DraggableAbility ability={ab} agent={agent} />
+                    <button className={styles.infoBtn} onClick={() => setSelectedAbility({ ability: ab, agent })} title="详情">?</button>
                   </div>
-                )}
+                ))}
               </div>
-            )
-          })}
+            )}
+          </div>
+        )}
+      )}
     </div>
   ), [filtered, expandedId])
 
   return (
     <>
       <div className={styles.panel}>
+        <div className={styles.sectionLabel}>阵容构建</div>
         <div className={styles.rosterRow}>
           <RosterSlots team="attack" onAgentClick={handleRosterClick} />
           <RosterSlots team="defense" onAgentClick={handleRosterClick} />
         </div>
-        <div style={{ height: 1, background: 'rgba(227,73,237,.15)', margin: '4px 0' }} />
+        <div className={styles.divider} />
+        <div className={styles.sectionLabel}>特工列表</div>
         <div className={styles.searchBox}>
           <input className={styles.searchInput} type="text" placeholder="搜索特工..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
