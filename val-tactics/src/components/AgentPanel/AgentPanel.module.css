@@ -238,15 +238,27 @@
   flex: 1;
   overflow-y: auto;
   padding: 2px 0;
+  position: relative;
+  mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent 100%);
 }
 
 .list::-webkit-scrollbar {
-  width: 3px;
+  width: 2px;
+}
+
+.list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .list::-webkit-scrollbar-thumb {
-  background: rgba(227,73,237,.15);
-  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(5,248,248,.25), rgba(227,73,237,.15));
+  border-radius: 1px;
+  transition: background .3s;
+}
+
+.list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(5,248,248,.5), rgba(227,73,237,.3));
 }
 
 .agentItem {
