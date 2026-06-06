@@ -151,12 +151,12 @@ export default function Timeline({ animate }: { animate?: boolean }) {
         <div className={styles.header}>
           <button className={`${styles.recBtn} ${recording ? styles.recordingActive : ''}`}
             onClick={() => dispatch({ type: recording ? 'RECORDING_STOP' : 'RECORDING_START' })}
-            title={recording ? '停止录制' : '开始录制'}>
+            data-tooltip={recording ? '停止录制' : '开始录制'}>
             {recording ? `⏹ ${timeStr}` : '⏺ 录制'}
           </button>
-          <button className={styles.recBtn} title="回放">{replaying ? `⏹ ${timeStr}` : '▶'}</button>
+          <button className={styles.recBtn} data-tooltip="回放">{replaying ? `⏹ ${timeStr}` : '▶'}</button>
           <div className={styles.headerDivider} />
-          <button className={styles.recBtn} onClick={handleImportTrack} title="导入轨道">📥</button>
+          <button className={styles.recBtn} onClick={handleImportTrack} data-tooltip="导入轨道">📥</button>
         </div>
       </div>
     )
@@ -167,23 +167,23 @@ export default function Timeline({ animate }: { animate?: boolean }) {
       <div className={styles.header}>
         <button className={`${styles.recBtn} ${recording ? styles.recordingActive : ''}`}
           onClick={() => dispatch({ type: recording ? 'RECORDING_STOP' : 'RECORDING_START' })}
-          title={recording ? '停止录制' : '开始录制'}>
+          data-tooltip={recording ? '停止录制' : '开始录制'}>
           {recording ? `⏹ ${timeStr}` : '⏺ 录制'}
         </button>
         <button className={styles.recBtn}
           onClick={() => {
             if (trackId && sorted.length > 0) dispatch({ type: replaying ? 'REPLAY_STOP' : 'REPLAY_START', markers: sorted })
           }}
-          title={replaying ? '停止回放' : '回放'}>
+          data-tooltip={replaying ? '停止回放' : '回放'}>
           {replaying ? `⏹ ${timeStr}` : '▶'}
         </button>
         {activeTrack && sorted.length > 0 && (
           <>
             <div className={styles.headerDivider} />
-            <button className={styles.recBtn} onClick={handleExportTrack} title="导出轨道">📤</button>
+            <button className={styles.recBtn} onClick={handleExportTrack} data-tooltip="导出轨道">📤</button>
           </>
         )}
-        <button className={styles.recBtn} onClick={handleImportTrack} title="导入轨道">📥</button>
+        <button className={styles.recBtn} onClick={handleImportTrack} data-tooltip="导入轨道">📥</button>
       </div>
       <div className={styles.trackList}>
         {tracks.map(t => {
@@ -207,7 +207,7 @@ export default function Timeline({ animate }: { animate?: boolean }) {
                 ) : (
                   <span className={styles.trackName}
                     onDoubleClick={e => { e.stopPropagation(); setRenamingId(t.id); setRenameText(t.name) }}
-                    title="双击重命名">{t.name}</span>
+                    data-tooltip="双击重命名">{t.name}</span>
                 )}
                 <span className={styles.trackCount}>{tm.length} 步 · {timeStr}</span>
                 <button className={styles.trackDelBtn}
