@@ -135,6 +135,7 @@
   border: 1px solid rgba(227,73,237,.2);
   transition: all .25s;
   animation: slotFillIn .4s cubic-bezier(.16,1,.3,1);
+  position: relative;
 }
 @keyframes slotFillIn { from { opacity: 0; transform: scale(.8) } to { opacity: 1; transform: scale(1) } }
 
@@ -142,6 +143,47 @@
   background: rgba(227,73,237,.14);
   border-color: rgba(227,73,237,.35);
   box-shadow: 0 0 12px rgba(227,73,237,.1);
+}
+
+/* Tooltip */
+.rosterFilled::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #e0d0f0;
+  background: rgba(18,12,32,.96);
+  border: 1px solid rgba(227,73,237,.25);
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s ease, transform .2s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4), 0 0 12px rgba(227,73,237,.08);
+  backdrop-filter: blur(8px);
+  letter-spacing: .3px;
+}
+.rosterFilled::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(227,73,237,.25);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.rosterFilled:hover::after,
+.rosterFilled:hover::before {
+  opacity: 1;
 }
 
 .rosterAvatar {

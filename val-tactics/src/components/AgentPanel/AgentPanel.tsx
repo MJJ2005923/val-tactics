@@ -101,7 +101,7 @@ function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAge
               {agent
                 ? <div className={styles.rosterFilled} onClick={() => onAgentClick(agent.id)}
                     onContextMenu={e => { e.preventDefault(); dispatch({ type: 'REMOVE_FROM_ROSTER', team, agentId: agent.id }) }}
-                    title="左键查看 · 右键移除"
+                    data-tooltip="左键查看 · 右键移除"
                     key={agent.id}>
                     <img src={getAgentImage(agent)} alt={agent.name} className={styles.rosterAvatar}
                       style={{ borderColor: color, boxShadow: `0 0 8px ${color}60` }} />
