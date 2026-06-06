@@ -245,7 +245,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     setMapSwitching(true)
     switchRef.current = { loaded: false, elapsed: false }
     const tryFade = () => { if (switchRef.current.loaded && switchRef.current.elapsed) setMapSwitching(false) }
-    const t1 = window.setTimeout(() => { switchRef.current.elapsed = true; tryFade() }, 1200)
+    const t1 = window.setTimeout(() => { switchRef.current.elapsed = true; tryFade() }, 1000)
     return () => clearTimeout(t1)
   }, [mapId])
   useEffect(() => {
