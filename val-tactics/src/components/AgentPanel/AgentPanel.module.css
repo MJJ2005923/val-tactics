@@ -284,9 +284,13 @@
 @keyframes selectBarIn { from { opacity: 0; transform: scaleY(0) } to { opacity: 1; transform: scaleY(1) } }
 
 .agentItem:hover {
-  background: rgba(5,248,248,.04);
-  box-shadow: inset 0 0 30px rgba(5,248,248,.03), 0 0 16px rgba(5,248,248,.08);
-  border-bottom-color: rgba(5,248,248,.15);
+  background: rgba(227,73,237,.02);
+}
+
+.agentBtn:hover {
+  background: rgba(5,248,248,.06);
+  box-shadow: inset 0 0 20px rgba(5,248,248,.04), 0 0 12px rgba(5,248,248,.08);
+  color: #05F8F8;
 }
 
 .agentRow {
