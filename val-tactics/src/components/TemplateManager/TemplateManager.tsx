@@ -47,7 +47,32 @@ export default function TemplateManager({ onClose, mapId, onLoadMap, onExportIma
   }
 
   const handleLoad = async (tpl: Template) => {
-    dispatch({ type: 'LOAD_ALL', markers: tpl.markers, drawings: tpl.drawings || [], texts: tpl.textAnnotations || [], agents: tpl.agentPositions || [], shapes: tpl.abilityShapes || [], name: tpl.name, desc: tpl.description || '', roster: tpl.roster || { attack: [], defense: [] }, tracks: tpl.tracks || [] })
+    // 旧地图→新地图坐标迁移(2048×2048)
+    const oldSizes: Record<string, { w: number; h: number }> = {
+      ascent: { w: 857, h: 706 }, bind: { w: 767, h: 713 }, icebox: { w: 873, h: 727 },
+      split: { w: 847, h: 659 }, pearl: { w: 921, h: 674 }, fracture: { w: 796, h: 640 },
+      haven: { w: 830, h: 667 }, sunset: { w: 891, h: 756 }, lotus: { w: 796, h: 581 },
+      breeze: { w: 909, h: 687 }, abyss: { w: 851, h: 709 }, saltmine: { w: 781, h: 694 },
+    }
+    const old = oldSizes[tpl.mapId], newW = 2048, newH = 2048
+    const migrate = (obj: any) => {
+      if (old && obj.x != null) { obj.x = obj.x * old.w / newW; obj.y = obj.y * old.h / newH }
+      if (obj.path) for (const p of obj.path) { p.x = p.x * old.w / newW; p.y = p.y * old.h / newH }
+      return obj
+    }
+    dispatch({ type: 'LOAD_ALL',
+      markers: tpl.markers.map(migrate),
+      drawings: (tpl.drawings || []).map((d: any) => {
+        if (old) { ['x','y','cx','cy'].forEach(k => { if (d[k] != null) d[k] = d[k] * old.w / newW }); ['y','cy','h'].forEach(k => { if (d[k] != null) d[k] = d[k] * old.h / newH }); if (d.r != null) d.r = d.r * old.w / newW; if (d.w != null) d.w = d.w * old.w / newW }
+        if (d.points) for (const p of d.points) { p.x = p.x * old.w / newW; p.y = p.y * old.h / newH }
+        return d
+      }),
+      texts: (tpl.textAnnotations || []).map(migrate),
+      agents: (tpl.agentPositions || []).map(migrate),
+      shapes: (tpl.abilityShapes || []).map(migrate),
+      name: tpl.name, desc: tpl.description || '',
+      roster: tpl.roster || { attack: [], defense: [] }, tracks: tpl.tracks || [],
+    })
     if (tpl.mapId) onLoadMap(tpl.mapId)
     toast('模板已加载')
     onClose()

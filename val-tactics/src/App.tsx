@@ -44,12 +44,36 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       if (!d.mapId) return
       const map = maps.find(m => m.id === d.mapId)
       if (map) setSelectedMap(map)
+
+      // 旧地图→新地图坐标迁移(2048×2048)
+      const oldSizes: Record<string, { w: number; h: number }> = {
+        ascent: { w: 857, h: 706 }, bind: { w: 767, h: 713 }, icebox: { w: 873, h: 727 },
+        split: { w: 847, h: 659 }, pearl: { w: 921, h: 674 }, fracture: { w: 796, h: 640 },
+        haven: { w: 830, h: 667 }, sunset: { w: 891, h: 756 }, lotus: { w: 796, h: 581 },
+        breeze: { w: 909, h: 687 }, abyss: { w: 851, h: 709 }, saltmine: { w: 781, h: 694 },
+      }
+      const old = oldSizes[d.mapId], newW = 2048, newH = 2048
+      const migrateCoord = (obj: any) => {
+        if (old && obj.x != null && obj.y != null) {
+          obj.x = obj.x * old.w / newW; obj.y = obj.y * old.h / newH
+        }
+        // 迁移路径点
+        if (obj.path) for (const p of obj.path) { p.x = p.x * old.w / newW; p.y = p.y * old.h / newH }
+        return obj
+      }
+
       dispatch({
         type: 'LOAD_ALL',
-        markers: d.markers || [], drawings: d.drawings || [],
-        texts: d.textAnnotations || [], agents: d.agentPositions || [],
-        shapes: d.abilityShapes || [], name: d.strategyName || '',
-        desc: d.strategyDescription || '',
+        markers: (d.markers || []).map(migrateCoord),
+        drawings: (d.drawings || []).map((d2: any) => {
+          if (old) { if (d2.x != null) d2.x = d2.x * old.w / newW; if (d2.y != null) d2.y = d2.y * old.h / newH; if (d2.cx != null) d2.cx = d2.cx * old.w / newW; if (d2.cy != null) d2.cy = d2.cy * old.h / newH; if (d2.w != null) d2.w = d2.w * old.w / newW; if (d2.h != null) d2.h = d2.h * old.h / newH; if (d2.r != null) d2.r = d2.r * old.w / newW }
+          if (d2.points) for (const p of d2.points) { p.x = p.x * old.w / newW; p.y = p.y * old.h / newH }
+          return d2
+        }),
+        texts: (d.textAnnotations || []).map(migrateCoord),
+        agents: (d.agentPositions || []).map(migrateCoord),
+        shapes: (d.abilityShapes || []).map(migrateCoord),
+        name: d.strategyName || '', desc: d.strategyDescription || '',
         roster: d.roster || { attack: [], defense: [] }, tracks: d.tracks || [],
       })
     } catch {}
