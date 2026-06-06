@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }: Props) {
-  const { drawings, toolMode, drawColor, drawWidth, dispatch } = useTactics()
+  const { drawings, toolMode, drawColor, drawWidth, selectedId, selectedType, dispatch } = useTactics()
   const [preview, setPreview] = useState<DrawPath | null>(null)
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
   const drawingRef = useRef(false)
@@ -134,11 +134,23 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
       }
       case 'line': {
         const [a, b] = d.points
-        return <line key={d.id} x1={a.x * mapW} y1={a.y * mapH} x2={b.x * mapW} y2={b.y * mapH} stroke={d.color} strokeWidth={scaledStroke} strokeLinecap="round" strokeDasharray={dash} opacity={dashOpacity} />
+        const midX = (a.x + b.x) / 2 * mapW
+        return (
+          <g key={d.id}>
+            <line x1={a.x * mapW} y1={a.y * mapH} x2={b.x * mapW} y2={b.y * mapH} stroke={d.color} strokeWidth={scaledStroke} strokeLinecap="round" strokeDasharray={dash} opacity={dashOpacity} />
+            {!preview && d.id === selectedId && selectedType === 'drawing' && (
+              <text x={midX} y={(a.y + b.y) / 2 * mapH - 8} textAnchor="middle" fill="#fff" fontSize={12 / scale} fontWeight={600}
+                style={{ pointerEvents: 'none', paintOrder: 'stroke', stroke: 'rgba(0,0,0,.7)', strokeWidth: 3 / scale, strokeLinecap: 'round' }}>
+                {Math.round(Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2) / (7 / 1600))}m
+              </text>
+            )}
+          </g>
+        )
       }
       case 'arrow': {
         const [a, b] = d.points
         const markerId = `arrowhead-${d.id}${preview ? '-p' : ''}`
+        const midX = (a.x + b.x) / 2 * mapW
         return (
           <g key={d.id} opacity={dashOpacity}>
             <defs>
@@ -147,6 +159,12 @@ export default function DrawingLayer({ offset, scale, mapW, mapH, containerRef }
               </marker>
             </defs>
             <line x1={a.x * mapW} y1={a.y * mapH} x2={b.x * mapW} y2={b.y * mapH} stroke={d.color} strokeWidth={scaledStroke} markerEnd={`url(#${markerId})`} strokeLinecap="round" strokeDasharray={dash} />
+            {!preview && d.id === selectedId && selectedType === 'drawing' && (
+              <text x={midX} y={(a.y + b.y) / 2 * mapH - 8} textAnchor="middle" fill="#fff" fontSize={12 / scale} fontWeight={600}
+                style={{ pointerEvents: 'none', paintOrder: 'stroke', stroke: 'rgba(0,0,0,.7)', strokeWidth: 3 / scale, strokeLinecap: 'round' }}>
+                {Math.round(Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2) / (7 / 1600))}m
+              </text>
+            )}
           </g>
         )
       }
