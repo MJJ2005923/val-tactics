@@ -96,7 +96,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
 
   // === 墙体 ===
   'viper-toxic-screen':       { shape: 'line', length: 90 * M, thickness: 2 * M },
-  'sage-barrier-orb':         { shape: 'rect', length: 16 * M, width: 3 * M },
+  'sage-barrier-orb':         { shape: 'rect', length: 20 * M, width: 3 * M },
   'phoenix-blaze':            { shape: 'line', length: 37 * M, thickness: 0.006, iconOnly: true },
   'phoenix-hot-hands':        { shape: 'circle', radius: 6.5 * M, iconOnly: true },
   'phoenix-curveball':        { shape: 'line', length: 6 * M, thickness: 0.004 },
