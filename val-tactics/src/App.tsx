@@ -233,23 +233,17 @@ function AppInner() {
         }}>
           {maps.map(m => <option key={m.id} value={m.id}>{m.name} · {m.nameEn}</option>)}
         </select>
-        <button className="navbar__sideBtn"
-          style={{
-            color: side === 'attack' ? '#ff6b7a' : '#05F8F8',
-            background: side === 'attack' ? 'rgba(255,70,85,.12)' : 'rgba(5,248,248,.08)',
-            borderColor: side === 'attack' ? 'rgba(255,70,85,.35)' : 'rgba(5,248,248,.25)',
-            ['--glow' as string]: side === 'attack' ? 'rgba(255,70,85,.35)' : 'rgba(5,248,248,.3)',
-          }}
+        <button className={`navbar__sideBtn ${side === 'attack' ? 'navbar__sideBtnAttack' : 'navbar__sideBtnDefense'}`}
           onClick={() => dispatch({ type: 'SET_SIDE', side: side === 'attack' ? 'defense' : 'attack' })}>
-          {side === 'attack' ? '进攻方' : '防守方'}
+          {side === 'attack' ? '⚔️ 进攻方' : '🛡️ 防守方'}
         </button>
         <button className="btn mobile-menu-btn" onClick={() => setMobileSidebarOpen(v => !v)}
           style={{ display: 'none' }}>☰</button>
         <div className="navbar__actions">
-          <button className="btn" onClick={() => setShowTemplates(true)}>模板管理</button>
-          <button className="btn" onClick={handleSaveProgress}>保存进度</button>
+          <button className="navbar__btn" onClick={() => setShowTemplates(true)}>📁 模板管理</button>
+          <button className="navbar__btn" onClick={handleSaveProgress}>💾 保存进度</button>
           <div className="navbar__aiDropdown" style={{ position: 'relative' }}>
-            <button className="btn" onClick={() => setShowAIDropdown(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <button className="navbar__btn" onClick={() => setShowAIDropdown(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="18" height="18" style={{ flexShrink: 0 }}>
                 <defs><linearGradient id="navLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
                 <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#navLogoGrad)" strokeWidth="2" transform="rotate(-12,37,39)"/>
@@ -275,8 +269,8 @@ function AppInner() {
               </>
             )}
           </div>
-          <button className="btn" onClick={() => setShowHelp(true)}>使用手册</button>
-          <a className="btn btn--donate" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>❤️ 爱发电</a>
+          <button className="navbar__btn" onClick={() => setShowHelp(true)}>📖 使用手册</button>
+          <a className="navbar__btn" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#f0a0f0', borderColor: 'rgba(227,73,237,.25)', background: 'rgba(227,73,237,.06)' }}>❤️ 爱发电</a>
         </div>
       </nav>
 
