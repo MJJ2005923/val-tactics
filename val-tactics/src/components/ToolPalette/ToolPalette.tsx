@@ -44,15 +44,15 @@ export default function ToolPalette() {
           <button key={t.mode}
             className={`${styles.toolBtn} ${toolMode === t.mode ? styles.toolBtnActive : ''}`}
             onClick={() => dispatch({ type: 'SET_TOOL_MODE', mode: t.mode })}
-            title={t.label}>
+            data-tooltip={t.label}>
             {t.icon}
           </button>
         ))}
         <div className={styles.divider} />
-        <button className={styles.toolBtn} onClick={() => dispatch({ type: 'UNDO' })} title="撤销 Ctrl+Z">↩</button>
-        <button className={styles.toolBtn} onClick={() => dispatch({ type: 'REDO' })} title="重做 Ctrl+Y">↪</button>
+        <button className={styles.toolBtn} onClick={() => dispatch({ type: 'UNDO' })} data-tooltip="撤销 Ctrl+Z">↩</button>
+        <button className={styles.toolBtn} onClick={() => dispatch({ type: 'REDO' })} data-tooltip="重做 Ctrl+Y">↪</button>
         <div className={styles.divider} />
-        <button className={`${styles.toolBtn} ${styles.clearBtn}`} onClick={handleClear} title="清空画布">🗑️</button>
+        <button className={`${styles.toolBtn} ${styles.clearBtn}`} onClick={handleClear} data-tooltip="清空画布">🗑️</button>
         {(isDrawTool || toolMode === 'text') && (
           <>
             <div className={styles.divider} />
