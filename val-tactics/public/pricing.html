@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>T教练 — 套餐方案</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#07040c;color:#fff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:60px 40px;display:flex;justify-content:center;min-height:100vh}
+.page{max-width:960px;width:100%}
+.header{text-align:center;margin-bottom:48px}
+.header h1{font-size:28px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#f0c0ff,#05F8F8,#d090f0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:gradient 4s ease infinite}
+@keyframes gradient{0%,100%{background-position:0% center}50%{background-position:200% center}}
+.header p{color:rgba(255,255,255,.35);font-size:14px}
+
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:40px}
+.card{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:28px 22px;text-align:center;transition:all .3s;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.3)}
+.card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.01) 50%,transparent 70%);transform:translateX(-100%);transition:transform .8s}
+.card:hover::after{transform:translateX(100%)}
+
+.cardIcon{font-size:36px;margin-bottom:12px}
+.cardName{font-size:16px;font-weight:700;margin-bottom:4px}
+.cardPrice{font-size:28px;font-weight:800;margin-bottom:16px;font-family:'Consolas',monospace}
+.cardQuota{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:16px}
+.cardModels{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.modelBadge{padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.modelBadgeOn{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.06);color:rgba(255,255,255,.3)}
+.modelBadgeOff{background:rgba(0,0,0,.1);border-color:rgba(255,255,255,.04);color:rgba(255,255,255,.12)}
+.cardLimit{font-size:11px;color:rgba(255,255,255,.25)}
+
+.c1 .cardName{color:#05F8F8}.c1 .cardPrice{color:#05F8F8}.c1{border-top:2px solid rgba(5,248,248,.3)}
+.c2 .cardName{color:#e8b0f8}.c2 .cardPrice{color:#e8b0f8}.c2{border-top:2px solid rgba(232,176,248,.3)}
+.c3 .cardName{color:#E349ED}.c3 .cardPrice{color:#E349ED}.c3{border-top:2px solid rgba(227,73,237,.3)}
+.c4 .cardName{color:#f0c0ff}.c4 .cardPrice{color:#f0c0ff}.c4{border-top:2px solid rgba(240,192,255,.3)}
+
+.ownkey{margin-top:16px;padding:20px 24px;border:2px dashed rgba(192,208,255,.15);border-radius:14px;display:flex;align-items:center;gap:16px;background:rgba(192,208,255,.02)}
+.ownkeyIcon{font-size:28px}
+.ownkeyInfo{flex:1}
+.ownkeyName{font-size:15px;font-weight:700;color:#c0d0ff}
+.ownkeyDesc{font-size:12px;color:rgba(192,208,255,.3);margin-top:2px}
+.ownkeyPrice{font-size:22px;font-weight:800;color:#c0d0ff;font-family:'Consolas',monospace;text-align:right}
+.ownkeyNote{font-size:11px;color:rgba(192,208,255,.2);text-align:right}
+
+.footer{text-align:center;font-size:12px;color:rgba(255,255,255,.15);margin-top:32px}
+.footer a{color:rgba(255,255,255,.25)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>T教练 套餐方案</h1>
+    <p>激活码联系客服购买 · 次数隔天自动恢复</p>
+  </div>
+
+  <div class="grid">
+    <div class="card c1">
+      <div class="cardIcon">⚡</div>
+      <div class="cardName">免费套餐</div>
+      <div class="cardPrice">¥0</div>
+      <div class="cardQuota">快速模式 · 每日 5 次</div>
+      <div class="cardModels">
+        <div class="modelBadge modelBadgeOn">⚡ 快速模式</div>
+        <div class="modelBadge modelBadgeOff">⚖️ 均衡模式 — 需升级</div>
+        <div class="modelBadge modelBadgeOff">💭 推理模式 — 需升级</div>
+        <div class="modelBadge modelBadgeOff">🧠 深度模式 — 需升级</div>
+      </div>
+      <div class="cardLimit">快速模式 · 5次/天</div>
+    </div>
+
+    <div class="card c2">
+      <div class="cardIcon">⚖️</div>
+      <div class="cardName">基础套餐</div>
+      <div class="cardPrice">¥24.9<small>/月</small></div>
+      <div class="cardQuota">每日 30 次</div>
+      <div class="cardModels">
+        <div class="modelBadge modelBadgeOn">⚡ 快速模式</div>
+        <div class="modelBadge modelBadgeOn">⚖️ 均衡模式</div>
+        <div class="modelBadge modelBadgeOff">💭 推理模式 — 需升级</div>
+        <div class="modelBadge modelBadgeOff">🧠 深度模式 — 需升级</div>
+      </div>
+      <div class="cardLimit">30次/天 · 快速+均衡共享配额</div>
+    </div>
+
+    <div class="card c3">
+      <div class="cardIcon">💭</div>
+      <div class="cardName">进阶套餐</div>
+      <div class="cardPrice">¥59.9<small>/月</small></div>
+      <div class="cardQuota">每日 40 次</div>
+      <div class="cardModels">
+        <div class="modelBadge modelBadgeOn">⚡ 快速模式</div>
+        <div class="modelBadge modelBadgeOn">⚖️ 均衡模式</div>
+        <div class="modelBadge modelBadgeOn">💭 推理模式 · 3次/天</div>
+        <div class="modelBadge modelBadgeOn">🧠 深度模式 · 2次/天</div>
+      </div>
+      <div class="cardLimit">全模式 · 推理限3 / 深度限2</div>
+    </div>
+
+    <div class="card c4">
+      <div class="cardIcon">🧠</div>
+      <div class="cardName">专业套餐</div>
+      <div class="cardPrice">¥99.9<small>/月</small></div>
+      <div class="cardQuota">每日 100 次 · 全部解锁</div>
+      <div class="cardModels">
+        <div class="modelBadge modelBadgeOn">⚡ 快速模式</div>
+        <div class="modelBadge modelBadgeOn">⚖️ 均衡模式</div>
+        <div class="modelBadge modelBadgeOn">💭 推理模式 · 20次/天</div>
+        <div class="modelBadge modelBadgeOn">🧠 深度模式 · 10次/天</div>
+      </div>
+      <div class="cardLimit">全模式 · 推理20 / 深度10</div>
+    </div>
+  </div>
+
+  <div class="ownkey">
+    <div class="ownkeyIcon">🔌</div>
+    <div class="ownkeyInfo">
+      <div class="ownkeyName">自备 API Key</div>
+      <div class="ownkeyDesc">使用你自己的 DeepSeek / OpenAI / Anthropic / Google Key · 不限次数 · 不限模型</div>
+    </div>
+    <div>
+      <div class="ownkeyPrice">¥19.9</div>
+      <div class="ownkeyNote">30 天有效期</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    激活码购买方式：请联系客服 · 套餐激活后 30 天内有效 · 到期自动恢复免费<br>
+    <a href="https://val-tactics.pages.dev" target="_blank">val-tactics.pages.dev</a>
+  </div>
+</div>
+</body>
+</html>
