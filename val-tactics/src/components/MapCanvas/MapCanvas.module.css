@@ -236,7 +236,7 @@
 }
 
 /* ══════ 旗舰版覆盖 ══════ */
-.container { background: radial-gradient(ellipse 600px 400px at 50% 45%,rgba(227,73,237,.03),transparent) }
+.container { background: transparent }
 .controls { background: rgba(14,8,26,.9); border: 1px solid rgba(227,73,237,.14); border-radius: 10px; padding: 6px 10px; backdrop-filter: blur(14px); box-shadow: 0 4px 24px rgba(0,0,0,.35) }
 .zoomBtn { border: 1px solid rgba(227,73,237,.1); border-radius: 7px; background: transparent; color: rgba(227,73,237,.35); transition: all .25s; width: 30px; height: 30px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit }
 .zoomBtn:hover { border-color: rgba(5,248,248,.35); color: #05F8F8; background: rgba(5,248,248,.05); box-shadow: 0 0 16px rgba(5,248,248,.08) }
