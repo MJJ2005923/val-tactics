@@ -552,7 +552,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const rightX = scx + len * Math.cos(r2), rightY = scy + len * Math.sin(r2)
               const tipX = scx + len * Math.cos(degToRad(s.rotation - 90))
               const tipY = scy + len * Math.sin(degToRad(s.rotation - 90))
-              const d = `M ${scx} ${scy} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`
+              const d = `M ${scx} ${scy} L ${leftX} ${leftY} M ${scx} ${scy} L ${rightX} ${rightY}`
               // Breach C 3椭圆环
               if (s.abilityId === 'breach-aftershock') {
                 const dir = degToRad(s.rotation - 90)
