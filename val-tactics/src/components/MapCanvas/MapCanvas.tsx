@@ -1258,7 +1258,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         <span className={styles.zoomLabel}>{Math.round(scale * 100)}%</span>
         <button className={styles.zoomBtn} onClick={() => setScale(s => Math.max(0.5, s * 0.8))}>−</button>
         <button className={styles.zoomBtn} onClick={() => setScale(1)}>1:1</button>
-        <button className={styles.zoomBtn} onClick={() => setMapRotation(r => (r + 90) % 360)} title="旋转地图">↻</button>
+        <div className={styles.controlsDivider} />
+        <button className={styles.zoomBtn} onClick={() => setMapRotation(r => (r + 90) % 360)} data-tooltip="旋转地图">↻</button>
       </div>
 
       {/* 底部状态栏 */}
