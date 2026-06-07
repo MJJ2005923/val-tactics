@@ -69,10 +69,10 @@
 /* 四角L形装饰 — 对标顶配.corner */
 .canvas-corner{position:absolute;z-index:3;pointer-events:none}
 .canvas-corner::before,.canvas-corner::after{content:'';position:absolute;background:rgba(5,248,248,.15)}
-.canvas-cornerTL{top:36px;left:36px}.canvas-cornerTL::before{width:36px;height:1px;top:0;left:0}.canvas-cornerTL::after{width:1px;height:36px;top:0;left:0}
-.canvas-cornerTR{top:36px;right:36px}.canvas-cornerTR::before{width:36px;height:1px;top:0;right:0}.canvas-cornerTR::after{width:1px;height:36px;top:0;right:0}
-.canvas-cornerBL{bottom:36px;left:36px}.canvas-cornerBL::before{width:36px;height:1px;bottom:0;left:0}.canvas-cornerBL::after{width:1px;height:36px;bottom:0;left:0}
-.canvas-cornerBR{bottom:36px;right:36px}.canvas-cornerBR::before{width:36px;height:1px;bottom:0;right:0}.canvas-cornerBR::after{width:1px;height:36px;bottom:0;right:0}
+.canvas-cornerTL{top:48px;left:48px}.canvas-cornerTL::before{width:48px;height:1px;top:0;left:0}.canvas-cornerTL::after{width:1px;height:48px;top:0;left:0}
+.canvas-cornerTR{top:48px;right:48px}.canvas-cornerTR::before{width:48px;height:1px;top:0;right:0}.canvas-cornerTR::after{width:1px;height:48px;top:0;right:0}
+.canvas-cornerBL{bottom:48px;left:48px}.canvas-cornerBL::before{width:48px;height:1px;bottom:0;left:0}.canvas-cornerBL::after{width:1px;height:48px;bottom:0;left:0}
+.canvas-cornerBR{bottom:48px;right:48px}.canvas-cornerBR::before{width:48px;height:1px;bottom:0;right:0}.canvas-cornerBR::after{width:1px;height:48px;bottom:0;right:0}
 .canvas-cornerDot{position:absolute;width:6px;height:6px;border-radius:50%;background:#05F8F8;box-shadow:0 0 10px #05F8F8,0 0 16px rgba(5,248,248,.3);top:0;left:0;transform:translate(-3px,-3px);animation:cornerDotPulse 2.5s ease-in-out infinite}
 @keyframes cornerDotPulse{0%,100%{box-shadow:0 0 8px #05F8F8}50%{box-shadow:0 0 16px #05F8F8,0 0 30px rgba(5,248,248,.5)}}
 /* 旋转光环 — 对标顶配.halo */
@@ -96,5 +96,5 @@
 .navbar__aiDropdownMenu{position:absolute;top:calc(100% + 6px);right:0;z-index:100;background:linear-gradient(180deg,rgba(18,12,32,.98),rgba(14,10,28,.99));border:1px solid rgba(227,73,237,.16);border-radius:10px;padding:4px;min-width:150px;box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 30px rgba(227,73,237,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:appFadeIn .2s cubic-bezier(.16,1,.3,1)}
 .navbar__aiDropdownItem{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:none;border-radius:7px;background:transparent;color:#b8b0c8;font-size:13px;cursor:pointer;transition:all .2s;text-align:left;font-family:inherit;opacity:0;transform:translateY(-8px);animation:mapItemIn .4s cubic-bezier(.16,1,.3,1) forwards}.navbar__aiDropdownItem:nth-child(1){animation-delay:0s}.navbar__aiDropdownItem:nth-child(2){animation-delay:.06s}.navbar__aiDropdownItem:hover{background:rgba(227,73,237,.08);color:#e0d0f0}
 
-@media(max-width:768px){.sidebar{position:fixed;left:0;top:var(--navbar-height);bottom:var(--timeline-height);z-index:50;width:240px;transform:translateX(-100%);transition:transform .25s ease}.sidebar.mobile-open{transform:translateX(0)}.canvas-area{width:100%}.mobile-menu-btn{display:flex!important;align-items:center;justify-content:center;width:36px;height:36px;font-size:18px}.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49}}
+@media(max-width:768px){.sidebar{position:fixed;left:0;top:var(--navbar-height);bottom:var(--timeline-height);z-index:50;width:240px;transform:translateX(-100%);transition:transform .25s ease}.sidebar.mobile-open{transform:translateX(0)}.canvas-area{width:100%}.mobile-menu-btn{display:flex!important;align-items:center;justify-content:center;width:48px;height:48px;font-size:18px}.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49}}
 
