@@ -142,6 +142,32 @@ export default function HelpPanel({ onClose }: Props) {
             <p>战术板面板功能完全免费。AI 服务的运营成本由套餐订阅和你的打赏支持。感谢每一位支持者！</p>
           </div>
 
+          <div className={styles.section}>
+            <h3>🏆 特别鸣谢</h3>
+            <div style={{
+              display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8,
+              padding: 16, borderRadius: 10,
+              background: 'linear-gradient(135deg, rgba(227,73,237,.04), rgba(5,248,248,.03))',
+              border: '1px solid rgba(227,73,237,.08)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+                <span style={{ color: 'rgba(255,255,255,.3)', fontSize: 12 }}>🥇 至尊赞助</span>
+                <span style={{ color: 'rgba(255,255,255,.15)', fontSize: 11 }}>期待第一位</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+                <span style={{ color: 'rgba(255,255,255,.25)', fontSize: 12 }}>🥈 金牌赞助</span>
+                <span style={{ color: 'rgba(255,255,255,.15)', fontSize: 11 }}>期待第一位</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                <span style={{ color: 'rgba(255,255,255,.2)', fontSize: 12 }}>🥉 银牌赞助</span>
+                <span style={{ color: 'rgba(255,255,255,.15)', fontSize: 11 }}>期待第一位</span>
+              </div>
+            </div>
+            <p style={{ marginTop: 10, fontSize: 11, color: 'rgba(255,255,255,.2)' }}>
+              赞助名单将显示在公网版本中。赞助后请联系开发者添加你的名字。
+            </p>
+          </div>
+
         </div>
       </div>
     </div>
