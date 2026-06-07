@@ -114,6 +114,15 @@ export interface MatchEntry {
   hsPercent?: number       // 爆头率
   rank?: string            // 段位
   side: PlaySide           // 开局方
+  firstKills?: number      // 首杀
+  firstDeaths?: number     // 首死
+  clutches?: number        // 残局
+  damage?: number          // 总伤害
+  plants?: number          // 下包
+  defuses?: number         // 拆包
+  mvp?: boolean            // 是否MVP
+  atkRoster?: string[]     // 己方阵容（特工ID列表）
+  defRoster?: string[]     // 对方阵容（特工ID列表）
   notes?: string           // 备注
   timestamp: number        // 录入时间
 }
