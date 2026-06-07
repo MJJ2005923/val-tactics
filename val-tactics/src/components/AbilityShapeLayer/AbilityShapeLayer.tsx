@@ -552,7 +552,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const rightX = scx + len * Math.cos(r2), rightY = scy + len * Math.sin(r2)
               const tipX = scx + len * Math.cos(degToRad(s.rotation - 90))
               const tipY = scy + len * Math.sin(degToRad(s.rotation - 90))
-              const d = `M ${scx} ${scy} L ${leftX} ${leftY} A ${len} ${len} 0 0 1 ${rightX} ${rightY} Z`
+              const d = `M ${scx} ${scy} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`
               // Breach C 3椭圆环
               if (s.abilityId === 'breach-aftershock') {
                 const dir = degToRad(s.rotation - 90)
@@ -561,7 +561,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                 const ops = [0.9, 0.6, 0.35]
                 return (
                   <>
-                    <path d={`M ${scx} ${scy} L ${leftX} ${leftY} A ${len} ${len} 0 0 1 ${rightX} ${rightY} Z`}
+                    <path d={`M ${scx} ${scy} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`}
                       fill="transparent" stroke="transparent" strokeWidth={12}
                       style={{ cursor: 'move' }} onMouseDown={(e) => handleMouseDown(e, s)} />
                     {waves.map((frac, i) => {
