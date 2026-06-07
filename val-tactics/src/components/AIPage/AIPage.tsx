@@ -262,7 +262,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const isFree = !config.apiKey
+  const isFree = !config.apiKey && !ownkeyActive
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }) }, [messages])
   useEffect(() => { localStorage.setItem('val-tactics-chat', JSON.stringify(messages)) }, [messages])
