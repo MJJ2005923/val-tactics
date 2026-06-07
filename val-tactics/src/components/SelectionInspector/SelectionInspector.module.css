@@ -1,68 +1,79 @@
 .panel {
   position: absolute;
-  bottom: 60px;
+  bottom: 48px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
+  background: rgba(10,6,20,.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  box-shadow: var(--shadow-md);
-  min-width: 180px;
-  max-width: 320px;
+  gap: 2px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  min-width: 140px;
+  max-width: 260px;
+  opacity: .75;
+  transition: opacity .2s;
+  pointer-events: auto;
+}
+
+.panel:hover {
+  opacity: 1;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
 .label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: rgba(255,255,255,.7);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .delBtn {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  font-size: 11px;
+  background: rgba(227,73,237,.1);
+  border: 1px solid rgba(227,73,237,.2);
+  border-radius: 4px;
+  color: rgba(227,73,237,.5);
+  font-size: 10px;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all var(--transition-fast);
+  transition: all .15s;
 }
 
 .delBtn:hover {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
+  color: #E349ED;
+  border-color: #E349ED;
+  background: rgba(227,73,237,.2);
 }
 
 .detail {
-  font-size: 11px;
-  color: var(--color-text-muted);
+  font-size: 10px;
+  color: rgba(255,255,255,.35);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .colorDot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,.2);
 }
