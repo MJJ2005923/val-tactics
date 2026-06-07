@@ -135,13 +135,13 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
       <div className={styles.messages} ref={scrollRef}>
         {messages.length === 0 && (
           <div className={styles.welcome}>
-            🤖 我是你的 AI 战术教练。试试问我：
-            <ul>
-              <li>「这张地图怎么打 B 点？」</li>
-              <li>「推荐一个进攻阵容」</li>
-              <li>「分析我现在的战术布局」</li>
-              <li>「怎么破解双烟防守？」</li>
-            </ul>
+            <div className={styles.welcomeIcon}>🤖</div>
+            <p>我是你的 AI 战术教练。试试问我：</p>
+            <div className={styles.quickPrompts}>
+              {['这张地图怎么打 B 点？', '推荐一个进攻阵容', '分析我现在的战术布局', '怎么破解双烟防守？'].map((p, i) => (
+                <button key={i} className={styles.quickBtn} onClick={() => { setInput(p) }}>{p}</button>
+              ))}
+            </div>
           </div>
         )}
         {messages.map((m, i) => (
@@ -152,7 +152,7 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
             </div>
           </div>
         ))}
-        {loading && <div className={styles.loading}>思考中...</div>}
+        {loading && <div className={styles.loading}><span>●</span><span>●</span><span>●</span></div>}
       </div>
 
       <div className={styles.inputArea}>
