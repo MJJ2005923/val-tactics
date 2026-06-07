@@ -306,6 +306,13 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
           const iconY = pathPt ? offset.y + pathPt.y * mapH * scale : (rectPt ? rectPt.y : (lineEndPt ? lineEndPt.y : cy))
           return (
             <div key={s.id} className={isAnimating ? styles.shapeReveal : undefined} style={{ position: 'absolute', pointerEvents: 'auto' }}>
+              {/* iconOnly模式也渲染外圈 */}
+              {s.outerRadius != null && (
+                <div style={{ position: 'absolute', left: cx - s.outerRadius * mapW * scale, top: cy - s.outerRadius * mapW * scale,
+                  width: s.outerRadius * mapW * scale * 2, height: s.outerRadius * mapW * scale * 2,
+                  borderRadius: '50%', border: `2px dashed ${color}99`, pointerEvents: 'none',
+                  background: `${color}10` }} />
+              )}
               <div style={{ position: 'absolute', left: iconX - 11, top: iconY - 11, width: 22, height: 22, cursor: 'move', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseDown={(e) => handleMouseDown(e, s)}>
                 <img src={info.iconUrl} style={{ width: 22, height: 22,
