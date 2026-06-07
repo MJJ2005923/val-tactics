@@ -618,16 +618,15 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       style={{ cursor: 'grab', filter: 'drop-shadow(0 0 4px black)' }}
                       onMouseDown={(e) => { e.stopPropagation(); handleRotMouseDown(e as unknown as React.MouseEvent, s) }} />
                   )}
+                  {/* 锥形外圈（SVG内） */}
+                  {s.outerRadius != null && (
+                    <circle cx={scx} cy={scy} r={s.outerRadius * mapW * scale}
+                      fill={`${color}10`} stroke={color} strokeWidth={1.5}
+                      strokeDasharray="6 4" style={{ pointerEvents: 'none' }} />
+                  )}
                 </>
               )
             })()}
-            {/* 锥形外圈 */}
-            {s.outerRadius != null && s.shape === 'cone' && (
-              <div style={{ position: 'absolute', left: cx - s.outerRadius * mapW * scale, top: cy - s.outerRadius * mapW * scale,
-                width: s.outerRadius * mapW * scale * 2, height: s.outerRadius * mapW * scale * 2,
-                borderRadius: '50%', border: `2px dashed ${color}99`, pointerEvents: 'none',
-                background: `${color}10`, zIndex: 10 }} />
-            )}
             {s.shape === 'line' && (() => {
               // Phoenix E 半圆弧线
               if (s.abilityId === 'phoenix-curveball') {
