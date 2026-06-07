@@ -146,7 +146,7 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
                 <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
               </svg>
             </div>
-            <p>我是你的 AI 战术教练。试试问我：</p>
+            <p>你好尊敬的选手，我是T教练，我能解答你所有关于无畏契约的疑问</p>
             <div className={styles.quickPrompts}>
               {['这张地图怎么打 B 点？', '推荐一个进攻阵容', '分析我现在的战术布局', '怎么破解双烟防守？'].map((p, i) => (
                 <button key={i} className={styles.quickBtn} onClick={() => { setInput(p) }}>{p}</button>
