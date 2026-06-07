@@ -186,7 +186,7 @@ export default function AISettings() {
                 className={`${styles.modelBtn} ${config.model === m.id ? styles.modelBtnActive : ''} ${locked ? styles.modelBtnLocked : ''}`}>
                 <div className={styles.modelRow}>
                   <ModelIcon modelId={m.id} size={22} />
-                  <span>{m.name}</span>
+                  <span>{m.name.replace(/^[^\w一-鿿]+/, '').trim()}</span>
                   {m.unlock && (
                     <span className={`${styles.unlockTag} ${m.tier === '免费' ? styles.unlockFree : styles.unlockPaid}`}>
                       {m.unlock}

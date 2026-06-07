@@ -510,10 +510,12 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
                 支持 DeepSeek · OpenAI · Anthropic · Google
               </div>
               <div style={{ marginTop: 6, textAlign: 'right' }}>
-                <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
-                  onClick={deactivateOwnkey}>
-                  取消激活
-                </span>
+                {import.meta.env.DEV && (
+                  <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
+                    onClick={deactivateOwnkey}>
+                    取消激活
+                  </span>
+                )}
               </div>
             </div>
           ) : (
@@ -551,7 +553,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
                   display: 'flex', flexDirection: 'column', gap: 8,
                 }}>
                   <div style={{ fontSize: 10, color: 'rgba(255,255,255,.35)' }}>
-                    💡 ¥19.9/月 · 填入你自己的 API Key 即可使用全部模型
+                    💡 ¥19.9/月 · 填入你自己的 API Key 即可使用自带模型
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     <input className={styles.keyInput} value={actCode} placeholder="输入激活码..."
@@ -599,7 +601,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
                     <div className={styles.modelIcon}><ModelIcon modelId={m.id} /></div>
                     <div className={styles.modelInfo}>
                       <div className={styles.modelName}>
-                        {m.name}
+                        {m.name.replace(/^[^\w一-鿿]+/, '').trim()}
                         {isFreeModel && <span className={styles.unlockFree} style={{ fontSize: 9, marginLeft: 6, padding: '1px 6px', verticalAlign: 'middle' }}>免费</span>}
                       </div>
                       <div className={styles.modelDesc}>{m.perf}</div>
@@ -634,7 +636,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
             {actStatus && (
               <div style={{ fontSize: 11, marginTop: 4, color: actStatus.includes('✅') ? '#05F8F8' : '#E349ED' }}>{actStatus}</div>
             )}
-            {tier !== 'free' && (
+            {tier !== 'free' && import.meta.env.DEV && (
               <div style={{ marginTop: 6, textAlign: 'right' }}>
                 <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
                   onClick={() => { setTier('free'); localStorage.removeItem('val-tactics-tier'); localStorage.removeItem('val-tactics-tier-at'); syncTierToSupabase('free') }}>
