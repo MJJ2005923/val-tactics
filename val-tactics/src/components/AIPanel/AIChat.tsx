@@ -36,11 +36,15 @@ function buildSystemPrompt(
 
 export default function AIChat({ mapName }: { mapId: string; mapName: string }) {
   const { abilityShapes, side } = useTactics()
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try { return JSON.parse(localStorage.getItem('val-tactics-chat') || '[]') } catch { return [] }
+  })
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // 持久化消息
+  useEffect(() => { localStorage.setItem('val-tactics-chat', JSON.stringify(messages)) }, [messages])
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
@@ -158,7 +162,6 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
           <div key={i} className={m.role === 'user' ? styles.userMsg : styles.aiMsg}>
             <div className={styles.msgBubble}>
               {m.content}
-              {m.model && <div className={styles.modelTag}>{m.model}</div>}
             </div>
           </div>
         ))}

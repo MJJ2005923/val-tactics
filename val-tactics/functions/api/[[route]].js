@@ -73,12 +73,12 @@ const PROVIDERS = {
 }
 
 // 服务端 API Keys — 从环境变量读取
-function getServerKey(provider) {
+function getServerKey(provider, env) {
   switch (provider) {
-    case 'deepseek': return context.env.DEEPSEEK_KEY || ''
-    case 'anthropic': return context.env.ANTHROPIC_KEY || ''
-    case 'openai': return context.env.OPENAI_KEY || ''
-    case 'google': return context.env.GOOGLE_KEY || ''
+    case 'deepseek': return env.DEEPSEEK_KEY || ''
+    case 'anthropic': return env.ANTHROPIC_KEY || ''
+    case 'openai': return env.OPENAI_KEY || ''
+    case 'google': return env.GOOGLE_KEY || ''
     default: return ''
   }
 }
@@ -113,7 +113,7 @@ export async function onRequest(context) {
   // 如果没有用户 Key，用服务端 Key（免费模式）
   const isFree = !apiKey
   if (isFree) {
-    apiKey = getServerKey(provider)
+    apiKey = getServerKey(provider, env)
     if (!apiKey) return new Response(JSON.stringify({ error: '该厂商暂不支持免费使用，请自备 API Key' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
