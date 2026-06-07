@@ -311,6 +311,8 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <div className="canvas-particle p1" /><div className="canvas-particle p2" />
           <div className="canvas-particle p3" /><div className="canvas-particle p4" />
           <div className="canvas-particle p5" /><div className="canvas-particle p6" />
+          <div className="canvas-particle p7" /><div className="canvas-particle p8" />
+          <div className="canvas-particle p9" /><div className="canvas-particle p10" />
           <ToolPalette />
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
