@@ -143,6 +143,7 @@ export default function AISettings() {
 
   const handleActivate = async () => {
     if (!actCode.trim()) return
+    if (!isFree && !config.apiKey) { setActStatus('❌ 请先注册/登录账号'); return }
     setActStatus('验证中...')
     const result = await activateCode(actCode)
     if (result.ok) {

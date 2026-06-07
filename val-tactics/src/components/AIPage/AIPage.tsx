@@ -201,6 +201,13 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   const { abilityShapes, side, agentPositions, drawings, textAnnotations, markers, roster } = useTactics()
   const { user } = useAuth()
 
+  // 未登录用户不能激活套餐
+  const requireUser = (): boolean => {
+    if (user) return true
+    setActStatus('❌ 请先注册/登录账号后再激活套餐')
+    return false
+  }
+
   // 同步套餐到 Supabase
   const syncTierToSupabase = async (t: string) => {
     if (!user) return
@@ -557,9 +564,10 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
               <input className={styles.keyInput} value={actCode} placeholder="输入激活码升级套餐..."
                 onChange={e => { setActCode(e.target.value); setActStatus('') }}
-                onKeyDown={e => { if (e.key === 'Enter') { const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
+                onKeyDown={e => { if (e.key === 'Enter') { if (!requireUser()) return; const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
                 style={{ flex: 1, fontSize: 11 }} />
               <button className={styles.keySaveBtn} onClick={async () => {
+                if (!requireUser()) return
                 const r = await activateCode(actCode)
                 if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') }
                 else setActStatus('❌ ' + (r.error || '激活失败'))
@@ -656,9 +664,10 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
                   <div style={{ display: 'flex', gap: 4 }}>
                     <input className={styles.keyInput} value={actCode} placeholder="输入激活码..."
                       onChange={e => { setActCode(e.target.value); setActStatus('') }}
-                      onKeyDown={e => { if (e.key === 'Enter') { activateCode(actCode).then(r => { if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() } else setActStatus('❌ '+ (r.error||'失败')) }) } }}
+                      onKeyDown={e => { if (e.key === 'Enter') { if (!requireUser()) return; activateCode(actCode).then(r => { if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() } else setActStatus('❌ '+ (r.error||'失败')) }) } }}
                       style={{ flex: 1, fontSize: 11 }} />
                     <button className={styles.keySaveBtn} onClick={async () => {
+                      if (!requireUser()) return
                       const r = await activateCode(actCode)
                       if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() }
                       else setActStatus('❌ '+ (r.error||'失败'))
