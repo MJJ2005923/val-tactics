@@ -236,13 +236,12 @@
 }
 
 /* ══════ 旗舰版覆盖 ══════ */
-.container { background: transparent; position:relative }
-/* 四角光点 */
-.container::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle 3px at 12px 12px,rgba(5,248,248,.4),transparent),radial-gradient(circle 3px at calc(100% - 12px) 12px,rgba(5,248,248,.4),transparent),radial-gradient(circle 3px at 12px calc(100% - 12px),rgba(5,248,248,.4),transparent),radial-gradient(circle 3px at calc(100% - 12px) calc(100% - 12px),rgba(5,248,248,.4),transparent);animation:cornerGlowCanvas 4s ease-in-out infinite alternate}
-/* 扫描线 */
-.container::after{content:'';position:absolute;left:5%;right:5%;height:1px;z-index:0;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(5,248,248,.1),transparent);animation:scanLineCanvas 8s ease-in-out infinite}
+.container { background: linear-gradient(135deg,rgba(24,14,42,.3),rgba(8,4,18,.15));border:1px solid rgba(227,73,237,.08);border-radius:4px;position:relative;box-shadow:inset 0 0 100px rgba(227,73,237,.02),0 8px 40px rgba(227,73,237,.04)}
+/* 地图网格叠加 — 对标顶配.mw::before */
+.container::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(227,73,237,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(227,73,237,.025) 1px,transparent 1px);background-size:50px 50px}
+/* 四角光点 — 对标顶配.sd1/.sd2 */
+.container::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle 4px at 14px 14px,rgba(5,248,248,.35),transparent calc(100% - 14px)),radial-gradient(circle 4px at calc(100% - 14px) 14px,rgba(5,248,248,.35),transparent),radial-gradient(circle 4px at 14px calc(100% - 14px),rgba(5,248,248,.35),transparent),radial-gradient(circle 4px at calc(100% - 14px) calc(100% - 14px),rgba(5,248,248,.35),transparent);animation:cornerGlowCanvas 4s ease-in-out infinite alternate}
 @keyframes cornerGlowCanvas{0%{opacity:.3}100%{opacity:.8}}
-@keyframes scanLineCanvas{0%,100%{top:20%}50%{top:75%}}
 .controls { background: rgba(14,8,26,.9); border: 1px solid rgba(227,73,237,.14); border-radius: 10px; padding: 6px 10px; backdrop-filter: blur(14px); box-shadow: 0 4px 24px rgba(0,0,0,.35) }
 .zoomBtn { border: 1px solid rgba(227,73,237,.1); border-radius: 7px; background: transparent; color: rgba(227,73,237,.35); transition: all .25s; width: 30px; height: 30px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit }
 .zoomBtn:hover { border-color: rgba(5,248,248,.35); color: #05F8F8; background: rgba(5,248,248,.05); box-shadow: 0 0 16px rgba(5,248,248,.08) }

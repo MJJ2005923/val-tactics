@@ -63,8 +63,7 @@
 .sidebar{width:var(--sidebar-width);height:100%;background:linear-gradient(180deg,rgba(16,10,30,.97),rgba(10,6,20,.98));backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-right:1px solid rgba(227,73,237,.16);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;position:relative;box-shadow:3px 0 50px rgba(0,0,0,.2)}
 .sidebar--right{width:270px;border-right:none;border-left:1px solid rgba(227,73,237,.16);box-shadow:-3px 0 50px rgba(0,0,0,.25);overflow:visible!important}
 .canvas-area{flex:1;position:relative;overflow:hidden;opacity:0;transform:scale(.96);background:#050210}
-.canvas-area::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 700px 450px at 55% 35%,rgba(227,73,237,.15),transparent 55%),radial-gradient(ellipse 400px 300px at 15% 80%,rgba(5,248,248,.08),transparent 50%),radial-gradient(ellipse 300px 200px at 80% 70%,rgba(227,73,237,.08),transparent 50%);animation:canvasBgPulse 10s ease-in-out infinite alternate}
-.canvas-area::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.7;background-image:radial-gradient(circle,rgba(227,73,237,.06) 1px,transparent 1px);background-size:28px 28px}
+.canvas-area::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 700px 500px at 55% 45%,rgba(227,73,237,.05),transparent 60%);animation:canvasBgPulse 12s ease-in-out infinite alternate}
 .canvas-area--enter{opacity:1;transform:scale(1);transition:opacity .7s ease .2s,transform .7s cubic-bezier(.16,1,.3,1) .2s}
 @keyframes canvasBgPulse{0%{opacity:.6}100%{opacity:1}}
 .timeline{height:100%;background:transparent;flex-shrink:0}
