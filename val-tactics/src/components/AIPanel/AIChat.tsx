@@ -187,6 +187,15 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
           placeholder="问战术..."
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
+        <button
+          onClick={() => { setMessages([]); localStorage.removeItem('val-tactics-chat') }}
+          style={{
+            padding: '6px 8px', background: 'transparent',
+            border: '1px solid rgba(255,255,255,.08)', borderRadius: 8,
+            color: 'rgba(255,255,255,.25)', fontSize: 11, cursor: 'pointer',
+            fontFamily: 'inherit', whiteSpace: 'nowrap',
+          }}
+        >重置</button>
         <button className={styles.sendBtn} onClick={send} disabled={loading}>
           {loading ? '⏳' : '发送'}
         </button>

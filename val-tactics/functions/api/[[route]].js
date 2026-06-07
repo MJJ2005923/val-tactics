@@ -106,14 +106,15 @@ export async function onRequest(context) {
   }
 
   // 开发环境测试激活码（KV 不可用时的 fallback）
-  const DEV_CODES = {
+  const isDev = env.CF_PAGES_BRANCH === 'dev' || !env.CF_PAGES
+  const DEV_CODES = isDev ? {
     'TEST-BASIC':    { tier: 'basic',    expiresAt: 0 },
     'TEST-ADVANCED': { tier: 'advanced', expiresAt: 0 },
     'TEST-PRO':      { tier: 'pro',      expiresAt: 0 },
     'TEST-OWNKEY':   { tier: 'ownkey',   expiresAt: 0 },
     'TEST-FREE':     { tier: 'free',     expiresAt: 0 },
-    'TEST-NO-OWNKEY':  { tier: 'free',     expiresAt: 0 },
-  }
+    'TEST-NO-OWNKEY':  { tier: 'free',   expiresAt: 0 },
+  } : {}
 
   // 激活码验证
   if (url.pathname === '/api/activate') {
@@ -145,7 +146,7 @@ export async function onRequest(context) {
       if (DEV_CODES[normalized]) {
         return new Response(JSON.stringify({ ok: true, tier: DEV_CODES[normalized].tier, expiresAt: 0, dev: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
       }
-      return new Response(JSON.stringify({ error: '激活码无效（本地开发环境，请使用测试码）' }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ error: '激活码无效' }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }
   }
 

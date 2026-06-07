@@ -368,9 +368,6 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     } else if (data.type === 'ability' && data.abilityId) {
       const shapeConfig = getAbilityShapeConfig(data.abilityId)
       if (shapeConfig) {
-        if (data.abilityId === 'omen-shrouded-step') {
-          console.log('OmenC config length:', JSON.stringify(shapeConfig.length), 'meters:', Math.round((shapeConfig.length ?? 0) / (7/1800)))
-        }
         // 矩形拖拽绘制
         if (shapeConfig.shape === 'line' || data.abilityId === 'miks-x' || data.abilityId === 'tejo-x' || data.abilityId === 'breach-aftershock' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q' || data.abilityId === 'waylay-e' || data.abilityId === 'waylay-x' || data.abilityId === 'omen-paranoia') {
           // 线型技能进入画线模式：先放起点，再拖终点

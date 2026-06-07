@@ -490,89 +490,6 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
           )}
         </div>
 
-        {/* ====== 自备 API ====== */}
-        <div className={styles.sidebarSection}>
-          <h3>🔌 自备 API</h3>
-          {ownkeyActive ? (
-            <div style={{
-              padding: 12, borderRadius: 10,
-              border: '1px solid rgba(5,248,248,.15)',
-              background: 'linear-gradient(135deg, rgba(5,248,248,.06), rgba(227,73,237,.03))',
-            }}>
-              <div style={{ fontSize: 11, color: '#05F8F8', marginBottom: 8, fontWeight: 500 }}>✅ 已解锁 · 输入你的 Key</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input className={styles.keyInput} type="password" value={keyInput}
-                  placeholder="sk-..." onChange={e => setKeyInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') saveKey() }} style={{ flex: 1, fontSize: 11 }} />
-                <button className={styles.keySaveBtn} onClick={saveKey}>确认</button>
-              </div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,.15)', marginTop: 5 }}>
-                支持 DeepSeek · OpenAI · Anthropic · Google
-              </div>
-              <div style={{ marginTop: 6, textAlign: 'right' }}>
-                {import.meta.env.DEV && (
-                  <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
-                    onClick={deactivateOwnkey}>
-                    取消激活
-                  </span>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div
-                onClick={() => setShowOwnkey(v => !v)}
-                style={{
-                  padding: 14, borderRadius: 10, cursor: 'pointer',
-                  border: '2px dashed rgba(192,208,255,.12)',
-                  background: 'rgba(192,208,255,.02)',
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  transition: 'all .3s ease',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(192,208,255,.3)'; e.currentTarget.style.background = 'rgba(192,208,255,.05)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(192,208,255,.12)'; e.currentTarget.style.background = 'rgba(192,208,255,.02)' }}
-              >
-                <div style={{ width: 38, height: 38, borderRadius: 8, background: 'rgba(192,208,255,.06)', border: '1px solid rgba(192,208,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="22" height="22" viewBox="0 0 22 22">
-                    <rect x="4" y="6" width="14" height="10" rx="2" fill="none" stroke="#c0d0ff" strokeWidth="1.4" opacity=".7"/>
-                    <circle cx="8" cy="11" r="1.5" fill="#c0d0ff" opacity=".5"/>
-                    <path d="M12 11h5" stroke="#c0d0ff" strokeWidth="1" opacity=".3" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#c0d0ff' }}>自备 API Key</div>
-                  <div style={{ fontSize: 10, color: 'rgba(192,208,255,.3)', marginTop: 1 }}>使用自有 Key · 不限制次数和模型</div>
-                </div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#c0d0ff', flexShrink: 0 }}>¥19.9</div>
-              </div>
-              {showOwnkey && (
-                <div style={{
-                  marginTop: 8, padding: 12, borderRadius: 8,
-                  border: '1px solid rgba(192,208,255,.08)',
-                  background: 'rgba(192,208,255,.02)',
-                  display: 'flex', flexDirection: 'column', gap: 8,
-                }}>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.35)' }}>
-                    💡 ¥19.9/月 · 填入你自己的 API Key 即可使用自带模型
-                  </div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <input className={styles.keyInput} value={actCode} placeholder="输入激活码..."
-                      onChange={e => { setActCode(e.target.value); setActStatus('') }}
-                      onKeyDown={e => { if (e.key === 'Enter') { activateCode(actCode).then(r => { if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() } else setActStatus('❌ '+ (r.error||'失败')) }) } }}
-                      style={{ flex: 1, fontSize: 11 }} />
-                    <button className={styles.keySaveBtn} onClick={async () => {
-                      const r = await activateCode(actCode)
-                      if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() }
-                      else setActStatus('❌ '+ (r.error||'失败'))
-                    }}>激活</button>
-                  </div>
-                  {actStatus && <div style={{ fontSize: 10, color: actStatus.includes('✅')?'#05F8F8':'#E349ED' }}>{actStatus}</div>}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* ====== 模式选择 ====== */}
         <div className={styles.sidebarSection}>
           <h3 onClick={() => setShowModels(v => !v)} style={{ cursor: 'pointer' }}>
@@ -656,6 +573,88 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
           </div>
         )}
 
+        {/* ====== 自备 API ====== */}
+        <div className={styles.sidebarSection}>
+          <h3>🔌 自备 API</h3>
+          {ownkeyActive ? (
+            <div style={{
+              padding: 12, borderRadius: 10,
+              border: '1px solid rgba(5,248,248,.15)',
+              background: 'linear-gradient(135deg, rgba(5,248,248,.06), rgba(227,73,237,.03))',
+            }}>
+              <div style={{ fontSize: 11, color: '#05F8F8', marginBottom: 8, fontWeight: 500 }}>✅ 已解锁 · 输入你的 Key</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input className={styles.keyInput} type="password" value={keyInput}
+                  placeholder="sk-..." onChange={e => setKeyInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveKey() }} style={{ flex: 1, fontSize: 11 }} />
+                <button className={styles.keySaveBtn} onClick={saveKey}>确认</button>
+              </div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,.15)', marginTop: 5 }}>
+                支持 DeepSeek · OpenAI · Anthropic · Google
+              </div>
+              <div style={{ marginTop: 6, textAlign: 'right' }}>
+                {import.meta.env.DEV && (
+                  <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
+                    onClick={deactivateOwnkey}>
+                    取消激活
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div
+                onClick={() => setShowOwnkey(v => !v)}
+                style={{
+                  padding: 14, borderRadius: 10, cursor: 'pointer',
+                  border: '2px dashed rgba(192,208,255,.12)',
+                  background: 'rgba(192,208,255,.02)',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  transition: 'all .3s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(192,208,255,.3)'; e.currentTarget.style.background = 'rgba(192,208,255,.05)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(192,208,255,.12)'; e.currentTarget.style.background = 'rgba(192,208,255,.02)' }}
+              >
+                <div style={{ width: 38, height: 38, borderRadius: 8, background: 'rgba(192,208,255,.06)', border: '1px solid rgba(192,208,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 22 22">
+                    <rect x="4" y="6" width="14" height="10" rx="2" fill="none" stroke="#c0d0ff" strokeWidth="1.4" opacity=".7"/>
+                    <circle cx="8" cy="11" r="1.5" fill="#c0d0ff" opacity=".5"/>
+                    <path d="M12 11h5" stroke="#c0d0ff" strokeWidth="1" opacity=".3" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#c0d0ff' }}>自备 API Key</div>
+                  <div style={{ fontSize: 10, color: 'rgba(192,208,255,.3)', marginTop: 1 }}>使用自有 Key · 不限制次数和模型</div>
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#c0d0ff', flexShrink: 0 }}>¥19.9</div>
+              </div>
+              {showOwnkey && (
+                <div style={{
+                  marginTop: 8, padding: 12, borderRadius: 8,
+                  border: '1px solid rgba(192,208,255,.08)',
+                  background: 'rgba(192,208,255,.02)',
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.35)' }}>
+                    💡 ¥19.9/月 · 填入你自己的 API Key 即可使用自带模型
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <input className={styles.keyInput} value={actCode} placeholder="输入激活码..."
+                      onChange={e => { setActCode(e.target.value); setActStatus('') }}
+                      onKeyDown={e => { if (e.key === 'Enter') { activateCode(actCode).then(r => { if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() } else setActStatus('❌ '+ (r.error||'失败')) }) } }}
+                      style={{ flex: 1, fontSize: 11 }} />
+                    <button className={styles.keySaveBtn} onClick={async () => {
+                      const r = await activateCode(actCode)
+                      if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() }
+                      else setActStatus('❌ '+ (r.error||'失败'))
+                    }}>激活</button>
+                  </div>
+                  {actStatus && <div style={{ fontSize: 10, color: actStatus.includes('✅')?'#05F8F8':'#E349ED' }}>{actStatus}</div>}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className={styles.sidebarSection}>
           <h3>🗺️ 基础信息</h3>
           <div
@@ -716,16 +715,26 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
         <div className={styles.chatHeader}>
           <div className={styles.chatModel}>
             <div className={styles.eqBar}><span /><span /><span /><span /></div>
-            T教练{config.model ? ` · ${models.find(m => m.id === config.model)?.name || ''}` : ''}
+            T教练{config.model ? ` · ${(models.find(m => m.id === config.model)?.name || '').replace(/^[^\w一-鿿]+/, '').trim()}` : ''}
           </div>
           <div className={styles.chatStatus}>● 在线</div>
         </div>
         <div className={styles.messages} ref={scrollRef}>
           {messages.length === 0 ? (
             <div className={styles.welcome}>
-              <div className={styles.welcomeIcon}>⚡</div>
+              <div className={styles.welcomeIcon}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="72" height="72">
+                  <defs><linearGradient id="welcomeGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                  <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#welcomeGrad)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+                  <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#welcomeGrad)" opacity="0.25" transform="rotate(5,53,35)"/>
+                  <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#welcomeGrad)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+                  <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#welcomeGrad)" opacity="0.35" transform="rotate(10,61,51)"/>
+                  <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#welcomeGrad)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+                  <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+                </svg>
+              </div>
               <h2>你好，我是你的 T教练</h2>
-              <p>{isFree ? '免费使用快速模式，输入 Key 解锁全部智能模式。' : '全部模式已解锁，尽情使用。'}试试问我：</p>
+              <p>{isFree ? '免费套餐 · 每日2次 · 试试问我：' : '全部模式已解锁，尽情使用。试试问我：'}</p>
               <div className={styles.quickPrompts}>
                 {quickPrompts.map((p, i) => (
                   <button key={i} className={styles.quickBtn} onClick={() => { setInput(p); inputRef.current?.focus() }}>{p}</button>
@@ -735,14 +744,36 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
           ) : (
             messages.map((m, i) => (
               <div key={i} className={m.role === 'user' ? styles.userMsg : styles.aiMsg}>
-                <div className={styles.msgAvatar}>{m.role === 'user' ? '👤' : '🤖'}</div>
+                <div className={styles.msgAvatar}>
+                  {m.role === 'user' ? '👤' : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="24" height="24">
+                      <defs><linearGradient id={`msggrad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                      <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke={`url(#msggrad-${i})`} strokeWidth="2" transform="rotate(-12,37,39)"/>
+                      <rect x="38" y="20" width="30" height="30" rx="7" fill={`url(#msggrad-${i})`} opacity="0.25" transform="rotate(5,53,35)"/>
+                      <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke={`url(#msggrad-${i})`} strokeWidth="2" transform="rotate(-3,44,54)"/>
+                      <rect x="48" y="38" width="26" height="26" rx="7" fill={`url(#msggrad-${i})`} opacity="0.35" transform="rotate(10,61,51)"/>
+                      <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke={`url(#msggrad-${i})`} strokeWidth="2" transform="rotate(-8,74,68)"/>
+                      <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+                    </svg>
+                  )}
+                </div>
                 <div className={styles.msgContent}>{m.content}</div>
               </div>
             ))
           )}
           {loading && (
             <div className={styles.aiMsg}>
-              <div className={styles.msgAvatar}>🤖</div>
+              <div className={styles.msgAvatar}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="24" height="24">
+                  <defs><linearGradient id="loadgrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                  <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#loadgrad)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+                  <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#loadgrad)" opacity="0.25" transform="rotate(5,53,35)"/>
+                  <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#loadgrad)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+                  <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#loadgrad)" opacity="0.35" transform="rotate(10,61,51)"/>
+                  <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#loadgrad)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+                  <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+                </svg>
+              </div>
               <div className={styles.msgContent}>
                 <div className={styles.typing}>
                   分析中<div className={styles.typingDots}><span /><span /><span /></div>
@@ -757,6 +788,18 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
             placeholder={config.model ? '输入你的战术问题...' : '请先在左侧选择智能模式'}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
+          <button
+            onClick={() => { setMessages([]); localStorage.removeItem('val-tactics-chat') }}
+            style={{
+              padding: '8px 14px', background: 'transparent',
+              border: '1px solid rgba(255,255,255,.08)', borderRadius: 14,
+              color: 'rgba(255,255,255,.3)', fontSize: 12, cursor: 'pointer',
+              fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#E349ED'; e.currentTarget.style.borderColor = 'rgba(227,73,237,.3)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,.3)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)' }}
+            title="清除对话历史，重新开始"
+          >重置</button>
           <button className={styles.sendBtn} onClick={send} disabled={loading || !input.trim() || !config.model}>发送消息</button>
         </div>
       </main>

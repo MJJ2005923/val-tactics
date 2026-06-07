@@ -34,8 +34,8 @@ const TIER_LIMITS: Record<string, number> = {
 
 // 套餐总次数 + 特殊模型限制（推理/深度有独立上限）
 const MODEL_CAPS: Record<string, Record<string, number>> = {
-  'deepseek-reasoner':  { advanced: 5, pro: 10 },
-  'deepseek-v4-pro':    { advanced: 3, pro: 5 },
+  'deepseek-reasoner':  { advanced: 3, pro: 20 },
+  'deepseek-v4-pro':    { advanced: 2, pro: 10 },
 }
 
 function loadConfig() {

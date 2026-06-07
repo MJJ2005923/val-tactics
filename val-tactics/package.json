@@ -13,8 +13,7 @@
     "@supabase/supabase-js": "^2.107.0",
     "dexie": "^4.4.2",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "sharp": "^0.34.5"
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

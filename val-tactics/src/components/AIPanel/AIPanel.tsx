@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import AISettings from './AISettings'
 import AIChat from './AIChat'
 import MatchContextSelector from '../MatchHistory/MatchContextSelector'
 import styles from './AIPanel.module.css'
@@ -14,39 +13,26 @@ function BoardInfoToggle() {
     localStorage.setItem('val-tactics-show-board-info', String(next))
   }
   return (
-    <div
-      onClick={toggle}
-      style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-        background: on
-          ? 'linear-gradient(135deg, rgba(5,248,248,.08), rgba(227,73,237,.04))'
-          : 'rgba(255,255,255,.02)',
-        border: on ? '1px solid rgba(5,248,248,.2)' : '1px solid rgba(255,255,255,.06)',
-        transition: 'all .3s cubic-bezier(.16,1,.3,1)',
-        boxShadow: on ? '0 0 16px rgba(5,248,248,.06)' : 'none',
-      }}
-    >
-      <div>
-        <div style={{ fontSize: 11, color: on ? '#05F8F8' : 'rgba(255,255,255,.45)', fontWeight: 500, transition: 'color .3s' }}>
-          {on ? '● 读取棋盘' : '○ 仅用知识库'}
-        </div>
-        <div style={{ fontSize: 9, color: 'rgba(255,255,255,.2)', marginTop: 1 }}>
-          特工 · 技能 · 标注
-        </div>
+    <div onClick={toggle} style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '6px 10px', borderRadius: 6, cursor: 'pointer',
+      background: on ? 'linear-gradient(135deg, rgba(5,248,248,.06), rgba(227,73,237,.03))' : 'rgba(255,255,255,.01)',
+      border: on ? '1px solid rgba(5,248,248,.15)' : '1px solid rgba(255,255,255,.04)',
+      transition: 'all .3s ease',
+    }}>
+      <div style={{ fontSize: 10, color: on ? '#05F8F8' : 'rgba(255,255,255,.35)', fontWeight: 500 }}>
+        {on ? '● 读取棋盘' : '○ 仅用知识库'}
       </div>
       <div style={{
-        width: 36, height: 20, borderRadius: 10,
-        background: on ? 'linear-gradient(135deg, #05F8F8, #E349ED)' : 'rgba(255,255,255,.1)',
-        transition: 'all .3s cubic-bezier(.16,1,.3,1)',
+        width: 28, height: 16, borderRadius: 8,
+        background: on ? 'linear-gradient(135deg, #05F8F8, #E349ED)' : 'rgba(255,255,255,.08)',
         position: 'relative', flexShrink: 0,
-        boxShadow: on ? '0 0 10px rgba(5,248,248,.25)' : 'none',
+        transition: 'all .3s ease',
       }}>
         <div style={{
-          width: 16, height: 16, borderRadius: '50%',
-          background: '#fff',
+          width: 12, height: 12, borderRadius: '50%', background: '#fff',
           position: 'absolute', top: 2,
-          left: on ? 18 : 2,
+          left: on ? 14 : 2,
           transition: 'left .3s cubic-bezier(.16,1,.3,1)',
         }} />
       </div>
@@ -61,42 +47,59 @@ interface Props {
 }
 
 export default function AIPanel({ mapId, mapName, onClose }: Props) {
-  const [tab, setTab] = useState<'chat' | 'settings'>('chat')
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className={styles.panel}>
-      <div className={styles.tabBar}>
-        <button
-          onClick={() => setTab('chat')}
-          className={`${styles.tabBtn} ${tab === 'chat' ? styles.tabBtnActive : ''}`}>
-          💬 AI 对话
-        </button>
-        <button
-          onClick={() => setTab('settings')}
-          className={`${styles.tabBtn} ${tab === 'settings' ? styles.tabBtnActive : ''}`}>
-          ⚙️ 设置
-        </button>
-        <button onClick={onClose} className={styles.tabClose}>✕</button>
-      </div>
+    <>
+      {/* 折叠时的拉起按钮 */}
+      {collapsed && (
+        <div
+          onClick={() => setCollapsed(false)}
+          style={{
+            position: 'fixed', top: '50%', right: 0, zIndex: 101,
+            transform: 'translateY(-50%)',
+            width: 28, height: 80, borderRadius: '14px 0 0 14px',
+            background: 'linear-gradient(180deg, rgba(20,10,35,.96), rgba(10,6,20,.98))',
+            border: '1px solid rgba(227,73,237,.16)', borderRight: 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', backdropFilter: 'blur(10px)',
+            boxShadow: '-2px 0 16px rgba(0,0,0,.2)',
+            animation: 'panelSlideIn2 .3s ease',
+          }}
+        >
+          <span style={{
+            writingMode: 'vertical-rl', fontSize: 11, fontWeight: 600,
+            background: 'linear-gradient(180deg, #05F8F8, #E349ED)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          }}>
+            T教练
+          </span>
+        </div>
+      )}
 
-      {tab === 'settings' && <AISettings />}
-      {tab === 'chat' && (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,.04)', flexShrink: 0 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(227,73,237,.4)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6 }}>
-              🗺️ 基础信息
-            </div>
+      {/* 面板 */}
+      <div
+        className={styles.panel}
+        style={{
+          transform: collapsed ? 'translateX(100%)' : 'translateX(0)',
+          transition: 'transform .35s cubic-bezier(.16,1,.3,1)',
+        }}
+      >
+        <div className={styles.tabBar}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', fontWeight: 500 }}>💬 T教练</span>
+          <button onClick={() => setCollapsed(true)} className={styles.tabClose} style={{ marginRight: 8 }}>◀</button>
+          <button onClick={onClose} className={styles.tabClose}>✕</button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div style={{ padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,.04)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <BoardInfoToggle />
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(227,73,237,.4)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6, marginTop: 10 }}>
-              📊 数据引用
-            </div>
             <MatchContextSelector />
           </div>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <AIChat mapId={mapId} mapName={mapName} />
           </div>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   )
 }
