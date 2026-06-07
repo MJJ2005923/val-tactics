@@ -236,7 +236,7 @@
 }
 
 /* ══════ 旗舰版覆盖 ══════ */
-.container { background: linear-gradient(135deg,rgba(24,14,42,.3),rgba(8,4,18,.15));border:1px solid rgba(227,73,237,.08);border-radius:4px;position:relative;box-shadow:inset 0 0 100px rgba(227,73,237,.02),0 8px 40px rgba(227,73,237,.04)}
+.container { background: linear-gradient(135deg,rgba(24,14,42,.3),rgba(8,4,18,.15));border:1px solid rgba(227,73,237,.08);border-radius:4px;position:relative;z-index:1;box-shadow:inset 0 0 100px rgba(227,73,237,.02),0 8px 40px rgba(227,73,237,.04)}
 /* 地图网格叠加 — 对标顶配.mw::before */
 .container::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(227,73,237,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(227,73,237,.025) 1px,transparent 1px);background-size:50px 50px}
 /* 四角光点 — 对标顶配.sd1/.sd2 */
