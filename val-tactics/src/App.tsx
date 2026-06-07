@@ -299,6 +299,11 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <AgentPanel animate={panelAnimate} />
         </aside>
         <div className={`canvas-area ${canvasAnimate ? 'canvas-area--enter' : ''}`}>
+          {/* 装饰形状 — 对标顶配.sh1/.sh2 */}
+          <div className="canvas-deco canvas-deco-ring" />
+          <div className="canvas-deco canvas-deco-bar" />
+          <div className="canvas-deco canvas-deco-dot canvas-deco-dot1" />
+          <div className="canvas-deco canvas-deco-dot canvas-deco-dot2" />
           <ToolPalette />
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
