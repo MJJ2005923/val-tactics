@@ -552,7 +552,8 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const rightX = scx + len * Math.cos(r2), rightY = scy + len * Math.sin(r2)
               const tipX = scx + len * Math.cos(degToRad(s.rotation - 90))
               const tipY = scy + len * Math.sin(degToRad(s.rotation - 90))
-              const d = `M ${scx} ${scy} L ${leftX} ${leftY} M ${scx} ${scy} L ${rightX} ${rightY}`
+              const openD = `M ${scx} ${scy} L ${leftX} ${leftY} M ${scx} ${scy} L ${rightX} ${rightY}`
+              const fillD = `M ${scx} ${scy} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`
               // Breach C 3椭圆环
               if (s.abilityId === 'breach-aftershock') {
                 const dir = degToRad(s.rotation - 90)
@@ -561,7 +562,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                 const ops = [0.9, 0.6, 0.35]
                 return (
                   <>
-                    <path d={`M ${scx} ${scy} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`}
+                    <path d={fillD}
                       fill="transparent" stroke="transparent" strokeWidth={12}
                       style={{ cursor: 'move' }} onMouseDown={(e) => handleMouseDown(e, s)} />
                     {waves.map((frac, i) => {
@@ -587,13 +588,14 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const patternId = info.type === 'recon' ? 'recon-scan' : 'flash-rays'
               return (
                 <>
-                  {/* 锥形本体 */}
-                  <path d={d} fill={color + '30'} stroke={isSelected ? '#fff' : color} strokeWidth={isSelected ? 3 : 2}
-                    style={{ cursor: 'move', transition: 'stroke 0.15s' }}
-                    onMouseDown={(e) => handleMouseDown(e, s)}
-                  />
+                  {/* 锥形填充 */}
+                  <path d={fillD} fill={color + '30'} stroke="none" style={{ pointerEvents: 'none' }} />
                   {/* 填充图案 */}
-                  <path d={d} fill={`url(#${patternId})`} style={{ pointerEvents: 'none' }} />
+                  <path d={fillD} fill={`url(#${patternId})`} style={{ pointerEvents: 'none' }} />
+                  {/* V形描边 */}
+                  <path d={openD} fill="none" stroke={isSelected ? '#fff' : color} strokeWidth={isSelected ? 3 : 2}
+                    style={{ cursor: 'move', transition: 'stroke 0.15s' }}
+                    onMouseDown={(e) => handleMouseDown(e, s)} />
                   {/* 扫描弧线 (recon) */}
                   {info.type === 'recon' && [0.3, 0.6].map((frac, i) => {
                     const arcR = len * frac
