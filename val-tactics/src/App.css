@@ -69,10 +69,10 @@
 /* 四角L形装饰 — 对标顶配.corner */
 .canvas-corner{position:absolute;z-index:3;pointer-events:none}
 .canvas-corner::before,.canvas-corner::after{content:'';position:absolute;background:rgba(5,248,248,.15)}
-.canvas-cornerTL{top:14px;left:14px}.canvas-cornerTL::before{width:36px;height:1px;top:0;left:0}.canvas-cornerTL::after{width:1px;height:36px;top:0;left:0}
-.canvas-cornerTR{top:14px;right:14px}.canvas-cornerTR::before{width:36px;height:1px;top:0;right:0}.canvas-cornerTR::after{width:1px;height:36px;top:0;right:0}
-.canvas-cornerBL{bottom:14px;left:14px}.canvas-cornerBL::before{width:36px;height:1px;bottom:0;left:0}.canvas-cornerBL::after{width:1px;height:36px;bottom:0;left:0}
-.canvas-cornerBR{bottom:14px;right:14px}.canvas-cornerBR::before{width:36px;height:1px;bottom:0;right:0}.canvas-cornerBR::after{width:1px;height:36px;bottom:0;right:0}
+.canvas-cornerTL{top:28px;left:28px}.canvas-cornerTL::before{width:36px;height:1px;top:0;left:0}.canvas-cornerTL::after{width:1px;height:36px;top:0;left:0}
+.canvas-cornerTR{top:28px;right:28px}.canvas-cornerTR::before{width:36px;height:1px;top:0;right:0}.canvas-cornerTR::after{width:1px;height:36px;top:0;right:0}
+.canvas-cornerBL{bottom:28px;left:28px}.canvas-cornerBL::before{width:36px;height:1px;bottom:0;left:0}.canvas-cornerBL::after{width:1px;height:36px;bottom:0;left:0}
+.canvas-cornerBR{bottom:28px;right:28px}.canvas-cornerBR::before{width:36px;height:1px;bottom:0;right:0}.canvas-cornerBR::after{width:1px;height:36px;bottom:0;right:0}
 .canvas-cornerDot{position:absolute;width:6px;height:6px;border-radius:50%;background:#05F8F8;box-shadow:0 0 10px #05F8F8,0 0 16px rgba(5,248,248,.3);top:0;left:0;transform:translate(-3px,-3px);animation:cornerDotPulse 2.5s ease-in-out infinite}
 @keyframes cornerDotPulse{0%,100%{box-shadow:0 0 8px #05F8F8}50%{box-shadow:0 0 16px #05F8F8,0 0 30px rgba(5,248,248,.5)}}
 /* 旋转光环 — 对标顶配.halo */
