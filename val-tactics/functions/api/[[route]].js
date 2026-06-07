@@ -164,6 +164,27 @@ export async function onRequest(context) {
     }
   }
 
+  // 管理端点：批量导入激活码
+  if (url.pathname === '/api/admin/seed' && request.method === 'POST') {
+    const { adminKey, codes } = await request.json()
+    if (adminKey !== env.ADMIN_KEY || !env.ADMIN_KEY) {
+      return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    if (!env.AI_USAGE) {
+      return new Response(JSON.stringify({ error: 'KV 不可用' }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    if (!Array.isArray(codes)) {
+      return new Response(JSON.stringify({ error: 'codes 应为数组 [{code, tier}]' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    let count = 0
+    for (const c of codes) {
+      if (!c.code || !c.tier) continue
+      await env.AI_USAGE.put(`code:${c.code}`, JSON.stringify({ tier: c.tier, expiresAt: c.expiresAt || 0, createdAt: Date.now() }))
+      count++
+    }
+    return new Response(JSON.stringify({ ok: true, count }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+  }
+
   let { apiKey, provider, model, messages, userId } = await request.json()
 
   const p = PROVIDERS[provider]
