@@ -36,7 +36,9 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   const { abilityShapes, side } = useTactics()
   const [config, setConfig] = useState(loadConfig)
   const [models, setModels] = useState<AIModel[]>([])
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try { return JSON.parse(localStorage.getItem('val-tactics-chat') || '[]') } catch { return [] }
+  })
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [keyInput, setKeyInput] = useState(config.apiKey)
@@ -47,6 +49,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   const isFree = !config.apiKey
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }) }, [messages])
+  useEffect(() => { localStorage.setItem('val-tactics-chat', JSON.stringify(messages)) }, [messages])
   useEffect(() => { saveConfig(config) }, [config])
 
   const fetchModels = useCallback(async () => {
