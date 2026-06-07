@@ -45,6 +45,6 @@
 .clearConfirmCancel:hover{border-color:rgba(227,73,237,.3);color:#c0b0d0;background:rgba(227,73,237,.04)}
 
 /* Tooltip */
-.toolBtn::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);padding:4px 10px;font-size:10px;font-weight:500;color:#e0d0f0;background:rgba(18,12,32,.96);border:1px solid rgba(5,248,248,.25);border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s ease;box-shadow:0 4px 16px rgba(0,0,0,.4),0 0 12px rgba(5,248,248,.08);backdrop-filter:blur(8px);z-index:50}.toolBtn:hover::after{opacity:1}
+.toolBtn::after{content:attr(data-tooltip);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);padding:4px 10px;font-size:10px;font-weight:500;color:#e0d0f0;background:rgba(18,12,32,.96);border:1px solid rgba(5,248,248,.25);border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s ease;box-shadow:0 4px 16px rgba(0,0,0,.4),0 0 12px rgba(5,248,248,.08);backdrop-filter:blur(8px);z-index:50}.toolBtn:hover::after{opacity:1}
 
 @media(max-width:768px){.palette{border-radius:20px;padding:5px 8px}.toolBtn{width:32px;height:32px;font-size:14px}}
