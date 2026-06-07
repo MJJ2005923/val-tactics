@@ -307,6 +307,10 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           {/* 旋转光环 — 对标顶配.halo */}
           <div className="canvas-halo" />
           <div className="canvas-halo2" />
+          {/* 粒子 — 对标顶配.trail */}
+          <div className="canvas-particle p1" /><div className="canvas-particle p2" />
+          <div className="canvas-particle p3" /><div className="canvas-particle p4" />
+          <div className="canvas-particle p5" /><div className="canvas-particle p6" />
           <ToolPalette />
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
