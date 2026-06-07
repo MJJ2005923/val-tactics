@@ -6,7 +6,6 @@ import type { AbilityShapeConfig } from '../../types'
 import DrawingLayer from '../DrawingLayer/DrawingLayer'
 import AbilityShapeLayer from '../AbilityShapeLayer/AbilityShapeLayer'
 import TextInputModal from '../TextInputModal/TextInputModal'
-import SelectionInspector from '../SelectionInspector/SelectionInspector'
 import styles from './MapCanvas.module.css'
 
 interface MapCanvasProps {
@@ -1238,9 +1237,6 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           }}
         />
       )}
-
-      {/* 选中对象属性面板 */}
-      <SelectionInspector />
 
       {/* 显示全部范围 */}
       <button className={`${styles.showAllBtn} ${showAllRanges ? styles.showAllBtnActive : ''}`}
