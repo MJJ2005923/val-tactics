@@ -43,6 +43,25 @@ export default function MatchAnalysisPage({ onBack }: Props) {
         <div className={styles.formArea}>
           {sideTab === 'form' ? <MatchForm onSaved={handleSaved} /> : <MatchImport onImported={handleSaved} />}
         </div>
+
+        {matches.length > 0 && (
+          <div className={styles.sidebarList}>
+            <div className={styles.listTitle}>最近 · {matches.length}场</div>
+            {matches.slice(0, 10).map(m => (
+              <div key={m.id} className={styles.miniRow} style={{ borderLeftColor: m.result === 'win' ? '#05F8F8' : m.result === 'loss' ? '#E349ED' : 'rgba(255,255,255,.2)' }}>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', width: 34, flexShrink: 0 }}>{new Date(m.timestamp).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>
+                <span style={{ fontSize: 11, color: '#fff', width: 54, flexShrink: 0 }}>{mapName(m.mapId)}</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', width: 38, flexShrink: 0 }}>{agentName(m.agentId)}</span>
+                <span style={{ fontSize: 10, fontFamily: 'Consolas,monospace', color: 'rgba(255,255,255,.45)', flex: 1, textAlign: 'right' }}>
+                  {m.kills}/{m.deaths}/{m.assists}
+                </span>
+                <span style={{ fontSize: 10, fontWeight: 600, width: 20, textAlign: 'center', flexShrink: 0, color: m.result === 'win' ? '#05F8F8' : m.result === 'loss' ? '#E349ED' : 'rgba(255,255,255,.4)' }}>
+                  {m.result === 'win' ? 'W' : m.result === 'loss' ? 'L' : 'D'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </aside>
 
       {/* ====== 右侧主区域 ====== */}
@@ -141,7 +160,13 @@ export default function MatchAnalysisPage({ onBack }: Props) {
                     <span className={styles.matchMap}>{mapName(m.mapId)}</span>
                     <span className={styles.matchAgent}>{agentName(m.agentId)}</span>
                     <span className={`${styles.matchSide} ${m.side === 'attack' ? styles.sAtk : styles.sDef}`}>{m.side === 'attack' ? '攻' : '守'}</span>
-                    <span className={styles.matchKda}>{m.kills}/{m.deaths}/{m.assists}{m.acs ? ` · ${m.acs}` : ''}</span>
+                    <span className={styles.matchKda}>
+                      {m.kills}/{m.deaths}/{m.assists}
+                      {m.acs ? ` ACS${m.acs}` : ''}
+                      {m.damage ? ` · ${m.damage}伤` : ''}
+                      {m.firstKills ? ` FK${m.firstKills}` : ''}
+                      {m.mvp ? ' MVP' : ''}
+                    </span>
                     <span className={`${styles.matchResult} ${m.result === 'win' ? styles.mWin : m.result === 'loss' ? styles.mLoss : styles.mDraw}`}>
                       {m.result === 'win' ? '胜' : m.result === 'loss' ? '负' : '平'}
                     </span>

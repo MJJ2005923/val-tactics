@@ -15,9 +15,16 @@
 .tab:hover{color:rgba(255,255,255,.75)}
 .tabActive{color:#05F8F8;border-bottom-color:#05F8F8}
 
-.formArea{flex:1;overflow-y:auto;padding:0 24px 20px;min-height:0}
+.formArea{flex:1;overflow-y:auto;padding:0 24px 20px;min-height:0;max-height:50%}
 .formArea::-webkit-scrollbar{width:3px}
 .formArea::-webkit-scrollbar-thumb{background:rgba(5,248,248,.12);border-radius:2px}
+
+.sidebarList{flex:1;overflow-y:auto;padding:0 24px 16px;min-height:0;border-top:1px solid rgba(255,255,255,.04)}
+.sidebarList::-webkit-scrollbar{width:3px}
+.sidebarList::-webkit-scrollbar-thumb{background:rgba(5,248,248,.12);border-radius:2px}
+.listTitle{font-size:9px;font-weight:700;color:rgba(227,73,237,.3);text-transform:uppercase;letter-spacing:2px;padding:10px 0 8px}
+.miniRow{display:flex;align-items:center;gap:4px;padding:4px 6px;border-left:2px solid transparent;transition:all .15s;border-radius:0 4px 4px 0}
+.miniRow:hover{background:rgba(255,255,255,.02)}
 
 /* === 右侧主区域 === */
 .main{flex:1;overflow-y:auto;position:relative;z-index:1;padding:36px 48px 48px}
