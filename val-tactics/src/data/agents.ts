@@ -113,7 +113,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'sova-hunters-fury':         { shape: 'line', length: 100 * M, thickness: 0.015, iconOnly: true },
   'fade-prowler':              { shape: 'line', length: 45 * M, thickness: 0.004, iconOnly: true },
   'fade-haunt':                { shape: 'circle', radius: 45 * M, iconOnly: true },
-  'killjoy-turret':            { shape: 'cone', angle: 100, length: 55 * M, outerRadius: 70 * M, iconOnly: true },
+  'killjoy-turret':            { shape: 'cone', angle: 100, length: 55 * M, outerRadius: 63 * M, iconOnly: true },
   'killjoy-alarmbot':          { shape: 'circle', radius: 7.5 * M, outerRadius: 65 * M, iconOnly: true },
   'cypher-tripwire':           { shape: 'line', length: 15 * M, thickness: 0.003 },
   'cypher-spycam':             { shape: 'circle', radius: 1.2 * M },
