@@ -187,21 +187,39 @@ export async function onRequest(context) {
   }
 
   // AI 对话 — 免费额度检查（付费用户不受限）
-  if (isFree && userId && env.AI_USAGE) {
+  // 本地开发用内存计数器，生产用 KV
+  const localUsage = new Map()
+  if (isFree && userId) {
+    // 检查是否有付费套餐
+    let isPaid = false
     try {
-      // 检查是否有付费套餐
-      const userTier = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
-      const isPaid = userTier?.tier && userTier.tier !== 'free'
-      if (!isPaid) {
-        const today = new Date().toISOString().slice(0, 10)
-        const key = `usage:${userId}:${today}`
-        const count = parseInt(await env.AI_USAGE.get(key) || '0')
-        if (count >= FREE_LIMIT) {
-          return new Response(JSON.stringify({ error: 'free_limit', message: `今日免费次数已用完（${FREE_LIMIT}次/天），请升级套餐或自备 API Key` }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
-        }
-        ctx.waitUntil(env.AI_USAGE.put(key, String(count + 1), { expirationTtl: 86400 }))
+      if (env.AI_USAGE) {
+        const userTier = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
+        isPaid = userTier?.tier && userTier.tier !== 'free'
       }
     } catch {}
+    if (!isPaid) {
+      const today = new Date().toISOString().slice(0, 10)
+      let count = 0
+      try {
+        if (env.AI_USAGE) {
+          const key = `usage:${userId}:${today}`
+          count = parseInt(await env.AI_USAGE.get(key) || '0')
+          if (count >= FREE_LIMIT) {
+            return new Response(JSON.stringify({ error: 'free_limit', message: `今日免费次数已用完（${FREE_LIMIT}次/天），请升级套餐或自备 API Key` }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+          }
+          ctx.waitUntil(env.AI_USAGE.put(key, String(count + 1), { expirationTtl: 86400 }))
+        } else {
+          // 本地开发 fallback
+          const localKey = `usage:${userId}:${today}`
+          count = localUsage.get(localKey) || 0
+          if (count >= FREE_LIMIT) {
+            return new Response(JSON.stringify({ error: 'free_limit', message: `今日免费次数已用完（${FREE_LIMIT}次/天），请升级套餐或自备 API Key` }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+          }
+          localUsage.set(localKey, count + 1)
+        }
+      } catch {}
+    }
   }
 
   try {

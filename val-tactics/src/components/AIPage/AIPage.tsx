@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../store/AuthContext'
 import styles from './AIPage.module.css'
 
-interface Message { role: 'user' | 'assistant'; content: string }
+interface Message { role: 'user' | 'assistant'; content: string; convId?: string; rating?: number }
 interface AIModel { id: string; name: string; tier?: string; perf?: string; limit?: string; unlock?: string }
 interface AIConfig { apiKey: string; provider: string; model: string }
 
@@ -393,7 +393,22 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
       else {
         const content = data.content?.[0]?.text || data.choices?.[0]?.message?.content
           || data.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(data)
-        setMessages(prev => [...prev, { role: 'assistant', content }])
+        // 存到 Supabase 知识库
+        let convId: string | undefined
+        if (user || true) { // 匿名也存
+          const agentNames = getAgentNames(agentIds)
+          const { data: row } = await supabase.from('ai_conversations').insert({
+            user_id: user?.id || null,
+            question: text,
+            answer: content,
+            model: config.model,
+            map_name: mapName,
+            side,
+            agents: agentNames.join(','),
+          }).select('id').single()
+          convId = row?.id
+        }
+        setMessages(prev => [...prev, { role: 'assistant', content, convId, rating: 0 }])
         if (isFree) {
           incrTodayUsage(config.model)
           setTodayUsed(getSharedUsage())
@@ -757,7 +772,29 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
                     </svg>
                   )}
                 </div>
-                <div className={styles.msgContent}>{m.content}</div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div className={styles.msgContent}>{m.content}</div>
+                  {m.role === 'assistant' && m.convId && (
+                    <div style={{ display: 'flex', gap: 6, marginTop: 4, paddingLeft: 4, opacity: .6 }}>
+                      <span
+                        onClick={async () => {
+                          const nr = m.rating === 1 ? 0 : 1
+                          setMessages(prev => prev.map(msg => msg.convId === m.convId ? { ...msg, rating: nr } : msg))
+                          await supabase.from('ai_conversations').update({ rating: nr }).eq('id', m.convId!)
+                        }}
+                        style={{ cursor: 'pointer', fontSize: 14, opacity: m.rating === 1 ? 1 : .4, transition: 'opacity .2s', userSelect: 'none' }}
+                        title="有帮助">👍</span>
+                      <span
+                        onClick={async () => {
+                          const nr = m.rating === -1 ? 0 : -1
+                          setMessages(prev => prev.map(msg => msg.convId === m.convId ? { ...msg, rating: nr } : msg))
+                          await supabase.from('ai_conversations').update({ rating: nr }).eq('id', m.convId!)
+                        }}
+                        style={{ cursor: 'pointer', fontSize: 14, opacity: m.rating === -1 ? 1 : .4, transition: 'opacity .2s', userSelect: 'none' }}
+                        title="没帮助">👎</span>
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           )}

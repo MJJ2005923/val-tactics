@@ -4,12 +4,15 @@ import { useTactics } from '../../store/TacticsContext'
 import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import { loadMatchContext } from '../MatchHistory/MatchContextSelector'
+import { supabase } from '../../lib/supabase'
 import styles from './AIPanel.module.css'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   model?: string
+  convId?: string
+  rating?: number
 }
 
 export default function AIChat({ mapName }: { mapId: string; mapName: string }) {
@@ -125,7 +128,15 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
         content = data.choices?.[0]?.message?.content || JSON.stringify(data)
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content, model: config.model }])
+      // 存到 Supabase
+      let convId: string | undefined
+      try {
+        const { data: row } = await supabase.from('ai_conversations').insert({
+          question: text, answer: content, model: config.model,
+        }).select('id').single()
+        convId = row?.id
+      } catch {}
+      setMessages(prev => [...prev, { role: 'assistant', content, model: config.model, convId, rating: 0 }])
       if (isFree) {
         const date = new Date().toISOString().slice(0,10)
         const k = `val-tactics-usage-${date}-${config.model}`
@@ -177,6 +188,20 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
             <div className={styles.msgBubble}>
               {m.content}
             </div>
+            {m.role === 'assistant' && m.convId && (
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, paddingLeft: 4 }}>
+                <span onClick={async () => {
+                  const nr = m.rating === 1 ? 0 : 1
+                  setMessages(prev => prev.map(msg => msg.convId === m.convId ? { ...msg, rating: nr } : msg))
+                  await supabase.from('ai_conversations').update({ rating: nr }).eq('id', m.convId!)
+                }} style={{ cursor: 'pointer', fontSize: 14, opacity: m.rating === 1 ? 1 : .3 }}>👍</span>
+                <span onClick={async () => {
+                  const nr = m.rating === -1 ? 0 : -1
+                  setMessages(prev => prev.map(msg => msg.convId === m.convId ? { ...msg, rating: nr } : msg))
+                  await supabase.from('ai_conversations').update({ rating: nr }).eq('id', m.convId!)
+                }} style={{ cursor: 'pointer', fontSize: 14, opacity: m.rating === -1 ? 1 : .3 }}>👎</span>
+              </div>
+            )}
           </div>
         ))}
         {loading && <div className={styles.loading}><span>●</span><span>●</span><span>●</span></div>}
