@@ -288,9 +288,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'high'
 
-    // 背景
-    ctx.fillStyle = '#000'
-    ctx.fillRect(0, 0, containerSize.w, containerSize.h)
+    // 背景（透明，让画布背景透出）
+    ctx.clearRect(0, 0, containerSize.w, containerSize.h)
     ctx.save()
     ctx.translate(offsetX, offsetY)
     ctx.scale(displayScale, displayScale)
