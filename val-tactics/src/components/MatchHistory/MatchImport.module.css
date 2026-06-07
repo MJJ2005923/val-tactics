@@ -1,0 +1,107 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, .4);
+  line-height: 1.5;
+}
+
+.textarea {
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(5, 248, 248, .12);
+  border-radius: 6px;
+  color: #fff;
+  padding: 8px;
+  font-size: 11px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.4;
+}
+
+.textarea:focus {
+  border-color: rgba(5, 248, 248, .4);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1px solid;
+  transition: all .2s;
+}
+
+.btnOutline {
+  background: transparent;
+  border-color: rgba(5, 248, 248, .2);
+  color: rgba(5, 248, 248, .7);
+}
+
+.btnOutline:hover {
+  border-color: rgba(5, 248, 248, .5);
+  color: #05F8F8;
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, rgba(5, 248, 248, .15), rgba(227, 73, 237, .08));
+  border-color: rgba(5, 248, 248, .2);
+  color: #05F8F8;
+}
+
+.btnPrimary:hover {
+  background: linear-gradient(135deg, rgba(5, 248, 248, .25), rgba(227, 73, 237, .15));
+}
+
+.fileInput {
+  display: none;
+}
+
+.result {
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+.resultSuccess {
+  background: rgba(5, 248, 248, .08);
+  border: 1px solid rgba(5, 248, 248, .15);
+  color: #05F8F8;
+}
+
+.resultError {
+  background: rgba(227, 73, 237, .08);
+  border: 1px solid rgba(227, 73, 237, .15);
+  color: #E349ED;
+}
+
+.errors {
+  font-size: 10px;
+  color: #E349ED;
+  max-height: 80px;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
+.compact .textarea {
+  min-height: 60px;
+  font-size: 10px;
+}
+
+.compact .btn {
+  font-size: 11px;
+  padding: 4px 10px;
+}

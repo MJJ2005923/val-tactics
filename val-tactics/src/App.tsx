@@ -11,6 +11,7 @@ import SplashScreen from './components/SplashScreen/SplashScreen'
 import HelpPanel from './components/HelpPanel/HelpPanel'
 import AIPanel from './components/AIPanel/AIPanel'
 import AIPage from './components/AIPage/AIPage'
+import MatchAnalysisPage from './components/MatchAnalysis/MatchAnalysisPage'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 
@@ -22,6 +23,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [showAIPage, setShowAIPage] = useState(false)
   const [showAIDropdown, setShowAIDropdown] = useState(false)
+  const [showMatchAnalysis, setShowMatchAnalysis] = useState(false)
   const [showMapDropdown, setShowMapDropdown] = useState(false)
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
   const toast = useToast()
@@ -284,6 +286,10 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
                   <button className="navbar__aiDropdownItem" onClick={() => { setShowAIPage(true); setShowAIDropdown(false) }}>
                     <span>主页面</span>
                   </button>
+                  <div className="navbar__aiDropdownDivider" style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 8px' }} />
+                  <button className="navbar__aiDropdownItem" onClick={() => { setShowMatchAnalysis(true); setShowAIDropdown(false) }}>
+                    <span>📊 数据分析</span>
+                  </button>
                 </div>
               </>
             )}
@@ -324,6 +330,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showAIPanel && <AIPanel mapId={selectedMap.id} mapName={selectedMap.name} onClose={() => setShowAIPanel(false)} />}
       {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => setShowAIPage(false)} />}
+      {showMatchAnalysis && <MatchAnalysisPage onBack={() => setShowMatchAnalysis(false)} />}
     </div>
   )
 }

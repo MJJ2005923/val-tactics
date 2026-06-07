@@ -1,0 +1,119 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modes {
+  display: flex;
+  gap: 4px;
+}
+
+.modeBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 1px solid rgba(255, 255, 255, .06);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .02);
+  color: rgba(255, 255, 255, .4);
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+  text-align: center;
+}
+
+.modeBtn:hover {
+  border-color: rgba(5, 248, 248, .15);
+  background: rgba(5, 248, 248, .03);
+}
+
+.modeBtnActive {
+  border-color: rgba(5, 248, 248, .25);
+  background: rgba(5, 248, 248, .06);
+  color: #05F8F8;
+}
+
+.modeLabel {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.modeDesc {
+  font-size: 9px;
+  opacity: .5;
+}
+
+/* 比赛选择器 */
+.matchPicker {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.matchPicker::-webkit-scrollbar {
+  width: 3px;
+}
+
+.matchPicker::-webkit-scrollbar-thumb {
+  background: rgba(5, 248, 248, .12);
+  border-radius: 2px;
+}
+
+.pickerLabel {
+  font-size: 10px;
+  color: rgba(255, 255, 255, .3);
+  padding: 4px 0;
+}
+
+.matchOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: rgba(255, 255, 255, .5);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  transition: all .15s;
+  text-align: left;
+}
+
+.matchOption:hover {
+  background: rgba(255, 255, 255, .03);
+  border-color: rgba(255, 255, 255, .06);
+}
+
+.matchOptionActive {
+  background: rgba(5, 248, 248, .06);
+  border-color: rgba(5, 248, 248, .2);
+}
+
+.moResult {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.moWin { background: rgba(5, 248, 248, .15); color: #05F8F8; }
+.moLoss { background: rgba(227, 73, 237, .15); color: #E349ED; }
+.moDraw { background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .4); }
+
+.moDate { color: rgba(255, 255, 255, .25); width: 36px; flex-shrink: 0; }
+.moMap { color: #fff; width: 52px; flex-shrink: 0; }
+.moAgent { color: rgba(255, 255, 255, .4); width: 40px; flex-shrink: 0; }
+.moKda { color: rgba(255, 255, 255, .35); font-family: 'Consolas', monospace; }

@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useTactics } from '../../store/TacticsContext'
-import agents from '../../data/agents'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI } from '../../data/knowledgeBase'
+import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
+import MatchContextSelector, { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import styles from './AIPage.module.css'
 
 interface Message { role: 'user' | 'assistant'; content: string }
@@ -11,11 +13,110 @@ const API_BASE = '/api'
 const PROVIDER = 'deepseek'
 
 const PLANS = [
-  { icon: '⚡', name: '免费', detail: '快速模式 · 2 次 / 天', price: '¥0', color: '#05F8F8' },
-  { icon: '⚖️', name: '基础', detail: '快速 & 均衡 · 30 次 / 天', price: '¥24.9', color: '#e8b0f8' },
-  { icon: '💭', name: '进阶', detail: '推理 5 & 深度 3 · 40 次 / 天', price: '¥39.9', color: '#e090f0' },
-  { icon: '🧠', name: '专业', detail: '全解锁 · 60 次 / 天', price: '¥49.9', color: '#d870e8' },
+  { name: '免费', tier: 'free', detail: '快速模式 · 2 次 / 天', price: '¥0', color: '#05F8F8' },
+  { name: '基础', tier: 'basic', detail: '快速 + 均衡', price: '¥24.9/月', color: '#05F8F8' },
+  { name: '进阶', tier: 'advanced', detail: '全部模式', price: '¥59.9/月', color: '#E349ED' },
+  { name: '专业', tier: 'pro', detail: '全部模式', price: '¥99.9/月', color: '#f0c0ff' },
 ]
+
+/** 套餐专属 SVG 图标 — 方案A：几何徽章 */
+function PlanIcon({ tier, color, size = 36 }: { tier: string; color: string; size?: number }) {
+  const s = size
+  // 免费 — 单层菱形
+  if (tier === 'free') {
+    return (
+      <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
+        <polygon points="18,5 31,18 18,31 5,18" fill={color} fillOpacity=".08" stroke={color} strokeWidth="1.2" strokeOpacity=".5"/>
+        <polygon points="18,11 25,18 18,25 11,18" fill={color} fillOpacity=".1" stroke={color} strokeWidth="1" strokeOpacity=".4"/>
+        <circle cx="18" cy="18" r="2.5" fill={color} opacity=".5"/>
+      </svg>
+    )
+  }
+  // 基础 — 双层菱形 + 中心点
+  if (tier === 'basic') {
+    return (
+      <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
+        <polygon points="18,4 32,18 18,32 4,18" fill="none" stroke={color} strokeWidth="1" opacity=".3"/>
+        <polygon points="18,9 27,18 18,27 9,18" fill={color} fillOpacity=".06" stroke={color} strokeWidth="1.3" strokeOpacity=".55"/>
+        <polygon points="18,14 22,18 18,22 14,18" fill={color} fillOpacity=".1" stroke={color} strokeWidth=".8" strokeOpacity=".35"/>
+        <circle cx="18" cy="18" r="2" fill={color} opacity=".55"/>
+      </svg>
+    )
+  }
+  // 进阶 — 三层菱形 + 十字星芒
+  if (tier === 'advanced') {
+    return (
+      <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
+        <polygon points="18,3 33,18 18,33 3,18" fill="none" stroke={color} strokeWidth=".8" opacity=".2"/>
+        <polygon points="18,8 28,18 18,28 8,18" fill={color} fillOpacity=".05" stroke={color} strokeWidth="1.2" strokeOpacity=".45"/>
+        <polygon points="18,13 23,18 18,23 13,18" fill={color} fillOpacity=".08" stroke={color} strokeWidth="1" strokeOpacity=".5"/>
+        <circle cx="18" cy="18" r="2" fill={color} opacity=".6"/>
+        <line x1="18" y1="5" x2="18" y2="9" stroke={color} strokeWidth=".8" opacity=".2"/>
+        <line x1="18" y1="27" x2="18" y2="31" stroke={color} strokeWidth=".8" opacity=".2"/>
+        <line x1="5" y1="18" x2="9" y2="18" stroke={color} strokeWidth=".8" opacity=".2"/>
+        <line x1="27" y1="18" x2="31" y2="18" stroke={color} strokeWidth=".8" opacity=".2"/>
+      </svg>
+    )
+  }
+  // 专业 — 五层旋转菱形 + 粉青渐变
+  return (
+    <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
+      <defs>
+        <linearGradient id={`proGrad`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#E349ED"/>
+          <stop offset="100%" stopColor="#05F8F8"/>
+        </linearGradient>
+      </defs>
+      <polygon points="18,2 34,18 18,34 2,18" fill="none" stroke="url(#proGrad)" strokeWidth=".7" opacity=".25"/>
+      <polygon points="18,6 30,18 18,30 6,18" fill="url(#proGrad)" fillOpacity=".04" stroke="url(#proGrad)" strokeWidth="1" strokeOpacity=".4"/>
+      <polygon points="18,10 26,18 18,26 10,18" fill="url(#proGrad)" fillOpacity=".06" stroke="url(#proGrad)" strokeWidth="1.2" strokeOpacity=".55"/>
+      <polygon points="18,14 22,18 18,22 14,18" fill="url(#proGrad)" fillOpacity=".08" stroke="url(#proGrad)" strokeWidth=".8" strokeOpacity=".35"/>
+      <polygon points="18,16 20,18 18,20 16,18" fill="url(#proGrad)" opacity=".12"/>
+      <circle cx="18" cy="18" r="1.5" fill="#fff" opacity=".7"/>
+      <circle cx="18" cy="2" r="1.2" fill="#fff" opacity=".25"/>
+      <circle cx="34" cy="18" r="1.2" fill="#fff" opacity=".25"/>
+      <circle cx="18" cy="34" r="1.2" fill="#fff" opacity=".25"/>
+      <circle cx="2" cy="18" r="1.2" fill="#fff" opacity=".25"/>
+    </svg>
+  )
+}
+
+// 套餐对应可用的模型
+const TIER_MODELS: Record<string, string[]> = {
+  free: ['deepseek-v4-flash'],
+  basic: ['deepseek-v4-flash', 'deepseek-chat'],
+  advanced: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
+  pro: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
+}
+
+// 每套餐总次数 + 特殊模型限制（基础模型共享总次数）
+const TIER_TOTAL_LIMITS: Record<string, number> = { free: 2, basic: 30, advanced: 40, pro: 100 }
+// 特殊限制：推理和深度有独立次数帽
+const MODEL_CAPS: Record<string, Record<string, number>> = {
+  'deepseek-reasoner':  { advanced: 3, pro: 20 },
+  'deepseek-v4-pro':    { advanced: 2, pro: 10 },
+}
+
+async function fetchTier(): Promise<string> {
+  try {
+    const resp = await fetch('/api/tier', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ userId: uid() }),
+    })
+    if (resp.ok) { const data = await resp.json(); return data.tier || 'free' }
+  } catch {}
+  return 'free'
+}
+
+async function activateCode(code: string): Promise<{ ok: boolean; tier?: string; error?: string }> {
+  try {
+    const resp = await fetch('/api/activate', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ code: code.trim(), userId: uid() }),
+    })
+    return await resp.json()
+  } catch { return { ok: false, error: '网络请求失败' } }
+}
 
 function uid() {
   let id = localStorage.getItem('val-tactics-uid')
@@ -28,12 +129,8 @@ function loadConfig() {
 }
 function saveConfig(c: AIConfig) { localStorage.setItem('val-tactics-ai-config', JSON.stringify(c)) }
 
-function buildSystemPrompt(mapName: string, side: string, agentNames: string[], shapeCount: number) {
-  return `你是一个无畏契约战术教练。当前地图「${mapName}」，${side === 'attack' ? '进攻方' : '防守方'}。地图上有 ${shapeCount} 个技能标记。${agentNames.length > 0 ? `场上特工: ${agentNames.join('、')}。` : ''}请用中文回答，简洁实用，像教练一样。`
-}
-
 export default function AIPage({ mapName, onBack }: { mapId: string; mapName: string; onBack: () => void }) {
-  const { abilityShapes, side } = useTactics()
+  const { abilityShapes, side, agentPositions, drawings, textAnnotations, markers, roster } = useTactics()
   const [config, setConfig] = useState(loadConfig)
   const [models, setModels] = useState<AIModel[]>([])
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -43,6 +140,15 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   const [loading, setLoading] = useState(false)
   const [keyInput, setKeyInput] = useState(config.apiKey)
   const [showKeyInput, setShowKeyInput] = useState(false)
+  const [showBoardInfo, setShowBoardInfo] = useState(() => {
+    try { return localStorage.getItem('val-tactics-show-board-info') !== 'false' } catch { return true }
+  })
+  const [tier, setTier] = useState('free')
+  const [actCode, setActCode] = useState('')
+  const [actStatus, setActStatus] = useState('')
+  const [showPlans, setShowPlans] = useState(false)
+  const [showModels, setShowModels] = useState(true)
+  const [expandedPlan, setExpandedPlan] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -51,6 +157,18 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }) }, [messages])
   useEffect(() => { localStorage.setItem('val-tactics-chat', JSON.stringify(messages)) }, [messages])
   useEffect(() => { saveConfig(config) }, [config])
+  useEffect(() => {
+    if (isFree) {
+      fetchTier().then(t => {
+        // KV 回退到 localStorage
+        if (t === 'free') {
+          const local = (() => { try { return localStorage.getItem('val-tactics-tier') } catch { return null } })()
+          if (local) t = local
+        }
+        setTier(t)
+      })
+    } else setTier('pro')
+  }, [isFree])
 
   const fetchModels = useCallback(async () => {
     try {
@@ -91,14 +209,41 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
     const msgs = [...messages, { role: 'user' as const, content: text }]
     setMessages(msgs)
 
-    const agentNames = abilityShapes
-      .map(s => agents.find(a => a.id === s.agentId)?.name)
-      .filter((v): v is string => !!v)
+    const agentIds = abilityShapes
+      .map(s => s.agentId)
       .filter((v, i, a) => a.indexOf(v) === i)
+    const agentNames = getAgentNames(agentIds)
 
     const allMessages = [
-      { role: 'user', content: buildSystemPrompt(mapName, side, agentNames, abilityShapes.length) },
-      { role: 'assistant', content: '明白了。' },
+      { role: 'user', content: buildKnowledgeBase(mapName, side, agentNames) },
+      { role: 'assistant', content: '明白。我是T教练，已掌握全部29位特工技能数据和12张地图信息，请随时提问。' },
+      // 注入棋盘基础信息
+      ...(showBoardInfo ? [
+        { role: 'user' as const, content: formatBoardStateForAI(mapName, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster) },
+        { role: 'assistant' as const, content: '收到，我已了解当前战术板的详细状态。' },
+      ] : []),
+      // 注入比赛数据（根据用户选择）
+      ...(() => {
+        const ctx = loadMatchContext()
+        if (ctx.mode === 'none') return []
+        const matches = loadMatches()
+        if (matches.length === 0) return []
+
+        if (ctx.mode === 'single' && ctx.matchId) {
+          const match = matches.find(m => m.id === ctx.matchId)
+          if (!match) return []
+          return [
+            { role: 'user' as const, content: `以下是我选定的一场比赛数据，请针对这场比赛进行分析：\n\n${formatSingleMatchForAI(match)}` },
+            { role: 'assistant' as const, content: '收到，我已看到这场比赛的详细数据，可以针对这场比赛给你分析。' },
+          ]
+        }
+
+        // mode === 'all'
+        return [
+          { role: 'user' as const, content: `以下是我的全部比赛记录数据，在后续分析中请结合这些个人数据：\n\n${formatMatchHistoryForAI(matches)}` },
+          { role: 'assistant' as const, content: '收到，我已掌握你的比赛记录和统计数据，可以据此分析你的个人表现和给出针对性建议。' },
+        ]
+      })(),
       ...msgs,
     ]
 
@@ -146,49 +291,124 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
           <button className={styles.backBtn} onClick={onBack}>← 返回战术板</button>
         </div>
 
+        {/* ====== 套餐方案 ====== */}
         <div className={styles.sidebarSection}>
-          <h3>套餐方案</h3>
-          <div className={styles.plansList}>
-            {PLANS.map((p, i) => (
-              <div key={i} className={styles.planCard}>
-                <div className={styles.planIcon}>{p.icon}</div>
-                <div className={styles.planInfo}>
-                  <div className={styles.planName} style={i === 0 ? { color: '#05F8F8' } : i === 1 ? { color: '#e8b0f8' } : i === 2 ? { color: '#e090f0' } : { color: '#d870e8' }}>{p.name}</div>
-                  <div className={styles.planDetail}>{p.detail}</div>
-                </div>
-                <div className={styles.planPrice}>{p.price}</div>
-              </div>
-            ))}
-          </div>
+          <h3 onClick={() => setShowPlans(v => !v)} style={{ cursor: 'pointer' }}>
+            💳 套餐方案 <span style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginLeft: 'auto' }}>{showPlans ? '▲' : '▼'}</span>
+          </h3>
+          {showPlans && (
+            <div className={styles.plansList}>
+              {PLANS.filter(p => p.tier !== 'free').map((p, i) => {
+                const tierOrder = ['free', 'basic', 'advanced', 'pro']
+                const currentIdx = tierOrder.indexOf(tier)
+                const planIdx = tierOrder.indexOf(p.tier)
+                const isCurrentTier = planIdx === currentIdx && isFree
+                const isLocked = isFree && planIdx > currentIdx
+                const isExpanded = expandedPlan === p.tier
+                // 该套餐可用的模型ID列表
+                const planModelIds = TIER_MODELS[p.tier] || []
+                return (
+                  <React.Fragment key={i}>
+                    <div
+                      className={`${styles.planCard} ${isLocked ? styles.planCardLocked : ''} ${isCurrentTier ? styles.planCardCurrent : ''}`}
+                      style={{ cursor: 'pointer', animationDelay: `${i * 0.12}s`, ...(isCurrentTier ? { borderColor: p.color } : {}) }}
+                      onClick={() => setExpandedPlan(isExpanded ? null : p.tier)}>
+                      <div className={styles.planIcon}><PlanIcon tier={p.tier} color={p.color} /></div>
+                      <div className={styles.planInfo}>
+                        <div className={styles.planName} style={{ color: isLocked ? 'rgba(255,255,255,.25)' : p.color }}>
+                          {p.name}
+                          {isCurrentTier && <span style={{ fontSize: 10, marginLeft: 6, color: p.color }}>● 当前</span>}
+                        </div>
+                        <div className={styles.planDetail}>{p.detail}</div>
+                      </div>
+                      <div className={styles.planPrice} style={{ color: isLocked ? 'rgba(255,255,255,.2)' : undefined }}>
+                        {isLocked ? <span style={{ fontSize: 14, filter: 'grayscale(1)', opacity: .5 }}>🔒</span> : `${p.price}`}
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className={styles.planExpand} style={{ animationDelay: `${i * 0.12 + 0.05}s` }}>
+                        <div style={{ marginBottom: 6, color: p.color, fontWeight: 600 }}>
+                          {p.price}/月 · 共 {TIER_TOTAL_LIMITS[p.tier]}次/天
+                        </div>
+                        {planModelIds.map(mid => {
+                          const model = models.find(m => m.id === mid)
+                          const cap = MODEL_CAPS[mid]?.[p.tier]
+                          const icon = model?.name?.includes('快速') ? '⚡' : model?.name?.includes('均衡') ? '⚖️' : model?.name?.includes('推理') ? '💭' : '🧠'
+                          return (
+                            <div key={mid} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,.03)' }}>
+                              <span>{icon} {model?.name || mid}</span>
+                              <span style={{ color: 'rgba(255,255,255,.35)', fontFamily: 'Consolas,monospace' }}>
+                                {cap !== undefined ? `${cap}次` : '共享'}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </React.Fragment>
+                )
+              })}
+            </div>
+          )}
         </div>
 
+        {/* ====== 模式选择 ====== */}
         <div className={styles.sidebarSection}>
-          <h3>智能模式</h3>
-          <div className={styles.modelList}>
-            {models.map(m => {
-              const locked = isFree && m.tier !== '免费'
-              return (
-                <button key={m.id}
-                  className={`${styles.modelCard} ${config.model === m.id ? styles.modelCardActive : ''} ${locked ? styles.modelCardLocked : ''}`}
-                  onClick={() => !locked && setConfig((c: AIConfig) => ({ ...c, model: m.id }))}>
-                  <div className={styles.modelIcon}>{m.name?.includes('快速') ? '⚡' : m.name?.includes('均衡') ? '⚖️' : m.name?.includes('推理') ? '💭' : '🧠'}</div>
-                  <div className={styles.modelInfo}>
-                    <div className={styles.modelName}>{m.name}</div>
-                    <div className={styles.modelDesc}>{m.perf}</div>
-                    <div className={styles.modelLimit}>{m.limit}{locked ? ' 🔒' : ''}</div>
-                  </div>
-                  <span className={`${styles.unlockBadge} ${m.tier === '免费' ? styles.unlockFree : styles.unlockPaid}`}>{m.unlock}</span>
-                </button>
-              )
-            })}
-          </div>
+          <h3 onClick={() => setShowModels(v => !v)} style={{ cursor: 'pointer' }}>
+            ⚡ 模式选择 <span style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginLeft: 'auto' }}>{showModels ? '▲' : '▼'}</span>
+          </h3>
+          {showModels && (
+            <div className={styles.modelList}>
+              {models.map(m => {
+                const locked = isFree && !(TIER_MODELS[tier]?.includes(m.id))
+                const isCurrent = config.model === m.id
+                const cap = MODEL_CAPS[m.id]?.[tier]
+                const limitText = cap !== undefined ? `${cap}次/天` : `${TIER_TOTAL_LIMITS[tier]}次/天`
+                const isFreeModel = m.tier === '免费'
+                return (
+                  <button key={m.id}
+                    className={`${styles.modelCard} ${isCurrent ? styles.modelCardActive : ''} ${locked ? styles.modelCardLocked : ''}`}
+                    onClick={() => !locked && setConfig((c: AIConfig) => ({ ...c, model: m.id }))}>
+                    <div className={styles.modelIcon}>{m.name?.includes('快速') ? '⚡' : m.name?.includes('均衡') ? '⚖️' : m.name?.includes('推理') ? '💭' : '🧠'}</div>
+                    <div className={styles.modelInfo}>
+                      <div className={styles.modelName}>
+                        {m.name}
+                        {isFreeModel && <span className={styles.unlockFree} style={{ fontSize: 9, marginLeft: 6, padding: '1px 6px', verticalAlign: 'middle' }}>免费</span>}
+                      </div>
+                      <div className={styles.modelDesc}>{m.perf}</div>
+                      <div className={styles.modelLimit}>
+                        {locked ? '🔒 需升级套餐' : limitText || '可用'}
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {isFree ? (
           <div className={styles.sidebarSection}>
-            <div className={styles.freeBanner}>🎉 免费使用中 · 快速模式 · 2 次 / 天</div>
+            <div className={styles.freeBanner}>
+              {tier === 'free' ? '🎉 免费套餐 · ⚡快速 · 2次/天' : `✅ ${PLANS.find(p => p.tier === tier)?.name || tier}套餐`}
+            </div>
+            {/* 激活码 */}
+            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+              <input className={styles.keyInput} value={actCode} placeholder="输入激活码升级套餐..."
+                onChange={e => { setActCode(e.target.value); setActStatus('') }}
+                onKeyDown={e => { if (e.key === 'Enter') { const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
+                style={{ flex: 1, fontSize: 11 }} />
+              <button className={styles.keySaveBtn} onClick={async () => {
+                const r = await activateCode(actCode)
+                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') }
+                else setActStatus('❌ ' + (r.error || '激活失败'))
+              }}>激活</button>
+            </div>
+            {actStatus && (
+              <div style={{ fontSize: 11, marginTop: 4, color: actStatus.includes('✅') ? '#05F8F8' : '#E349ED' }}>{actStatus}</div>
+            )}
             <button className={styles.keyBtn} onClick={() => setShowKeyInput(!showKeyInput)}>
-              🔑 自备 API Key 解锁全部模式
+              🔑 自备 API Key 解锁全部
             </button>
             {showKeyInput && (
               <div className={styles.keyEdit} style={{ marginTop: 8 }}>
@@ -211,9 +431,57 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
         )}
 
         <div className={styles.sidebarSection}>
-          <div className={styles.context}>
-            <span>🗺️ {mapName}</span>
-            <span>⚔️ {side === 'attack' ? '进攻方' : '防守方'}</span>
+          <h3>🗺️ 基础信息</h3>
+          <div
+            onClick={() => { const n = !showBoardInfo; setShowBoardInfo(n); localStorage.setItem('val-tactics-show-board-info', String(n)) }}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
+              background: showBoardInfo
+                ? 'linear-gradient(135deg, rgba(5,248,248,.08), rgba(227,73,237,.04))'
+                : 'rgba(255,255,255,.02)',
+              border: showBoardInfo
+                ? '1px solid rgba(5,248,248,.2)'
+                : '1px solid rgba(255,255,255,.06)',
+              transition: 'all .3s cubic-bezier(.16,1,.3,1)',
+              boxShadow: showBoardInfo ? '0 0 16px rgba(5,248,248,.06)' : 'none',
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 12, color: showBoardInfo ? '#05F8F8' : 'rgba(255,255,255,.45)', fontWeight: 500, transition: 'color .3s' }}>
+                {showBoardInfo ? '● AI 正在读取棋盘' : '○ AI 仅用知识库'}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginTop: 2 }}>
+                特工站位 · 技能范围 · 绘图标注
+              </div>
+            </div>
+            {/* 自定义开关 */}
+            <div style={{
+              width: 40, height: 22, borderRadius: 11,
+              background: showBoardInfo
+                ? 'linear-gradient(135deg, #05F8F8, #E349ED)'
+                : 'rgba(255,255,255,.1)',
+              transition: 'all .3s cubic-bezier(.16,1,.3,1)',
+              position: 'relative', flexShrink: 0,
+              boxShadow: showBoardInfo ? '0 0 12px rgba(5,248,248,.25)' : 'none',
+            }}>
+              <div style={{
+                width: 18, height: 18, borderRadius: '50%',
+                background: '#fff',
+                position: 'absolute', top: 2,
+                left: showBoardInfo ? 20 : 2,
+                transition: 'left .3s cubic-bezier(.16,1,.3,1)',
+                boxShadow: showBoardInfo ? '0 0 8px rgba(5,248,248,.3)' : '0 1px 3px rgba(0,0,0,.3)',
+              }} />
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.sidebarSection}>
+          <h3>📊 数据分析</h3>
+          <MatchContextSelector />
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginTop: 6 }}>
+            录入和编辑在「数据分析」页面
           </div>
         </div>
       </aside>

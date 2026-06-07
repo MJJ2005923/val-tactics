@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { getAIConfig, getUserId } from './AISettings'
 import { useTactics } from '../../store/TacticsContext'
-import agents from '../../data/agents'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI } from '../../data/knowledgeBase'
+import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
+import { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import styles from './AIPanel.module.css'
 
 interface Message {
@@ -10,32 +12,8 @@ interface Message {
   model?: string
 }
 
-// 知识库：系统提示词
-function buildSystemPrompt(
-  mapName: string, side: string,
-  agentNames: string[], shapeCount: number
-): string {
-  let prompt = `你是一个无畏契约(VALORANT)战术教练助手。你正在帮用户在「${mapName}」这张地图上布置${side === 'attack' ? '进攻' : '防守'}战术。
-
-目前地图上有 ${shapeCount} 个技能标记。`
-
-  if (agentNames.length > 0) {
-    prompt += `\n场上特工: ${agentNames.join('、')}。`
-  }
-
-  prompt += `
-请用中文回答。回答简洁实用，像教练一样给出建议。
-
-关于无畏契约的知识：
-- 12 张地图: 亚海悬城、源工重镇、森寒冬港、霓虹町、深海明珠、裂变峡谷、隐士修所、日落之城、莲华古城、微风岛屿、幽邃地窖、盐海矿镇
-- 29 个特工分四个角色: 决斗者(进点)、先锋(信息)、控场者(烟雾)、哨卫(防守)
-- 每个特工有 C/Q/E/X 四个技能`
-
-  return prompt
-}
-
 export default function AIChat({ mapName }: { mapId: string; mapName: string }) {
-  const { abilityShapes, side } = useTactics()
+  const { abilityShapes, side, agentPositions, drawings, textAnnotations, markers, roster } = useTactics()
   const [messages, setMessages] = useState<Message[]>(() => {
     try { return JSON.parse(localStorage.getItem('val-tactics-chat') || '[]') } catch { return [] }
   })
@@ -73,16 +51,46 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
     setMessages(msgs)
 
     // 获取当前上下文
-    const agentNames = abilityShapes
-      .map(s => agents.find(a => a.id === s.agentId)?.name)
-      .filter((v): v is string => !!v)
+    const agentIds = abilityShapes
+      .map(s => s.agentId)
       .filter((v, i, a) => a.indexOf(v) === i)
+    const agentNames = getAgentNames(agentIds)
 
-    const systemPrompt = buildSystemPrompt(mapName, side, agentNames, abilityShapes.length)
+    const systemPrompt = buildKnowledgeBase(mapName, side, agentNames)
 
     const allMessages = [
       { role: 'user', content: systemPrompt },
-      { role: 'assistant', content: '明白了，我会根据当前战术布局给出建议。' },
+      { role: 'assistant', content: '明白。我是T教练，已掌握全部29位特工技能数据和12张地图信息，请随时提问。' },
+      // 注入棋盘基础信息（每次发送时实时读取开关状态）
+      ...(() => {
+        const enabled = (() => { try { return localStorage.getItem('val-tactics-show-board-info') !== 'false' } catch { return true } })()
+        if (!enabled) return []
+        return [
+          { role: 'user' as const, content: formatBoardStateForAI(mapName, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster) },
+          { role: 'assistant' as const, content: '收到，我已了解当前战术板的详细状态。' },
+        ]
+      })(),
+      // 注入比赛数据（根据用户选择）
+      ...(() => {
+        const ctx = loadMatchContext()
+        if (ctx.mode === 'none') return []
+        const matches = loadMatches()
+        if (matches.length === 0) return []
+
+        if (ctx.mode === 'single' && ctx.matchId) {
+          const match = matches.find(m => m.id === ctx.matchId)
+          if (!match) return []
+          return [
+            { role: 'user' as const, content: `以下是我选定的一场比赛数据，请针对这场比赛进行分析：\n\n${formatSingleMatchForAI(match)}` },
+            { role: 'assistant' as const, content: '收到，我已看到这场比赛的详细数据，可以针对这场比赛给你分析。' },
+          ]
+        }
+
+        return [
+          { role: 'user' as const, content: `以下是我的全部比赛记录数据，在后续分析中请结合这些个人数据：\n\n${formatMatchHistoryForAI(matches)}` },
+          { role: 'assistant' as const, content: '收到，我已掌握你的比赛记录和统计数据，可以据此分析你的个人表现和给出针对性建议。' },
+        ]
+      })(),
       ...msgs.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     ]
 

@@ -25,28 +25,50 @@
 
 /* === 套餐卡片 === */
 .plansList{display:flex;flex-direction:column;gap:5px}
-.planCard{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;background:rgba(227,73,237,.025);border:1px solid rgba(227,73,237,.06);cursor:default;transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden;transform-style:preserve-3d}
+.planCard{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;background:rgba(227,73,237,.025);border:1px solid rgba(227,73,237,.06);cursor:pointer;transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden;transform-style:preserve-3d}
 .planCard::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(5,248,248,.03) 50%,transparent 70%);transform:translateX(-100%);transition:transform .8s}
 .planCard:hover::after{transform:translateX(100%)}
-.planCard:hover{border-color:rgba(227,73,237,.2);box-shadow:0 4px 24px rgba(227,73,237,.08),0 0 0 1px rgba(227,73,237,.05)}
-.planCard:nth-child(1){animation:slideIn .45s ease .08s both}
-.planCard:nth-child(2){animation:slideIn .45s ease .16s both}
-.planCard:nth-child(3){animation:slideIn .45s ease .24s both}
-.planCard:nth-child(4){animation:slideIn .45s ease .32s both}
-@keyframes slideIn{from{opacity:0;transform:translateX(-30px)}}
-.planIcon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;z-index:1}
+.planCard:hover{border-color:rgba(227,73,237,.3);box-shadow:0 4px 24px rgba(227,73,237,.08),0 0 0 1px rgba(227,73,237,.05);transform:translateX(3px)}
+.planCard:nth-child(1){animation:slideIn .5s ease 0s both}
+.planCard:nth-child(2){animation:slideIn .5s ease .15s both}
+.planCard:nth-child(3){animation:slideIn .5s ease .3s both}
+@keyframes slideIn{from{opacity:0;transform:translateX(-50px)}}
+.planExpand{margin-top:-4px;margin-bottom:6px;padding:10px 14px;background:rgba(255,255,255,.02);border-radius:0 0 10px 10px;border:1px solid rgba(255,255,255,.04);border-top:none;font-size:11px;color:rgba(255,255,255,.5);animation:slideIn .35s ease both}
+.planIcon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;z-index:2}
 .planCard:hover .planIcon{transform:scale(1.12)}
 .planCard:nth-child(1) .planIcon{background:rgba(5,248,248,.1);border:1px solid rgba(5,248,248,.2)}
-.planCard:nth-child(2) .planIcon{background:rgba(227,73,237,.08);border:1px solid rgba(227,73,237,.2)}
-.planCard:nth-child(3) .planIcon{background:rgba(227,73,237,.14);border:1px solid rgba(227,73,237,.3)}
-.planCard:nth-child(4) .planIcon{background:linear-gradient(135deg,rgba(227,73,237,.22),rgba(5,248,248,.12));border:1px solid rgba(227,73,237,.45);animation:shimmer 3s ease-in-out infinite}
-@keyframes shimmer{0%,100%{border-color:rgba(227,73,237,.45)}50%{border-color:rgba(5,248,248,.55);box-shadow:0 0 20px rgba(5,248,248,.2)}}
-.planInfo{flex:1;min-width:0;position:relative;z-index:1}
+.planCard:nth-child(1) .planIcon svg{animation:iconPulse 3s ease-in-out infinite}
+.planCard:nth-child(2) .planIcon{background:rgba(227,73,237,.1);border:1px solid rgba(227,73,237,.25)}
+.planCard:nth-child(2) .planIcon svg{animation:iconPulse 3s ease-in-out .5s infinite}
+.planCard:nth-child(3) .planIcon{background:linear-gradient(135deg,rgba(227,73,237,.2),rgba(5,248,248,.1));border:1px solid rgba(227,73,237,.4);animation:shimmer 2.5s ease-in-out infinite}
+.planCard:nth-child(3) .planIcon svg{animation:iconSpin 6s linear infinite}
+@keyframes iconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes iconSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes shimmer{0%,100%{border-color:rgba(227,73,237,.4)}50%{border-color:rgba(5,248,248,.5);box-shadow:0 0 18px rgba(5,248,248,.15)}}
+.planInfo{flex:1;min-width:0;position:relative;z-index:2}
 .planName{font-size:13px;font-weight:700}
 .planCard:nth-child(1) .planName{color:#05F8F8}.planCard:nth-child(2) .planName{color:#e8b0f8}
 .planCard:nth-child(3) .planName{color:#e090f0}.planCard:nth-child(4) .planName{color:#d870e8}
 .planDetail{font-size:10px;color:rgba(227,73,237,.3);margin-top:2px}
-.planPrice{font-size:16px;font-weight:800;color:#f0d0f8;flex-shrink:0;position:relative;z-index:1}
+.planPrice{font-size:14px;font-weight:700;color:#f0d0f8;flex-shrink:0;position:relative;z-index:2}
+/* planCard 按钮化后的叠加状态 */
+.modelCardActive.planCard{border-color:rgba(5,248,248,.35) !important;background:rgba(5,248,248,.04) !important;box-shadow:0 0 20px rgba(5,248,248,.08) !important}
+.modelCardActive.planCard .planIcon{transform:scale(1.08)}
+.modelCardLocked.planCard{opacity:.35;cursor:not-allowed;filter:grayscale(.3)}
+.modelCardLocked.planCard:hover{border-color:rgba(227,73,237,.06);box-shadow:none}
+.modelCardLocked.planCard:hover .planIcon{transform:none}
+
+/* 套餐封锁状态 */
+.planCardLocked{opacity:.38;filter:grayscale(.35) blur(.3px);position:relative;overflow:hidden}
+.planCardLocked::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(255,255,255,.015) 4px,rgba(255,255,255,.015) 8px);z-index:0;pointer-events:none;animation:lockScan 6s linear infinite}
+@keyframes lockScan{0%{background-position:0 0}100%{background-position:16px 16px}}
+.planCardLocked:hover{filter:grayscale(.2) blur(0);opacity:.5;border-color:rgba(255,255,255,.08);box-shadow:none;transform:none}
+.planCardLocked .planIcon{filter:grayscale(.3);opacity:.5}
+.planCardLocked:hover .planIcon{transform:none;filter:grayscale(.1);opacity:.6}
+
+/* 当前套餐高亮 */
+.planCardCurrent{opacity:1;filter:none;background:rgba(5,248,248,.04);box-shadow:0 0 20px rgba(5,248,248,.08)}
+.planCardCurrent .planIcon{transform:scale(1.05);filter:none;opacity:1}
 
 /* === 模式按钮 === */
 .modelList{display:flex;flex-direction:column;gap:5px;margin-top:0 !important}
