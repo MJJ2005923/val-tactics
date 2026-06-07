@@ -1,7 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
+import { ModelIcon } from '../AIPage/AIPage'
 import styles from './AIPanel.module.css'
 
 interface AIModel { id: string; name: string; tier?: string; perf?: string; limit?: string; unlock?: string }
+
+// 本地今日用量（按模型分开）
+const USAGE_DATE = new Date().toISOString().slice(0,10)
+function getTodayUsage(modelId?: string): number {
+  try { return parseInt(localStorage.getItem(`val-tactics-usage-${USAGE_DATE}${modelId ? `-${modelId}` : ''}`) || '0') } catch { return 0 }
+}
+function getSharedUsage(): number {
+  return getTodayUsage('deepseek-v4-flash') + getTodayUsage('deepseek-chat')
+}
 interface AIConfig { apiKey: string; provider: string; model: string }
 
 const PROVIDER = 'deepseek'
@@ -152,7 +162,7 @@ export default function AISettings() {
       {/* 套餐状态 */}
       {isFree ? (
         <div className={styles.freeBadge} style={{ marginBottom: 10 }}>
-          {tier === 'free' ? '🎉 免费套餐 · ⚡快速模式 · 2次/天' : `✅ ${tierLabel}套餐 · ${TIER_LIMITS[tier]}次/天`}
+          {tier === 'free' ? `🎉 免费套餐 · 剩余 ${Math.max(0, 2 - getSharedUsage())} 次` : `✅ ${tierLabel}套餐 · ${TIER_LIMITS[tier]}次/天`}
         </div>
       ) : (
         <div className={styles.freeBadge} style={{ background: 'rgba(227,73,237,.08)', borderColor: 'rgba(227,73,237,.2)', color: '#f0a0f0' }}>
@@ -167,12 +177,15 @@ export default function AISettings() {
             const locked = isFree && !isModelAvailable(tier, isFree, m)
             const tierLimit = isFree ? TIER_LIMITS[tier] : Infinity
             const cap = MODEL_CAPS[m.id]?.[tier]
-            const modelLimit = cap !== undefined ? `${cap}次/天` : `${tierLimit}次/天`
+            const usage = cap !== undefined ? getTodayUsage(m.id) : getSharedUsage()
+            const remaining = Math.max(0, (cap ?? tierLimit) - usage)
+            const modelLimit = isFree ? `剩余 ${remaining} 次` : `${cap ?? tierLimit}次/天`
             return (
               <button key={m.id}
                 onClick={() => !locked && setConfig((c: AIConfig) => ({ ...c, model: m.id }))}
                 className={`${styles.modelBtn} ${config.model === m.id ? styles.modelBtnActive : ''} ${locked ? styles.modelBtnLocked : ''}`}>
                 <div className={styles.modelRow}>
+                  <ModelIcon modelId={m.id} size={22} />
                   <span>{m.name}</span>
                   {m.unlock && (
                     <span className={`${styles.unlockTag} ${m.tier === '免费' ? styles.unlockFree : styles.unlockPaid}`}>

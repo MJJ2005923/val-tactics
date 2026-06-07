@@ -126,6 +126,12 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content, model: config.model }])
+      if (isFree) {
+        const date = new Date().toISOString().slice(0,10)
+        const k = `val-tactics-usage-${date}-${config.model}`
+        const n = (parseInt(localStorage.getItem(k) || '0')) + 1
+        localStorage.setItem(k, String(n))
+      }
     } catch (err: any) {
       const msg = err.message || ''
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {

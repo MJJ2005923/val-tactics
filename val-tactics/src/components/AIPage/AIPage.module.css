@@ -84,7 +84,9 @@
 .modelCardLocked{opacity:.42;cursor:not-allowed;filter:grayscale(.2)}
 .modelIcon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;background:rgba(227,73,237,.04);border:1px solid rgba(227,73,237,.1);transition:all .25s}
 .modelCardActive .modelIcon{background:rgba(5,248,248,.12);border-color:rgba(5,248,248,.2);animation:iconPulse 2.5s ease-in-out infinite}
-@keyframes iconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes iconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.modelIcon svg{transition:transform .3s ease}
+.modelCard:hover .modelIcon svg{transform:scale(1.1)}
 .modelInfo{flex:1;min-width:0}
 .modelName{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#d0c0e0}
 .modelDesc{font-size:10px;color:rgba(227,73,237,.3);margin-top:2px}
