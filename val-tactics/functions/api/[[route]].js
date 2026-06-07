@@ -116,6 +116,32 @@ export async function onRequest(context) {
     'TEST-NO-OWNKEY':  { tier: 'free',   expiresAt: 0 },
   } : {}
 
+  // 免邮件注册（绕过 SMTP）
+  if (url.pathname === '/api/signup') {
+    const { email, password } = await request.json()
+    if (!email || !password) {
+      return new Response(JSON.stringify({ error: '缺少邮箱或密码' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    try {
+      const resp = await fetch(`https://zwtpeyvqbllrpregjpyd.supabase.co/auth/v1/admin/users`, {
+        method: 'POST',
+        headers: {
+          'apikey': 'sb_secret_pgyAfwce5NPH71pee-XVfQ_8X-t4QaW',
+          'Authorization': 'Bearer sb_secret_pgyAfwce5NPH71pee-XVfQ_8X-t4QaW',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, email_confirm: true }),
+      })
+      const data = await resp.json()
+      if (resp.ok) {
+        return new Response(JSON.stringify({ ok: true, user: data }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+      return new Response(JSON.stringify({ error: data.msg || '注册失败' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   // 激活码验证
   if (url.pathname === '/api/activate') {
     const { code, userId } = await request.json()

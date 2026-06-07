@@ -35,9 +35,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signUp = async (email: string, password: string) => {
+    // 先试 Supabase 注册
     const { error } = await supabase.auth.signUp({ email, password })
-    if (error) return { error: error.message }
-    return {}
+    if (!error) return {}
+    // SMTP 失败 → 走免邮通道
+    if (error.message?.includes('email') || error.message?.includes('sending')) {
+      try {
+        const resp = await fetch('/api/signup', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        })
+        if (resp.ok) return {}
+        const data = await resp.json()
+        return { error: data.error || '注册失败' }
+      } catch {
+        return { error: '网络错误，请重试' }
+      }
+    }
+    return { error: error.message }
   }
 
   const signIn = async (email: string, password: string) => {
