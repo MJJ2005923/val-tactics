@@ -299,11 +299,14 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <AgentPanel animate={panelAnimate} />
         </aside>
         <div className={`canvas-area ${canvasAnimate ? 'canvas-area--enter' : ''}`}>
-          {/* 装饰形状 — 对标顶配.sh1/.sh2 */}
-          <div className="canvas-deco canvas-deco-ring" />
-          <div className="canvas-deco canvas-deco-bar" />
-          <div className="canvas-deco canvas-deco-dot canvas-deco-dot1" />
-          <div className="canvas-deco canvas-deco-dot canvas-deco-dot2" />
+          {/* 四角L形装饰 — 对标顶配.corner */}
+          <div className="canvas-corner canvas-cornerTL"><div className="canvas-cornerDot" /></div>
+          <div className="canvas-corner canvas-cornerTR"><div className="canvas-cornerDot" /></div>
+          <div className="canvas-corner canvas-cornerBL"><div className="canvas-cornerDot" /></div>
+          <div className="canvas-corner canvas-cornerBR"><div className="canvas-cornerDot" /></div>
+          {/* 旋转光环 — 对标顶配.halo */}
+          <div className="canvas-halo" />
+          <div className="canvas-halo2" />
           <ToolPalette />
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
