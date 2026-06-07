@@ -918,6 +918,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     <div
       ref={(node) => { containerRef.current = node }}
       className={`${styles.container} ${isOver ? styles.containerOver : ''} ${toolMode === 'text' ? styles.containerText : ''}`}
+      style={toolMode === 'pan' ? { cursor: 'grab' } : panning ? { cursor: 'grabbing' } : undefined}
       onWheel={handleWheel}
       onClick={handleCanvasClick}
       onContextMenu={e => e.preventDefault()}
@@ -926,7 +927,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       onDrop={handleDrop}
       onMouseDown={(e) => {
         // 右键/中键拖拽平移
-        if (e.button === 2 || e.button === 1) {
+        if (e.button === 2 || e.button === 1 || toolMode === 'pan') {
           e.preventDefault()
           setPanning({ sx: e.clientX, sy: e.clientY, ox: panX, oy: panY })
           return

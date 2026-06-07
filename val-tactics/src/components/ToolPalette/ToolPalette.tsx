@@ -5,6 +5,7 @@ import styles from './ToolPalette.module.css'
 
 const tools: { mode: ToolMode; icon: string; label: string }[] = [
   { mode: 'select', icon: '✋', label: '选择' },
+  { mode: 'pan', icon: '✋', label: '拖拽' },
   { mode: 'freehand', icon: '✏️', label: '画笔' },
   { mode: 'line', icon: '📏', label: '直线' },
   { mode: 'arrow', icon: '➡️', label: '箭头' },

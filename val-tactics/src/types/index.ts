@@ -86,7 +86,7 @@ export interface AbilityShape {
 }
 
 // ====== 工具模式 ======
-export type ToolMode = 'select' | 'freehand' | 'line' | 'arrow' | 'rect' | 'circle' | 'text' | 'agent' | 'eraser'
+export type ToolMode = 'select' | 'pan' | 'freehand' | 'line' | 'arrow' | 'rect' | 'circle' | 'text' | 'agent' | 'eraser'
 
 // ====== 撤销重做快照 ======
 export interface Snapshot {
