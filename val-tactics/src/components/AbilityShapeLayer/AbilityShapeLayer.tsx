@@ -609,16 +609,12 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     x={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90)) - 14}
                     y={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90)) - 14}
                     width={28} height={28} style={{ pointerEvents: 'none' }} />
-                  {/* 角度弧线标记 */}
-                  <path d={`M ${leftX} ${leftY} A ${len * 0.2} ${len * 0.2} 0 0 1 ${rightX} ${rightY}`}
-                    fill="none" stroke={color} strokeWidth={1} opacity={0.5} style={{ pointerEvents: 'none' }} />
                   {/* 旋转手柄 */}
                   {isSelected && (
                     <circle cx={tipX} cy={tipY} r={6} fill="#fff" stroke="#333" strokeWidth={2}
                       style={{ cursor: 'grab', filter: 'drop-shadow(0 0 4px black)' }}
                       onMouseDown={(e) => { e.stopPropagation(); handleRotMouseDown(e as unknown as React.MouseEvent, s) }} />
                   )}
-                  {/* 锥形外圈（SVG内） */}
                   {s.outerRadius != null && (
                     <circle cx={scx} cy={scy} r={s.outerRadius * mapW * scale}
                       fill={`${color}10`} stroke={color} strokeWidth={1.5}
