@@ -596,6 +596,12 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                   <path d={openD} fill="none" stroke={isSelected ? '#fff' : color} strokeWidth={isSelected ? 3 : 2}
                     style={{ cursor: 'move', transition: 'stroke 0.15s' }}
                     onMouseDown={(e) => handleMouseDown(e, s)} />
+                  {/* 迷核X末端半圆虚线 */}
+                  {s.abilityId === 'miks-x' && (
+                    <path d={`M ${leftX} ${leftY} A ${len} ${len} 0 0 1 ${rightX} ${rightY}`}
+                      fill="none" stroke={color} strokeWidth={2}
+                      strokeDasharray="6 4" style={{ pointerEvents: 'none' }} />
+                  )}
                   {/* 扫描弧线 (recon) */}
                   {info.type === 'recon' && [0.3, 0.6].map((frac, i) => {
                     const arcR = len * frac
