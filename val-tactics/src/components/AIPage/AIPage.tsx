@@ -216,13 +216,37 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [keyInput, setKeyInput] = useState(config.apiKey)
-  const [showKeyInput, setShowKeyInput] = useState(false)
   const [showBoardInfo, setShowBoardInfo] = useState(() => {
     try { return localStorage.getItem('val-tactics-show-board-info') !== 'false' } catch { return true }
   })
-  const [tier, setTier] = useState('free')
+  const checkExpiry = (key: string) => {
+    const ts = parseInt(localStorage.getItem(key) || '0')
+    return ts && (Date.now() - ts) < 30 * 86400000
+  }
+  const [tier, setTier] = useState(() => {
+    const stored = localStorage.getItem('val-tactics-tier')
+    if (stored && stored !== 'free' && checkExpiry('val-tactics-tier-at')) return stored
+    return 'free'
+  })
   const [actCode, setActCode] = useState('')
   const [actStatus, setActStatus] = useState('')
+  const [ownkeyActive, setOwnkeyActive] = useState(() => {
+    if (localStorage.getItem('val-tactics-ownkey') !== '1') return false
+    return checkExpiry('val-tactics-ownkey-at')
+  })
+  const activateOwnkey = () => {
+    setOwnkeyActive(true)
+    localStorage.setItem('val-tactics-ownkey', '1')
+    localStorage.setItem('val-tactics-ownkey-at', String(Date.now()))
+    setShowOwnkey(false)
+    setActCode('')
+  }
+  const deactivateOwnkey = () => {
+    setOwnkeyActive(false)
+    localStorage.removeItem('val-tactics-ownkey')
+    localStorage.removeItem('val-tactics-ownkey-at')
+  }
+  const [showOwnkey, setShowOwnkey] = useState(false)
   const [todayUsed, setTodayUsed] = useState(() => getSharedUsage())
   const [showPlans, setShowPlans] = useState(false)
   const [showModels, setShowModels] = useState(true)
@@ -273,14 +297,13 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
 
   const saveKey = () => {
     setConfig((c: AIConfig) => ({ ...c, apiKey: keyInput }))
-    setShowKeyInput(false)
     setTimeout(() => fetchModels(), 100)
   }
 
   const send = async () => {
     const text = input.trim()
     if (!text || loading) return
-    if (!isFree && !config.apiKey) { setShowKeyInput(true); return }
+    if (!isFree && !config.apiKey) return
     if (!config.model) return
 
     setInput(''); setLoading(true)
@@ -434,6 +457,87 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
           )}
         </div>
 
+        {/* ====== 自备 API ====== */}
+        <div className={styles.sidebarSection}>
+          <h3>🔌 自备 API</h3>
+          {ownkeyActive ? (
+            <div style={{
+              padding: 12, borderRadius: 10,
+              border: '1px solid rgba(5,248,248,.15)',
+              background: 'linear-gradient(135deg, rgba(5,248,248,.06), rgba(227,73,237,.03))',
+            }}>
+              <div style={{ fontSize: 11, color: '#05F8F8', marginBottom: 8, fontWeight: 500 }}>✅ 已解锁 · 输入你的 Key</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input className={styles.keyInput} type="password" value={keyInput}
+                  placeholder="sk-..." onChange={e => setKeyInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveKey() }} style={{ flex: 1, fontSize: 11 }} />
+                <button className={styles.keySaveBtn} onClick={saveKey}>确认</button>
+              </div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,.15)', marginTop: 5 }}>
+                支持 DeepSeek · OpenAI · Anthropic · Google
+              </div>
+              <div style={{ marginTop: 6, textAlign: 'right' }}>
+                <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
+                  onClick={deactivateOwnkey}>
+                  取消激活
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div
+                onClick={() => setShowOwnkey(v => !v)}
+                style={{
+                  padding: 14, borderRadius: 10, cursor: 'pointer',
+                  border: '2px dashed rgba(192,208,255,.12)',
+                  background: 'rgba(192,208,255,.02)',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  transition: 'all .3s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(192,208,255,.3)'; e.currentTarget.style.background = 'rgba(192,208,255,.05)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(192,208,255,.12)'; e.currentTarget.style.background = 'rgba(192,208,255,.02)' }}
+              >
+                <div style={{ width: 38, height: 38, borderRadius: 8, background: 'rgba(192,208,255,.06)', border: '1px solid rgba(192,208,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 22 22">
+                    <rect x="4" y="6" width="14" height="10" rx="2" fill="none" stroke="#c0d0ff" strokeWidth="1.4" opacity=".7"/>
+                    <circle cx="8" cy="11" r="1.5" fill="#c0d0ff" opacity=".5"/>
+                    <path d="M12 11h5" stroke="#c0d0ff" strokeWidth="1" opacity=".3" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#c0d0ff' }}>自备 API Key</div>
+                  <div style={{ fontSize: 10, color: 'rgba(192,208,255,.3)', marginTop: 1 }}>使用自有 Key · 不限制次数和模型</div>
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#c0d0ff', flexShrink: 0 }}>¥19.9</div>
+              </div>
+              {showOwnkey && (
+                <div style={{
+                  marginTop: 8, padding: 12, borderRadius: 8,
+                  border: '1px solid rgba(192,208,255,.08)',
+                  background: 'rgba(192,208,255,.02)',
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.35)' }}>
+                    💡 ¥19.9/月 · 填入你自己的 API Key 即可使用全部模型
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <input className={styles.keyInput} value={actCode} placeholder="输入激活码..."
+                      onChange={e => { setActCode(e.target.value); setActStatus('') }}
+                      onKeyDown={e => { if (e.key === 'Enter') { activateCode(actCode).then(r => { if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() } else setActStatus('❌ '+ (r.error||'失败')) }) } }}
+                      style={{ flex: 1, fontSize: 11 }} />
+                    <button className={styles.keySaveBtn} onClick={async () => {
+                      const r = await activateCode(actCode)
+                      if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() }
+                      else setActStatus('❌ '+ (r.error||'失败'))
+                    }}>激活</button>
+                  </div>
+                  {actStatus && <div style={{ fontSize: 10, color: actStatus.includes('✅')?'#05F8F8':'#E349ED' }}>{actStatus}</div>}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* ====== 模式选择 ====== */}
         <div className={styles.sidebarSection}>
           <h3 onClick={() => setShowModels(v => !v)} style={{ cursor: 'pointer' }}>
@@ -486,26 +590,23 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
               <input className={styles.keyInput} value={actCode} placeholder="输入激活码升级套餐..."
                 onChange={e => { setActCode(e.target.value); setActStatus('') }}
-                onKeyDown={e => { if (e.key === 'Enter') { const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
+                onKeyDown={e => { if (e.key === 'Enter') { const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
                 style={{ flex: 1, fontSize: 11 }} />
               <button className={styles.keySaveBtn} onClick={async () => {
                 const r = await activateCode(actCode)
-                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') }
+                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); setActCode(''); setActStatus('✅ 激活成功！') }
                 else setActStatus('❌ ' + (r.error || '激活失败'))
               }}>激活</button>
             </div>
             {actStatus && (
               <div style={{ fontSize: 11, marginTop: 4, color: actStatus.includes('✅') ? '#05F8F8' : '#E349ED' }}>{actStatus}</div>
             )}
-            <button className={styles.keyBtn} onClick={() => setShowKeyInput(!showKeyInput)}>
-              🔑 自备 API Key 解锁全部
-            </button>
-            {showKeyInput && (
-              <div className={styles.keyEdit} style={{ marginTop: 8 }}>
-                <input className={styles.keyInput} type="password" value={keyInput}
-                  placeholder="粘贴 API Key..." onChange={e => setKeyInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') saveKey() }} />
-                <button className={styles.keySaveBtn} onClick={saveKey}>确认</button>
+            {tier !== 'free' && (
+              <div style={{ marginTop: 6, textAlign: 'right' }}>
+                <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
+                  onClick={() => { setTier('free'); localStorage.removeItem('val-tactics-tier'); localStorage.removeItem('val-tactics-tier-at') }}>
+                  取消套餐
+                </span>
               </div>
             )}
           </div>

@@ -110,6 +110,9 @@ export async function onRequest(context) {
     'TEST-BASIC':    { tier: 'basic',    expiresAt: 0 },
     'TEST-ADVANCED': { tier: 'advanced', expiresAt: 0 },
     'TEST-PRO':      { tier: 'pro',      expiresAt: 0 },
+    'TEST-OWNKEY':   { tier: 'ownkey',   expiresAt: 0 },
+    'TEST-FREE':     { tier: 'free',     expiresAt: 0 },
+    'TEST-NO-OWNKEY':  { tier: 'free',     expiresAt: 0 },
   }
 
   // 激活码验证
