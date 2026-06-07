@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>画布背景方案</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px}
+h2{font-size:12px;letter-spacing:3px;color:rgba(5,248,248,.35)}
+.row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.card{text-align:center}.card p{font-size:10px;color:rgba(227,73,237,.25);margin-top:6px}
+.canvas{width:400px;height:280px;border:1px solid rgba(227,73,237,.16);border-radius:10px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.map{width:70%;height:65%;border:1px solid rgba(5,248,248,.12);border-radius:6px;position:relative;z-index:1}
+</style></head><body>
+<h2>画布背景方案（4种）</h2>
+<div class="row" id="r"></div>
+<script>
+function create(name, bgStyle, extra){
+  const c=document.createElement('div');c.className='canvas';c.style.cssText=bgStyle
+  // 地图占位
+  const m=document.createElement('div');m.className='map'
+  m.style.cssText='background:rgba(10,5,20,.6);border:1px solid rgba(5,248,248,.08);border-radius:8px'
+  c.appendChild(m)
+  // 额外装饰
+  if(extra)extra(c)
+  const w=document.createElement('div');w.className='card';w.appendChild(c)
+  const p=document.createElement('p');p.textContent=name;w.appendChild(p)
+  document.getElementById('r').appendChild(w)
+}
+
+// 方案A: 暗底+中心光晕（当前方案升级版）
+create('A · 中心光晕','background:radial-gradient(ellipse 300px 200px at 50% 45%,rgba(227,73,237,.06),transparent 60%),radial-gradient(ellipse 200px 150px at 25% 80%,rgba(5,248,248,.03),transparent 55%),#05020c')
+
+// 方案B: 细网格+微光
+create('B · 暗底网格','background: #05020c', c=>{
+  const g=document.createElement('div');g.style.cssText='position:absolute;inset:0;background-image:linear-gradient(rgba(227,73,237,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(227,73,237,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none'
+  c.appendChild(g)
+  // 光晕中心
+  const glow=document.createElement('div');glow.style.cssText='position:absolute;inset:0;background:radial-gradient(ellipse 250px 180px at 50% 45%,rgba(227,73,237,.05),transparent 60%);pointer-events:none'
+  c.appendChild(glow)
+})
+
+// 方案C: 紫色三角光+颗粒纹理
+create('C · 棱角光','background:#05020c', c=>{
+  const g=document.createElement('div');g.style.cssText='position:absolute;inset:0;background:radial-gradient(ellipse 350px 250px at 55% 10%,rgba(227,73,237,.1),transparent 60%),radial-gradient(ellipse 250px 200px at 10% 80%,rgba(5,248,248,.05),transparent 55%),radial-gradient(ellipse 200px 150px at 80% 70%,rgba(227,73,237,.06),transparent 50%);pointer-events:none'
+  c.appendChild(g)
+  // 噪点纹理
+  const n=document.createElement('div');n.style.cssText='position:absolute;inset:0;opacity:.015;background-image:url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'.7\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E");pointer-events:none'
+  c.appendChild(n)
+})
+
+// 方案D: 青紫双星+扫描线
+create('D · 双星扫描','background:#05020c', c=>{
+  const g=document.createElement('div');g.style.cssText='position:absolute;inset:0;background:radial-gradient(ellipse 300px 200px at 50% 40%,rgba(227,73,237,.07),transparent 60%),radial-gradient(ellipse 200px 150px at 55% 50%,rgba(5,248,248,.03),transparent 50%);pointer-events:none'
+  c.appendChild(g)
+  // 扫描线
+  const scan=document.createElement('div');scan.style.cssText='position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(5,248,248,.015) 2px,rgba(5,248,248,.015) 4px);pointer-events:none'
+  c.appendChild(scan)
+  // 装饰光点
+  for(let i=0;i<3;i++){
+    const d=document.createElement('div');d.style.cssText=`position:absolute;width:${4+i*2}px;height:${4+i*2}px;border-radius:50%;background:#05F8F8;box-shadow:0 0 ${8+i*4}px #05F8F8;opacity:${.15+i*.05};pointer-events:none;top:${20+i*15}%;left:${25+i*20}%`
+    c.appendChild(d)
+  }
+})
+</script></body></html>

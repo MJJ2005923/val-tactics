@@ -1,0 +1,43 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><title>方案C · 星空粒子</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#05020c;display:flex;align-items:center;justify-content:center;min-height:100vh;gap:16px;padding:20px;flex-direction:column}
+h2{font-size:12px;letter-spacing:3px;color:rgba(5,248,248,.35)}
+.canvas{width:900px;height:600px;border:1px solid rgba(227,73,237,.16);border-radius:12px;position:relative;overflow:hidden;background:#05020c}
+.map{position:absolute;top:12%;left:10%;width:80%;height:76%;border-radius:10px;background:rgba(10,5,20,.6);border:1px solid rgba(5,248,248,.08);z-index:1}
+/* 三光源 */
+.canvas::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 500px 350px at 55% 12%,rgba(227,73,237,.1),transparent 60%),radial-gradient(ellipse 350px 250px at 10% 82%,rgba(5,248,248,.05),transparent 55%),radial-gradient(ellipse 300px 200px at 85% 70%,rgba(227,73,237,.06),transparent 50%);animation:bgBreathe 8s ease-in-out infinite alternate}
+@keyframes bgBreathe{0%{opacity:.6}100%{opacity:1}}
+/* 细网格 */
+.canvas::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(227,73,237,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(227,73,237,.02) 1px,transparent 1px);background-size:50px 50px}
+/* 粒子 */
+.dot{position:absolute;border-radius:50%;pointer-events:none;z-index:0}
+</style></head><body>
+<h2>方案C · 星空粒子优化版</h2>
+<div class="canvas" id="c"><div class="map"></div></div>
+<script>
+const c=document.getElementById('c')
+const colors=['rgba(5,248,248,.5)','rgba(227,73,237,.45)','rgba(180,220,255,.4)','rgba(255,150,220,.4)','rgba(5,248,248,.3)']
+const glows=['0 0 12px rgba(5,248,248,.4)','0 0 10px rgba(227,73,237,.35)','0 0 8px rgba(180,200,255,.3)','0 0 10px rgba(255,150,220,.3)','0 0 6px rgba(5,248,248,.25)']
+
+// 30个粒子
+for(let i=0;i<30;i++){
+  const dot=document.createElement('div');dot.className='dot'
+  const size=2+Math.random()*5
+  const ci=Math.floor(Math.random()*colors.length)
+  dot.style.cssText=`width:${size}px;height:${size}px;background:${colors[ci]};box-shadow:${glows[ci]};top:${Math.random()*100}%;left:${Math.random()*100}%;opacity:0;animation:float${Math.floor(Math.random()*3)} ${6+Math.random()*12}s ease-in-out ${Math.random()*5}s infinite`
+  c.appendChild(dot)
+}
+
+// 大星（少数几个更亮的）
+for(let i=0;i<5;i++){
+  const s=document.createElement('div');s.className='dot'
+  s.style.cssText=`width:8px;height:8px;background:rgba(5,248,248,.7);box-shadow:0 0 18px rgba(5,248,248,.5),0 0 36px rgba(5,248,248,.15);top:${10+Math.random()*80}%;left:${10+Math.random()*80}%;opacity:0;animation:bigFloat ${8+Math.random()*8}s ease-in-out ${Math.random()*4}s infinite`
+  c.appendChild(s)
+}
+</script>
+<style>
+@keyframes float0{0%,100%{opacity:.1;transform:translateY(0) translateX(0)}50%{opacity:.6;transform:translateY(-20px) translateX(8px)}}
+@keyframes float1{0%,100%{opacity:.15;transform:translateY(0) translateX(0)}50%{opacity:.7;transform:translateY(-14px) translateX(-6px)}}
+@keyframes float2{0%,100%{opacity:.08;transform:translateY(0) translateX(0)}50%{opacity:.5;transform:translateY(-8px) translateX(10px)}}
+@keyframes bigFloat{0%,100%{opacity:.15;transform:translateY(0)}50%{opacity:.8;transform:translateY(-24px)}}
+</style></body></html>
