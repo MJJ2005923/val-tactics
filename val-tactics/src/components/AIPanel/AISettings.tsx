@@ -26,7 +26,7 @@ const TIER_MODELS: Record<string, string[]> = {
 
 // 套餐对应每日限额
 const TIER_LIMITS: Record<string, number> = {
-  free: 2,
+  free: 5,
   basic: 30,
   advanced: 40,
   pro: 100,
@@ -162,7 +162,7 @@ export default function AISettings() {
       {/* 套餐状态 */}
       {isFree ? (
         <div className={styles.freeBadge} style={{ marginBottom: 10 }}>
-          {tier === 'free' ? `🎉 免费套餐 · 剩余 ${Math.max(0, 2 - getSharedUsage())} 次` : `✅ ${tierLabel}套餐 · ${TIER_LIMITS[tier]}次/天`}
+          {tier === 'free' ? `🎉 免费套餐 · 剩余 ${Math.max(0, 5 - getSharedUsage())} 次` : `✅ ${tierLabel}套餐 · ${TIER_LIMITS[tier]}次/天`}
         </div>
       ) : (
         <div className={styles.freeBadge} style={{ background: 'rgba(227,73,237,.08)', borderColor: 'rgba(227,73,237,.2)', color: '#f0a0f0' }}>

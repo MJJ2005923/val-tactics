@@ -32,7 +32,7 @@ function getSharedUsage(): number {
 }
 
 const PLANS = [
-  { name: '免费', tier: 'free', detail: '快速模式 · 2 次 / 天', price: '¥0', color: '#05F8F8' },
+  { name: '免费', tier: 'free', detail: '快速模式 · 5 次 / 天', price: '¥0', color: '#05F8F8' },
   { name: '基础', tier: 'basic', detail: '快速 + 均衡', price: '¥24.9/月', color: '#05F8F8' },
   { name: '进阶', tier: 'advanced', detail: '全部模式', price: '¥59.9/月', color: '#E349ED' },
   { name: '专业', tier: 'pro', detail: '全部模式', price: '¥99.9/月', color: '#f0c0ff' },
@@ -169,7 +169,7 @@ const TIER_MODELS: Record<string, string[]> = {
 }
 
 // 每套餐总次数 + 特殊模型限制（基础模型共享总次数）
-const TIER_TOTAL_LIMITS: Record<string, number> = { free: 2, basic: 30, advanced: 40, pro: 100 }
+const TIER_TOTAL_LIMITS: Record<string, number> = { free: 5, basic: 30, advanced: 40, pro: 100 }
 // 特殊限制：推理和深度有独立次数帽
 const MODEL_CAPS: Record<string, Record<string, number>> = {
   'deepseek-reasoner':  { advanced: 3, pro: 20 },
@@ -551,7 +551,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
         {isFree ? (
           <div className={styles.sidebarSection}>
             <div className={styles.freeBanner}>
-              {tier === 'free' ? `🎉 免费套餐 · 剩余 ${Math.max(0, 2 - todayUsed)} 次` : `✅ ${PLANS.find(p => p.tier === tier)?.name || tier}套餐`}
+              {tier === 'free' ? `🎉 免费套餐 · 剩余 ${Math.max(0, 5 - todayUsed)} 次` : `✅ ${PLANS.find(p => p.tier === tier)?.name || tier}套餐`}
             </div>
             {/* 激活码 */}
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -749,7 +749,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
                 </svg>
               </div>
               <h2>你好，我是你的 T教练</h2>
-              <p>{isFree ? '免费套餐 · 每日2次 · 试试问我：' : '全部模式已解锁，尽情使用。试试问我：'}</p>
+              <p>{isFree ? '免费套餐 · 每日5次 · 试试问我：' : '全部模式已解锁，尽情使用。试试问我：'}</p>
               <div className={styles.quickPrompts}>
                 {quickPrompts.map((p, i) => (
                   <button key={i} className={styles.quickBtn} onClick={() => { setInput(p); inputRef.current?.focus() }}>{p}</button>
