@@ -32,8 +32,8 @@ export const agentImages: Record<string, string> = {
   tejo: 'tejo', vyse: 'vyse', veto: 'pine', miks: 'iris', waylay: 'terra'
 }
 
-// 游戏内技能范围 (地图 1800x1200, 1m=7px, norm=0.0039)
-const M = 7 / 1800 // 1米对应的标准化坐标
+// 游戏内技能范围 (新地图2048px, 微调补偿)
+const M = 7 / 1600 // 1米对应的标准化坐标
 
 const typeDefaults: Record<AbilityType, AbilityShapeConfig> = {
   smoke:   { shape: 'circle', radius: 4.5 * M },     // 烟雾 ~4-5m
@@ -48,83 +48,83 @@ const typeDefaults: Record<AbilityType, AbilityShapeConfig> = {
 // 每个技能根据游戏内实际数据的精确覆盖
 const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   // === 烟雾 (半径单位: 米) ===
-  'brimstone-sky-smoke':      { radius: 5.5 * M },   // 5.5m
-  'omen-dark-cover':          { radius: 5.5 * M },    // 5.5m
-  'omen-shrouded-step':        { shape: 'line', length: 20 * M, thickness: 0.003, iconOnly: true },
-  'omen-paranoia':             { shape: 'rect', length: 40 * M, width: 15 * M, iconOnly: true },
-  'astra-nebula':             { radius: 6 * M },   // 6m
-  'viper-poison-cloud':       { radius: 6 * M },    // 6m
-  'jett-cloudburst':          { shape: 'circle', radius: 4.5 * M },    // 4.5m 瞬发烟
+  'brimstone-sky-smoke':      { radius: 6.5 * M },   // 6.5m
+  'omen-dark-cover':          { radius: 6.5 * M },    // 6.5m
+  'omen-shrouded-step':        { shape: 'line', length: 25 * M, thickness: 0.003, iconOnly: true },
+  'omen-paranoia':             { shape: 'rect', length: 43 * M, width: 15 * M, iconOnly: true },
+  'astra-nebula':             { radius: 7 * M },   // 7m
+  'viper-poison-cloud':       { radius: 7 * M },    // 7m
+  'jett-cloudburst':          { shape: 'circle', radius: 5 * M },    // 5m 瞬发烟
   'jett-tailwind':             { shape: 'line', length: 18 * M, thickness: 0.003, iconOnly: true },
-  'harbor-cove':              { shape: 'circle', radius: 6.5 * M },    // 6.5m 护盾
-  'harbor-reckoning':         { shape: 'line', length: 50 * M, thickness: 0.006 },
-  'sova-owl-drone':           { shape: 'line', length: 55 * M, thickness: 0.004, iconOnly: true },
-  'clove-ruse':               { radius: 5.5 * M },    // 5.5m
-  'clove-meddle':              { radius: 5.5 * M, iconOnly: true },
-  'cypher-cyber-cage':        { radius: 5.5 * M, iconOnly: true },    // 5.5m 网牢
+  'harbor-cove':              { shape: 'circle', radius: 7 * M },    // 7m 护盾
+  'harbor-reckoning':         { shape: 'line', length: 55 * M, thickness: 0.006 },
+  'sova-owl-drone':           { shape: 'line', length: 50 * M, thickness: 0.004, iconOnly: true },
+  'clove-ruse':               { radius: 6.5 * M },    // 6.5m
+  'clove-meddle':              { radius: 6.5 * M, iconOnly: true },
+  'cypher-cyber-cage':        { radius: 6 * M, iconOnly: true },    // 6m 网牢
 
   // === 燃烧弹/伤害 ===
-  'brimstone-incendiary':     { radius: 6 * M, iconOnly: true },
-  'killjoy-nanoswarm':        { radius: 6 * M, iconOnly: true },
-  'raze-paint-shells':        { shape: 'circle', radius: 6.5 * M, iconOnly: true },
-  'gekko-mosh-pit':           { radius: 7 * M, iconOnly: true },
+  'brimstone-incendiary':     { radius: 6.5 * M, iconOnly: true },
+  'killjoy-nanoswarm':        { radius: 6.5 * M, iconOnly: true },
+  'raze-paint-shells':        { shape: 'circle', radius: 8 * M, iconOnly: true },
+  'gekko-mosh-pit':           { radius: 7.5 * M, iconOnly: true },
   'raze-boom-bot':            { radius: 2.0 * M },
-  'kayo-frag':                { radius: 5.5 * M, iconOnly: true },
-  'tejo-c':                    { shape: 'line', length: 35 * M, thickness: 0.004, radius: 22 * M, iconOnly: true },
-  'tejo-q':                    { shape: 'line', length: 25 * M, thickness: 0.005, radius: 7 * M, iconOnly: true },
+  'kayo-frag':                { radius: 6 * M, iconOnly: true },
+  'tejo-c':                    { shape: 'line', length: 35 * M, thickness: 0.004, radius: 20 * M, iconOnly: true },
+  'tejo-q':                    { shape: 'line', length: 25 * M, thickness: 0.005, radius: 7.5 * M, iconOnly: true },
   'tejo-e':                    { shape: 'circle', radius: 7 * M, iconOnly: true },
-  'tejo-x':                    { shape: 'line', length: 45 * M, width: 20 * M, radius: 5 * M, iconOnly: true },
-  'sova-shock-bolt':          { shape: 'circle', radius: 5.5 * M, iconOnly: true },
-  'vyse-razorvine':           { radius: 8 * M, iconOnly: true },
-  'vyse-steel-garden':         { radius: 40 * M, iconOnly: true },
+  'tejo-x':                    { shape: 'line', length: 50 * M, width: 23 * M, radius: 5 * M, iconOnly: true },
+  'sova-shock-bolt':          { shape: 'circle', radius: 6.5 * M, iconOnly: true },
+  'vyse-razorvine':           { radius: 8.5 * M, iconOnly: true },
+  'vyse-steel-garden':         { radius: 45 * M, iconOnly: true },
   'vyse-arc-rose':             { shape: 'circle', radius: 1.2 * M, iconOnly: true },
-  'vyse-shear':                { shape: 'line', length: 15 * M, thickness: 0.01 },
+  'vyse-shear':                { shape: 'line', length: 18.5 * M, thickness: 0.01 },
 
   // === 终极技能 ===
-  'brimstone-orbital-strike': { radius: 12.0 * M, iconOnly: true },
+  'brimstone-orbital-strike': { radius: 14 * M, iconOnly: true },
   'viper-snake-bite':         { radius: 6 * M, iconOnly: true },
   'viper-pit':                { radius: 12.0 * M },
-  'raze-showstopper':         { radius: 5.5 * M, iconOnly: true },
-  'kayo-null-cmd':             { radius: 60 * M, iconOnly: true },
-  'kayo-zero-point':           { radius: 20 * M, iconOnly: true },
-  'killjoy-lockdown':          { radius: 45 * M, iconOnly: true },
-  'deadlock-gravnet':          { shape: 'circle', radius: 10 * M },
-  'deadlock-sonic-sensor':     { shape: 'line', length: 13 * M, width: 13 * M, iconOnly: true },
-  'deadlock-annihilation':     { shape: 'line', length: 50 * M, thickness: 0.006, radius: 8 * M, iconOnly: true },
-  'breach-rolling-thunder':    { shape: 'line', length: 45 * M, width: 30 * M, thickness: 0.015, iconOnly: true },
-  'fade-nightfall':            { shape: 'line', length: 55 * M, width: 30 * M, thickness: 0.015, iconOnly: true },
+  'raze-showstopper':         { radius: 7 * M, iconOnly: true },
+  'kayo-null-cmd':             { radius: 75 * M, iconOnly: true },
+  'kayo-zero-point':           { radius: 23 * M, iconOnly: true },
+  'killjoy-lockdown':          { radius: 50 * M, iconOnly: true },
+  'deadlock-gravnet':          { shape: 'circle', radius: 12.5 * M },
+  'deadlock-sonic-sensor':     { shape: 'line', length: 15 * M, width: 11 * M, iconOnly: true },
+  'deadlock-annihilation':     { shape: 'line', length: 50 * M, thickness: 0.006, radius: 8.5 * M, iconOnly: true },
+  'breach-rolling-thunder':    { shape: 'line', length: 50 * M, width: 28 * M, thickness: 0.015, iconOnly: true },
+  'fade-nightfall':            { shape: 'line', length: 63 * M, width: 35 * M, thickness: 0.015, iconOnly: true },
 
   // === 墙体 ===
-  'viper-toxic-screen':       { shape: 'line', length: 90 * M, thickness: 2 * M },
-  'sage-barrier-orb':         { shape: 'rect', length: 16 * M, width: 3 * M },
-  'phoenix-blaze':            { shape: 'line', length: 37 * M, thickness: 0.006, iconOnly: true },
+  'viper-toxic-screen':       { shape: 'line', length: 100 * M, thickness: 2 * M },
+  'sage-barrier-orb':         { shape: 'rect', length: 17 * M, width: 3 * M },
+  'phoenix-blaze':            { shape: 'line', length: 35 * M, thickness: 0.006, iconOnly: true },
   'phoenix-hot-hands':        { shape: 'circle', radius: 6.5 * M, iconOnly: true },
   'phoenix-curveball':        { shape: 'line', length: 6 * M, thickness: 0.004 },
   'astra-astral-form':        { shape: 'line', length: 150 * M, thickness: 0.003 },
-  'harbor-high-tide':         { shape: 'line', length: 90 * M, thickness: 2 * M },
-  'harbor-cascade':           { shape: 'circle', radius: 6.5 * M, iconOnly: true },
-  'deadlock-barrier-mesh':    { shape: 'circle', radius: 8 * M, iconOnly: true },
+  'harbor-high-tide':         { shape: 'line', length: 100 * M, thickness: 2 * M },
+  'harbor-cascade':           { shape: 'circle', radius: 7.5 * M, iconOnly: true },
+  'deadlock-barrier-mesh':    { shape: 'circle', radius: 8.5 * M, iconOnly: true },
   'neon-relay-bolt':          { shape: 'circle', radius: 7 * M, iconOnly: true },
-  'neon-fast-lane':           { shape: 'line', length: 70 * M, thickness: 0.003, iconOnly: true },
-  'neon-high-gear':           { shape: 'line', length: 10 * M, thickness: 0.003, iconOnly: true },
+  'neon-fast-lane':           { shape: 'line', length: 75 * M, thickness: 0.003, iconOnly: true },
+  'neon-high-gear':           { shape: 'line', length: 11 * M, thickness: 0.003, iconOnly: true },
 
   // === 侦查 ===
-  'sova-recon-bolt':           { shape: 'circle', radius: 40 * M, iconOnly: true },
-  'sova-hunters-fury':         { shape: 'line', length: 90 * M, thickness: 0.015, iconOnly: true },
-  'fade-prowler':              { shape: 'line', length: 50 * M, thickness: 0.004, iconOnly: true },
-  'fade-haunt':                { shape: 'circle', radius: 40 * M, iconOnly: true },
-  'killjoy-turret':            { shape: 'cone', angle: 100, length: 55 * M, iconOnly: true },
-  'killjoy-alarmbot':          { shape: 'circle', radius: 7 * M, outerRadius: 55 * M, iconOnly: true },
+  'sova-recon-bolt':           { shape: 'circle', radius: 45 * M, iconOnly: true },
+  'sova-hunters-fury':         { shape: 'line', length: 100 * M, thickness: 0.015, iconOnly: true },
+  'fade-prowler':              { shape: 'line', length: 45 * M, thickness: 0.004, iconOnly: true },
+  'fade-haunt':                { shape: 'circle', radius: 45 * M, iconOnly: true },
+  'killjoy-turret':            { shape: 'cone', angle: 100, length: 55 * M, outerRadius: 63 * M, iconOnly: true },
+  'killjoy-alarmbot':          { shape: 'circle', radius: 7.5 * M, outerRadius: 65 * M, iconOnly: true },
   'cypher-tripwire':           { shape: 'line', length: 15 * M, thickness: 0.003 },
   'cypher-spycam':             { shape: 'circle', radius: 1.2 * M },
-  'gekko-thrash':              { shape: 'line', length: 80 * M, thickness: 0.005, radius: 17 * M, iconOnly: true },
+  'gekko-thrash':              { shape: 'line', length: 90 * M, thickness: 0.005, radius: 13 * M, iconOnly: true },
   'gekko-wingman':             { angle: 30, length: 12 * M, iconOnly: true },
-  'skye-trailblazer':          { shape: 'line', length: 40 * M, thickness: 0.005, radius: 20 * M, iconOnly: true },
+  'skye-trailblazer':          { shape: 'line', length: 40 * M, thickness: 0.005, radius: 15 * M, iconOnly: true },
   'skye-seekers':              { shape: 'circle', radius: 1.2 * M },
 
   // === 闪光 ===
   'breach-flashpoint':         { angle: 70, length: 18 * M, iconOnly: true },
-  'skye-guiding-light':        { shape: 'line', length: 40 * M, thickness: 0.005, iconOnly: true },
+  'skye-guiding-light':        { shape: 'line', length: 60 * M, thickness: 0.005, iconOnly: true },
   'kayo-flash':                { shape: 'circle', radius: 1.2 * M },
   'yoru-blindside':            { angle: 50, length: 12 * M, iconOnly: true },
   'gekko-dizzy':               { shape: 'circle', radius: 50 * M, iconOnly: true },
@@ -132,30 +132,30 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
 
   // === 减速/控制 ===
   'sage-slow-orb':             { shape: 'circle', radius: 7 * M, iconOnly: true },
-  'astra-gravity-well':        { radius: 6 * M, iconOnly: true },
-  'astra-nova-pulse':          { radius: 6 * M, iconOnly: true },
-  'fade-seize':                { radius: 8 * M, iconOnly: true },
+  'astra-gravity-well':        { radius: 7 * M, iconOnly: true },
+  'astra-nova-pulse':          { radius: 7 * M, iconOnly: true },
+  'fade-seize':                { radius: 8.5 * M, iconOnly: true },
   'breach-aftershock':         { shape: 'cone', angle: 50, length: 20 * M, iconOnly: true },
-  'breach-fault-line':         { shape: 'line', length: 70 * M, width: 15 * M, thickness: 0.01, iconOnly: true },
+  'breach-fault-line':         { shape: 'line', length: 75 * M, width: 14 * M, thickness: 0.01, iconOnly: true },
   'brimstone-stim-beacon':     { shape: 'circle', radius: 8 * M, iconOnly: true },
-  'waylay-c':                  { shape: 'circle', radius: 7.5 * M, iconOnly: true },
+  'waylay-c':                  { shape: 'circle', radius: 8 * M, iconOnly: true },
   'waylay-q':                  { shape: 'line', length: 15 * M, thickness: 0.003, iconOnly: true },
   'waylay-e':                  { shape: 'line', length: 999, thickness: 0.003, iconOnly: true },
-  'waylay-x':                  { shape: 'rect', length: 52 * M, width: 23 * M, iconOnly: true },
-  'veto-c':                    { shape: 'circle', radius: 32 * M, iconOnly: true },
-  'veto-q':                    { shape: 'circle', radius: 8 * M, iconOnly: true },
-  'veto-e':                    { shape: 'circle', radius: 25 * M, iconOnly: true },
-  'miks-c':                    { shape: 'circle', radius: 7 * M, iconOnly: true },
-  'miks-e':                    { shape: 'circle', radius: 5.5 * M },
-  'miks-x':                    { shape: 'cone', angle: 55, length: 55 * M, iconOnly: true },
-  'iso-contingency':           { shape: 'line', length: 40 * M, thickness: 0.003, iconOnly: true },
-  'iso-undercut':              { shape: 'rect', length: 50 * M, width: 10 * M, iconOnly: true },
-  'iso-kill-contract':         { shape: 'rect', length: 51.5 * M, width: 25 * M, iconOnly: true },
+  'waylay-x':                  { shape: 'rect', length: 55 * M, width: 20 * M, iconOnly: true },
+  'veto-c':                    { shape: 'circle', radius: 36.5 * M, iconOnly: true },
+  'veto-q':                    { shape: 'circle', radius: 8.5 * M, iconOnly: true },
+  'veto-e':                    { shape: 'circle', radius: 28.5 * M, iconOnly: true },
+  'miks-c':                    { shape: 'circle', radius: 7.5 * M, iconOnly: true },
+  'miks-e':                    { shape: 'circle', radius: 6 * M },
+  'miks-x':                    { shape: 'cone', angle: 60, length: 63 * M, iconOnly: true },
+  'iso-contingency':           { shape: 'line', length: 43 * M, thickness: 0.003, iconOnly: true },
+  'iso-undercut':              { shape: 'rect', length: 55 * M, width: 10 * M, iconOnly: true },
+  'iso-kill-contract':         { shape: 'rect', length: 57 * M, width: 24 * M, iconOnly: true },
 
   // === 治疗 ===
   'sage-healing-orb':          { shape: 'circle', radius: 3 * M },
   'sage-resurrection':         { radius: 2 * M },
-  'skye-regrowth':             { radius: 24 * M, iconOnly: true },
+  'skye-regrowth':             { radius: 27 * M, iconOnly: true },
   'reyna-devour':              { radius: 1 * M },
   'clove-pick-me-up':          { radius: 3 * M },
 
@@ -166,8 +166,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'yoru-gatecrash':            { shape: 'circle', radius: 2.5 * M },
   'yoru-dimensional-drift':    { shape: 'circle', radius: 2.5 * M },
   'omen-from-the-shadows':     { shape: 'circle', radius: 2 * M },
-  'chamber-trademark':         { shape: 'circle', radius: 15 * M, iconOnly: true },
-  'chamber-rendezvous':        { shape: 'circle', radius: 25 * M, iconOnly: true },
+  'chamber-trademark':         { shape: 'circle', radius: 15.5 * M, iconOnly: true },
+  'chamber-rendezvous':        { shape: 'circle', radius: 27 * M, iconOnly: true },
 }
 
 export function getAbilityShapeConfig(abilityId: string): AbilityShapeConfig | null {
@@ -392,9 +392,9 @@ const agents: Agent[] = [
   {
     id: 'deadlock', name: '钢锁', nameEn: 'Deadlock', role: '哨卫',
     abilities: [
-      { id: 'deadlock-gravnet', name: '阻域屏障', nameEn: 'GravNet', key: 'C', type: 'control', iconUrl: '/images/abilities/deadlock-barrier-mesh.png', description: '投掷一颗重力网手雷，爆炸后将范围内敌人拉向地面并强制蹲下。', usage: '按C投掷，爆炸后强制拉倒敌人。' },
+      { id: 'deadlock-gravnet', name: '阻域屏障', nameEn: 'GravNet', key: 'C', type: 'control', iconUrl: '/images/abilities/deadlock-gravnet.png', description: '投掷一颗重力网手雷，爆炸后将范围内敌人拉向地面并强制蹲下。', usage: '按C投掷，爆炸后强制拉倒敌人。' },
       { id: 'deadlock-sonic-sensor', name: '声感陷阱', nameEn: 'Sonic Sensor', key: 'Q', type: 'recon', iconUrl: '/images/abilities/deadlock-sonic-sensor.png', description: '部署一个声波传感器，检测到敌人移动时释放声波震动，使敌人减速。', usage: '按Q部署，检测移动后震动减速。' },
-      { id: 'deadlock-barrier-mesh', name: '重力捕网', nameEn: 'Barrier Mesh', key: 'E', type: 'control', iconUrl: '/images/abilities/deadlock-gravnet.png', description: '部署一道网状屏障，阻挡通过并吸收子弹伤害。', usage: '按E部署网状屏障。' },
+      { id: 'deadlock-barrier-mesh', name: '重力捕网', nameEn: 'Barrier Mesh', key: 'E', type: 'control', iconUrl: '/images/abilities/deadlock-barrier-mesh.png', description: '部署一道网状屏障，阻挡通过并吸收子弹伤害。', usage: '按E部署网状屏障。' },
       { id: 'deadlock-annihilation', name: '断魂索道', nameEn: 'Annihilation', key: 'X', type: 'control', iconUrl: '/images/abilities/deadlock-annihilation.png', description: '发射一颗强力能量弹，追逐第一名被击中的敌人，将其禁锢并拖行。', usage: '按X发射能量弹，追捕并禁锢敌人。' }
     ]
   },

@@ -1,0 +1,143 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty {
+  text-align: center;
+  padding: 24px 12px;
+  color: rgba(255, 255, 255, .35);
+  font-size: 12px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.card {
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid rgba(255, 255, 255, .06);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.cardValue {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Consolas', monospace;
+}
+
+.cardLabel {
+  font-size: 10px;
+  color: rgba(255, 255, 255, .35);
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+.winRate {
+  color: #05F8F8;
+}
+
+.kd {
+  color: #e8b0f8;
+}
+
+.acs {
+  color: #f0a0f0;
+}
+
+.hs {
+  color: #f0c0a0;
+}
+
+.section {
+  margin-top: 2px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, .4);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 6px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.table th, .table td {
+  padding: 4px 6px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, .04);
+}
+
+.table th {
+  color: rgba(255, 255, 255, .35);
+  font-weight: 400;
+  font-size: 10px;
+}
+
+.table td {
+  color: rgba(255, 255, 255, .7);
+}
+
+.winRateCell {
+  font-weight: 600;
+}
+
+.winRateGood {
+  color: #05F8F8;
+}
+
+.winRateBad {
+  color: #E349ED;
+}
+
+.winRateMid {
+  color: rgba(255, 255, 255, .5);
+}
+
+/* 趋势条 */
+.trendBar {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.trendDot {
+  width: 20px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.trendWin {
+  background: rgba(5, 248, 248, .4);
+}
+
+.trendLoss {
+  background: rgba(227, 73, 237, .4);
+}
+
+.trendDraw {
+  background: rgba(255, 255, 255, .15);
+}
+
+/* 紧凑 */
+.compact .cardValue {
+  font-size: 16px;
+}
+
+.compact .card {
+  padding: 8px;
+}
+
+.compact .table {
+  font-size: 10px;
+}

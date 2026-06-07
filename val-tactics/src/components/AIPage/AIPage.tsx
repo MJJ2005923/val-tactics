@@ -1,66 +1,316 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useTactics } from '../../store/TacticsContext'
-import agents from '../../data/agents'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI } from '../../data/knowledgeBase'
+import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
+import MatchContextSelector, { loadMatchContext } from '../MatchHistory/MatchContextSelector'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../store/AuthContext'
 import styles from './AIPage.module.css'
 
-const PROVIDERS = [
-  { id: 'anthropic', name: 'Anthropic', icon: '🧠', color: '#d4a574', hint: '去 console.anthropic.com 获取' },
-  { id: 'openai', name: 'OpenAI', icon: '⚡', color: '#74aa9c', hint: '去 platform.openai.com 获取' },
-  { id: 'google', name: 'Google', icon: '🌐', color: '#8ab4f8', hint: '去 aistudio.google.com 获取' },
-  { id: 'deepseek', name: 'DeepSeek', icon: '🐋', color: '#4f6ef7', hint: '去 platform.deepseek.com 获取' },
-]
-
-interface Message { role: 'user' | 'assistant'; content: string }
-interface AIModel { id: string; name: string }
+interface Message { role: 'user' | 'assistant'; content: string; convId?: string; rating?: number }
+interface AIModel { id: string; name: string; tier?: string; perf?: string; limit?: string; unlock?: string }
 interface AIConfig { apiKey: string; provider: string; model: string }
 
-// Worker 地址（本地用 localhost:8787，部署后改成实际地址）
 const API_BASE = '/api'
+const PROVIDER = 'deepseek'
 
-function loadConfig() {
+// 本地今日用量追踪（按模型分开计数）
+const USAGE_DATE = new Date().toISOString().slice(0,10)
+function usageKey(modelId?: string) { return `val-tactics-usage-${USAGE_DATE}${modelId ? `-${modelId}` : ''}` }
+function getTodayUsage(modelId?: string): number {
+  try { return parseInt(localStorage.getItem(usageKey(modelId)) || '0') } catch { return 0 }
+}
+function incrTodayUsage(modelId?: string): number {
+  const k = usageKey(modelId)
+  const n = getTodayUsage(modelId) + 1
+  localStorage.setItem(k, String(n))
+  return n
+}
+/** 共享池用量 = 基础模型总消耗 */
+function getSharedUsage(): number {
+  return getTodayUsage('deepseek-v4-flash') + getTodayUsage('deepseek-chat')
+}
+
+const PLANS = [
+  { name: '免费', tier: 'free', detail: '快速模式 · 2 次 / 天', price: '¥0', color: '#05F8F8' },
+  { name: '基础', tier: 'basic', detail: '快速 + 均衡', price: '¥24.9/月', color: '#05F8F8' },
+  { name: '进阶', tier: 'advanced', detail: '全部模式', price: '¥59.9/月', color: '#E349ED' },
+  { name: '专业', tier: 'pro', detail: '全部模式', price: '¥99.9/月', color: '#f0c0ff' },
+]
+
+/** 模型专属 SVG 图标 — 方案F：魔方透视 */
+export function ModelIcon({ modelId, size = 34 }: { modelId: string; size?: number }) {
+  const s = size
+  // 快速 — 单面方块
+  if (modelId === 'deepseek-v4-flash') {
+    return (
+      <svg width={s} height={s} viewBox="0 0 34 34" fill="none">
+        <rect x="5" y="5" width="24" height="24" rx="4" fill="#05F8F8" fillOpacity=".08" stroke="#05F8F8" strokeWidth="1.3" opacity=".5"/>
+        <line x1="8" y1="11" x2="26" y2="11" stroke="#fff" strokeWidth=".4" opacity=".15"/>
+        <line x1="8" y1="17" x2="26" y2="17" stroke="#fff" strokeWidth=".4" opacity=".15"/>
+        <line x1="8" y1="23" x2="26" y2="23" stroke="#fff" strokeWidth=".4" opacity=".1"/>
+        <circle cx="17" cy="15" r="1.5" fill="#05F8F8" opacity=".4"><animate attributeName="opacity" values=".2;.6;.2" dur="1.5s" repeatCount="indefinite"/></circle>
+      </svg>
+    )
+  }
+  // 均衡 — 双面方块
+  if (modelId === 'deepseek-chat') {
+    return (
+      <svg width={s} height={s} viewBox="0 0 34 34" fill="none">
+        <rect x="3" y="3" width="20" height="20" rx="3" fill="#05F8F8" fillOpacity=".04" stroke="#05F8F8" strokeWidth="1" opacity=".35"/>
+        <rect x="11" y="11" width="20" height="20" rx="3" fill="#05F8F8" fillOpacity=".1" stroke="#05F8F8" strokeWidth="1.2" opacity=".55"/>
+        <line x1="3" y1="3" x2="11" y2="11" stroke="#fff" strokeWidth=".25" opacity=".08"/>
+        <line x1="23" y1="3" x2="31" y2="11" stroke="#fff" strokeWidth=".25" opacity=".08"/>
+        <circle cx="21" cy="21" r="1.5" fill="#05F8F8" opacity=".5"><animate attributeName="opacity" values=".25;.7;.25" dur="1.5s" repeatCount="indefinite"/></circle>
+      </svg>
+    )
+  }
+  // 推理 — 三面方块
+  if (modelId === 'deepseek-reasoner') {
+    return (
+      <svg width={s} height={s} viewBox="0 0 34 34" fill="none">
+        <rect x="1" y="1" width="17" height="17" rx="3" fill="#E349ED" fillOpacity=".04" stroke="#E349ED" strokeWidth=".9" opacity=".3"/>
+        <rect x="8" y="8" width="17" height="17" rx="3" fill="#E349ED" fillOpacity=".06" stroke="#E349ED" strokeWidth="1" opacity=".4"/>
+        <rect x="15" y="15" width="17" height="17" rx="3" fill="#E349ED" fillOpacity=".09" stroke="#E349ED" strokeWidth="1.2" opacity=".5"/>
+        <line x1="1" y1="1" x2="8" y2="8" stroke="#fff" strokeWidth=".2" opacity=".06"/>
+        <line x1="8" y1="8" x2="15" y2="15" stroke="#fff" strokeWidth=".2" opacity=".08"/>
+        <circle cx="23" cy="23" r="1.5" fill="#E349ED" opacity=".55"><animate attributeName="opacity" values=".2;.7;.2" dur="1.2s" repeatCount="indefinite"/></circle>
+      </svg>
+    )
+  }
+  // 深度 — 3D等距立方体
+  return (
+    <svg width={s} height={s} viewBox="0 0 34 34" fill="none">
+      <defs>
+        <linearGradient id="mdeep" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#E349ED"/>
+          <stop offset="100%" stopColor="#05F8F8"/>
+        </linearGradient>
+      </defs>
+      <g transform="translate(17,17)">
+        <polygon points="0,-12 11,-6 0,0 -11,-6" fill="url(#mdeep)" fillOpacity=".06" stroke="url(#mdeep)" strokeWidth=".9" opacity=".3"/>
+        <polygon points="0,0 11,-6 11,6 0,12" fill="url(#mdeep)" fillOpacity=".04" stroke="url(#mdeep)" strokeWidth=".7" opacity=".2"/>
+        <polygon points="0,0 -11,-6 -11,6 0,12" fill="url(#mdeep)" fillOpacity=".09" stroke="url(#mdeep)" strokeWidth="1" opacity=".45"/>
+        <polygon points="0,0 5,-3 0,5 -5,-3" fill="#fff" opacity=".08"/>
+        <circle cx="0" cy="0" r="1.5" fill="#fff" opacity=".7"><animate attributeName="opacity" values=".3;.9;.3" dur="1s" repeatCount="indefinite"/></circle>
+      </g>
+    </svg>
+  )
+}
+
+/** 套餐专属 SVG 图标 — 方案A：几何徽章 */
+function PlanIcon({ tier, color, size = 36 }: { tier: string; color: string; size?: number }) {
+  const s = size
+  // 免费 — 单层菱形
+  if (tier === 'free') {
+    return (
+      <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
+        <polygon points="18,5 31,18 18,31 5,18" fill={color} fillOpacity=".08" stroke={color} strokeWidth="1.2" strokeOpacity=".5"/>
+        <polygon points="18,11 25,18 18,25 11,18" fill={color} fillOpacity=".1" stroke={color} strokeWidth="1" strokeOpacity=".4"/>
+        <circle cx="18" cy="18" r="2.5" fill={color} opacity=".5"/>
+      </svg>
+    )
+  }
+  // 基础 — 双层菱形 + 中心点
+  if (tier === 'basic') {
+    return (
+      <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
+        <polygon points="18,4 32,18 18,32 4,18" fill="none" stroke={color} strokeWidth="1" opacity=".3"/>
+        <polygon points="18,9 27,18 18,27 9,18" fill={color} fillOpacity=".06" stroke={color} strokeWidth="1.3" strokeOpacity=".55"/>
+        <polygon points="18,14 22,18 18,22 14,18" fill={color} fillOpacity=".1" stroke={color} strokeWidth=".8" strokeOpacity=".35"/>
+        <circle cx="18" cy="18" r="2" fill={color} opacity=".55"/>
+      </svg>
+    )
+  }
+  // 进阶 — 三层菱形 + 十字星芒
+  if (tier === 'advanced') {
+    return (
+      <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
+        <polygon points="18,3 33,18 18,33 3,18" fill="none" stroke={color} strokeWidth=".8" opacity=".2"/>
+        <polygon points="18,8 28,18 18,28 8,18" fill={color} fillOpacity=".05" stroke={color} strokeWidth="1.2" strokeOpacity=".45"/>
+        <polygon points="18,13 23,18 18,23 13,18" fill={color} fillOpacity=".08" stroke={color} strokeWidth="1" strokeOpacity=".5"/>
+        <circle cx="18" cy="18" r="2" fill={color} opacity=".6"/>
+        <line x1="18" y1="5" x2="18" y2="9" stroke={color} strokeWidth=".8" opacity=".2"/>
+        <line x1="18" y1="27" x2="18" y2="31" stroke={color} strokeWidth=".8" opacity=".2"/>
+        <line x1="5" y1="18" x2="9" y2="18" stroke={color} strokeWidth=".8" opacity=".2"/>
+        <line x1="27" y1="18" x2="31" y2="18" stroke={color} strokeWidth=".8" opacity=".2"/>
+      </svg>
+    )
+  }
+  // 专业 — 五层旋转菱形 + 粉青渐变
+  return (
+    <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
+      <defs>
+        <linearGradient id={`proGrad`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#E349ED"/>
+          <stop offset="100%" stopColor="#05F8F8"/>
+        </linearGradient>
+      </defs>
+      <polygon points="18,2 34,18 18,34 2,18" fill="none" stroke="url(#proGrad)" strokeWidth=".7" opacity=".25"/>
+      <polygon points="18,6 30,18 18,30 6,18" fill="url(#proGrad)" fillOpacity=".04" stroke="url(#proGrad)" strokeWidth="1" strokeOpacity=".4"/>
+      <polygon points="18,10 26,18 18,26 10,18" fill="url(#proGrad)" fillOpacity=".06" stroke="url(#proGrad)" strokeWidth="1.2" strokeOpacity=".55"/>
+      <polygon points="18,14 22,18 18,22 14,18" fill="url(#proGrad)" fillOpacity=".08" stroke="url(#proGrad)" strokeWidth=".8" strokeOpacity=".35"/>
+      <polygon points="18,16 20,18 18,20 16,18" fill="url(#proGrad)" opacity=".12"/>
+      <circle cx="18" cy="18" r="1.5" fill="#fff" opacity=".7"/>
+      <circle cx="18" cy="2" r="1.2" fill="#fff" opacity=".25"/>
+      <circle cx="34" cy="18" r="1.2" fill="#fff" opacity=".25"/>
+      <circle cx="18" cy="34" r="1.2" fill="#fff" opacity=".25"/>
+      <circle cx="2" cy="18" r="1.2" fill="#fff" opacity=".25"/>
+    </svg>
+  )
+}
+
+// 套餐对应可用的模型
+const TIER_MODELS: Record<string, string[]> = {
+  free: ['deepseek-v4-flash'],
+  basic: ['deepseek-v4-flash', 'deepseek-chat'],
+  advanced: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
+  pro: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
+}
+
+// 每套餐总次数 + 特殊模型限制（基础模型共享总次数）
+const TIER_TOTAL_LIMITS: Record<string, number> = { free: 2, basic: 30, advanced: 40, pro: 100 }
+// 特殊限制：推理和深度有独立次数帽
+const MODEL_CAPS: Record<string, Record<string, number>> = {
+  'deepseek-reasoner':  { advanced: 3, pro: 20 },
+  'deepseek-v4-pro':    { advanced: 2, pro: 10 },
+}
+
+async function activateCode(code: string): Promise<{ ok: boolean; tier?: string; error?: string }> {
   try {
-    const raw = localStorage.getItem('val-tactics-ai-config')
-    if (raw) return JSON.parse(raw)
-  } catch {}
-  return { apiKey: '', provider: 'anthropic', model: '' }
-}
-function saveConfig(c: { apiKey: string; provider: string; model: string }) {
-  localStorage.setItem('val-tactics-ai-config', JSON.stringify(c))
+    const resp = await fetch('/api/activate', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ code: code.trim(), userId: uid() }),
+    })
+    return await resp.json()
+  } catch { return { ok: false, error: '网络请求失败' } }
 }
 
-function buildSystemPrompt(mapName: string, side: string, agentNames: string[], shapeCount: number) {
-  return `你是一个无畏契约战术教练。当前地图「${mapName}」，${side === 'attack' ? '进攻方' : '防守方'}。地图上有 ${shapeCount} 个技能标记。${agentNames.length > 0 ? `场上特工: ${agentNames.join('、')}。` : ''}请用中文回答，简洁实用，像教练一样。`
+function uid() {
+  let id = localStorage.getItem('val-tactics-uid')
+  if (!id) { id = 'u' + Date.now().toString(36); localStorage.setItem('val-tactics-uid', id) }
+  return id
 }
+function loadConfig() {
+  try { const raw = localStorage.getItem('val-tactics-ai-config'); if (raw) return JSON.parse(raw) } catch {}
+  return { apiKey: '', provider: PROVIDER, model: '' }
+}
+function saveConfig(c: AIConfig) { localStorage.setItem('val-tactics-ai-config', JSON.stringify(c)) }
 
 export default function AIPage({ mapName, onBack }: { mapId: string; mapName: string; onBack: () => void }) {
-  const { abilityShapes, side } = useTactics()
+  const { abilityShapes, side, agentPositions, drawings, textAnnotations, markers, roster } = useTactics()
+  const { user } = useAuth()
+
+  // 同步套餐到 Supabase
+  const syncTierToSupabase = async (t: string) => {
+    if (!user) return
+    const now = Date.now()
+    await supabase.from('user_tiers').upsert({
+      user_id: user.id,
+      tier: t,
+      activated_at: now,
+      expires_at: t === 'free' ? 0 : now + 30 * 86400000,
+      updated_at: new Date().toISOString(),
+    })
+  }
   const [config, setConfig] = useState(loadConfig)
-  const [providerId, setProviderId] = useState(config.provider)
   const [models, setModels] = useState<AIModel[]>([])
-  const [loadingModels, setLoadingModels] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try { return JSON.parse(localStorage.getItem('val-tactics-chat') || '[]') } catch { return [] }
+  })
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [keyInput, setKeyInput] = useState(config.apiKey)
+  const [showBoardInfo, setShowBoardInfo] = useState(() => {
+    try { return localStorage.getItem('val-tactics-show-board-info') !== 'false' } catch { return true }
+  })
+  const checkExpiry = (key: string) => {
+    const ts = parseInt(localStorage.getItem(key) || '0')
+    return ts && (Date.now() - ts) < 30 * 86400000
+  }
+  const [tier, setTier] = useState(() => {
+    const stored = localStorage.getItem('val-tactics-tier')
+    if (stored && stored !== 'free' && checkExpiry('val-tactics-tier-at')) return stored
+    return 'free'
+  })
+  const [actCode, setActCode] = useState('')
+  const [actStatus, setActStatus] = useState('')
+  const [ownkeyActive, setOwnkeyActive] = useState(() => {
+    if (localStorage.getItem('val-tactics-ownkey') !== '1') return false
+    return checkExpiry('val-tactics-ownkey-at')
+  })
+  const activateOwnkey = () => {
+    setOwnkeyActive(true)
+    const now = Date.now()
+    localStorage.setItem('val-tactics-ownkey', '1')
+    localStorage.setItem('val-tactics-ownkey-at', String(now))
+    setShowOwnkey(false)
+    setActCode('')
+    if (user) supabase.from('user_ownkey').upsert({ user_id: user.id, active: true, activated_at: now, expires_at: now + 30 * 86400000 })
+  }
+  const deactivateOwnkey = () => {
+    setOwnkeyActive(false)
+    localStorage.removeItem('val-tactics-ownkey')
+    localStorage.removeItem('val-tactics-ownkey-at')
+    if (user) supabase.from('user_ownkey').upsert({ user_id: user.id, active: false, activated_at: 0, expires_at: 0 })
+  }
+  const [showOwnkey, setShowOwnkey] = useState(false)
+  const [todayUsed, setTodayUsed] = useState(() => getSharedUsage())
+  const [showPlans, setShowPlans] = useState(false)
+  const [showModels, setShowModels] = useState(true)
+  const [expandedPlan, setExpandedPlan] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const provider = PROVIDERS.find(p => p.id === providerId)!
+  const isFree = !config.apiKey
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }) }, [messages])
+  useEffect(() => { localStorage.setItem('val-tactics-chat', JSON.stringify(messages)) }, [messages])
   useEffect(() => { saveConfig(config) }, [config])
 
-  // 填 Key 后自动拉取模型列表
+  // 登录时从 Supabase 恢复套餐
+  useEffect(() => {
+    if (!user) return
+    ;(async () => {
+      try {
+        const { data } = await supabase.from('user_tiers').select('tier, activated_at').eq('user_id', user.id).single()
+        if (data && data.tier && data.tier !== 'free') {
+          const ts = data.activated_at ? data.activated_at * 1000 : 0
+          if (Date.now() - ts < 30 * 86400000) {
+            setTier(data.tier)
+            localStorage.setItem('val-tactics-tier', data.tier)
+            localStorage.setItem('val-tactics-tier-at', String(ts))
+          }
+        }
+      } catch {}
+    })()
+
+    // 恢复自备Key状态
+    ;(async () => {
+      try {
+        const { data } = await supabase.from('user_ownkey').select('active, activated_at').eq('user_id', user.id).single()
+        if (data && data.active) {
+          const ts = data.activated_at ? data.activated_at * 1000 : 0
+          if (Date.now() - ts < 30 * 86400000) {
+            setOwnkeyActive(true)
+            localStorage.setItem('val-tactics-ownkey', '1')
+            localStorage.setItem('val-tactics-ownkey-at', String(ts))
+          }
+        }
+      } catch {}
+    })()
+  }, [user])
+
+  useEffect(() => {
+    if (!isFree) setTier('free')
+  }, [isFree])
+
   const fetchModels = useCallback(async () => {
-    if (!config.apiKey) return
-    setLoadingModels(true)
     try {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 8000)
+      const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 8000)
       const resp = await fetch(`${API_BASE}/models`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ apiKey: config.apiKey, provider: config.provider }),
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ apiKey: config.apiKey, provider: PROVIDER }),
         signal: controller.signal,
       })
       clearTimeout(timeout)
@@ -68,199 +318,526 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
         const data = await resp.json()
         if (data.models?.length > 0) {
           setModels(data.models)
-          // 自动选第一个
           if (!config.model || !data.models.find((m: AIModel) => m.id === config.model)) {
             setConfig((c: AIConfig) => ({ ...c, model: data.models[0].id }))
           }
         }
       }
-    } catch (e) { console.error('拉取模型失败:', e) }
-    finally { setLoadingModels(false) }
-  }, [config.apiKey, config.provider, config.model])
+    } catch { /* ok */ }
+  }, [config.apiKey])
+
+  useEffect(() => { fetchModels() }, [fetchModels])
 
   const saveKey = () => {
-    setConfig((c: AIConfig) => ({ ...c, apiKey: keyInput, provider: providerId }))
+    setConfig((c: AIConfig) => ({ ...c, apiKey: keyInput }))
     setTimeout(() => fetchModels(), 100)
-  }
-
-  const selectModel = (modelId: string) => {
-    setConfig((c: AIConfig) => ({ ...c, model: modelId }))
   }
 
   const send = async () => {
     const text = input.trim()
     if (!text || loading) return
-    if (!config.apiKey || !config.model) return
+    if (!isFree && !config.apiKey) return
+    if (!config.model) return
 
-    setInput('')
-    setLoading(true)
+    setInput(''); setLoading(true)
     const msgs = [...messages, { role: 'user' as const, content: text }]
     setMessages(msgs)
 
-    const agentNames = abilityShapes
-      .map(s => agents.find(a => a.id === s.agentId)?.name)
-      .filter((v): v is string => !!v)
+    const agentIds = abilityShapes
+      .map(s => s.agentId)
       .filter((v, i, a) => a.indexOf(v) === i)
+    const agentNames = getAgentNames(agentIds)
 
     const allMessages = [
-      { role: 'user', content: buildSystemPrompt(mapName, side, agentNames, abilityShapes.length) },
-      { role: 'assistant', content: '明白了。' },
+      { role: 'user', content: buildKnowledgeBase(mapName, side, agentNames) },
+      { role: 'assistant', content: '明白。我是T教练，已掌握全部29位特工技能数据和12张地图信息，请随时提问。' },
+      // 注入棋盘基础信息
+      ...(showBoardInfo ? [
+        { role: 'user' as const, content: formatBoardStateForAI(mapName, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster) },
+        { role: 'assistant' as const, content: '收到，我已了解当前战术板的详细状态。' },
+      ] : []),
+      // 注入比赛数据（根据用户选择）
+      ...(() => {
+        const ctx = loadMatchContext()
+        if (ctx.mode === 'none') return []
+        const matches = loadMatches()
+        if (matches.length === 0) return []
+
+        if (ctx.mode === 'single' && ctx.matchId) {
+          const match = matches.find(m => m.id === ctx.matchId)
+          if (!match) return []
+          return [
+            { role: 'user' as const, content: `以下是我选定的一场比赛数据，请针对这场比赛进行分析：\n\n${formatSingleMatchForAI(match)}` },
+            { role: 'assistant' as const, content: '收到，我已看到这场比赛的详细数据，可以针对这场比赛给你分析。' },
+          ]
+        }
+
+        // mode === 'all'
+        return [
+          { role: 'user' as const, content: `以下是我的全部比赛记录数据，在后续分析中请结合这些个人数据：\n\n${formatMatchHistoryForAI(matches)}` },
+          { role: 'assistant' as const, content: '收到，我已掌握你的比赛记录和统计数据，可以据此分析你的个人表现和给出针对性建议。' },
+        ]
+      })(),
       ...msgs,
     ]
 
     try {
       const resp = await fetch(`${API_BASE}/ai`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ apiKey: config.apiKey, provider: config.provider, model: config.model, messages: allMessages }),
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ apiKey: config.apiKey, provider: PROVIDER, model: config.model, messages: allMessages, userId: isFree ? uid() : undefined }),
       })
-      if (!resp.ok) throw new Error(`请求失败 (${resp.status})`)
       const data = await resp.json()
-      const content = data.content?.[0]?.text || data.choices?.[0]?.message?.content
-        || data.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(data)
-      setMessages(prev => [...prev, { role: 'assistant', content }])
+      if (resp.status === 429 && data.error === 'free_limit') {
+        setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${data.message}` }])
+      } else if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`)
+      else {
+        const content = data.content?.[0]?.text || data.choices?.[0]?.message?.content
+          || data.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(data)
+        // 存到 Supabase 知识库
+        let convId: string | undefined
+        if (user || true) { // 匿名也存
+          const agentNames = getAgentNames(agentIds)
+          const { data: row } = await supabase.from('ai_conversations').insert({
+            user_id: user?.id || null,
+            question: text,
+            answer: content,
+            model: config.model,
+            map_name: mapName,
+            side,
+            agents: agentNames.join(','),
+          }).select('id').single()
+          convId = row?.id
+        }
+        setMessages(prev => [...prev, { role: 'assistant', content, convId, rating: 0 }])
+        if (isFree) {
+          incrTodayUsage(config.model)
+          setTodayUsed(getSharedUsage())
+        }
+      }
     } catch (err: any) {
       const msg = err.message || ''
-      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        setMessages(prev => [...prev, { role: 'assistant', content: '❌ 网络连接失败，请检查网络或稍后重试。' }])
-      } else if (msg.includes('401') || msg.includes('403')) {
-        setMessages(prev => [...prev, { role: 'assistant', content: '❌ API Key 无效或已过期，请检查后重新输入。' }])
-      } else if (msg.includes('404') || msg.includes('model')) {
-        setMessages(prev => [...prev, { role: 'assistant', content: `❌ 模型 "${config.model}" 不存在或不可用。请在左侧切换模型后重试。` }])
-      } else if (msg.includes('429')) {
-        setMessages(prev => [...prev, { role: 'assistant', content: '❌ API 调用频率超限，请稍后重试。' }])
-      } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${msg || '请求失败，请检查 API Key 和模型名是否正确'}` }])
-      }
-    } finally {
-      setLoading(false)
-    }
+      if (msg.includes('Failed to fetch')) setMessages(prev => [...prev, { role: 'assistant', content: '❌ 网络连接失败' }])
+      else if (msg.includes('401') || msg.includes('403')) setMessages(prev => [...prev, { role: 'assistant', content: '❌ 服务暂不可用' }])
+      else setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${msg || '请求失败'}` }])
+    } finally { setLoading(false) }
   }
 
-  const quickPrompts = [
-    '分析我现在的战术布局有什么问题',
-    '推荐一个适合这张地图的进攻阵容',
-    '怎么防守 B 点？给三个方案',
-    '当前版本最强的双烟组合是什么',
-  ]
+  const quickPrompts = ['分析我现在的战术布局有什么问题', '推荐一个适合这张地图的进攻阵容', '怎么防守 B 点？给三个方案', '当前版本最强的双烟组合是什么']
 
   return (
     <div className={styles.page}>
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <h1 className={styles.logo}>🤖 AI 战术教练</h1>
+          <div className="brand" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="36" height="36" style={{flexShrink:0}}>
+              <defs><linearGradient id="aig" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+              <rect width="120" height="120" rx="26" fill="none"/>
+              <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#aig)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+              <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#aig)" opacity="0.25" transform="rotate(5,53,35)"/>
+              <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#aig)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+              <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#aig)" opacity="0.35" transform="rotate(10,61,51)"/>
+              <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#aig)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+              <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+            </svg>
+            <h1 className={styles.logo}>T教练</h1>
+          </div>
           <button className={styles.backBtn} onClick={onBack}>← 返回战术板</button>
         </div>
 
-        {/* 厂商选择 */}
+        {/* ====== 套餐方案 ====== */}
         <div className={styles.sidebarSection}>
-          <h3>选择厂商</h3>
-          <div className={styles.providerTabs}>
-            {PROVIDERS.map(p => (
-              <button key={p.id}
-                className={`${styles.providerTab} ${providerId === p.id ? styles.providerTabActive : ''}`}
-                onClick={() => { setProviderId(p.id); setConfig((c: AIConfig) => ({ ...c, provider: p.id, model: '' })); setModels([]) }}>
-                {p.icon} {p.name}
-              </button>
-            ))}
-          </div>
+          <h3 onClick={() => setShowPlans(v => !v)} style={{ cursor: 'pointer' }}>
+            💳 套餐方案 <span style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginLeft: 'auto' }}>{showPlans ? '▲' : '▼'}</span>
+          </h3>
+          {showPlans && (
+            <div className={styles.plansList}>
+              {PLANS.filter(p => p.tier !== 'free').map((p, i) => {
+                const tierOrder = ['free', 'basic', 'advanced', 'pro']
+                const currentIdx = tierOrder.indexOf(tier)
+                const planIdx = tierOrder.indexOf(p.tier)
+                const isCurrentTier = planIdx === currentIdx && isFree
+                const isLocked = isFree && planIdx > currentIdx
+                const isExpanded = expandedPlan === p.tier
+                // 该套餐可用的模型ID列表
+                const planModelIds = TIER_MODELS[p.tier] || []
+                return (
+                  <React.Fragment key={i}>
+                    <div
+                      className={`${styles.planCard} ${isLocked ? styles.planCardLocked : ''} ${isCurrentTier ? styles.planCardCurrent : ''}`}
+                      style={{ cursor: 'pointer', animationDelay: `${i * 0.12}s`, ...(isCurrentTier ? { borderColor: p.color } : {}) }}
+                      onClick={() => setExpandedPlan(isExpanded ? null : p.tier)}>
+                      <div className={styles.planIcon}><PlanIcon tier={p.tier} color={p.color} /></div>
+                      <div className={styles.planInfo}>
+                        <div className={styles.planName} style={{ color: isLocked ? 'rgba(255,255,255,.25)' : p.color }}>
+                          {p.name}
+                          {isCurrentTier && <span style={{ fontSize: 10, marginLeft: 6, color: p.color }}>● 当前</span>}
+                        </div>
+                        <div className={styles.planDetail}>{p.detail}</div>
+                      </div>
+                      <div className={styles.planPrice} style={{ color: isLocked ? 'rgba(255,255,255,.2)' : undefined }}>
+                        {isLocked ? <span style={{ fontSize: 14, filter: 'grayscale(1)', opacity: .5 }}>🔒</span> : `${p.price}`}
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className={styles.planExpand} style={{ animationDelay: `${i * 0.12 + 0.05}s` }}>
+                        <div style={{ marginBottom: 6, color: p.color, fontWeight: 600 }}>
+                          {p.price}/月 · 共 {TIER_TOTAL_LIMITS[p.tier]}次/天
+                        </div>
+                        {planModelIds.map(mid => {
+                          const model = models.find(m => m.id === mid)
+                          const cap = MODEL_CAPS[mid]?.[p.tier]
+                          const icon = model?.name?.includes('快速') ? '⚡' : model?.name?.includes('均衡') ? '⚖️' : model?.name?.includes('推理') ? '💭' : '🧠'
+                          return (
+                            <div key={mid} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,.03)' }}>
+                              <span>{icon} {model?.name || mid}</span>
+                              <span style={{ color: 'rgba(255,255,255,.35)', fontFamily: 'Consolas,monospace' }}>
+                                {cap !== undefined ? `${cap}次` : '共享'}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </React.Fragment>
+                )
+              })}
+            </div>
+          )}
         </div>
 
-        {/* API Key */}
+        {/* ====== 模式选择 ====== */}
         <div className={styles.sidebarSection}>
-          <h3>API Key</h3>
-          <div className={styles.keyEdit}>
-            <input className={styles.keyInput} type="password" value={keyInput}
-              placeholder="粘贴你的 API Key..."
-              onChange={e => setKeyInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') saveKey() }} />
-            <button className={styles.keySaveBtn} onClick={saveKey}>确认</button>
-          </div>
-          <p className={styles.keyHint}>{provider.hint} · Key 只存在你的浏览器里</p>
-        </div>
-
-        {/* 模型列表 — 自动发现 + 手动输入 */}
-        {config.apiKey && (
-          <div className={styles.sidebarSection}>
-            <h3>选择模型 {loadingModels && <span className={styles.loadingHint}>检测中...</span>}</h3>
-            {models.length > 0 && (
-              <div className={styles.modelList}>
-                {models.map(m => (
+          <h3 onClick={() => setShowModels(v => !v)} style={{ cursor: 'pointer' }}>
+            ⚡ 模式选择 <span style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginLeft: 'auto' }}>{showModels ? '▲' : '▼'}</span>
+          </h3>
+          {showModels && (
+            <div className={styles.modelList}>
+              {models.map(m => {
+                const locked = isFree && !(TIER_MODELS[tier]?.includes(m.id))
+                const isCurrent = config.model === m.id
+                const cap = MODEL_CAPS[m.id]?.[tier]
+                const tierTotal = TIER_TOTAL_LIMITS[tier]
+                // 独立上限模型用专属计数器，共享模型用共享池
+                const usage = cap !== undefined
+                  ? getTodayUsage(m.id)
+                  : getSharedUsage()
+                const remaining = Math.max(0, (cap ?? tierTotal) - usage)
+                const limitText = isFree
+                  ? `剩余 ${remaining} 次`
+                  : `${cap ?? tierTotal}次/天`
+                const isFreeModel = m.tier === '免费'
+                return (
                   <button key={m.id}
-                    className={`${styles.modelCard} ${config.model === m.id ? styles.modelCardActive : ''}`}
-                    style={{ borderColor: config.model === m.id ? provider.color : 'transparent' }}
-                    onClick={() => selectModel(m.id)}>
-                    <div className={styles.modelName}>{m.name || m.id}</div>
-                    <div className={styles.modelId}>{m.id}</div>
+                    className={`${styles.modelCard} ${isCurrent ? styles.modelCardActive : ''} ${locked ? styles.modelCardLocked : ''}`}
+                    onClick={() => !locked && setConfig((c: AIConfig) => ({ ...c, model: m.id }))}>
+                    <div className={styles.modelIcon}><ModelIcon modelId={m.id} /></div>
+                    <div className={styles.modelInfo}>
+                      <div className={styles.modelName}>
+                        {m.name.replace(/^[^\w一-鿿]+/, '').trim()}
+                        {isFreeModel && <span className={styles.unlockFree} style={{ fontSize: 9, marginLeft: 6, padding: '1px 6px', verticalAlign: 'middle' }}>免费</span>}
+                      </div>
+                      <div className={styles.modelDesc}>{m.perf}</div>
+                      <div className={styles.modelLimit}>
+                        {locked ? '🔒 需升级套餐' : limitText || '可用'}
+                      </div>
+                    </div>
                   </button>
-                ))}
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {isFree ? (
+          <div className={styles.sidebarSection}>
+            <div className={styles.freeBanner}>
+              {tier === 'free' ? `🎉 免费套餐 · 剩余 ${Math.max(0, 2 - todayUsed)} 次` : `✅ ${PLANS.find(p => p.tier === tier)?.name || tier}套餐`}
+            </div>
+            {/* 激活码 */}
+            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+              <input className={styles.keyInput} value={actCode} placeholder="输入激活码升级套餐..."
+                onChange={e => { setActCode(e.target.value); setActStatus('') }}
+                onKeyDown={e => { if (e.key === 'Enter') { const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
+                style={{ flex: 1, fontSize: 11 }} />
+              <button className={styles.keySaveBtn} onClick={async () => {
+                const r = await activateCode(actCode)
+                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') }
+                else setActStatus('❌ ' + (r.error || '激活失败'))
+              }}>激活</button>
+            </div>
+            {actStatus && (
+              <div style={{ fontSize: 11, marginTop: 4, color: actStatus.includes('✅') ? '#05F8F8' : '#E349ED' }}>{actStatus}</div>
+            )}
+            {tier !== 'free' && import.meta.env.DEV && (
+              <div style={{ marginTop: 6, textAlign: 'right' }}>
+                <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
+                  onClick={() => { setTier('free'); localStorage.removeItem('val-tactics-tier'); localStorage.removeItem('val-tactics-tier-at'); syncTierToSupabase('free') }}>
+                  取消套餐
+                </span>
               </div>
             )}
-            <div style={{ marginTop: 8 }}>
-              <input className={styles.keyInput}
-                value={config.model}
-                placeholder="或手动输入模型名，如 deepseek-chat"
-                onChange={e => setConfig((c: AIConfig) => ({ ...c, model: e.target.value }))} />
+          </div>
+        ) : (
+          <div className={styles.sidebarSection}>
+            <div className={styles.freeBanner} style={{ background: 'rgba(227,73,237,.08)', borderColor: 'rgba(227,73,237,.2)', color: '#f0a0f0' }}>
+              🔑 自备 Key · 全部已解锁
             </div>
+            <button className={styles.keyBtn} onClick={() => { setConfig((c: AIConfig) => ({ ...c, apiKey: '' })); setTimeout(() => fetchModels(), 100) }}>
+              ← 切换免费模式
+            </button>
           </div>
         )}
 
-        {/* 上下文 */}
+        {/* ====== 自备 API ====== */}
         <div className={styles.sidebarSection}>
-          <h3>当前上下文</h3>
-          <div className={styles.context}>
-            <span>🗺️ {mapName}</span>
-            <span>⚔️ {side === 'attack' ? '进攻方' : '防守方'}</span>
-            <span>📐 {abilityShapes.length} 个技能</span>
+          <h3>🔌 自备 API</h3>
+          {ownkeyActive ? (
+            <div style={{
+              padding: 12, borderRadius: 10,
+              border: '1px solid rgba(5,248,248,.15)',
+              background: 'linear-gradient(135deg, rgba(5,248,248,.06), rgba(227,73,237,.03))',
+            }}>
+              <div style={{ fontSize: 11, color: '#05F8F8', marginBottom: 8, fontWeight: 500 }}>✅ 已解锁 · 输入你的 Key</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input className={styles.keyInput} type="password" value={keyInput}
+                  placeholder="sk-..." onChange={e => setKeyInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveKey() }} style={{ flex: 1, fontSize: 11 }} />
+                <button className={styles.keySaveBtn} onClick={saveKey}>确认</button>
+              </div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,.15)', marginTop: 5 }}>
+                支持 DeepSeek · OpenAI · Anthropic · Google
+              </div>
+              <div style={{ marginTop: 6, textAlign: 'right' }}>
+                {import.meta.env.DEV && (
+                  <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
+                    onClick={deactivateOwnkey}>
+                    取消激活
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div
+                onClick={() => setShowOwnkey(v => !v)}
+                style={{
+                  padding: 14, borderRadius: 10, cursor: 'pointer',
+                  border: '2px dashed rgba(192,208,255,.12)',
+                  background: 'rgba(192,208,255,.02)',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  transition: 'all .3s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(192,208,255,.3)'; e.currentTarget.style.background = 'rgba(192,208,255,.05)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(192,208,255,.12)'; e.currentTarget.style.background = 'rgba(192,208,255,.02)' }}
+              >
+                <div style={{ width: 38, height: 38, borderRadius: 8, background: 'rgba(192,208,255,.06)', border: '1px solid rgba(192,208,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 22 22">
+                    <rect x="4" y="6" width="14" height="10" rx="2" fill="none" stroke="#c0d0ff" strokeWidth="1.4" opacity=".7"/>
+                    <circle cx="8" cy="11" r="1.5" fill="#c0d0ff" opacity=".5"/>
+                    <path d="M12 11h5" stroke="#c0d0ff" strokeWidth="1" opacity=".3" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#c0d0ff' }}>自备 API Key</div>
+                  <div style={{ fontSize: 10, color: 'rgba(192,208,255,.3)', marginTop: 1 }}>使用自有 Key · 不限制次数和模型</div>
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#c0d0ff', flexShrink: 0 }}>¥19.9</div>
+              </div>
+              {showOwnkey && (
+                <div style={{
+                  marginTop: 8, padding: 12, borderRadius: 8,
+                  border: '1px solid rgba(192,208,255,.08)',
+                  background: 'rgba(192,208,255,.02)',
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.35)' }}>
+                    💡 ¥19.9/月 · 填入你自己的 API Key 即可使用自带模型
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <input className={styles.keyInput} value={actCode} placeholder="输入激活码..."
+                      onChange={e => { setActCode(e.target.value); setActStatus('') }}
+                      onKeyDown={e => { if (e.key === 'Enter') { activateCode(actCode).then(r => { if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() } else setActStatus('❌ '+ (r.error||'失败')) }) } }}
+                      style={{ flex: 1, fontSize: 11 }} />
+                    <button className={styles.keySaveBtn} onClick={async () => {
+                      const r = await activateCode(actCode)
+                      if (r.ok) { if (r.tier === 'ownkey') activateOwnkey(); else deactivateOwnkey() }
+                      else setActStatus('❌ '+ (r.error||'失败'))
+                    }}>激活</button>
+                  </div>
+                  {actStatus && <div style={{ fontSize: 10, color: actStatus.includes('✅')?'#05F8F8':'#E349ED' }}>{actStatus}</div>}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className={styles.sidebarSection}>
+          <h3>🗺️ 基础信息</h3>
+          <div
+            onClick={() => { const n = !showBoardInfo; setShowBoardInfo(n); localStorage.setItem('val-tactics-show-board-info', String(n)) }}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
+              background: showBoardInfo
+                ? 'linear-gradient(135deg, rgba(5,248,248,.08), rgba(227,73,237,.04))'
+                : 'rgba(255,255,255,.02)',
+              border: showBoardInfo
+                ? '1px solid rgba(5,248,248,.2)'
+                : '1px solid rgba(255,255,255,.06)',
+              transition: 'all .3s cubic-bezier(.16,1,.3,1)',
+              boxShadow: showBoardInfo ? '0 0 16px rgba(5,248,248,.06)' : 'none',
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 12, color: showBoardInfo ? '#05F8F8' : 'rgba(255,255,255,.45)', fontWeight: 500, transition: 'color .3s' }}>
+                {showBoardInfo ? '● AI 正在读取棋盘' : '○ AI 仅用知识库'}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginTop: 2 }}>
+                特工站位 · 技能范围 · 绘图标注
+              </div>
+            </div>
+            {/* 自定义开关 */}
+            <div style={{
+              width: 40, height: 22, borderRadius: 11,
+              background: showBoardInfo
+                ? 'linear-gradient(135deg, #05F8F8, #E349ED)'
+                : 'rgba(255,255,255,.1)',
+              transition: 'all .3s cubic-bezier(.16,1,.3,1)',
+              position: 'relative', flexShrink: 0,
+              boxShadow: showBoardInfo ? '0 0 12px rgba(5,248,248,.25)' : 'none',
+            }}>
+              <div style={{
+                width: 18, height: 18, borderRadius: '50%',
+                background: '#fff',
+                position: 'absolute', top: 2,
+                left: showBoardInfo ? 20 : 2,
+                transition: 'left .3s cubic-bezier(.16,1,.3,1)',
+                boxShadow: showBoardInfo ? '0 0 8px rgba(5,248,248,.3)' : '0 1px 3px rgba(0,0,0,.3)',
+              }} />
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.sidebarSection}>
+          <h3>📊 数据分析</h3>
+          <MatchContextSelector />
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginTop: 6 }}>
+            录入和编辑在「数据分析」页面
           </div>
         </div>
       </aside>
 
       <main className={styles.chatArea}>
         <div className={styles.chatHeader}>
-          <span className={styles.chatModel}>{provider.icon} {provider.name}{config.model ? ` · ${config.model}` : ''}</span>
-          {config.apiKey && config.model && <span className={styles.chatStatus}>● 就绪</span>}
+          <div className={styles.chatModel}>
+            <div className={styles.eqBar}><span /><span /><span /><span /></div>
+            T教练{config.model ? ` · ${(models.find(m => m.id === config.model)?.name || '').replace(/^[^\w一-鿿]+/, '').trim()}` : ''}
+          </div>
+          <div className={styles.chatStatus}>● 在线</div>
         </div>
-
         <div className={styles.messages} ref={scrollRef}>
           {messages.length === 0 ? (
             <div className={styles.welcome}>
-              <div className={styles.welcomeIcon}>🤖</div>
-              <h2>你好！我是你的 AI 战术教练</h2>
-              <p>我可以帮你分析战术、推荐阵容、解答疑问。试试问我：</p>
+              <div className={styles.welcomeIcon}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="72" height="72">
+                  <defs><linearGradient id="welcomeGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                  <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#welcomeGrad)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+                  <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#welcomeGrad)" opacity="0.25" transform="rotate(5,53,35)"/>
+                  <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#welcomeGrad)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+                  <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#welcomeGrad)" opacity="0.35" transform="rotate(10,61,51)"/>
+                  <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#welcomeGrad)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+                  <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+                </svg>
+              </div>
+              <h2>你好，我是你的 T教练</h2>
+              <p>{isFree ? '免费套餐 · 每日2次 · 试试问我：' : '全部模式已解锁，尽情使用。试试问我：'}</p>
               <div className={styles.quickPrompts}>
                 {quickPrompts.map((p, i) => (
-                  <button key={i} className={styles.quickBtn} onClick={() => { setInput(p); inputRef.current?.focus() }}>
-                    {p}
-                  </button>
+                  <button key={i} className={styles.quickBtn} onClick={() => { setInput(p); inputRef.current?.focus() }}>{p}</button>
                 ))}
               </div>
             </div>
           ) : (
             messages.map((m, i) => (
               <div key={i} className={m.role === 'user' ? styles.userMsg : styles.aiMsg}>
-                <div className={styles.msgAvatar}>{m.role === 'user' ? '👤' : provider.icon}</div>
-                <div className={styles.msgContent}>{m.content}</div>
+                <div className={styles.msgAvatar}>
+                  {m.role === 'user' ? '👤' : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="24" height="24">
+                      <defs><linearGradient id={`msggrad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                      <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke={`url(#msggrad-${i})`} strokeWidth="2" transform="rotate(-12,37,39)"/>
+                      <rect x="38" y="20" width="30" height="30" rx="7" fill={`url(#msggrad-${i})`} opacity="0.25" transform="rotate(5,53,35)"/>
+                      <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke={`url(#msggrad-${i})`} strokeWidth="2" transform="rotate(-3,44,54)"/>
+                      <rect x="48" y="38" width="26" height="26" rx="7" fill={`url(#msggrad-${i})`} opacity="0.35" transform="rotate(10,61,51)"/>
+                      <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke={`url(#msggrad-${i})`} strokeWidth="2" transform="rotate(-8,74,68)"/>
+                      <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+                    </svg>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div className={styles.msgContent}>{m.content}</div>
+                  {m.role === 'assistant' && m.convId && (
+                    <div style={{ display: 'flex', gap: 6, marginTop: 4, paddingLeft: 4, opacity: .6 }}>
+                      <span
+                        onClick={async () => {
+                          const nr = m.rating === 1 ? 0 : 1
+                          setMessages(prev => prev.map(msg => msg.convId === m.convId ? { ...msg, rating: nr } : msg))
+                          await supabase.from('ai_conversations').update({ rating: nr }).eq('id', m.convId!)
+                        }}
+                        style={{ cursor: 'pointer', fontSize: 14, opacity: m.rating === 1 ? 1 : .4, transition: 'opacity .2s', userSelect: 'none' }}
+                        title="有帮助">👍</span>
+                      <span
+                        onClick={async () => {
+                          const nr = m.rating === -1 ? 0 : -1
+                          setMessages(prev => prev.map(msg => msg.convId === m.convId ? { ...msg, rating: nr } : msg))
+                          await supabase.from('ai_conversations').update({ rating: nr }).eq('id', m.convId!)
+                        }}
+                        style={{ cursor: 'pointer', fontSize: 14, opacity: m.rating === -1 ? 1 : .4, transition: 'opacity .2s', userSelect: 'none' }}
+                        title="没帮助">👎</span>
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           )}
           {loading && (
             <div className={styles.aiMsg}>
-              <div className={styles.msgAvatar}>{provider.icon}</div>
-              <div className={styles.msgContent}><span className={styles.typing}>思考中</span></div>
+              <div className={styles.msgAvatar}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="24" height="24">
+                  <defs><linearGradient id="loadgrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                  <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#loadgrad)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+                  <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#loadgrad)" opacity="0.25" transform="rotate(5,53,35)"/>
+                  <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#loadgrad)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+                  <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#loadgrad)" opacity="0.35" transform="rotate(10,61,51)"/>
+                  <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#loadgrad)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+                  <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+                </svg>
+              </div>
+              <div className={styles.msgContent}>
+                <div className={styles.typing}>
+                  分析中<div className={styles.typingDots}><span /><span /><span /></div>
+                </div>
+              </div>
             </div>
           )}
         </div>
-
         <div className={styles.inputBar}>
           <input ref={inputRef} className={styles.chatInput}
             value={input}
-            placeholder={config.apiKey && config.model ? '输入你的战术问题...' : '请先在左侧设置 API Key 和模型'}
+            placeholder={config.model ? '输入你的战术问题...' : '请先在左侧选择智能模式'}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
-          <button className={styles.sendBtn} onClick={send} disabled={loading || !input.trim() || !config.model}>
-            发送
-          </button>
+          <button
+            onClick={() => { setMessages([]); localStorage.removeItem('val-tactics-chat') }}
+            style={{
+              padding: '8px 14px', background: 'transparent',
+              border: '1px solid rgba(255,255,255,.08)', borderRadius: 14,
+              color: 'rgba(255,255,255,.3)', fontSize: 12, cursor: 'pointer',
+              fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#E349ED'; e.currentTarget.style.borderColor = 'rgba(227,73,237,.3)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,.3)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)' }}
+            title="清除对话历史，重新开始"
+          >重置</button>
+          <button className={styles.sendBtn} onClick={send} disabled={loading || !input.trim() || !config.model}>发送消息</button>
         </div>
       </main>
     </div>

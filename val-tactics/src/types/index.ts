@@ -12,6 +12,7 @@ export interface Marker {
   createdAt?: number  // 录制时间戳
   shapeId?: string  // 关联的技能形状ID
   trackId?: string  // 所属录制轨道ID
+  duration?: number  // 技能持续时间(秒)，回放时到期自动隐藏
 }
 
 // 录制轨道
@@ -85,7 +86,7 @@ export interface AbilityShape {
 }
 
 // ====== 工具模式 ======
-export type ToolMode = 'select' | 'freehand' | 'line' | 'arrow' | 'rect' | 'circle' | 'text' | 'agent' | 'eraser'
+export type ToolMode = 'select' | 'pan' | 'freehand' | 'line' | 'arrow' | 'rect' | 'circle' | 'text' | 'agent' | 'eraser'
 
 // ====== 撤销重做快照 ======
 export interface Snapshot {
@@ -94,6 +95,47 @@ export interface Snapshot {
   textAnnotations: TextAnnotation[]
   agentPositions: AgentPosition[]
   abilityShapes: AbilityShape[]
+}
+
+// ====== 比赛记录 ======
+export type MatchResult = 'win' | 'loss' | 'draw'
+export type PlaySide = 'attack' | 'defense'
+
+export interface MatchEntry {
+  id: string               // 唯一ID "mh_" + timestamp
+  mapId: string            // 地图ID
+  agentId: string          // 特工ID
+  role: string             // 角色（自动从特工派生）
+  result: MatchResult
+  kills: number
+  deaths: number
+  assists: number
+  acs?: number             // 平均战斗评分
+  hsPercent?: number       // 爆头率
+  rank?: string            // 段位
+  side: PlaySide           // 开局方
+  notes?: string           // 备注
+  timestamp: number        // 录入时间
+}
+
+export interface MatchStats {
+  totalMatches: number
+  wins: number
+  losses: number
+  draws: number
+  winRate: number
+  kdRatio: number
+  avgACS: number
+  avgHS: number
+  perMapStats: Record<string, { matches: number; wins: number; winRate: number }>
+  perAgentStats: Record<string, { matches: number; wins: number; winRate: number; avgKills: number; avgDeaths: number; avgAssists: number; avgACS: number }>
+  recentTrend: { results: MatchResult[]; kdRatios: number[] }
+}
+
+export interface MatchImportResult {
+  entries: MatchEntry[]
+  errors: string[]
+  warningCount: number
 }
 
 // ====== 战术模板 ======

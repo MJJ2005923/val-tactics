@@ -5,14 +5,15 @@ import { useTactics } from '../../store/TacticsContext'
 import { useToast } from '../Toast/Toast'
 import styles from './TemplateManager.module.css'
 
-interface Props { onClose: () => void; mapId: string; onLoadMap: (mapId: string) => void }
+interface Props { onClose: () => void; mapId: string; onLoadMap: (mapId: string) => void; onExportImage: () => void; onShareLink: () => void }
 
-export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
+export default function TemplateManager({ onClose, mapId, onLoadMap, onExportImage, onShareLink }: Props) {
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks, dispatch } = useTactics()
   const toast = useToast()
   const [templates, setTemplates] = useState<Template[]>([])
   const [name, setName] = useState(strategyName)
   const [desc, setDesc] = useState(strategyDescription)
+  const hasContent = markers.length > 0 || drawings.length > 0 || abilityShapes.length > 0 || textAnnotations.length > 0 || agentPositions.length > 0
   const refresh = useCallback(async () => {
     const all = await db.templates.orderBy('updatedAt').reverse().toArray()
     setTemplates(all)
@@ -92,13 +93,6 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
     input.click()
   }
 
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
-
-  const handleClear = () => {
-    if (markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0) return
-    setShowClearConfirm(true)
-  }
-
   const formatDate = (ts: number) => {
     const d = new Date(ts)
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
@@ -114,35 +108,28 @@ export default function TemplateManager({ onClose, mapId, onLoadMap }: Props) {
         <div className={styles.body}>
           {/* 保存 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>保存当前战术</h4>
+            <div className={styles.sectionTitle}>保存当前战术</div>
             <div className={styles.saveRow}>
               <input className={styles.input} value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSave()} placeholder="策略名称..." />
               <button className={styles.btnPrimary} onClick={handleSave}>保存</button>
             </div>
-            <input className={styles.input} value={desc} onChange={e => setDesc(e.target.value)} placeholder="策略描述（可选）..." style={{ marginTop: 6 }} />
+            <input className={`${styles.input} ${styles.inputMt}`} value={desc} onChange={e => setDesc(e.target.value)} placeholder="策略描述（可选）..." />
           </div>
 
-          {/* 导入导出 */}
+          {/* 导入导出分享 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>导入 / 导出</h4>
+            <div className={styles.sectionTitle}>导入 / 导出 / 分享</div>
             <div className={styles.actionRow}>
-              <button className={styles.btn} onClick={handleExport} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>导出 JSON</button>
+              <button className={styles.btn} onClick={handleExport} disabled={!hasContent}>导出 JSON</button>
               <button className={styles.btn} onClick={handleImport}>导入 JSON</button>
-              {showClearConfirm ? (
-                <div className={styles.confirmRow}>
-                  <span className={styles.confirmText}>确定清空？</span>
-                  <button className={styles.btnDanger} onClick={() => { dispatch({ type: 'CLEAR_ALL' }); setShowClearConfirm(false); toast('已清空') }}>确定</button>
-                  <button className={styles.btnSm} onClick={() => setShowClearConfirm(false)}>取消</button>
-                </div>
-              ) : (
-                <button className={styles.btnDanger} onClick={handleClear} disabled={markers.length === 0 && drawings.length === 0 && abilityShapes.length === 0}>清空画布</button>
-              )}
+              <button className={styles.btn} onClick={onExportImage} disabled={!hasContent}>导出图片</button>
+              <button className={styles.btn} onClick={onShareLink}>分享链接</button>
             </div>
           </div>
 
           {/* 模板列表 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>已保存的模板 ({templates.length})</h4>
+            <div className={styles.sectionTitle}>已保存的模板 ({templates.length})</div>
             {templates.length === 0 && <p className={styles.emptyText}>暂无保存的模板</p>}
             <div className={styles.templateList}>
               {templates.map(tpl => (

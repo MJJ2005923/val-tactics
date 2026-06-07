@@ -1,55 +1,340 @@
+/* ══════ 旗舰版特工面板 ══════ */
 .panel {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  background: transparent;
+  opacity: 0; transform: translateX(-30px);
+}
+.panelEnter {
+  opacity: 1; transform: translateX(0);
+  transition: opacity .6s ease, transform .6s cubic-bezier(.16,1,.3,1);
 }
 
-.header {
-  padding: 12px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 1px solid var(--color-border);
+/* ====== 入场交错动画（transition方案，无卡顿）====== */
+.sectionLabel { opacity: 0; transform: translateY(8px) }
+.panelEnter .sectionLabel { opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1); transition-delay: .1s }
+.rosterRow { opacity: 0; transform: translateY(8px) }
+.panelEnter .rosterRow { opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1); transition-delay: .15s }
+.rosterSlot { opacity: 0; transform: translateY(-10px) }
+.panelEnter .rosterSlot { opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1) }
+.panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(1),
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(1) { transition-delay: .16s }
+.panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(2),
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(2) { transition-delay: .22s }
+.panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(3),
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(3) { transition-delay: .28s }
+.panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(4),
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(4) { transition-delay: .34s }
+.panelEnter .rosterGroup:nth-child(1) .rosterSlot:nth-child(5),
+.panelEnter .rosterGroup:nth-child(2) .rosterSlot:nth-child(5) { transition-delay: .40s }
+.divider { opacity: 0 }
+.panelEnter .divider { opacity: 1; transition: opacity .3s; transition-delay: .28s }
+.searchBox { opacity: 0; transform: translateY(8px) }
+.panelEnter .searchBox { opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1); transition-delay: .4s }
+.panelEnter .agentItem:nth-child(1) { animation-delay: .38s }
+.panelEnter .agentItem:nth-child(2) { animation-delay: .43s }
+.panelEnter .agentItem:nth-child(3) { animation-delay: .48s }
+.panelEnter .agentItem:nth-child(4) { animation-delay: .53s }
+.panelEnter .agentItem:nth-child(5) { animation-delay: .58s }
+.panelEnter .agentItem:nth-child(6) { animation-delay: .63s }
+.panelEnter .agentItem:nth-child(7) { animation-delay: .68s }
+.panelEnter .agentItem:nth-child(8) { animation-delay: .73s }
+.panelEnter .agentItem:nth-child(9) { animation-delay: .78s }
+.panelEnter .agentItem:nth-child(10) { animation-delay: .83s }
+.panelEnter .agentItem:nth-child(11) { animation-delay: .88s }
+.panelEnter .agentItem:nth-child(12) { animation-delay: .93s }
+.panelEnter .agentItem:nth-child(13) { animation-delay: .98s }
+.panelEnter .agentItem:nth-child(14) { animation-delay: 1.03s }
+.panelEnter .agentItem:nth-child(15) { animation-delay: 1.08s }
+.panelEnter .agentItem:nth-child(16) { animation-delay: 1.13s }
+.panelEnter .agentItem:nth-child(17) { animation-delay: 1.18s }
+.panelEnter .agentItem:nth-child(18) { animation-delay: 1.23s }
+.panelEnter .agentItem:nth-child(19) { animation-delay: 1.28s }
+.panelEnter .agentItem:nth-child(20) { animation-delay: 1.33s }
+.panelEnter .agentItem:nth-child(21) { animation-delay: 1.38s }
+.panelEnter .agentItem:nth-child(22) { animation-delay: 1.43s }
+.panelEnter .agentItem:nth-child(23) { animation-delay: 1.48s }
+.panelEnter .agentItem:nth-child(24) { animation-delay: 1.53s }
+.panelEnter .agentItem:nth-child(25) { animation-delay: 1.58s }
+.panelEnter .agentItem:nth-child(26) { animation-delay: 1.63s }
+.panelEnter .agentItem:nth-child(27) { animation-delay: 1.68s }
+.panelEnter .agentItem:nth-child(28) { animation-delay: 1.73s }
+@keyframes agentSlideLeft { from { opacity: 0; transform: translateX(-16px) } to { opacity: 1; transform: translateX(0) } }
+@keyframes apFadeUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
+
+.rosterRow {
+  display: flex;
   flex-shrink: 0;
 }
 
+.rosterGroup {
+  flex: 1;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.rosterLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.rosterSlots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rosterSlot {
+  width: 100%;
+  height: 42px;
+  border: 1.5px dashed rgba(227,73,237,.12);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .3s cubic-bezier(.16,1,.3,1);
+  position: relative;
+  overflow: visible;
+}
+
+.rosterSlot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(227,73,237,.04));
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+}
+
+.rosterSlot:hover {
+  border-color: rgba(227,73,237,.4);
+  background: rgba(227,73,237,.06);
+  box-shadow: 0 0 20px rgba(227,73,237,.08);
+  transform: translateY(-1px);
+}
+
+.rosterSlot:hover::before {
+  opacity: 1;
+}
+
+.rosterFilled {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
+  width: 100%;
+  background: rgba(227,73,237,.08);
+  border-radius: 9px;
+  border: 1px solid rgba(227,73,237,.2);
+  transition: all .25s;
+  animation: slotFillIn .4s cubic-bezier(.16,1,.3,1);
+  position: relative;
+}
+@keyframes slotFillIn { from { opacity: 0; transform: scale(.8) } to { opacity: 1; transform: scale(1) } }
+
+.rosterFilled:hover {
+  background: rgba(227,73,237,.14);
+  border-color: rgba(227,73,237,.35);
+  box-shadow: 0 0 12px rgba(227,73,237,.1);
+}
+
+/* Tooltip */
+.rosterFilled::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #e0d0f0;
+  background: rgba(18,12,32,.97);
+  border: 1px solid rgba(227,73,237,.25);
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4), 0 0 12px rgba(227,73,237,.08);
+  backdrop-filter: blur(8px);
+  letter-spacing: .3px;
+  z-index: 10;
+}
+.rosterFilled::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 0px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid rgba(227,73,237,.25);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s;
+  z-index: 10;
+}
+.rosterFilled:hover::after,
+.rosterFilled:hover::before {
+  opacity: 1;
+}
+
+.rosterAvatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(227,73,237,.3);
+  flex-shrink: 0;
+  transition: border-color .3s, box-shadow .3s;
+}
+
+.rosterName {
+  font-size: 11px;
+  font-weight: 600;
+  color: #d0b8e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.rosterNameEn {
+  font-size: 9px;
+  font-weight: 400;
+  color: rgba(227,73,237,.3);
+  display: block;
+}
+
+.rosterEmpty {
+  font-size: 16px;
+  color: rgba(227,73,237,.15);
+  line-height: 1;
+  transition: all .3s cubic-bezier(.16,1,.3,1);
+}
+
+.rosterSlot:hover .rosterEmpty {
+  color: rgba(227,73,237,.45);
+  transform: scale(1.2);
+  text-shadow: 0 0 8px rgba(227,73,237,.2);
+}
+
+/* ====== 分隔线 ====== */
+.divider {
+  height: 1px;
+  background: rgba(227,73,237,.12);
+  margin: 2px 0;
+  flex-shrink: 0;
+}
+
+/* ====== 搜索区 ====== */
 .searchBox {
   padding: 8px 12px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(227,73,237,.08);
   flex-shrink: 0;
 }
 
 .searchInput {
   width: 100%;
-  padding: 6px 10px;
-  font-size: 13px;
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-primary);
+  padding: 9px 14px;
+  font-size: 12px;
+  background: rgba(227,73,237,.03);
+  border: 1px solid rgba(227,73,237,.12);
+  border-radius: 10px;
+  color: #c0b0d0;
   outline: none;
-  transition: border-color var(--transition-fast);
+  font-family: inherit;
+  transition: all .3s cubic-bezier(.16,1,.3,1);
+  animation: searchPulse 4s ease-in-out infinite;
+}
+@keyframes searchPulse {
+  0%, 100% { border-color: rgba(227,73,237,.1); box-shadow: 0 0 0 rgba(227,73,237,0); }
+  50% { border-color: rgba(5,248,248,.25); box-shadow: 0 0 12px rgba(5,248,248,.08), 0 0 24px rgba(227,73,237,.04); }
 }
 
 .searchInput:focus {
-  border-color: var(--color-border-light);
+  border-color: #05F8F8;
+  box-shadow: 0 0 0 4px rgba(5,248,248,.06), 0 0 30px rgba(5,248,248,.12);
+  background: rgba(5,248,248,.03);
+  animation: none;
+  color: #e0d0f0;
 }
 
 .searchInput::placeholder {
-  color: var(--color-text-muted);
+  color: rgba(227,73,237,.25);
+  transition: color .3s;
+}
+.searchInput:focus::placeholder {
+  color: rgba(5,248,248,.2);
 }
 
+/* ====== 特工列表 ====== */
 .list {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 0;
+  padding: 2px 0;
+  position: relative;
+  mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent 100%);
+}
+
+.list::-webkit-scrollbar {
+  width: 2px;
+}
+
+.list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(5,248,248,.25), rgba(227,73,237,.15));
+  border-radius: 1px;
+  transition: background .3s;
+}
+
+.list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(5,248,248,.5), rgba(227,73,237,.3));
 }
 
 .agentItem {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(227,73,237,.06);
+  transition: background .2s;
+  position: relative;
+}
+.panelEnter .agentItem {
+  animation: agentSlideLeft .4s cubic-bezier(.16,1,.3,1) backwards;
+}
+
+/* 选中指示条 */
+.agentItemExpanded::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 6px; bottom: 6px;
+  width: 2.5px;
+  background: #05F8F8;
+  border-radius: 2px;
+  box-shadow: 0 0 12px #05F8F8, 0 0 24px rgba(5,248,248,.35);
+  animation: selectBarIn .25s cubic-bezier(.16,1,.3,1);
+}
+@keyframes selectBarIn { from { opacity: 0; transform: scaleY(0) } to { opacity: 1; transform: scaleY(1) } }
+
+.agentItem:hover {
+  background: rgba(227,73,237,.02);
+}
+
+.agentBtn:hover {
+  background: rgba(5,248,248,.06);
+  box-shadow: inset 0 0 20px rgba(5,248,248,.04), 0 0 12px rgba(5,248,248,.08);
+  color: #05F8F8;
 }
 
 .agentRow {
@@ -58,10 +343,10 @@
   gap: 0;
 }
 
-/* 英雄头像（可拖拽） */
+/* 英雄头像拖拽区 */
 .agentDragArea {
   flex-shrink: 0;
-  padding: 4px 0 4px 8px;
+  padding: 4px 0 4px 10px;
   cursor: grab;
   display: flex;
   align-items: center;
@@ -71,21 +356,28 @@
   cursor: grabbing;
 }
 
-.agentDragging {
-  opacity: 0.5;
-}
-
 .agentAvatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 2px solid var(--color-border);
+  border: 2px solid rgba(227,73,237,.12);
   object-fit: cover;
-  transition: border-color var(--transition-fast);
+  transition: border-color .25s, box-shadow .25s;
 }
 
 .agentDragArea:hover .agentAvatar {
-  border-color: var(--color-border-light);
+  border-color: rgba(227,73,237,.35);
+  box-shadow: 0 0 16px rgba(227,73,237,.12);
+}
+
+.agentItemExpanded .agentAvatar {
+  border-color: #05F8F8 !important;
+  box-shadow: 0 0 14px rgba(5,248,248,.3), 0 0 28px rgba(227,73,237,.15) !important;
+  animation: avatarGlow 2.5s ease-in-out infinite;
+}
+@keyframes avatarGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(5,248,248,.25), 0 0 20px rgba(227,73,237,.1); }
+  50% { box-shadow: 0 0 20px rgba(5,248,248,.5), 0 0 36px rgba(227,73,237,.25); }
 }
 
 /* 英雄信息按钮 */
@@ -94,32 +386,36 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px 8px 8px;
+  padding: 10px 12px 10px 10px;
   background: transparent;
   border: none;
-  color: var(--color-text-primary);
+  color: #b8b0c8;
   font-size: 13px;
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: all .2s;
   text-align: left;
   min-width: 0;
+  font-family: inherit;
 }
 
 .agentBtn:hover {
-  background: var(--color-bg-hover);
+  background: rgba(227,73,237,.04);
 }
 
 .agentBtnActive {
-  background: var(--color-bg-active);
+  background: rgba(227,73,237,.06);
+  color: #d0b8e0;
 }
 
 .agentRole {
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 2px;
-  background: var(--color-bg-primary);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(227,73,237,.06);
   white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: .3px;
+  font-weight: 500;
 }
 
 .agentName {
@@ -128,175 +424,191 @@
 }
 
 .arrow {
-  color: var(--color-text-muted);
+  color: rgba(227,73,237,.2);
   font-size: 10px;
-  transition: transform var(--transition-fast);
+  transition: transform .25s cubic-bezier(.16,1,.3,1);
   flex-shrink: 0;
 }
 
+/* ====== 技能展开区 ====== */
 .abilities {
-  padding: 0 0 8px;
+  overflow: hidden;
+  animation: expandIn .3s cubic-bezier(.16,1,.3,1);
+  padding: 4px 12px 8px;
+}
+
+@keyframes expandIn {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 320px; }
 }
 
 .dragHint {
   font-size: 10px;
-  color: var(--color-text-muted);
-  padding: 2px 16px 6px 48px;
+  color: rgba(227,73,237,.18);
+  padding: 2px 4px 8px;
+  letter-spacing: .3px;
+  animation: fadeIn .25s ease .1s both;
 }
 
 .abilityRow {
   display: flex;
   align-items: center;
-}
-
-.abilityBtn {
+  opacity: 0; transform: translateX(20px);
+  animation: abilitySlideRight .35s cubic-bezier(.16,1,.3,1) forwards;
+  cursor: pointer;
+  margin-bottom: 5px;
   position: relative;
+}
+/* Tooltip */
+.abilityRow::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #e0d0f0;
+  background: rgba(18,12,32,.96);
+  border: 1px solid rgba(5,248,248,.25);
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4), 0 0 12px rgba(5,248,248,.08);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+.abilityRow:hover::after {
+  opacity: 1;
+}
+.abilityRow:last-child { margin-bottom: 0 }
+.abilityRow:nth-child(2) { animation-delay: .12s }
+.abilityRow:nth-child(3) { animation-delay: .22s }
+.abilityRow:nth-child(4) { animation-delay: .32s }
+.abilityRow:nth-child(5) { animation-delay: .42s }
+@keyframes abilitySlideRight { to { opacity: 1; transform: translateX(0) } }
+@keyframes fadeIn { to { opacity: 1 } }
+
+/* 技能卡片（方案B） */
+.abilityBtn {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 4px 5px 48px;
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  font-size: 12px;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(227,73,237,.02);
+  border: 1px solid rgba(227,73,237,.1);
+  border-radius: 10px;
   cursor: grab;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition: all .25s cubic-bezier(.16,1,.3,1);
   text-align: left;
+  font-family: inherit;
 }
 
 .abilityBtn:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-primary);
+  border-color: rgba(227,73,237,.3);
+  background: rgba(227,73,237,.06);
+  transform: translateX(3px);
+  box-shadow: 0 0 14px rgba(227,73,237,.06);
 }
 
 .abilityBtn:active {
   cursor: grabbing;
 }
 
-.abilityBtnDragging {
-  opacity: 0.5;
-  background: var(--color-bg-active);
-}
-
 .abilityBtnDisabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
-.abilityKeyBadge {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-  position: absolute;
-  left: 8px;
+.abilityBtnDisabled:hover {
+  background: rgba(227,73,237,.02);
+  color: inherit;
+  transform: none;
+  box-shadow: none;
 }
 
-.abilityKey {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  color: var(--color-text-secondary);
+.abilityIconWrap {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  color: #fff; font-weight: 800;
   flex-shrink: 0;
+  position: relative;
+}
+
+.abilityKeyBadge {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+
+.abilityInfo {
+  flex: 1; min-width: 0;
 }
 
 .abilityName {
-  flex: 1;
-  font-weight: 500;
+  font-size: 12px; font-weight: 600; color: #c0b0d0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 .abilityType {
-  font-size: 11px;
-  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .3px;
 }
 
+/* 信息按钮 */
 .infoBtn {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: none;
-  color: var(--color-text-muted);
-  font-size: 12px;
+  border: 1px solid rgba(227,73,237,.08);
+  border-radius: 50%;
+  color: rgba(227,73,237,.18);
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  margin-right: 8px;
-  border-radius: 50%;
+  margin-right: 10px;
   flex-shrink: 0;
-  transition: all var(--transition-fast);
+  transition: all .25s;
+  font-family: inherit;
 }
 
 .infoBtn:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-primary);
+  background: rgba(227,73,237,.08);
+  border-color: rgba(227,73,237,.25);
+  color: #d0b8e0;
+  box-shadow: 0 0 12px rgba(227,73,237,.08);
 }
 
-/* 阵容 */
-.rosterGroup {
-  padding: 4px 8px;
-}
-
-.rosterLabel {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  margin-bottom: 3px;
-}
-
-.rosterSlots {
-  display: flex;
-  gap: 4px;
-}
-
-.rosterSlot {
-  width: 36px;
-  height: 36px;
-  border: 1.5px dashed var(--color-border);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: border-color var(--transition-fast);
-}
-
-.rosterSlot:hover {
-  border-color: var(--color-border-light);
-}
-
-.rosterEmpty {
-  font-size: 16px;
-  color: var(--color-text-muted);
-  line-height: 1;
-}
-
-.rosterAvatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--color-border);
-}
-
+/* 空状态 */
 .emptySearch {
-  padding: 24px 16px;
+  padding: 32px 16px;
   text-align: center;
-  font-size: 13px;
-  color: var(--color-text-muted);
+  font-size: 12px;
+  color: rgba(227,73,237,.18);
+  letter-spacing: .5px;
+}
+
+/* 阵容区标签 */
+.sectionLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: rgba(227,73,237,.18);
+  padding: 6px 12px 4px;
+  flex-shrink: 0;
 }

@@ -2,7 +2,7 @@ import { useTactics } from '../../store/TacticsContext'
 import agents from '../../data/agents'
 import styles from './SelectionInspector.module.css'
 
-const M = 7 / 1800
+const M = 7 / 1600
 
 function fmt(n: number): string {
   const m = n / M
@@ -26,8 +26,16 @@ export default function SelectionInspector() {
     if (s.shape === 'cone') dims.push(`角度 ${s.angle}°`, `射程 ${fmt(s.length)}`)
     if (s.shape === 'rect') dims.push(`${fmt(s.length)} × ${fmt(s.width)}`)
     if (s.shape === 'line') {
-      if (s.path) dims.push(`路径 ${s.path.length - 1}段`)
-      else dims.push(`长度 ${fmt(s.length)}`)
+      if (s.path && s.path.length > 1) {
+        let total = 0
+        for (let i = 1; i < s.path.length; i++) {
+          const dx = s.path[i].x - s.path[i - 1].x, dy = s.path[i].y - s.path[i - 1].y
+          total += Math.sqrt(dx * dx + dy * dy)
+        }
+        dims.push(`长度 ${fmt(total)}`)
+      } else {
+        dims.push(`长度 ${fmt(s.length)}`)
+      }
     }
     content = {
       label: `${agent?.name || '?'} · ${ability?.name || '?'}`,

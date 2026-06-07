@@ -1,46 +1,31 @@
 import { useState, useRef, useEffect } from 'react'
-import { getAIConfig } from './AISettings'
+import { getAIConfig, getUserId } from './AISettings'
 import { useTactics } from '../../store/TacticsContext'
-import agents from '../../data/agents'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI } from '../../data/knowledgeBase'
+import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
+import { loadMatchContext } from '../MatchHistory/MatchContextSelector'
+import { supabase } from '../../lib/supabase'
 import styles from './AIPanel.module.css'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   model?: string
-}
-
-// 知识库：系统提示词
-function buildSystemPrompt(
-  mapName: string, side: string,
-  agentNames: string[], shapeCount: number
-): string {
-  let prompt = `你是一个无畏契约(VALORANT)战术教练助手。你正在帮用户在「${mapName}」这张地图上布置${side === 'attack' ? '进攻' : '防守'}战术。
-
-目前地图上有 ${shapeCount} 个技能标记。`
-
-  if (agentNames.length > 0) {
-    prompt += `\n场上特工: ${agentNames.join('、')}。`
-  }
-
-  prompt += `
-请用中文回答。回答简洁实用，像教练一样给出建议。
-
-关于无畏契约的知识：
-- 12 张地图: 亚海悬城、源工重镇、森寒冬港、霓虹町、深海明珠、裂变峡谷、隐士修所、日落之城、莲华古城、微风岛屿、幽邃地窖、盐海矿镇
-- 29 个特工分四个角色: 决斗者(进点)、先锋(信息)、控场者(烟雾)、哨卫(防守)
-- 每个特工有 C/Q/E/X 四个技能`
-
-  return prompt
+  convId?: string
+  rating?: number
 }
 
 export default function AIChat({ mapName }: { mapId: string; mapName: string }) {
-  const { abilityShapes, side } = useTactics()
-  const [messages, setMessages] = useState<Message[]>([])
+  const { abilityShapes, side, agentPositions, drawings, textAnnotations, markers, roster } = useTactics()
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try { return JSON.parse(localStorage.getItem('val-tactics-chat') || '[]') } catch { return [] }
+  })
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // 持久化消息
+  useEffect(() => { localStorage.setItem('val-tactics-chat', JSON.stringify(messages)) }, [messages])
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
@@ -50,8 +35,14 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
     if (!text || loading) return
 
     const config = getAIConfig()
-    if (!config.apiKey) {
-      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ 请先在「AI 设置」里填入你的 API Key。' }])
+    const isFree = !config.apiKey
+    if (!config.apiKey && !isFree) {
+      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ 请先填入 API Key 或使用免费模式。' }])
+      return
+    }
+
+    if (!config.model) {
+      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ 请先选择一个模型。' }])
       return
     }
 
@@ -63,16 +54,46 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
     setMessages(msgs)
 
     // 获取当前上下文
-    const agentNames = abilityShapes
-      .map(s => agents.find(a => a.id === s.agentId)?.name)
-      .filter((v): v is string => !!v)
+    const agentIds = abilityShapes
+      .map(s => s.agentId)
       .filter((v, i, a) => a.indexOf(v) === i)
+    const agentNames = getAgentNames(agentIds)
 
-    const systemPrompt = buildSystemPrompt(mapName, side, agentNames, abilityShapes.length)
+    const systemPrompt = buildKnowledgeBase(mapName, side, agentNames)
 
     const allMessages = [
       { role: 'user', content: systemPrompt },
-      { role: 'assistant', content: '明白了，我会根据当前战术布局给出建议。' },
+      { role: 'assistant', content: '明白。我是T教练，已掌握全部29位特工技能数据和12张地图信息，请随时提问。' },
+      // 注入棋盘基础信息（每次发送时实时读取开关状态）
+      ...(() => {
+        const enabled = (() => { try { return localStorage.getItem('val-tactics-show-board-info') !== 'false' } catch { return true } })()
+        if (!enabled) return []
+        return [
+          { role: 'user' as const, content: formatBoardStateForAI(mapName, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster) },
+          { role: 'assistant' as const, content: '收到，我已了解当前战术板的详细状态。' },
+        ]
+      })(),
+      // 注入比赛数据（根据用户选择）
+      ...(() => {
+        const ctx = loadMatchContext()
+        if (ctx.mode === 'none') return []
+        const matches = loadMatches()
+        if (matches.length === 0) return []
+
+        if (ctx.mode === 'single' && ctx.matchId) {
+          const match = matches.find(m => m.id === ctx.matchId)
+          if (!match) return []
+          return [
+            { role: 'user' as const, content: `以下是我选定的一场比赛数据，请针对这场比赛进行分析：\n\n${formatSingleMatchForAI(match)}` },
+            { role: 'assistant' as const, content: '收到，我已看到这场比赛的详细数据，可以针对这场比赛给你分析。' },
+          ]
+        }
+
+        return [
+          { role: 'user' as const, content: `以下是我的全部比赛记录数据，在后续分析中请结合这些个人数据：\n\n${formatMatchHistoryForAI(matches)}` },
+          { role: 'assistant' as const, content: '收到，我已掌握你的比赛记录和统计数据，可以据此分析你的个人表现和给出针对性建议。' },
+        ]
+      })(),
       ...msgs.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     ]
 
@@ -84,6 +105,7 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
           apiKey: config.apiKey,
           provider: config.provider,
           model: config.model,
+          userId: isFree ? getUserId() : undefined,
           messages: allMessages,
         }),
       })
@@ -106,7 +128,21 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
         content = data.choices?.[0]?.message?.content || JSON.stringify(data)
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content, model: config.model }])
+      // 存到 Supabase
+      let convId: string | undefined
+      try {
+        const { data: row } = await supabase.from('ai_conversations').insert({
+          question: text, answer: content, model: config.model,
+        }).select('id').single()
+        convId = row?.id
+      } catch {}
+      setMessages(prev => [...prev, { role: 'assistant', content, model: config.model, convId, rating: 0 }])
+      if (isFree) {
+        const date = new Date().toISOString().slice(0,10)
+        const k = `val-tactics-usage-${date}-${config.model}`
+        const n = (parseInt(localStorage.getItem(k) || '0')) + 1
+        localStorage.setItem(k, String(n))
+      }
     } catch (err: any) {
       const msg = err.message || ''
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
@@ -128,24 +164,47 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
       <div className={styles.messages} ref={scrollRef}>
         {messages.length === 0 && (
           <div className={styles.welcome}>
-            🤖 我是你的 AI 战术教练。试试问我：
-            <ul>
-              <li>「这张地图怎么打 B 点？」</li>
-              <li>「推荐一个进攻阵容」</li>
-              <li>「分析我现在的战术布局」</li>
-              <li>「怎么破解双烟防守？」</li>
-            </ul>
+            <div className={styles.welcomeIcon}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="72" height="72">
+                <defs><linearGradient id="aiLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#aiLogoGrad)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+                <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#aiLogoGrad)" opacity="0.25" transform="rotate(5,53,35)"/>
+                <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#aiLogoGrad)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+                <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#aiLogoGrad)" opacity="0.35" transform="rotate(10,61,51)"/>
+                <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#aiLogoGrad)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+                <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+              </svg>
+            </div>
+            <p>你好尊敬的选手，我是T教练，我能解答你所有关于无畏契约的疑问</p>
+            <div className={styles.quickPrompts}>
+              {['这张地图怎么打 B 点？', '推荐一个进攻阵容', '分析我现在的战术布局', '怎么破解双烟防守？'].map((p, i) => (
+                <button key={i} className={styles.quickBtn} onClick={() => { setInput(p) }}>{p}</button>
+              ))}
+            </div>
           </div>
         )}
         {messages.map((m, i) => (
           <div key={i} className={m.role === 'user' ? styles.userMsg : styles.aiMsg}>
             <div className={styles.msgBubble}>
               {m.content}
-              {m.model && <div className={styles.modelTag}>{m.model}</div>}
             </div>
+            {m.role === 'assistant' && m.convId && (
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, paddingLeft: 4 }}>
+                <span onClick={async () => {
+                  const nr = m.rating === 1 ? 0 : 1
+                  setMessages(prev => prev.map(msg => msg.convId === m.convId ? { ...msg, rating: nr } : msg))
+                  await supabase.from('ai_conversations').update({ rating: nr }).eq('id', m.convId!)
+                }} style={{ cursor: 'pointer', fontSize: 14, opacity: m.rating === 1 ? 1 : .3 }}>👍</span>
+                <span onClick={async () => {
+                  const nr = m.rating === -1 ? 0 : -1
+                  setMessages(prev => prev.map(msg => msg.convId === m.convId ? { ...msg, rating: nr } : msg))
+                  await supabase.from('ai_conversations').update({ rating: nr }).eq('id', m.convId!)
+                }} style={{ cursor: 'pointer', fontSize: 14, opacity: m.rating === -1 ? 1 : .3 }}>👎</span>
+              </div>
+            )}
           </div>
         ))}
-        {loading && <div className={styles.loading}>思考中...</div>}
+        {loading && <div className={styles.loading}><span>●</span><span>●</span><span>●</span></div>}
       </div>
 
       <div className={styles.inputArea}>
@@ -153,6 +212,15 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
           placeholder="问战术..."
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
+        <button
+          onClick={() => { setMessages([]); localStorage.removeItem('val-tactics-chat') }}
+          style={{
+            padding: '6px 8px', background: 'transparent',
+            border: '1px solid rgba(255,255,255,.08)', borderRadius: 8,
+            color: 'rgba(255,255,255,.25)', fontSize: 11, cursor: 'pointer',
+            fontFamily: 'inherit', whiteSpace: 'nowrap',
+          }}
+        >重置</button>
         <button className={styles.sendBtn} onClick={send} disabled={loading}>
           {loading ? '⏳' : '发送'}
         </button>

@@ -1,0 +1,157 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  gap: 6px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, .5);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.select, .input {
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(5, 248, 248, .12);
+  border-radius: 4px;
+  color: #fff;
+  padding: 5px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.select:focus, .input:focus {
+  border-color: rgba(5, 248, 248, .4);
+}
+
+.select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%2305F8F8' opacity='.4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+}
+
+.select option {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+.readonly {
+  background: rgba(255, 255, 255, .02);
+  color: rgba(255, 255, 255, .4);
+  cursor: default;
+}
+
+.resultGroup {
+  display: flex;
+  gap: 4px;
+}
+
+.resultBtn {
+  flex: 1;
+  padding: 6px 4px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .03);
+  color: rgba(255, 255, 255, .45);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+}
+
+.resultBtn:hover {
+  border-color: rgba(255, 255, 255, .2);
+}
+
+.resultBtnActiveWin {
+  background: rgba(5, 248, 248, .12);
+  border-color: #05F8F8;
+  color: #05F8F8;
+}
+
+.resultBtnActiveLoss {
+  background: rgba(227, 73, 237, .12);
+  border-color: #E349ED;
+  color: #E349ED;
+}
+
+.resultBtnActiveDraw {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .3);
+  color: rgba(255, 255, 255, .7);
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 8px;
+  background: linear-gradient(135deg, rgba(5, 248, 248, .2), rgba(227, 73, 237, .12));
+  border: 1px solid rgba(5, 248, 248, .3);
+  border-radius: 6px;
+  color: #05F8F8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+  margin-top: 4px;
+  letter-spacing: .5px;
+  box-shadow: 0 0 16px rgba(5, 248, 248, .06);
+}
+
+.submitBtn:hover {
+  background: linear-gradient(135deg, rgba(5, 248, 248, .35), rgba(227, 73, 237, .22));
+  border-color: rgba(5, 248, 248, .6);
+  box-shadow: 0 0 28px rgba(5, 248, 248, .15);
+  transform: translateY(-1px);
+}
+
+.submitBtn:active {
+  transform: translateY(0);
+}
+
+.notesInput {
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(5, 248, 248, .12);
+  border-radius: 4px;
+  color: #fff;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  min-height: 40px;
+  transition: border-color .2s;
+}
+
+.notesInput:focus {
+  border-color: rgba(5, 248, 248, .4);
+}
+
+.compact .select, .compact .input {
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.compact .submitBtn {
+  padding: 9px;
+  font-size: 12px;
+  font-weight: 600;
+}

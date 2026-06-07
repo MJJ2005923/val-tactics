@@ -5,10 +5,11 @@ import type { AbilityShape } from '../../types'
 import styles from './AbilityShapeLayer.module.css'
 
 // 海神X波浪 — 直接用ref+RAF避免React重渲染
-function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY, svgHalfW, svgHalfH }: {
+function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY, svgHalfW, svgHalfH, waveWidth }: {
   pathPts: { x: number; y: number }[]; color: string
   mapW: number; mapH: number; scale: number
   svgCenterX: number; svgCenterY: number; svgHalfW: number; svgHalfH: number
+  waveWidth?: number
 }) {
   const lineRef = useRef<SVGLineElement>(null)
 
@@ -43,7 +44,7 @@ function HarborWave({ pathPts, color, mapW, mapH, scale, svgCenterX, svgCenterY,
       const y = a.y + (b.y - a.y) * segFrac
       const dx2 = b.x - a.x, dy2 = b.y - a.y
       const n = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1
-      const pw = 45 * scale
+      const pw = (waveWidth || 45) * scale
       const px = -dy2 / n * pw, py = dx2 / n * pw
       if (lineRef.current) {
         lineRef.current.setAttribute('x1', String(x - px))
@@ -551,7 +552,8 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const rightX = scx + len * Math.cos(r2), rightY = scy + len * Math.sin(r2)
               const tipX = scx + len * Math.cos(degToRad(s.rotation - 90))
               const tipY = scy + len * Math.sin(degToRad(s.rotation - 90))
-              const d = `M ${scx} ${scy} L ${leftX} ${leftY} A ${len} ${len} 0 0 1 ${rightX} ${rightY} Z`
+              const openD = `M ${scx} ${scy} L ${leftX} ${leftY} M ${scx} ${scy} L ${rightX} ${rightY}`
+              const fillD = `M ${scx} ${scy} L ${leftX} ${leftY} A ${len} ${len} 0 0 1 ${rightX} ${rightY} Z`
               // Breach C 3椭圆环
               if (s.abilityId === 'breach-aftershock') {
                 const dir = degToRad(s.rotation - 90)
@@ -560,7 +562,7 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                 const ops = [0.9, 0.6, 0.35]
                 return (
                   <>
-                    <path d={`M ${scx} ${scy} L ${leftX} ${leftY} A ${len} ${len} 0 0 1 ${rightX} ${rightY} Z`}
+                    <path d={fillD}
                       fill="transparent" stroke="transparent" strokeWidth={12}
                       style={{ cursor: 'move' }} onMouseDown={(e) => handleMouseDown(e, s)} />
                     {waves.map((frac, i) => {
@@ -586,13 +588,20 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
               const patternId = info.type === 'recon' ? 'recon-scan' : 'flash-rays'
               return (
                 <>
-                  {/* 锥形本体 */}
-                  <path d={d} fill={color + '30'} stroke={isSelected ? '#fff' : color} strokeWidth={isSelected ? 3 : 2}
-                    style={{ cursor: 'move', transition: 'stroke 0.15s' }}
-                    onMouseDown={(e) => handleMouseDown(e, s)}
-                  />
+                  {/* 锥形填充 */}
+                  <path d={fillD} fill={color + '30'} stroke="none" style={{ pointerEvents: 'none' }} />
                   {/* 填充图案 */}
-                  <path d={d} fill={`url(#${patternId})`} style={{ pointerEvents: 'none' }} />
+                  <path d={fillD} fill={`url(#${patternId})`} style={{ pointerEvents: 'none' }} />
+                  {/* V形描边 */}
+                  <path d={openD} fill="none" stroke={isSelected ? '#fff' : color} strokeWidth={isSelected ? 3 : 2}
+                    style={{ cursor: 'move', transition: 'stroke 0.15s' }}
+                    onMouseDown={(e) => handleMouseDown(e, s)} />
+                  {/* 迷核X末端半圆虚线 */}
+                  {s.abilityId === 'miks-x' && (
+                    <path d={`M ${leftX} ${leftY} A ${len} ${len} 0 0 1 ${rightX} ${rightY}`}
+                      fill="none" stroke={color} strokeWidth={2}
+                      strokeDasharray="6 4" style={{ pointerEvents: 'none' }} />
+                  )}
                   {/* 扫描弧线 (recon) */}
                   {info.type === 'recon' && [0.3, 0.6].map((frac, i) => {
                     const arcR = len * frac
@@ -608,14 +617,16 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     x={scx + len * 0.35 * Math.cos(degToRad(s.rotation - 90)) - 14}
                     y={scy + len * 0.35 * Math.sin(degToRad(s.rotation - 90)) - 14}
                     width={28} height={28} style={{ pointerEvents: 'none' }} />
-                  {/* 角度弧线标记 */}
-                  <path d={`M ${leftX} ${leftY} A ${len * 0.2} ${len * 0.2} 0 0 1 ${rightX} ${rightY}`}
-                    fill="none" stroke={color} strokeWidth={1} opacity={0.5} style={{ pointerEvents: 'none' }} />
                   {/* 旋转手柄 */}
                   {isSelected && (
                     <circle cx={tipX} cy={tipY} r={6} fill="#fff" stroke="#333" strokeWidth={2}
                       style={{ cursor: 'grab', filter: 'drop-shadow(0 0 4px black)' }}
                       onMouseDown={(e) => { e.stopPropagation(); handleRotMouseDown(e as unknown as React.MouseEvent, s) }} />
+                  )}
+                  {s.outerRadius != null && (
+                    <circle cx={scx} cy={scy} r={s.outerRadius * mapW * scale}
+                      fill={`${color}10`} stroke={color} strokeWidth={1.5}
+                      strokeDasharray="6 4" style={{ pointerEvents: 'none' }} />
                   )}
                 </>
               )
@@ -691,7 +702,8 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                       return <HarborWave pathPts={[p2, p1]} color={color}
                         mapW={mapW} mapH={mapH} scale={scale}
                         svgCenterX={s.x} svgCenterY={s.y}
-                        svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
+                        svgHalfW={svgW / 2} svgHalfH={svgH / 2}
+                        waveWidth={150} />
                     })()}
                     {/* 斯凯E：图标显示在终点 */}
                     {s.abilityId === 'skye-guiding-light' ? (() => {
@@ -804,7 +816,8 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                     return <HarborWave pathPts={[p2, p1]} color={color}
                       mapW={mapW} mapH={mapH} scale={scale}
                       svgCenterX={s.x} svgCenterY={s.y}
-                      svgHalfW={svgW / 2} svgHalfH={svgH / 2} />
+                      svgHalfW={svgW / 2} svgHalfH={svgH / 2}
+                      waveWidth={150} />
                   })()}
                   {/* 标签 */}
                   <image href={'/images/abilities/' + s.abilityId + '.png'}

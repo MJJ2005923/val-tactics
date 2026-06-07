@@ -1,8 +1,11 @@
+/* ══════ 旗舰版使用手册面板 ══════ */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 8000;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   justify-content: flex-end;
 }
@@ -11,12 +14,15 @@
   width: 420px;
   max-width: 90vw;
   height: 100%;
-  background: #111118;
-  border-left: 1px solid #2a2a3a;
+  background: linear-gradient(180deg,rgba(16,10,30,.98),rgba(10,6,20,.99));
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-left: 1px solid rgba(227,73,237,.16);
   display: flex;
   flex-direction: column;
-  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  animation: slideIn 0.2s ease;
+  font-family: 'PingFang SC','Microsoft YaHei',sans-serif;
+  animation: slideIn .3s cubic-bezier(.16,1,.3,1);
+  box-shadow: -3px 0 50px rgba(0,0,0,.25);
 }
 
 @keyframes slideIn {
@@ -29,30 +35,38 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid #1e1e2e;
+  border-bottom: 1px solid rgba(227,73,237,.12);
   flex-shrink: 0;
 }
 
 .header h2 {
   margin: 0;
-  font-size: 18px;
-  color: #fff;
-  font-weight: 700;
+  font-size: 16px;
+  background: linear-gradient(135deg,#f0a0ff,#E349ED,#d870e8);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  letter-spacing: .5px;
 }
 
 .closeBtn {
   width: 32px; height: 32px;
-  border: none; border-radius: 6px;
+  border: 1px solid rgba(227,73,237,.1);
+  border-radius: 7px;
   background: transparent;
-  color: #666;
+  color: rgba(227,73,237,.25);
   font-size: 16px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
+  transition: all .25s cubic-bezier(.16,1,.3,1);
+  font-family: inherit;
 }
 .closeBtn:hover {
-  background: #1e1e2e;
-  color: #fff;
+  background: rgba(227,73,237,.06);
+  border-color: rgba(227,73,237,.3);
+  color: #e0b8f0;
+  box-shadow: 0 0 16px rgba(227,73,237,.08);
 }
 
 .body {
@@ -63,24 +77,27 @@
 
 .body::-webkit-scrollbar { width: 4px; }
 .body::-webkit-scrollbar-track { background: transparent; }
-.body::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+.body::-webkit-scrollbar-thumb { background: rgba(227,73,237,.15); border-radius: 2px; }
 
+/* 爱发电卡片 */
 .donateCard {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
   margin-bottom: 24px;
-  background: linear-gradient(135deg, rgba(255,107,122,0.12), rgba(240,72,95,0.06));
-  border: 1px solid rgba(255,107,122,0.2);
-  border-radius: 10px;
+  background: linear-gradient(135deg,rgba(227,73,237,.14),rgba(200,53,216,.06));
+  border: 1px solid rgba(227,73,237,.2);
+  border-radius: var(--radius-lg);
   text-decoration: none;
-  transition: all 0.2s;
+  transition: all .3s cubic-bezier(.16,1,.3,1);
   cursor: pointer;
 }
 .donateCard:hover {
-  background: linear-gradient(135deg, rgba(255,107,122,0.2), rgba(240,72,95,0.1));
-  border-color: rgba(255,107,122,0.4);
+  background: linear-gradient(135deg,rgba(227,73,237,.22),rgba(200,53,216,.1));
+  border-color: rgba(227,73,237,.4);
+  box-shadow: 0 4px 30px rgba(227,73,237,.12);
+  transform: translateY(-1px);
 }
 
 .donateIcon {
@@ -103,22 +120,22 @@
 .donateText strong {
   display: block;
   font-size: 14px;
-  color: #e0e0e0;
+  color: #d0b8e0;
   margin-bottom: 4px;
 }
 
 .donateText p {
   font-size: 12px;
-  color: #999;
+  color: rgba(227,73,237,.3);
   margin: 0;
   line-height: 1.6;
 }
 
 .donateArrow {
   font-size: 18px;
-  color: rgba(255,107,122,0.6);
+  color: rgba(227,73,237,.5);
   flex-shrink: 0;
-  transition: transform 0.2s;
+  transition: transform .25s cubic-bezier(.16,1,.3,1);
 }
 .donateCard:hover .donateArrow {
   transform: translateX(3px);
@@ -129,21 +146,22 @@
 }
 
 .section h3 {
-  font-size: 15px;
-  color: #e0e0e0;
+  font-size: 14px;
+  color: #c8b0d8;
   margin: 0 0 10px;
   font-weight: 700;
+  letter-spacing: .3px;
 }
 
 .section p {
   font-size: 13px;
-  color: #888;
+  color: rgba(227,73,237,.35);
   line-height: 1.8;
   margin: 0 0 8px;
 }
 
 .section strong {
-  color: #bbb;
+  color: #c0b0d0;
 }
 
 .section ul {
@@ -153,7 +171,7 @@
 
 .section li {
   font-size: 13px;
-  color: #888;
+  color: rgba(227,73,237,.35);
   line-height: 1.8;
 }
 
@@ -165,24 +183,25 @@
 
 .table th {
   text-align: left;
-  color: #888;
+  color: rgba(227,73,237,.35);
   font-weight: 600;
   padding: 6px 8px;
-  border-bottom: 1px solid #1e1e2e;
+  border-bottom: 1px solid rgba(227,73,237,.1);
+  letter-spacing: .3px;
 }
 
 .table td {
-  color: #999;
+  color: rgba(227,73,237,.3);
   padding: 6px 8px;
-  border-bottom: 1px solid #15151e;
+  border-bottom: 1px solid rgba(227,73,237,.06);
 }
 
 .table kbd {
-  background: #1e1e2e;
-  border: 1px solid #2a2a3a;
+  background: rgba(227,73,237,.08);
+  border: 1px solid rgba(227,73,237,.2);
   border-radius: 4px;
   padding: 1px 6px;
   font-size: 12px;
-  color: #ccc;
+  color: #c0b0d0;
   font-family: inherit;
 }

@@ -26,10 +26,10 @@ const PRESET_MODELS = {
     { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', tier: '旗舰' },
   ],
   deepseek: [
-    { id: 'deepseek-chat', name: 'DeepSeek-V3 (通用)', tier: '旗舰' },
-    { id: 'deepseek-reasoner', name: 'DeepSeek-R1 (推理)', tier: '推理' },
-    { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', tier: '经济' },
-    { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', tier: '旗舰' },
+    { id: 'deepseek-v4-flash', name: '⚡ 快速模式', tier: '免费', perf: '日常问答 · 极速响应', limit: '2次/天', unlock: '免费可用' },
+    { id: 'deepseek-chat', name: '⚖️ 均衡模式', tier: '基础', perf: '战术分析 · 阵容推荐', limit: '30次/天', unlock: '¥24.9/月' },
+    { id: 'deepseek-reasoner', name: '💭 推理模式', tier: '进阶', perf: '极致推理 · 职业分析', limit: '3次/天', unlock: '¥59.9/月' },
+    { id: 'deepseek-v4-pro', name: '🧠 深度模式', tier: '专业', perf: '深度策略 · 复杂推演', limit: '2次/天', unlock: '¥99.9/月' },
   ],
 }
 
@@ -72,8 +72,22 @@ const PROVIDERS = {
   },
 }
 
+// 服务端 API Keys — 从环境变量读取
+function getServerKey(provider, env) {
+  switch (provider) {
+    case 'deepseek': return env.DEEPSEEK_KEY || ''
+    case 'anthropic': return env.ANTHROPIC_KEY || ''
+    case 'openai': return env.OPENAI_KEY || ''
+    case 'google': return env.GOOGLE_KEY || ''
+    default: return ''
+  }
+}
+
+// 免费额度限制
+const FREE_LIMIT = 2 // 每天每人免费 2 次（与前端套餐方案一致）
+
 export async function onRequest(context) {
-  const { request } = context
+  const { request, env } = context
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -91,22 +105,123 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
-  const { apiKey, provider, model, messages } = await request.json()
+  // 开发环境测试激活码（KV 不可用时的 fallback）
+  const isDev = env.CF_PAGES_BRANCH === 'dev' || !env.CF_PAGES
+  const DEV_CODES = isDev ? {
+    'TEST-BASIC':    { tier: 'basic',    expiresAt: 0 },
+    'TEST-ADVANCED': { tier: 'advanced', expiresAt: 0 },
+    'TEST-PRO':      { tier: 'pro',      expiresAt: 0 },
+    'TEST-OWNKEY':   { tier: 'ownkey',   expiresAt: 0 },
+    'TEST-FREE':     { tier: 'free',     expiresAt: 0 },
+    'TEST-NO-OWNKEY':  { tier: 'free',   expiresAt: 0 },
+  } : {}
+
+  // 激活码验证
+  if (url.pathname === '/api/activate') {
+    const { code, userId } = await request.json()
+    if (!code || !userId) {
+      return new Response(JSON.stringify({ error: '缺少激活码或用户ID' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    const normalized = code.toUpperCase().trim()
+    try {
+      const codeData = await env.AI_USAGE.get(`code:${normalized}`, { type: 'json' })
+      if (!codeData) {
+        // KV 中未找到，检查开发环境测试码
+        if (DEV_CODES[normalized]) {
+          return new Response(JSON.stringify({ ok: true, tier: DEV_CODES[normalized].tier, expiresAt: 0, dev: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+        }
+        return new Response(JSON.stringify({ error: '激活码无效' }), { status: 404, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+      if (codeData.used && codeData.usedBy !== userId) {
+        return new Response(JSON.stringify({ error: '激活码已被使用' }), { status: 409, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+      // 标记使用
+      await env.AI_USAGE.put(`code:${normalized}`, JSON.stringify({ ...codeData, used: true, usedBy: userId, usedAt: Date.now() }))
+      // 存储用户套餐
+      const userTier = { tier: codeData.tier, activatedAt: Date.now(), expiresAt: codeData.expiresAt || 0 }
+      await env.AI_USAGE.put(`tier:${userId}`, JSON.stringify(userTier))
+      return new Response(JSON.stringify({ ok: true, tier: codeData.tier, expiresAt: codeData.expiresAt }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      // KV 不可用（本地开发），检查测试码
+      if (DEV_CODES[normalized]) {
+        return new Response(JSON.stringify({ ok: true, tier: DEV_CODES[normalized].tier, expiresAt: 0, dev: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+      return new Response(JSON.stringify({ error: '激活码无效' }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
+  // 查询用户套餐状态
+  if (url.pathname === '/api/tier') {
+    const { userId } = await request.json()
+    if (!userId) {
+      return new Response(JSON.stringify({ error: '缺少用户ID' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    try {
+      const userTier = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
+      return new Response(JSON.stringify({ tier: userTier?.tier || 'free', expiresAt: userTier?.expiresAt || 0 }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch {
+      return new Response(JSON.stringify({ tier: 'free' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
+  let { apiKey, provider, model, messages, userId } = await request.json()
 
   const p = PROVIDERS[provider]
   if (!p) return new Response(JSON.stringify({ error: '未知厂商' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+  // 如果没有用户 Key，用服务端 Key（免费模式）
+  const isFree = !apiKey
+  if (isFree) {
+    apiKey = getServerKey(provider, env)
+    if (!apiKey) return new Response(JSON.stringify({ error: '该厂商暂不支持免费使用，请自备 API Key' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+  }
 
   // 模型列表
   if (url.pathname === '/api/models') {
     try {
       const models = await p.listModels(apiKey)
-      return new Response(JSON.stringify({ models }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ models, freeMode: isFree }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }
   }
 
-  // AI 对话
+  // AI 对话 — 免费额度检查（付费用户不受限）
+  // 本地开发用内存计数器，生产用 KV
+  const localUsage = new Map()
+  if (isFree && userId) {
+    // 检查是否有付费套餐
+    let isPaid = false
+    try {
+      if (env.AI_USAGE) {
+        const userTier = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
+        isPaid = userTier?.tier && userTier.tier !== 'free'
+      }
+    } catch {}
+    if (!isPaid) {
+      const today = new Date().toISOString().slice(0, 10)
+      let count = 0
+      try {
+        if (env.AI_USAGE) {
+          const key = `usage:${userId}:${today}`
+          count = parseInt(await env.AI_USAGE.get(key) || '0')
+          if (count >= FREE_LIMIT) {
+            return new Response(JSON.stringify({ error: 'free_limit', message: `今日免费次数已用完（${FREE_LIMIT}次/天），请升级套餐或自备 API Key` }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+          }
+          ctx.waitUntil(env.AI_USAGE.put(key, String(count + 1), { expirationTtl: 86400 }))
+        } else {
+          // 本地开发 fallback
+          const localKey = `usage:${userId}:${today}`
+          count = localUsage.get(localKey) || 0
+          if (count >= FREE_LIMIT) {
+            return new Response(JSON.stringify({ error: 'free_limit', message: `今日免费次数已用完（${FREE_LIMIT}次/天），请升级套餐或自备 API Key` }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+          }
+          localUsage.set(localKey, count + 1)
+        }
+      } catch {}
+    }
+  }
+
   try {
     let chatUrl = typeof p.chatUrl === 'function' ? p.chatUrl(model) : p.chatUrl
     if (p.keyInQuery) chatUrl += `?key=${encodeURIComponent(apiKey)}`
@@ -118,6 +233,8 @@ export async function onRequest(context) {
     })
 
     const data = await resp.json()
+    // 注入免费模式标识
+    if (isFree) data._free = true
     return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })

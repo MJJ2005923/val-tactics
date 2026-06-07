@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import maps, { type MapData } from './data/maps'
-import agents from './data/agents'
+import agents, { agentImages } from './data/agents'
 import MapCanvas from './components/MapCanvas/MapCanvas'
 import AgentPanel from './components/AgentPanel/AgentPanel'
 import Timeline from './components/Timeline/Timeline'
@@ -11,16 +11,24 @@ import SplashScreen from './components/SplashScreen/SplashScreen'
 import HelpPanel from './components/HelpPanel/HelpPanel'
 import AIPanel from './components/AIPanel/AIPanel'
 import AIPage from './components/AIPage/AIPage'
+import MatchAnalysisPage from './components/MatchAnalysis/MatchAnalysisPage'
+import AuthModal from './components/Auth/AuthModal'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
+import { AuthProvider, useAuth } from './store/AuthContext'
 
-function AppInner() {
+function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate }: { navbarAnimate: boolean; panelAnimate: boolean; canvasAnimate: boolean; timelineAnimate: boolean }) {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [showAIPage, setShowAIPage] = useState(false)
+  const [showAIDropdown, setShowAIDropdown] = useState(false)
+  const [showMatchAnalysis, setShowMatchAnalysis] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const { user } = useAuth()
+  const [showMapDropdown, setShowMapDropdown] = useState(false)
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
   const toast = useToast()
 
@@ -42,6 +50,7 @@ function AppInner() {
       if (!d.mapId) return
       const map = maps.find(m => m.id === d.mapId)
       if (map) setSelectedMap(map)
+
       dispatch({
         type: 'LOAD_ALL',
         markers: d.markers || [], drawings: d.drawings || [],
@@ -52,22 +61,6 @@ function AppInner() {
       })
     } catch {}
   }, [])
-
-  const handleDirectExport = () => {
-    const data = {
-      version: 2, exportedAt: Date.now(),
-      strategyName, strategyDescription,
-      markers: markers.map(m => ({ abilityId: m.abilityId, agentId: m.agentId, x: m.x, y: m.y, step: m.step, time: m.time, note: m.note })),
-      drawings: drawings.map(d => ({ ...d })),
-      textAnnotations: textAnnotations.map(t => ({ ...t })),
-      agentPositions: agentPositions.map(a => ({ ...a })),
-      abilityShapes: abilityShapes.map(s => ({ ...s })),
-    }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob); a.download = `tactics-${Date.now()}.json`; a.click()
-    URL.revokeObjectURL(a.href)
-  }
 
   const handleExportImage = async () => {
     const mapImg = selectedMap.id
@@ -130,10 +123,37 @@ function AppInner() {
       ctx.fillStyle = t.color; ctx.fillText(t.text, t.x * cw, t.y * ch)
     }
 
-    // 5. 特工
+    // 5. 特工头像
     for (const ap of agentPositions) {
-      ctx.fillStyle = ap.team === 'attack' ? '#ff4655' : '#50b4f0'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2
-      ctx.beginPath(); ctx.arc(ap.x * cw, ap.y * ch, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke()
+      const agent = agents.find(a => a.id === ap.agentId)
+      if (!agent) continue
+      const devName = agentImages[agent.id] || agent.id
+      const avatarImg = new Image()
+      avatarImg.src = `/images/agents/${devName}.png`
+      const ax = ap.x * cw, ay = ap.y * ch, ar = 16
+      try {
+        await new Promise<void>((resolve, reject) => {
+          avatarImg.onload = () => resolve()
+          avatarImg.onerror = () => reject()
+        })
+        // 圆形裁剪
+        ctx.save()
+        ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.closePath()
+        ctx.clip()
+        ctx.drawImage(avatarImg, ax - ar, ay - ar, ar * 2, ar * 2)
+        ctx.restore()
+        // 边框
+        const borderColor = ap.team === 'attack' ? '#ff4655' : '#50b4f0'
+        ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2)
+        ctx.strokeStyle = borderColor; ctx.lineWidth = 3; ctx.stroke()
+        // 外发光
+        ctx.beginPath(); ctx.arc(ax, ay, ar + 2, 0, Math.PI * 2)
+        ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = 1; ctx.stroke()
+      } catch {
+        // 加载失败时画彩色圆点兜底
+        ctx.fillStyle = ap.team === 'attack' ? '#ff4655' : '#50b4f0'
+        ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.fill()
+      }
     }
 
     // 下载
@@ -211,56 +231,125 @@ function AppInner() {
 
   return (
     <div className="app-container">
-      <nav className="navbar">
+      <nav className={`navbar ${navbarAnimate ? 'navbar--enter' : ''}`}>
+        <span className="navbar__dot" />
         <span className="navbar__logo">TACTICS</span>
         <div className="navbar__divider" />
-        <select className="btn" value={selectedMap.id} onChange={(e) => {
-          const map = maps.find(m => m.id === e.target.value)
-          if (map) setSelectedMap(map)
-        }}>
-          {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-        <button className={`btn ${side === 'attack' ? 'btn--attack' : 'btn--defense'}`}
+        <div className="navbar__mapTrigger" style={{ position: 'relative' }}>
+          <button className="navbar__mapBtn" onClick={() => setShowMapDropdown(v => !v)}>
+            <span className="navbar__mapBtnDot" />
+            {selectedMap.name}
+            <span className={`navbar__mapBtnArrow ${showMapDropdown ? 'navbar__mapBtnArrowOpen' : ''}`}>▾</span>
+          </button>
+          {showMapDropdown && (
+            <>
+              <div className="navbar__mapOverlay" onClick={() => setShowMapDropdown(false)} />
+              <div className="navbar__mapDropdown">
+                {maps.map((m, i) => (
+                  <button key={m.id}
+                    className={`navbar__mapItem ${selectedMap.id === m.id ? 'navbar__mapItemActive' : ''}`}
+                    onClick={() => { setSelectedMap(m); setShowMapDropdown(false) }}
+                    style={{ animationDelay: `${i * .04}s` }}>
+                    <span className="navbar__mapItemName">{m.name}</span>
+                    <span className="navbar__mapItemEn">{m.nameEn}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        <button className={`navbar__sideBtn ${side === 'attack' ? 'navbar__sideBtnAttack' : 'navbar__sideBtnDefense'}`}
           onClick={() => dispatch({ type: 'SET_SIDE', side: side === 'attack' ? 'defense' : 'attack' })}>
-          {side === 'attack' ? '进攻方' : '防守方'}
+          <span className="navbar__sideBtnText" key={side}>{side === 'attack' ? 'Ω 欧米茄' : 'α 阿尔法'}</span>
         </button>
         <button className="btn mobile-menu-btn" onClick={() => setMobileSidebarOpen(v => !v)}
           style={{ display: 'none' }}>☰</button>
         <div className="navbar__actions">
-          <button className="btn" onClick={() => setShowTemplates(true)}>模板管理</button>
-          <button className="btn btn--primary" onClick={handleDirectExport}>导出 JSON</button>
-          <button className="btn" onClick={handleExportImage}>导出图片</button>
-          <button className="btn" onClick={handleShareLink}>分享链接</button>
-          <button className="btn" onClick={handleSaveProgress}>保存进度</button>
-          <button className="btn" onClick={() => setShowAIPage(true)}>🤖 AI 教练</button>
-          <button className="btn" onClick={() => setShowAIPanel(true)}>💬 快速问答</button>
-          <button className="btn" onClick={() => setShowHelp(true)}>使用手册</button>
-          <a className="btn btn--donate" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>❤️ 爱发电</a>
+          <button className="navbar__btn" onClick={() => setShowTemplates(true)}>📁 模板管理</button>
+          <button className="navbar__btn" onClick={handleSaveProgress}>💾 保存进度</button>
+          <div className="navbar__aiDropdown" style={{ position: 'relative' }}>
+            <button className="navbar__btn" onClick={() => setShowAIDropdown(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="18" height="18" style={{ flexShrink: 0 }}>
+                <defs><linearGradient id="navLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#navLogoGrad)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+                <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#navLogoGrad)" opacity="0.25" transform="rotate(5,53,35)"/>
+                <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#navLogoGrad)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+                <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#navLogoGrad)" opacity="0.35" transform="rotate(10,61,51)"/>
+                <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#navLogoGrad)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+                <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+              </svg>
+              T教练 ▾
+            </button>
+            {showAIDropdown && (
+              <>
+                <div className="navbar__aiDropdownOverlay" onClick={() => setShowAIDropdown(false)} />
+                <div className="navbar__aiDropdownMenu">
+                  <button className="navbar__aiDropdownItem" onClick={() => { setShowAIPanel(true); setShowAIDropdown(false) }}>
+                    <span>侧边栏</span>
+                  </button>
+                  <button className="navbar__aiDropdownItem" onClick={() => { setShowAIPage(true); setShowAIDropdown(false) }}>
+                    <span>主页面</span>
+                  </button>
+                  <div className="navbar__aiDropdownDivider" style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 8px' }} />
+                  <button className="navbar__aiDropdownItem" onClick={() => { setShowMatchAnalysis(true); setShowAIDropdown(false) }}>
+                    <span>📊 数据分析</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          <button className="navbar__btn" onClick={() => setShowAuthModal(true)}
+            style={user ? { color: '#05F8F8', borderColor: 'rgba(5,248,248,.2)' } : undefined}>
+            {user ? `👤 ${user.email?.split('@')[0]}` : '🔐 登录'}
+          </button>
+          <button className="navbar__btn" onClick={() => setShowHelp(true)}>📖 使用手册</button>
+          <a className="navbar__btn" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#f0a0f0', borderColor: 'rgba(227,73,237,.25)', background: 'rgba(227,73,237,.06)' }}>❤️ 爱发电</a>
         </div>
       </nav>
 
       <div className="main-area">
         {mobileSidebarOpen && <div className="sidebar-overlay" onClick={() => setMobileSidebarOpen(false)} />}
         <aside className={`sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
-          <AgentPanel />
+          <AgentPanel animate={panelAnimate} />
         </aside>
-        <div className="canvas-area">
+        <div className={`canvas-area ${canvasAnimate ? 'canvas-area--enter' : ''}`}>
+          {/* 四角L形装饰 — 对标顶配.corner */}
+          <div className="canvas-corner canvas-cornerTL"><div className="canvas-cornerDot" /></div>
+          <div className="canvas-corner canvas-cornerTR"><div className="canvas-cornerDot" /></div>
+          <div className="canvas-corner canvas-cornerBL"><div className="canvas-cornerDot" /></div>
+          <div className="canvas-corner canvas-cornerBR"><div className="canvas-cornerDot" /></div>
+          {/* 旋转光环 — 对标顶配.halo */}
+          <div className="canvas-halo" />
+          <div className="canvas-halo2" />
+          {/* 粒子 — 对标顶配.trail */}
+          <div className="canvas-particle p1" /><div className="canvas-particle p2" />
+          <div className="canvas-particle p3" /><div className="canvas-particle p4" />
+          <div className="canvas-particle p5" /><div className="canvas-particle p6" />
+          <div className="canvas-particle p7" /><div className="canvas-particle p8" />
+          <div className="canvas-particle p9" /><div className="canvas-particle p10" />
           <ToolPalette />
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
+        <aside className="sidebar sidebar--right">
+          <Timeline animate={timelineAnimate} />
+        </aside>
       </div>
-
-      <Timeline />
-      {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} />}
+      {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} onExportImage={handleExportImage} onShareLink={handleShareLink} />}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showAIPanel && <AIPanel mapId={selectedMap.id} mapName={selectedMap.name} onClose={() => setShowAIPanel(false)} />}
       {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => setShowAIPage(false)} />}
+      {showMatchAnalysis && <MatchAnalysisPage onBack={() => setShowMatchAnalysis(false)} />}
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   )
 }
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true)
+  const [navbarAnimate, setNavbarAnimate] = useState(false)
+  const [panelAnimate, setPanelAnimate] = useState(false)
+  const [canvasAnimate, setCanvasAnimate] = useState(false)
+  const [timelineAnimate, setTimelineAnimate] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -270,12 +359,22 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  const handleSplashEnter = () => {
+    setShowSplash(false)
+    setNavbarAnimate(true)
+    setPanelAnimate(true)
+    setCanvasAnimate(true)
+    setTimelineAnimate(true)
+  }
+
   return (
-    <TacticsProvider>
-      <ToastProvider>
-        {showSplash && <SplashScreen onEnter={() => setShowSplash(false)} />}
-        <AppInner />
-      </ToastProvider>
-    </TacticsProvider>
+    <AuthProvider>
+      <TacticsProvider>
+        <ToastProvider>
+          {showSplash && <SplashScreen onEnter={handleSplashEnter} />}
+          <AppInner navbarAnimate={navbarAnimate} panelAnimate={panelAnimate} canvasAnimate={canvasAnimate} timelineAnimate={timelineAnimate} />
+        </ToastProvider>
+      </TacticsProvider>
+    </AuthProvider>
   )
 }

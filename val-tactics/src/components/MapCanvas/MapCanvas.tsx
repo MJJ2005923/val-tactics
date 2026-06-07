@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { useTactics } from '../../store/TacticsContext'
+import { useToast } from '../Toast/Toast'
 import agents, { getAbilityShapeConfig, agentImages } from '../../data/agents'
 import type { AbilityShapeConfig } from '../../types'
 import DrawingLayer from '../DrawingLayer/DrawingLayer'
@@ -164,9 +165,15 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const imageRef = useRef<HTMLImageElement | null>(null)
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
   const [scale, setScale] = useState(1)
+  const [mapRotation, setMapRotation] = useState(0) // 0, 90, 180, 270
   const [mapSize, setMapSize] = useState({ w: 1800, h: 1200 })
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
+  const [mapSwitching, setMapSwitching] = useState(false)
+  const [panning, setPanning] = useState<{ sx: number; sy: number; ox: number; oy: number } | null>(null)
+  const [panX, setPanX] = useState(0)
+  const [panY, setPanY] = useState(0)
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
+  const toast = useToast()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
   const [editingText, setEditingText] = useState<{ id: string; text: string; color: string; fontSize: number } | null>(null)
@@ -193,11 +200,25 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const mapW = mapSize.w
   const mapH = mapSize.h
 
+  // 技能放置通知
+  const prevShapeCount = useRef(abilityShapes.length)
+  useEffect(() => {
+    if (abilityShapes.length > prevShapeCount.current) {
+      const latest = abilityShapes[abilityShapes.length - 1]
+      const agent = agents.find(a => a.id === latest.agentId)
+      const ab = agent?.abilities.find(a => a.id === latest.abilityId)
+      if (agent && ab) {
+        toast(`${agent.name}/${agent.nameEn} · ${ab.key} ${ab.name}`)
+      }
+    }
+    prevShapeCount.current = abilityShapes.length
+  }, [abilityShapes.length])
+
   // 计算使地图填充容器的基准缩放
   const fitScale = Math.min(containerSize.w / mapW, containerSize.h / mapH)
   const displayScale = scale * fitScale
-  const offsetX = (containerSize.w - mapW * displayScale) / 2
-  const offsetY = (containerSize.h - mapH * displayScale) / 2
+  const offsetX = (containerSize.w - mapW * displayScale) / 2 + panX
+  const offsetY = (containerSize.h - mapH * displayScale) / 2 + panY
 
   // 容器尺寸监听
   useEffect(() => {
@@ -222,13 +243,29 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     }
   })
 
+  // 地图切换过渡动画 — 至少暗屏800ms再渐亮
+  const switchRef = useRef({ loaded: false, elapsed: false })
+  useEffect(() => {
+    setMapSwitching(true)
+    switchRef.current = { loaded: false, elapsed: false }
+    const tryFade = () => { if (switchRef.current.loaded && switchRef.current.elapsed) setMapSwitching(false) }
+    const t1 = window.setTimeout(() => { switchRef.current.elapsed = true; tryFade() }, 500)
+    return () => clearTimeout(t1)
+  }, [mapId])
+  useEffect(() => {
+    if (mapImgLoaded && mapSwitching) {
+      switchRef.current.loaded = true
+      if (switchRef.current.elapsed) setMapSwitching(false)
+    }
+  }, [mapImgLoaded, mapSwitching])
+
   // 地图图片缓存加载（仅在地图切换时加载）+ 按图片比例调整 mapW/mapH
   useEffect(() => {
     setMapImgLoaded(false)
     const img = new Image()
     img.onload = () => {
       imageRef.current = img
-      // 使用图片原始尺寸，保持比例准确
+      // 使用图片原始比例
       setMapSize({ w: img.naturalWidth, h: img.naturalHeight })
       setMapImgLoaded(true)
     }
@@ -251,19 +288,25 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'high'
 
-    // 背景
-    ctx.fillStyle = '#000'
-    ctx.fillRect(0, 0, containerSize.w, containerSize.h)
+    // 背景（透明，让画布背景透出）
+    ctx.clearRect(0, 0, containerSize.w, containerSize.h)
     ctx.save()
     ctx.translate(offsetX, offsetY)
     ctx.scale(displayScale, displayScale)
+    // 地图旋转（攻防翻转 + 手动旋转）
+    const effectiveRotation = (mapRotation + (side === 'defense' ? 180 : 0)) % 360
+    if (effectiveRotation !== 0) {
+      ctx.translate(mapW / 2, mapH / 2)
+      ctx.rotate((effectiveRotation * Math.PI) / 180)
+      ctx.translate(-mapW / 2, -mapH / 2)
+    }
     if (imageRef.current && mapImgLoaded) {
       ctx.drawImage(imageRef.current, 0, 0, mapW, mapH)
     } else {
       drawPlaceholderMap(ctx, mapId, mapW, mapH)
     }
     ctx.restore()
-  }, [containerSize, displayScale, offsetX, offsetY, mapId, mapImgLoaded, side])
+  }, [containerSize, displayScale, offsetX, offsetY, mapId, mapImgLoaded, side, mapRotation])
 
   useEffect(() => { render() }, [render])
 
@@ -325,9 +368,6 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     } else if (data.type === 'ability' && data.abilityId) {
       const shapeConfig = getAbilityShapeConfig(data.abilityId)
       if (shapeConfig) {
-        if (data.abilityId === 'omen-shrouded-step') {
-          console.log('OmenC config length:', JSON.stringify(shapeConfig.length), 'meters:', Math.round((shapeConfig.length ?? 0) / (7/1800)))
-        }
         // 矩形拖拽绘制
         if (shapeConfig.shape === 'line' || data.abilityId === 'miks-x' || data.abilityId === 'tejo-x' || data.abilityId === 'breach-aftershock' || data.abilityId === 'tejo-q' || data.abilityId === 'phoenix-curveball' || data.abilityId === 'neon-fast-lane' || data.abilityId === 'neon-high-gear' || data.abilityId === 'iso-contingency' || data.abilityId === 'iso-undercut' || data.abilityId === 'iso-kill-contract' || data.abilityId === 'viper-toxic-screen' || data.abilityId === 'waylay-q' || data.abilityId === 'waylay-e' || data.abilityId === 'waylay-x' || data.abilityId === 'omen-paranoia') {
           // 线型技能进入画线模式：先放起点，再拖终点
@@ -875,12 +915,56 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     <div
       ref={(node) => { containerRef.current = node }}
       className={`${styles.container} ${isOver ? styles.containerOver : ''} ${toolMode === 'text' ? styles.containerText : ''}`}
+      style={toolMode === 'pan' ? { cursor: 'grab' } : panning ? { cursor: 'grabbing' } : undefined}
       onWheel={handleWheel}
       onClick={handleCanvasClick}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onMouseDown={(e) => {
+        // 右键/中键拖拽平移
+        if (toolMode === 'pan') {
+          e.preventDefault()
+          setPanning({ sx: e.clientX, sy: e.clientY, ox: panX, oy: panY })
+          return
+        }
+        // 选择模式：判断是否点击了绘图
+        if (toolMode === 'select') {
+          const t3 = transformRef.current
+          if (!t3.container) return
+          if ((e.target as HTMLElement).closest?.('[data-shape]')) return
+          const rr = t3.container.getBoundingClientRect()
+          const cx = (e.clientX - rr.left - offsetX) / (displayScale * mapW)
+          const cy = (e.clientY - rr.top - offsetY) / (displayScale * mapH)
+          // 命中测试绘图
+          const hit = drawings.find(d => {
+            switch (d.type) {
+              case 'line': case 'arrow': {
+                const [a, b] = d.points
+                const dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy
+                if (len2 === 0) return Math.sqrt((cx - a.x) ** 2 + (cy - a.y) ** 2) < 0.02
+                let t = ((cx - a.x) * dx + (cy - a.y) * dy) / len2
+                t = Math.max(0, Math.min(1, t))
+                return Math.sqrt((cx - (a.x + t * dx)) ** 2 + (cy - (a.y + t * dy)) ** 2) < 0.02
+              }
+              case 'freehand': {
+                for (let i = 1; i < d.points.length; i++) {
+                  const [a2, b2] = [d.points[i - 1], d.points[i]]
+                  const dx2 = b2.x - a2.x, dy2 = b2.y - a2.y, len22 = dx2 * dx2 + dy2 * dy2
+                  if (len22 === 0) continue
+                  let t2 = ((cx - a2.x) * dx2 + (cy - a2.y) * dy2) / len22
+                  t2 = Math.max(0, Math.min(1, t2))
+                  if (Math.sqrt((cx - (a2.x + t2 * dx2)) ** 2 + (cy - (a2.y + t2 * dy2)) ** 2) < 0.02) return true
+                }
+                return false
+              }
+              default: return false
+            }
+          })
+          if (hit) { dispatch({ type: 'SELECT', id: hit.id, selType: 'drawing' }); return }
+          dispatch({ type: 'SELECT', id: null, selType: null })
+          return
+        }
         if (!rectDrawing || rectDrawing.drawing) return
         const t3 = transformRef.current
         if (!t3.container) return
@@ -889,12 +973,21 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         setRectDrawing(p => p ? { ...p, drawing: true, startX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), startY: (e.clientY - rr.top - offsetY) / (displayScale * mapH), currentX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), currentY: (e.clientY - rr.top - offsetY) / (displayScale * mapH) } : null)
       }}
       onMouseMove={(e) => {
+        if (panning) {
+          const dx = e.clientX - panning.sx, dy = e.clientY - panning.sy
+          const nx = panning.ox + dx, ny = panning.oy + dy
+          transformRef.current.offset.x = nx
+          transformRef.current.offset.y = ny
+          setPanX(nx); setPanY(ny)
+          return
+        }
         if (!rectDrawing || !rectDrawing.drawing) return
         const rr = transformRef.current?.container?.getBoundingClientRect()
         if (!rr) return
         setRectDrawing(p => p ? { ...p, currentX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), currentY: (e.clientY - rr.top - offsetY) / (displayScale * mapH) } : null)
       }}
       onMouseUp={() => {
+        if (panning) { setPanning(null); return }
         if (!rectDrawing || !rectDrawing.drawing) return
         const rd = rectDrawing
         const xx = (rd.startX + rd.currentX) / 2
@@ -1149,18 +1242,34 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       {/* 选中对象属性面板 */}
       <SelectionInspector />
 
+      {/* 显示全部范围 */}
+      <button className={`${styles.showAllBtn} ${showAllRanges ? styles.showAllBtnActive : ''}`}
+        onClick={() => dispatch({ type: 'TOGGLE_SHOW_ALL_RANGES' })}>
+        👁 {showAllRanges ? '隐藏范围' : '显示全部'}
+      </button>
+
       {/* 缩放控件 */}
       <div className={styles.controls}>
         <button className={styles.zoomBtn} onClick={() => setScale(s => Math.min(3, s * 1.25))}>+</button>
         <span className={styles.zoomLabel}>{Math.round(scale * 100)}%</span>
-        <button className={styles.zoomBtn} onClick={() => setScale(s => Math.max(0.5, s * 0.8))}>-</button>
-        <button className={styles.zoomBtn} onClick={() => setScale(1)}>重置</button>
-        <button className={styles.zoomBtn} style={{ marginLeft: 8, background: showAllRanges ? '#fff3' : 'transparent' }}
-          onClick={() => dispatch({ type: 'TOGGLE_SHOW_ALL_RANGES' })}
-          title={showAllRanges ? '隐藏技能范围' : '显示全部技能范围'}>
-          {showAllRanges ? '👁' : '👁‍🗨'}
-        </button>
+        <button className={styles.zoomBtn} onClick={() => setScale(s => Math.max(0.5, s * 0.8))}>−</button>
+        <button className={styles.zoomBtn} onClick={() => setScale(1)}>1:1</button>
+        <div className={styles.controlsDivider} />
+        <button className={styles.zoomBtn} onClick={() => setMapRotation(r => (r + 90) % 360)} data-tooltip="旋转地图">↻</button>
       </div>
+
+      {/* 底部状态栏 */}
+      <div className={styles.statusBar}>
+        <div className={styles.statusEq}>
+          <span /><span /><span /><span />
+        </div>
+        <span>就绪 · {_mapName} · {side === 'attack' ? '进攻方' : '防守方'}</span>
+        <div className={styles.statusDot} />
+        <span>在线</span>
+      </div>
+
+      {/* 地图切换过渡遮罩 */}
+      <div className={`${styles.mapTransition} ${!mapSwitching ? styles.mapTransitionOut : ''}`} />
     </div>
   )
 }

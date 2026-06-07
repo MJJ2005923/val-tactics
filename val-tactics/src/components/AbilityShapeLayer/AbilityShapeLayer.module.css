@@ -8,7 +8,12 @@
 }
 
 .shapeSelected {
-  filter: drop-shadow(0 0 4px rgba(255,255,255,0.5));
+  filter: drop-shadow(0 0 6px rgba(227,73,237,.5)) drop-shadow(0 0 14px rgba(227,73,237,.2));
+}
+
+.shapeHover {
+  filter: drop-shadow(0 0 8px rgba(5,248,248,.4)) drop-shadow(0 0 16px rgba(5,248,248,.15));
+  transition: filter .2s ease;
 }
 
 .shapeReveal {
@@ -19,3 +24,6 @@
   from { opacity: 0; transform: scale(0.5); }
   to { opacity: 1; transform: scale(1); }
 }
+
+[data-shape] { transition: filter .2s ease }
+[data-shape]:hover { filter: drop-shadow(0 0 8px rgba(5,248,248,.4)) drop-shadow(0 0 16px rgba(5,248,248,.12)) }
