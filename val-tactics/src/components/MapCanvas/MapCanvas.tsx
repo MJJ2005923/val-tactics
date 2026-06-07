@@ -165,9 +165,11 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const imageRef = useRef<HTMLImageElement | null>(null)
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
   const [scale, setScale] = useState(1)
+  const [mapRotation, setMapRotation] = useState(0) // 0, 90, 180, 270
   const [mapSize, setMapSize] = useState({ w: 1800, h: 1200 })
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
   const [mapSwitching, setMapSwitching] = useState(false)
+  const [panning, setPanning] = useState<{ sx: number; sy: number; ox: number; oy: number } | null>(null)
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
   const toast = useToast()
   const [isOver, setIsOver] = useState(false)
@@ -290,13 +292,19 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     ctx.save()
     ctx.translate(offsetX, offsetY)
     ctx.scale(displayScale, displayScale)
+    // 地图旋转
+    if (mapRotation !== 0) {
+      ctx.translate(mapW / 2, mapH / 2)
+      ctx.rotate((mapRotation * Math.PI) / 180)
+      ctx.translate(-mapW / 2, -mapH / 2)
+    }
     if (imageRef.current && mapImgLoaded) {
       ctx.drawImage(imageRef.current, 0, 0, mapW, mapH)
     } else {
       drawPlaceholderMap(ctx, mapId, mapW, mapH)
     }
     ctx.restore()
-  }, [containerSize, displayScale, offsetX, offsetY, mapId, mapImgLoaded, side])
+  }, [containerSize, displayScale, offsetX, offsetY, mapId, mapImgLoaded, side, mapRotation])
 
   useEffect(() => { render() }, [render])
 
@@ -910,10 +918,17 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       className={`${styles.container} ${isOver ? styles.containerOver : ''} ${toolMode === 'text' ? styles.containerText : ''}`}
       onWheel={handleWheel}
       onClick={handleCanvasClick}
+      onContextMenu={e => e.preventDefault()}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onMouseDown={(e) => {
+        // 右键/中键拖拽平移
+        if (e.button === 2 || e.button === 1) {
+          e.preventDefault()
+          setPanning({ sx: e.clientX, sy: e.clientY, ox: offsetX, oy: offsetY })
+          return
+        }
         // 选择模式：判断是否点击了绘图
         if (toolMode === 'select') {
           const t3 = transformRef.current
@@ -959,12 +974,19 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         setRectDrawing(p => p ? { ...p, drawing: true, startX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), startY: (e.clientY - rr.top - offsetY) / (displayScale * mapH), currentX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), currentY: (e.clientY - rr.top - offsetY) / (displayScale * mapH) } : null)
       }}
       onMouseMove={(e) => {
+        if (panning) {
+          const dx = e.clientX - panning.sx, dy = e.clientY - panning.sy
+          transformRef.current.offset.x = panning.ox + dx
+          transformRef.current.offset.y = panning.oy + dy
+          return
+        }
         if (!rectDrawing || !rectDrawing.drawing) return
         const rr = transformRef.current?.container?.getBoundingClientRect()
         if (!rr) return
         setRectDrawing(p => p ? { ...p, currentX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), currentY: (e.clientY - rr.top - offsetY) / (displayScale * mapH) } : null)
       }}
       onMouseUp={() => {
+        if (panning) { setPanning(null); return }
         if (!rectDrawing || !rectDrawing.drawing) return
         const rd = rectDrawing
         const xx = (rd.startX + rd.currentX) / 2
@@ -1230,7 +1252,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         <button className={styles.zoomBtn} onClick={() => setScale(s => Math.min(3, s * 1.25))}>+</button>
         <span className={styles.zoomLabel}>{Math.round(scale * 100)}%</span>
         <button className={styles.zoomBtn} onClick={() => setScale(s => Math.max(0.5, s * 0.8))}>−</button>
-        <button className={styles.zoomBtn} onClick={() => setScale(1)}>重置</button>
+        <button className={styles.zoomBtn} onClick={() => setScale(1)}>1:1</button>
+        <button className={styles.zoomBtn} onClick={() => setMapRotation(r => (r + 90) % 360)} title="旋转地图">↻</button>
       </div>
 
       {/* 底部状态栏 */}
