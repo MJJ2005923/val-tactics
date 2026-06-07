@@ -12,8 +12,10 @@ import HelpPanel from './components/HelpPanel/HelpPanel'
 import AIPanel from './components/AIPanel/AIPanel'
 import AIPage from './components/AIPage/AIPage'
 import MatchAnalysisPage from './components/MatchAnalysis/MatchAnalysisPage'
+import AuthModal from './components/Auth/AuthModal'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
+import { AuthProvider, useAuth } from './store/AuthContext'
 
 function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate }: { navbarAnimate: boolean; panelAnimate: boolean; canvasAnimate: boolean; timelineAnimate: boolean }) {
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
@@ -24,6 +26,8 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showAIPage, setShowAIPage] = useState(false)
   const [showAIDropdown, setShowAIDropdown] = useState(false)
   const [showMatchAnalysis, setShowMatchAnalysis] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const { user } = useAuth()
   const [showMapDropdown, setShowMapDropdown] = useState(false)
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
   const toast = useToast()
@@ -294,6 +298,10 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
               </>
             )}
           </div>
+          <button className="navbar__btn" onClick={() => setShowAuthModal(true)}
+            style={user ? { color: '#05F8F8', borderColor: 'rgba(5,248,248,.2)' } : undefined}>
+            {user ? `👤 ${user.email?.split('@')[0]}` : '🔐 登录'}
+          </button>
           <button className="navbar__btn" onClick={() => setShowHelp(true)}>📖 使用手册</button>
           <a className="navbar__btn" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#f0a0f0', borderColor: 'rgba(227,73,237,.25)', background: 'rgba(227,73,237,.06)' }}>❤️ 爱发电</a>
         </div>
@@ -331,6 +339,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showAIPanel && <AIPanel mapId={selectedMap.id} mapName={selectedMap.name} onClose={() => setShowAIPanel(false)} />}
       {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => setShowAIPage(false)} />}
       {showMatchAnalysis && <MatchAnalysisPage onBack={() => setShowMatchAnalysis(false)} />}
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   )
 }
@@ -359,11 +368,13 @@ export default function App() {
   }
 
   return (
-    <TacticsProvider>
-      <ToastProvider>
-        {showSplash && <SplashScreen onEnter={handleSplashEnter} />}
-        <AppInner navbarAnimate={navbarAnimate} panelAnimate={panelAnimate} canvasAnimate={canvasAnimate} timelineAnimate={timelineAnimate} />
-      </ToastProvider>
-    </TacticsProvider>
+    <AuthProvider>
+      <TacticsProvider>
+        <ToastProvider>
+          {showSplash && <SplashScreen onEnter={handleSplashEnter} />}
+          <AppInner navbarAnimate={navbarAnimate} panelAnimate={panelAnimate} canvasAnimate={canvasAnimate} timelineAnimate={timelineAnimate} />
+        </ToastProvider>
+      </TacticsProvider>
+    </AuthProvider>
   )
 }

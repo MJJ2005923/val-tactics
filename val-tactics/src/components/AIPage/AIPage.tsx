@@ -3,6 +3,8 @@ import { useTactics } from '../../store/TacticsContext'
 import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import MatchContextSelector, { loadMatchContext } from '../MatchHistory/MatchContextSelector'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../store/AuthContext'
 import styles from './AIPage.module.css'
 
 interface Message { role: 'user' | 'assistant'; content: string }
@@ -174,17 +176,6 @@ const MODEL_CAPS: Record<string, Record<string, number>> = {
   'deepseek-v4-pro':    { advanced: 2, pro: 10 },
 }
 
-async function fetchTier(): Promise<string> {
-  try {
-    const resp = await fetch('/api/tier', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ userId: uid() }),
-    })
-    if (resp.ok) { const data = await resp.json(); return data.tier || 'free' }
-  } catch {}
-  return 'free'
-}
-
 async function activateCode(code: string): Promise<{ ok: boolean; tier?: string; error?: string }> {
   try {
     const resp = await fetch('/api/activate', {
@@ -208,6 +199,20 @@ function saveConfig(c: AIConfig) { localStorage.setItem('val-tactics-ai-config',
 
 export default function AIPage({ mapName, onBack }: { mapId: string; mapName: string; onBack: () => void }) {
   const { abilityShapes, side, agentPositions, drawings, textAnnotations, markers, roster } = useTactics()
+  const { user } = useAuth()
+
+  // 同步套餐到 Supabase
+  const syncTierToSupabase = async (t: string) => {
+    if (!user) return
+    const now = Date.now()
+    await supabase.from('user_tiers').upsert({
+      user_id: user.id,
+      tier: t,
+      activated_at: now,
+      expires_at: t === 'free' ? 0 : now + 30 * 86400000,
+      updated_at: new Date().toISOString(),
+    })
+  }
   const [config, setConfig] = useState(loadConfig)
   const [models, setModels] = useState<AIModel[]>([])
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -236,15 +241,18 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   })
   const activateOwnkey = () => {
     setOwnkeyActive(true)
+    const now = Date.now()
     localStorage.setItem('val-tactics-ownkey', '1')
-    localStorage.setItem('val-tactics-ownkey-at', String(Date.now()))
+    localStorage.setItem('val-tactics-ownkey-at', String(now))
     setShowOwnkey(false)
     setActCode('')
+    if (user) supabase.from('user_ownkey').upsert({ user_id: user.id, active: true, activated_at: now, expires_at: now + 30 * 86400000 })
   }
   const deactivateOwnkey = () => {
     setOwnkeyActive(false)
     localStorage.removeItem('val-tactics-ownkey')
     localStorage.removeItem('val-tactics-ownkey-at')
+    if (user) supabase.from('user_ownkey').upsert({ user_id: user.id, active: false, activated_at: 0, expires_at: 0 })
   }
   const [showOwnkey, setShowOwnkey] = useState(false)
   const [todayUsed, setTodayUsed] = useState(() => getSharedUsage())
@@ -259,17 +267,42 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }) }, [messages])
   useEffect(() => { localStorage.setItem('val-tactics-chat', JSON.stringify(messages)) }, [messages])
   useEffect(() => { saveConfig(config) }, [config])
+
+  // 登录时从 Supabase 恢复套餐
   useEffect(() => {
-    if (isFree) {
-      fetchTier().then(t => {
-        // KV 回退到 localStorage
-        if (t === 'free') {
-          const local = (() => { try { return localStorage.getItem('val-tactics-tier') } catch { return null } })()
-          if (local) t = local
+    if (!user) return
+    ;(async () => {
+      try {
+        const { data } = await supabase.from('user_tiers').select('tier, activated_at').eq('user_id', user.id).single()
+        if (data && data.tier && data.tier !== 'free') {
+          const ts = data.activated_at ? data.activated_at * 1000 : 0
+          if (Date.now() - ts < 30 * 86400000) {
+            setTier(data.tier)
+            localStorage.setItem('val-tactics-tier', data.tier)
+            localStorage.setItem('val-tactics-tier-at', String(ts))
+          }
         }
-        setTier(t)
-      })
-    } else setTier('pro')
+      } catch {}
+    })()
+
+    // 恢复自备Key状态
+    ;(async () => {
+      try {
+        const { data } = await supabase.from('user_ownkey').select('active, activated_at').eq('user_id', user.id).single()
+        if (data && data.active) {
+          const ts = data.activated_at ? data.activated_at * 1000 : 0
+          if (Date.now() - ts < 30 * 86400000) {
+            setOwnkeyActive(true)
+            localStorage.setItem('val-tactics-ownkey', '1')
+            localStorage.setItem('val-tactics-ownkey-at', String(ts))
+          }
+        }
+      } catch {}
+    })()
+  }, [user])
+
+  useEffect(() => {
+    if (!isFree) setTier('free')
   }, [isFree])
 
   const fetchModels = useCallback(async () => {
@@ -590,11 +623,11 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
               <input className={styles.keyInput} value={actCode} placeholder="输入激活码升级套餐..."
                 onChange={e => { setActCode(e.target.value); setActStatus('') }}
-                onKeyDown={e => { if (e.key === 'Enter') { const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
+                onKeyDown={e => { if (e.key === 'Enter') { const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
                 style={{ flex: 1, fontSize: 11 }} />
               <button className={styles.keySaveBtn} onClick={async () => {
                 const r = await activateCode(actCode)
-                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); setActCode(''); setActStatus('✅ 激活成功！') }
+                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') }
                 else setActStatus('❌ ' + (r.error || '激活失败'))
               }}>激活</button>
             </div>
@@ -604,7 +637,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
             {tier !== 'free' && (
               <div style={{ marginTop: 6, textAlign: 'right' }}>
                 <span style={{ cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,.2)' }}
-                  onClick={() => { setTier('free'); localStorage.removeItem('val-tactics-tier'); localStorage.removeItem('val-tactics-tier-at') }}>
+                  onClick={() => { setTier('free'); localStorage.removeItem('val-tactics-tier'); localStorage.removeItem('val-tactics-tier-at'); syncTierToSupabase('free') }}>
                   取消套餐
                 </span>
               </div>
