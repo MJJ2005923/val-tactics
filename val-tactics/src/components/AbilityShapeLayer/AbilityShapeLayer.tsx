@@ -621,6 +621,13 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
                 </>
               )
             })()}
+            {/* 锥形外圈 */}
+            {s.outerRadius != null && s.shape === 'cone' && (
+              <div style={{ position: 'absolute', left: cx - s.outerRadius * mapW * scale, top: cy - s.outerRadius * mapW * scale,
+                width: s.outerRadius * mapW * scale * 2, height: s.outerRadius * mapW * scale * 2,
+                borderRadius: '50%', border: `2px dashed ${color}60`, pointerEvents: 'none',
+                background: `${color}06` }} />
+            )}
             {s.shape === 'line' && (() => {
               // Phoenix E 半圆弧线
               if (s.abilityId === 'phoenix-curveball') {
