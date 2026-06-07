@@ -54,14 +54,14 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'omen-paranoia':             { shape: 'rect', length: 43 * M, width: 15 * M, iconOnly: true },
   'astra-nebula':             { radius: 7 * M },   // 7m
   'viper-poison-cloud':       { radius: 7 * M },    // 7m
-  'jett-cloudburst':          { shape: 'circle', radius: 4.5 * M },    // 4.5m 瞬发烟
+  'jett-cloudburst':          { shape: 'circle', radius: 5 * M },    // 5m 瞬发烟
   'jett-tailwind':             { shape: 'line', length: 18 * M, thickness: 0.003, iconOnly: true },
   'harbor-cove':              { shape: 'circle', radius: 7 * M },    // 7m 护盾
   'harbor-reckoning':         { shape: 'line', length: 55 * M, thickness: 0.006 },
   'sova-owl-drone':           { shape: 'line', length: 50 * M, thickness: 0.004, iconOnly: true },
   'clove-ruse':               { radius: 6.5 * M },    // 6.5m
   'clove-meddle':              { radius: 6.5 * M, iconOnly: true },
-  'cypher-cyber-cage':        { radius: 5.5 * M, iconOnly: true },    // 5.5m 网牢
+  'cypher-cyber-cage':        { radius: 6 * M, iconOnly: true },    // 6m 网牢
 
   // === 燃烧弹/伤害 ===
   'brimstone-incendiary':     { radius: 6.5 * M, iconOnly: true },
@@ -88,7 +88,7 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'kayo-null-cmd':             { radius: 75 * M, iconOnly: true },
   'kayo-zero-point':           { radius: 23 * M, iconOnly: true },
   'killjoy-lockdown':          { radius: 50 * M, iconOnly: true },
-  'deadlock-gravnet':          { shape: 'circle', radius: 10 * M },
+  'deadlock-gravnet':          { shape: 'circle', radius: 12.5 * M },
   'deadlock-sonic-sensor':     { shape: 'line', length: 13 * M, width: 13 * M, iconOnly: true },
   'deadlock-annihilation':     { shape: 'line', length: 50 * M, thickness: 0.006, radius: 8 * M, iconOnly: true },
   'breach-rolling-thunder':    { shape: 'line', length: 50 * M, width: 28 * M, thickness: 0.015, iconOnly: true },
@@ -166,8 +166,8 @@ const abilityOverrides: Record<string, Partial<AbilityShapeConfig>> = {
   'yoru-gatecrash':            { shape: 'circle', radius: 2.5 * M },
   'yoru-dimensional-drift':    { shape: 'circle', radius: 2.5 * M },
   'omen-from-the-shadows':     { shape: 'circle', radius: 2 * M },
-  'chamber-trademark':         { shape: 'circle', radius: 15 * M, iconOnly: true },
-  'chamber-rendezvous':        { shape: 'circle', radius: 25 * M, iconOnly: true },
+  'chamber-trademark':         { shape: 'circle', radius: 15.5 * M, iconOnly: true },
+  'chamber-rendezvous':        { shape: 'circle', radius: 27 * M, iconOnly: true },
 }
 
 export function getAbilityShapeConfig(abilityId: string): AbilityShapeConfig | null {
@@ -392,9 +392,9 @@ const agents: Agent[] = [
   {
     id: 'deadlock', name: '钢锁', nameEn: 'Deadlock', role: '哨卫',
     abilities: [
-      { id: 'deadlock-gravnet', name: '阻域屏障', nameEn: 'GravNet', key: 'C', type: 'control', iconUrl: '/images/abilities/deadlock-barrier-mesh.png', description: '投掷一颗重力网手雷，爆炸后将范围内敌人拉向地面并强制蹲下。', usage: '按C投掷，爆炸后强制拉倒敌人。' },
+      { id: 'deadlock-gravnet', name: '阻域屏障', nameEn: 'GravNet', key: 'C', type: 'control', iconUrl: '/images/abilities/deadlock-gravnet.png', description: '投掷一颗重力网手雷，爆炸后将范围内敌人拉向地面并强制蹲下。', usage: '按C投掷，爆炸后强制拉倒敌人。' },
       { id: 'deadlock-sonic-sensor', name: '声感陷阱', nameEn: 'Sonic Sensor', key: 'Q', type: 'recon', iconUrl: '/images/abilities/deadlock-sonic-sensor.png', description: '部署一个声波传感器，检测到敌人移动时释放声波震动，使敌人减速。', usage: '按Q部署，检测移动后震动减速。' },
-      { id: 'deadlock-barrier-mesh', name: '重力捕网', nameEn: 'Barrier Mesh', key: 'E', type: 'control', iconUrl: '/images/abilities/deadlock-gravnet.png', description: '部署一道网状屏障，阻挡通过并吸收子弹伤害。', usage: '按E部署网状屏障。' },
+      { id: 'deadlock-barrier-mesh', name: '重力捕网', nameEn: 'Barrier Mesh', key: 'E', type: 'control', iconUrl: '/images/abilities/deadlock-barrier-mesh.png', description: '部署一道网状屏障，阻挡通过并吸收子弹伤害。', usage: '按E部署网状屏障。' },
       { id: 'deadlock-annihilation', name: '断魂索道', nameEn: 'Annihilation', key: 'X', type: 'control', iconUrl: '/images/abilities/deadlock-annihilation.png', description: '发射一颗强力能量弹，追逐第一名被击中的敌人，将其禁锢并拖行。', usage: '按X发射能量弹，追捕并禁锢敌人。' }
     ]
   },
