@@ -625,8 +625,8 @@ export default function AbilityShapeLayer({ offset, scale, mapW, mapH, container
             {s.outerRadius != null && s.shape === 'cone' && (
               <div style={{ position: 'absolute', left: cx - s.outerRadius * mapW * scale, top: cy - s.outerRadius * mapW * scale,
                 width: s.outerRadius * mapW * scale * 2, height: s.outerRadius * mapW * scale * 2,
-                borderRadius: '50%', border: `2px dashed ${color}60`, pointerEvents: 'none',
-                background: `${color}06` }} />
+                borderRadius: '50%', border: `2px dashed ${color}99`, pointerEvents: 'none',
+                background: `${color}10`, zIndex: 10 }} />
             )}
             {s.shape === 'line' && (() => {
               // Phoenix E 半圆弧线
