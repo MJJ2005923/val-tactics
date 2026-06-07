@@ -135,7 +135,17 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
       <div className={styles.messages} ref={scrollRef}>
         {messages.length === 0 && (
           <div className={styles.welcome}>
-            <div className={styles.welcomeIcon}>🤖</div>
+            <div className={styles.welcomeIcon}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="48" height="48">
+                <defs><linearGradient id="aiLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E349ED"/><stop offset="100%" stopColor="#05F8F8"/></linearGradient></defs>
+                <rect x="22" y="24" width="30" height="30" rx="7" fill="none" stroke="url(#aiLogoGrad)" strokeWidth="2" transform="rotate(-12,37,39)"/>
+                <rect x="38" y="20" width="30" height="30" rx="7" fill="url(#aiLogoGrad)" opacity="0.25" transform="rotate(5,53,35)"/>
+                <rect x="30" y="40" width="28" height="28" rx="7" fill="none" stroke="url(#aiLogoGrad)" strokeWidth="2" transform="rotate(-3,44,54)"/>
+                <rect x="48" y="38" width="26" height="26" rx="7" fill="url(#aiLogoGrad)" opacity="0.35" transform="rotate(10,61,51)"/>
+                <rect x="62" y="56" width="24" height="24" rx="7" fill="none" stroke="url(#aiLogoGrad)" strokeWidth="2" transform="rotate(-8,74,68)"/>
+                <text x="58" y="72" textAnchor="middle" fontFamily="Arial" fontSize="22" fontWeight="900" fill="#fff" transform="rotate(-3,58,68)">T</text>
+              </svg>
+            </div>
             <p>我是你的 AI 战术教练。试试问我：</p>
             <div className={styles.quickPrompts}>
               {['这张地图怎么打 B 点？', '推荐一个进攻阵容', '分析我现在的战术布局', '怎么破解双烟防守？'].map((p, i) => (
