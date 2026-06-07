@@ -170,6 +170,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
   const [mapSwitching, setMapSwitching] = useState(false)
   const [panning, setPanning] = useState<{ sx: number; sy: number; ox: number; oy: number } | null>(null)
+  const [panX, setPanX] = useState(0)
+  const [panY, setPanY] = useState(0)
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
   const toast = useToast()
   const [isOver, setIsOver] = useState(false)
@@ -215,8 +217,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   // 计算使地图填充容器的基准缩放
   const fitScale = Math.min(containerSize.w / mapW, containerSize.h / mapH)
   const displayScale = scale * fitScale
-  const offsetX = (containerSize.w - mapW * displayScale) / 2
-  const offsetY = (containerSize.h - mapH * displayScale) / 2
+  const offsetX = (containerSize.w - mapW * displayScale) / 2 + panX
+  const offsetY = (containerSize.h - mapH * displayScale) / 2 + panY
 
   // 容器尺寸监听
   useEffect(() => {
@@ -926,7 +928,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         // 右键/中键拖拽平移
         if (e.button === 2 || e.button === 1) {
           e.preventDefault()
-          setPanning({ sx: e.clientX, sy: e.clientY, ox: offsetX, oy: offsetY })
+          setPanning({ sx: e.clientX, sy: e.clientY, ox: panX, oy: panY })
           return
         }
         // 选择模式：判断是否点击了绘图
@@ -976,8 +978,10 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       onMouseMove={(e) => {
         if (panning) {
           const dx = e.clientX - panning.sx, dy = e.clientY - panning.sy
-          transformRef.current.offset.x = panning.ox + dx
-          transformRef.current.offset.y = panning.oy + dy
+          const nx = panning.ox + dx, ny = panning.oy + dy
+          transformRef.current.offset.x = nx
+          transformRef.current.offset.y = ny
+          setPanX(nx); setPanY(ny)
           return
         }
         if (!rectDrawing || !rectDrawing.drawing) return
