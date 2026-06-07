@@ -294,10 +294,11 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     ctx.save()
     ctx.translate(offsetX, offsetY)
     ctx.scale(displayScale, displayScale)
-    // 地图旋转
-    if (mapRotation !== 0) {
+    // 地图旋转（攻防翻转 + 手动旋转）
+    const effectiveRotation = (mapRotation + (side === 'defense' ? 180 : 0)) % 360
+    if (effectiveRotation !== 0) {
       ctx.translate(mapW / 2, mapH / 2)
-      ctx.rotate((mapRotation * Math.PI) / 180)
+      ctx.rotate((effectiveRotation * Math.PI) / 180)
       ctx.translate(-mapW / 2, -mapH / 2)
     }
     if (imageRef.current && mapImgLoaded) {
