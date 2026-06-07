@@ -147,18 +147,18 @@ export default function MatchForm({ onSaved, compact, editEntry, onEditSaved }: 
       </div>
 
       <div className={styles.row}>
-        <div className={styles.field}>
-          <label className={styles.label}>击杀 K</label>
+        <div className={styles.field} style={{ flex: '0 0 48px', minWidth: 0 }}>
+          <label className={styles.label}>击杀</label>
           <input className={styles.input} type="number" min="0" value={kills}
             onChange={e => setKills(e.target.value)} placeholder="0" />
         </div>
-        <div className={styles.field}>
-          <label className={styles.label}>死亡 D</label>
+        <div className={styles.field} style={{ flex: '0 0 48px', minWidth: 0 }}>
+          <label className={styles.label}>死亡</label>
           <input className={styles.input} type="number" min="0" value={deaths}
             onChange={e => setDeaths(e.target.value)} placeholder="0" />
         </div>
-        <div className={styles.field}>
-          <label className={styles.label}>助攻 A</label>
+        <div className={styles.field} style={{ flex: '0 0 48px', minWidth: 0 }}>
+          <label className={styles.label}>助攻</label>
           <input className={styles.input} type="number" min="0" value={assists}
             onChange={e => setAssists(e.target.value)} placeholder="0" />
         </div>
