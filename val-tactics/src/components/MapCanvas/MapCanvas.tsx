@@ -363,7 +363,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     if (x < 0 || x > 1 || y < 0 || y > 1) return
 
     if (data.type === 'agent') {
-      dispatch({ type: 'ADD_AGENT_POS', pos: { id: '', agentId: data.agentId, x, y, team: side } })
+      dispatch({ type: 'ADD_AGENT_POS', pos: { id: '', agentId: data.agentId, x, y, team: (data as any).team || side } })
     } else if (data.type === 'ability' && data.abilityId) {
       const shapeConfig = getAbilityShapeConfig(data.abilityId)
       if (shapeConfig) {
