@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>T教练 — 更新公告</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#07040c;color:#fff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:60px 40px;display:flex;justify-content:center;min-height:100vh}
+.page{max-width:720px;width:100%}
+.header{text-align:center;margin-bottom:48px}
+.header h1{font-size:28px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#f0c0ff,#05F8F8,#d090f0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:gradient 4s ease infinite}
+@keyframes gradient{0%,100%{background-position:0% center}50%{background-position:200% center}}
+.header p{color:rgba(255,255,255,.25);font-size:13px}
+
+.update{margin-bottom:40px}
+.updateTitle{font-size:18px;font-weight:700;color:#05F8F8;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.updateTitle::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(5,248,248,.2),transparent)}
+.updateDate{font-size:11px;color:rgba(255,255,255,.2);margin-bottom:16px}
+
+.items{display:flex;flex-direction:column;gap:2px}
+.item{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:6px;font-size:13px;color:rgba(255,255,255,.55);transition:background .2s}
+.item:hover{background:rgba(255,255,255,.02)}
+.tag{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;white-space:nowrap;margin-right:4px;flex-shrink:0}
+.tagNew{background:rgba(5,248,248,.12);color:#05F8F8}
+.tagFix{background:rgba(227,73,237,.12);color:#E349ED}
+.tagUp{background:rgba(255,215,0,.1);color:#ffd700}
+
+.footer{text-align:center;font-size:12px;color:rgba(255,255,255,.1);margin-top:32px}
+.footer a{color:rgba(255,255,255,.2)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>T教练 更新公告</h1>
+    <p>val-tactics.pages.dev</p>
+  </div>
+
+  <div class="update">
+    <div class="updateTitle">2026.6.9 更新</div>
+    <div class="updateDate">版本 V1.2</div>
+    <div class="items">
+      <div class="item"><span class="tag tagNew">新增</span> 阵容特工可拖拽到地图布阵，从进攻/防守方拖出分别显示红/蓝边框</div>
+      <div class="item"><span class="tag tagNew">新增</span> 橡皮擦工具现可删除地图上的特工头像</div>
+      <div class="item"><span class="tag tagNew">新增</span> 免邮件注册通道 — QQ邮箱SMTP不稳定时自动走免邮通道</div>
+      <div class="item"><span class="tag tagFix">修复</span> 移除技能尺寸面板，保护战术数据，减少地图遮挡</div>
+      <div class="item"><span class="tag tagFix">修复</span> 未登录用户限制激活套餐，必须先注册账号</div>
+    </div>
+  </div>
+
+  <div class="update">
+    <div class="updateTitle">2026.6.8 更新</div>
+    <div class="updateDate">版本 V1.1</div>
+    <div class="items">
+      <div class="item"><span class="tag tagNew">新增</span> 赞助墙系统 — 🏆 特别鸣谢页面，赞助者滚动展示</div>
+      <div class="item"><span class="tag tagNew">新增</span> 隐私条款页面 + Riot 免责声明</div>
+      <div class="item"><span class="tag tagNew">新增</span> 密码重置功能</div>
+      <div class="item"><span class="tag tagNew">新增</span> 套餐价位图（pricing.html）</div>
+      <div class="item"><span class="tag tagNew">新增</span> AI 对话重置按钮</div>
+      <div class="item"><span class="tag tagUp">优化</span> 免费额度从 2 次/天 → 5 次/天</div>
+      <div class="item"><span class="tag tagUp">优化</span> T教练侧边栏面板精简 + 折叠动画</div>
+      <div class="item"><span class="tag tagUp">优化</span> AI 对话头像换为 T 字 LOGO</div>
+      <div class="item"><span class="tag tagFix">修复</span> 模式选择 emoji 清理</div>
+      <div class="item"><span class="tag tagFix">修复</span> 侧边栏聊天滚动问题</div>
+    </div>
+  </div>
+
+  <div class="update">
+    <div class="updateTitle">2026.6.7 更新</div>
+    <div class="updateDate">版本 V1.0 · 正式上线</div>
+    <div class="items">
+      <div class="item"><span class="tag tagNew">上线</span> T教练 AI 战术助手 — 知识库 + 4档套餐 + 激活码系统</div>
+      <div class="item"><span class="tag tagNew">上线</span> Supabase 账号系统 — 注册/登录/跨设备同步</div>
+      <div class="item"><span class="tag tagNew">上线</span> 对局数据分析 — 手动录入/批量导入/统计面板</div>
+      <div class="item"><span class="tag tagNew">上线</span> AI 知识库 — 9 篇战术文档 + 实时问答采集</div>
+      <div class="item"><span class="tag tagNew">上线</span> 套餐系统 — 免费/基础¥24.9/进阶¥59.9/专业¥99.9 + 自备API ¥19.9</div>
+      <div class="item"><span class="tag tagNew">上线</span> 12 张地图 2048×2048 高清战术板</div>
+      <div class="item"><span class="tag tagNew">上线</span> 29 特工 + 116 技能完整数据</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    更新公告同步发布在 <a href="https://val-tactics.pages.dev" target="_blank">val-tactics.pages.dev</a>
+  </div>
+</div>
+</body>
+</html>
