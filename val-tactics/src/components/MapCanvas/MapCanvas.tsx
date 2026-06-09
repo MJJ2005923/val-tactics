@@ -1191,7 +1191,14 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
               top: offsetY + ap.y * mapH * displayScale,
               borderColor: isSelected ? '#fff' : teamColor,
             }}
-            onMouseDown={(e) => handleMarkerMouseDown(e, ap.id, 'agent')}
+            onMouseDown={(e) => {
+              if (toolMode === 'eraser') {
+                e.stopPropagation()
+                dispatch({ type: 'REMOVE_AGENT_POS', id: ap.id })
+                return
+              }
+              handleMarkerMouseDown(e, ap.id, 'agent')
+            }}
           >
             <img
               src={`/images/agents/${imgFile}.png`}
