@@ -11,6 +11,7 @@ import attackRoutes from '../../knowledge/进攻路线.md?raw'
 import patchHistory from '../../knowledge/版本记录.md?raw'
 import combatTips from '../../knowledge/实战技巧.md?raw'
 import aimTraining from '../../knowledge/枪法训练.md?raw'
+import beginnerGuide from '../../knowledge/新手必读.md?raw'
 
 /** 地图列表（中文名 + 英文名 + 简要特征） */
 const MAPS: { name: string; nameEn: string; desc: string }[] = [
@@ -104,6 +105,8 @@ ${MAPS.map(m => `· ${m.name}（${m.nameEn}）— ${m.desc}`).join('\n')}
   kb += `\n${combatTips}\n`
   // 枪法训练
   kb += `\n${aimTraining}\n`
+  // 新手必读
+  kb += `\n${beginnerGuide}\n`
 
   // 回答规范
   kb += `
