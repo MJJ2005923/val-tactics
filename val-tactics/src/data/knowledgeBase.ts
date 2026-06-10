@@ -18,16 +18,16 @@ import compAnalysis from '../../knowledge/阵容策略深度分析.md?raw'
 const MAPS: { name: string; nameEn: string; desc: string }[] = [
   { name: '亚海悬城', nameEn: 'Ascent', desc: '双点地图，中路控制至关重要，A/B两点均有可破坏门扉' },
   { name: '源工重镇', nameEn: 'Bind', desc: '双点地图，无中路，有两个单向传送门连接AB点' },
-  { name: '森寒冬港', nameEn: 'Icebox', desc: '双点地图，垂直空间多，狙击位丰富，A点有高空走道' },
+  { name: '隐世修所', nameEn: 'Haven', desc: '三点地图（唯一），A/B/C三路，C点独立远程' },
   { name: '霓虹町', nameEn: 'Split', desc: '双点地图，中路高塔控制核心，上下层结构复杂' },
-  { name: '深海明珠', nameEn: 'Pearl', desc: '双点地图，视野开阔，中路长廊为核心争夺区域' },
-  { name: '裂变峡谷', nameEn: 'Fracture', desc: '双点地图，防守方被夹在中间，攻击方从两侧进攻' },
-  { name: '隐士修所', nameEn: 'Haven', desc: '三点地图（唯一），A/B/C三路，C点独立远程' },
-  { name: '日落之城', nameEn: 'Sunset', desc: '双点地图，洛杉矶风格街区，中路宽阔直通B点' },
-  { name: '莲华古城', nameEn: 'Lotus', desc: '三点地图，旋转门+可破坏墙体，A/C点通过转门连接' },
+  { name: '森寒冬港', nameEn: 'Icebox', desc: '双点地图，垂直空间多，狙击位丰富，A点有高空走道' },
   { name: '微风岛屿', nameEn: 'Breeze', desc: '双点地图，海滩主题，地图开阔，A点金字塔为核心' },
-  { name: '幽邃地窖', nameEn: 'Abyss', desc: '双点地图，地底洞穴主题，多层结构，跌落区域多' },
-  { name: '盐海矿镇', nameEn: 'Salt Mine', desc: '双点地图，矿场主题，窄通道与开阔矿区交替' },
+  { name: '裂变峡谷', nameEn: 'Fracture', desc: '双点地图，防守方被夹在中间，攻击方从两侧进攻' },
+  { name: '深海明珠', nameEn: 'Pearl', desc: '双点地图，视野开阔，中路长廊为核心争夺区域' },
+  { name: '莲华古城', nameEn: 'Lotus', desc: '三点地图，旋转门+可破坏墙体，A/C点通过转门连接' },
+  { name: '盐海矿镇', nameEn: 'Salt Town', desc: '双点地图，矿场主题，窄通道与开阔矿区交替' },
+  { name: '日落之城', nameEn: 'Sunset City', desc: '双点地图，洛杉矶风格街区，中路宽阔直通B点' },
+  { name: '幽邃地窖', nameEn: 'ABYSS', desc: '双点地图，地底洞穴主题，多层结构，跌落区域多' },
 ]
 
 /** 角色中文名映射 */
