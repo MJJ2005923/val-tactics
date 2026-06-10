@@ -9,6 +9,7 @@ import abilityCombos from '../../knowledge/技能连招.md?raw'
 import agentCounters from '../../knowledge/特工克制.md?raw'
 import attackRoutes from '../../knowledge/进攻路线.md?raw'
 import patchHistory from '../../knowledge/版本记录.md?raw'
+import combatTips from '../../knowledge/实战技巧.md?raw'
 
 /** 地图列表（中文名 + 英文名 + 简要特征） */
 const MAPS: { name: string; nameEn: string; desc: string }[] = [
@@ -98,6 +99,8 @@ ${MAPS.map(m => `· ${m.name}（${m.nameEn}）— ${m.desc}`).join('\n')}
   kb += `\n${attackRoutes}\n`
   // 版本记录
   kb += `\n${patchHistory}\n`
+  // 实战技巧
+  kb += `\n${combatTips}\n`
 
   // 回答规范
   kb += `
