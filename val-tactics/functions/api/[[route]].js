@@ -126,8 +126,8 @@ export async function onRequest(context) {
       const resp = await fetch(`https://zwtpeyvqbllrpregjpyd.supabase.co/auth/v1/admin/users`, {
         method: 'POST',
         headers: {
-          'apikey': 'sb_secret_pgyAfwce5NPH71pee-XVfQ_8X-t4QaW',
-          'Authorization': 'Bearer sb_secret_pgyAfwce5NPH71pee-XVfQ_8X-t4QaW',
+          'apikey': env.SUPABASE_SERVICE_KEY || '',
+          'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY || ''}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password, email_confirm: true }),
