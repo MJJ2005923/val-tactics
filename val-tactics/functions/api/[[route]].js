@@ -53,16 +53,16 @@ const PROVIDERS = {
   google: {
     chatUrl: (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     listModels: async (key) => {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`)
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models`, { headers: { 'x-goog-api-key': key } })
       const data = await r.json()
       return (data.models || []).filter(m => m.name.includes('gemini')).map(m => ({ id: m.name.replace('models/', ''), name: m.displayName || m.name })).slice(0, 30)
     },
-    chatHeaders: () => ({ 'content-type': 'application/json' }),
+    chatHeaders: (key) => ({ 'x-goog-api-key': key, 'content-type': 'application/json' }),
     chatBody: (model, messages) => ({
       contents: messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
       generationConfig: { maxOutputTokens: 2048 },
     }),
-    keyInQuery: true,
+    keyInQuery: false,
   },
   deepseek: {
     chatUrl: 'https://api.deepseek.com/v1/chat/completions',
@@ -85,6 +85,28 @@ function getServerKey(provider, env) {
 
 // 免费额度限制
 const FREE_LIMIT = 5 // 每天每人免费 5 次（与前端套餐方案一致）
+const RATE_PER_MIN = 30 // 每 IP 每分钟最大请求数
+const RATE_PER_HOUR = 500 // 每 IP 每小时最大请求数
+
+/**
+ * IP 级别限流检查（基于 Cloudflare KV）
+ * @returns {number} 0=通过, 429=超限
+ */
+async function checkRateLimit(ip, env) {
+  if (!env.AI_USAGE) return 0 // 本地开发跳过
+  const now = Date.now()
+  // 每分钟限制
+  const minKey = `rl:min:${ip}:${Math.floor(now / 60000)}`
+  const minCount = parseInt(await env.AI_USAGE.get(minKey) || '0')
+  if (minCount >= RATE_PER_MIN) return 429
+  await env.AI_USAGE.put(minKey, String(minCount + 1), { expirationTtl: 120 })
+  // 每小时限制
+  const hourKey = `rl:hour:${ip}:${Math.floor(now / 3600000)}`
+  const hourCount = parseInt(await env.AI_USAGE.get(hourKey) || '0')
+  if (hourCount >= RATE_PER_HOUR) return 429
+  await env.AI_USAGE.put(hourKey, String(hourCount + 1), { expirationTtl: 7200 })
+  return 0
+}
 
 export async function onRequest(context) {
   const { request, env } = context
@@ -233,49 +255,37 @@ export async function onRequest(context) {
     }
   }
 
+  // AI 对话 — IP 限流（防滥用，所有用户生效）
+  const ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'unknown'
+  const rateStatus = await checkRateLimit(ip, env)
+  if (rateStatus === 429) {
+    return new Response(JSON.stringify({ error: 'rate_limit', message: '请求过快，请稍后再试' }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+  }
+
   // AI 对话 — 免费额度检查（付费用户不受限）
-  // 本地开发用内存计数器，生产用 KV
-  const localUsage = new Map()
-  if (isFree && userId) {
-    // 检查是否有付费套餐
+  if (isFree && userId && env.AI_USAGE) {
     let isPaid = false
     try {
-      if (env.AI_USAGE) {
-        const userTier = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
-        isPaid = userTier?.tier && userTier.tier !== 'free'
-      }
+      const userTier = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
+      isPaid = userTier?.tier && userTier.tier !== 'free'
     } catch {}
     if (!isPaid) {
       const today = new Date().toISOString().slice(0, 10)
-      let count = 0
-      try {
-        if (env.AI_USAGE) {
-          const key = `usage:${userId}:${today}`
-          count = parseInt(await env.AI_USAGE.get(key) || '0')
-          if (count >= FREE_LIMIT) {
-            return new Response(JSON.stringify({ error: 'free_limit', message: `今日免费次数已用完（${FREE_LIMIT}次/天），请升级套餐或自备 API Key` }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
-          }
-          ctx.waitUntil(env.AI_USAGE.put(key, String(count + 1), { expirationTtl: 86400 }))
-        } else {
-          // 本地开发 fallback
-          const localKey = `usage:${userId}:${today}`
-          count = localUsage.get(localKey) || 0
-          if (count >= FREE_LIMIT) {
-            return new Response(JSON.stringify({ error: 'free_limit', message: `今日免费次数已用完（${FREE_LIMIT}次/天），请升级套餐或自备 API Key` }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
-          }
-          localUsage.set(localKey, count + 1)
-        }
-      } catch {}
+      const key = `usage:${userId}:${today}`
+      const count = parseInt(await env.AI_USAGE.get(key) || '0')
+      if (count >= FREE_LIMIT) {
+        return new Response(JSON.stringify({ error: 'free_limit', message: `今日免费次数已用完（${FREE_LIMIT}次/天），请升级套餐或自备 API Key` }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+      await env.AI_USAGE.put(key, String(count + 1), { expirationTtl: 86400 })
     }
   }
 
   try {
-    let chatUrl = typeof p.chatUrl === 'function' ? p.chatUrl(model) : p.chatUrl
-    if (p.keyInQuery) chatUrl += `?key=${encodeURIComponent(apiKey)}`
+    const chatUrl = typeof p.chatUrl === 'function' ? p.chatUrl(model) : p.chatUrl
 
     const resp = await fetch(chatUrl, {
       method: 'POST',
-      headers: p.keyInQuery ? { 'content-type': 'application/json' } : p.chatHeaders(apiKey),
+      headers: p.chatHeaders(apiKey),
       body: JSON.stringify(p.chatBody(model, messages)),
     })
 

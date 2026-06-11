@@ -5,6 +5,7 @@ import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '..
 import MatchContextSelector, { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../store/AuthContext'
+import { encryptKey, decryptKey } from '../../utils/crypto'
 import styles from './AIPage.module.css'
 
 interface Message { role: 'user' | 'assistant'; content: string; convId?: string; rating?: number }
@@ -192,10 +193,21 @@ function uid() {
   return id
 }
 function loadConfig() {
-  try { const raw = localStorage.getItem('val-tactics-ai-config'); if (raw) return JSON.parse(raw) } catch {}
+  try {
+    const raw = localStorage.getItem('val-tactics-ai-config')
+    if (raw) {
+      const obj = JSON.parse(raw)
+      if (obj.apiKey) obj.apiKey = decryptKey(obj.apiKey, uid())
+      return obj
+    }
+  } catch {}
   return { apiKey: '', provider: PROVIDER, model: '' }
 }
-function saveConfig(c: AIConfig) { localStorage.setItem('val-tactics-ai-config', JSON.stringify(c)) }
+function saveConfig(c: AIConfig) {
+  const safe = { ...c }
+  if (safe.apiKey) safe.apiKey = encryptKey(safe.apiKey, uid())
+  localStorage.setItem('val-tactics-ai-config', JSON.stringify(safe))
+}
 
 export default function AIPage({ mapName, onBack }: { mapId: string; mapName: string; onBack: () => void }) {
   const { abilityShapes, side, agentPositions, drawings, textAnnotations, markers, roster } = useTactics()

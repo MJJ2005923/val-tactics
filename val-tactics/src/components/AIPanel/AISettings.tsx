@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ModelIcon } from '../AIPage/AIPage'
+import { encryptKey, decryptKey } from '../../utils/crypto'
 import styles from './AIPanel.module.css'
 
 interface AIModel { id: string; name: string; tier?: string; perf?: string; limit?: string; unlock?: string }
@@ -39,10 +40,21 @@ const MODEL_CAPS: Record<string, Record<string, number>> = {
 }
 
 function loadConfig() {
-  try { const raw = localStorage.getItem('val-tactics-ai-config'); if (raw) return JSON.parse(raw) } catch {}
+  try {
+    const raw = localStorage.getItem('val-tactics-ai-config')
+    if (raw) {
+      const obj = JSON.parse(raw)
+      if (obj.apiKey) obj.apiKey = decryptKey(obj.apiKey, uid())
+      return obj
+    }
+  } catch {}
   return { apiKey: '', provider: PROVIDER, model: '' }
 }
-function saveConfig(c: AIConfig) { localStorage.setItem('val-tactics-ai-config', JSON.stringify(c)) }
+function saveConfig(c: AIConfig) {
+  const safe = { ...c }
+  if (safe.apiKey) safe.apiKey = encryptKey(safe.apiKey, uid())
+  localStorage.setItem('val-tactics-ai-config', JSON.stringify(safe))
+}
 export function getAIConfig() { return loadConfig() }
 function uid() {
   let id = localStorage.getItem('val-tactics-uid')
