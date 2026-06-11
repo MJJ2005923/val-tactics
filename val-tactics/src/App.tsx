@@ -409,7 +409,13 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
             )}
           </div>
           <NotificationBell />
-          <button className="navbar__btn" onClick={() => setShowAuthModal(true)}
+          <button className="navbar__btn" onClick={() => {
+            if (user) {
+              setCommProfileId(user.id); setCommView('profile'); setShowCommunity(true)
+            } else {
+              setShowAuthModal(true)
+            }
+          }}
             style={user ? { color: '#05F8F8', borderColor: 'rgba(5,248,248,.2)' } : undefined}>
             {user ? `${user.email?.split('@')[0]}` : '登录'}
           </button>
