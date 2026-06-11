@@ -304,7 +304,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
                     setShowAIPage(true)
                     setShowAIDropdown(false)
                   }} style={{ color: '#f0c0ff' }}>
-                    <span>🎯 AI 生成战术</span>
+                    <span>AI 生成战术</span>
                   </button>
                   <div className="navbar__aiDropdownDivider" style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 8px' }} />
                   <button className="navbar__aiDropdownItem" onClick={() => { setShowMatchAnalysis(true); setShowAIDropdown(false) }}>
