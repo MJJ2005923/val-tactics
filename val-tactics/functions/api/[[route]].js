@@ -269,6 +269,57 @@ export async function onRequest(context) {
     }
   }
 
+  // 内容安全审核（供社区功能调用）
+  if (url.pathname === '/api/content-filter') {
+    const { text } = await request.json()
+    if (!text) {
+      return new Response(JSON.stringify({ allowed: false, level: 'block', reason: '内容为空' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+
+    // 第一层：敏感词库快速匹配
+    const blockedWords = [
+      '习近平','毛主席','共产党','六四','天安门','法轮功','达赖','藏独','疆独','台独','反共','反华','颠覆','暴动','文革',
+      '裸聊','约炮','一夜情','嫖娼','卖淫','色情','AV','毛片','草榴','91视频','福利姬','做爱','性交','操你','日你',
+      '杀人','砍死','屠杀','恐怖组织','ISIS','圣战','自制枪支','割喉','碎尸',
+      '赌博','赌场','博彩','时时彩','六合彩','刷单','日赚','套现',
+      '支那','东亚病夫','黑鬼','nigger','faggot',
+    ]
+    const lower = text.toLowerCase()
+    const hits = blockedWords.filter(w => lower.includes(w.toLowerCase()))
+    if (hits.length > 0) {
+      return new Response(JSON.stringify({ allowed: false, level: 'block', reason: `包含违规内容`, flags: ['sensitive_words'] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+
+    // 第二层：AI 深度审核（可选，使用 DeepSeek Flash 快速判断）
+    const dskey = env.DEEPSEEK_KEY
+    if (dskey) {
+      try {
+        const aiResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
+          body: JSON.stringify({
+            model: 'deepseek-v4-flash',
+            messages: [
+              { role: 'system', content: '你是内容安全审核员。判断文本是否可以发布到游戏社区。只回复 PASS、REVIEW 或 BLOCK，加一句简短原因。' },
+              { role: 'user', content: text },
+            ],
+            max_tokens: 30, temperature: 0,
+          }),
+        })
+        const aiData = await aiResp.json()
+        const verdict = aiData.choices?.[0]?.message?.content?.trim().toUpperCase() || 'REVIEW'
+        if (verdict.startsWith('BLOCK')) {
+          return new Response(JSON.stringify({ allowed: false, level: 'block', reason: verdict, flags: ['ai_blocked'] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+        }
+        if (verdict.startsWith('REVIEW')) {
+          return new Response(JSON.stringify({ allowed: false, level: 'review', reason: verdict, flags: ['ai_review'] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+        }
+      } catch {} // AI 不可用时降级为通过（已过词库）
+    }
+
+    return new Response(JSON.stringify({ allowed: true, level: 'pass', reason: '审核通过', flags: [] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+  }
+
   let { apiKey, provider, model, messages, userId } = await request.json()
 
   const p = PROVIDERS[provider]
