@@ -73,3 +73,75 @@
 }
 .tabActive .tabIcon { background: rgba(5,248,248,.08) }
 .tabLabel { font-size: 10px; font-weight: 600; letter-spacing: .5px }
+
+/* === 顶部工具栏 === */
+.topToolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 8px; gap: 6px;
+  background: rgba(10,6,20,.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  z-index: 15; position: relative;
+}
+.mapSelectBtn {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  color: #05F8F8; padding: 5px 10px; border-radius: 8px;
+  font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  display: flex; align-items: center; gap: 4px;
+}
+.mapDropdown {
+  position: absolute; top: 100%; left: 0; z-index: 100;
+  background: #0d0a14; border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px; min-width: 140px; max-height: 260px;
+  overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,.5);
+}
+.mapDropdownItem {
+  display: block; width: 100%; padding: 8px 14px; background: none;
+  border: none; color: rgba(255,255,255,.5); font-size: 12px;
+  cursor: pointer; text-align: left; border-bottom: 1px solid rgba(255,255,255,.02);
+}
+.mapDropdownItem:hover { background: rgba(5,248,248,.06); color: #05F8F8 }
+
+.sideBtn {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  color: #E349ED; padding: 5px 10px; border-radius: 8px;
+  font-size: 11px; font-weight: 700; cursor: pointer; min-width: 28px;
+}
+.loginBtn {
+  background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06);
+  color: rgba(255,255,255,.4); padding: 5px 8px; border-radius: 8px;
+  font-size: 11px; cursor: pointer; white-space: nowrap;
+}
+
+/* === 地图内部 === */
+.mapInner {
+  position: absolute; top: 40px; bottom: 42px; left: 0; right: 0;
+}
+
+/* === 底部快捷操作栏 === */
+.quickBar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+  display: flex; align-items: center; gap: 4px; padding: 0 8px;
+  background: rgba(10,6,20,.9); border-top: 1px solid rgba(255,255,255,.03);
+  z-index: 15;
+}
+.quickBtn {
+  display: flex; align-items: center; gap: 4px; padding: 4px 8px;
+  background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05);
+  color: rgba(255,255,255,.3); border-radius: 6px; font-size: 10px;
+  cursor: pointer; font-family: inherit;
+}
+.quickBtn:active { background: rgba(5,248,248,.06); color: #05F8F8 }
+
+/* === 横屏调整 === */
+@media (max-width: 1024px) and (orientation: landscape) {
+  .topToolbar { padding: 4px 6px; gap: 4px }
+  .mapSelectBtn { font-size: 11px; padding: 4px 8px }
+  .mapInner { top: 36px; bottom: 36px }
+  .quickBar { height: 34px; gap: 2px }
+  .quickBtn { padding: 3px 6px; font-size: 9px }
+  .timelineDrawer { height: 120px }
+  .tabBar { height: 44px }
+  .tab { padding: 2px 0 }
+  .tabLabel { font-size: 9px }
+  .drawer { width: 200px }
+}

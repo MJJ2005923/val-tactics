@@ -292,6 +292,15 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           agentPanel={<AgentPanel animate={panelAnimate} />}
           timeline={<Timeline animate={timelineAnimate} />}
           toolbar={<ToolPalette />}
+          selectedMap={selectedMap}
+          onMapChange={setSelectedMap}
+          side={side}
+          onSideToggle={() => dispatch({ type: 'SET_SIDE', side: side === 'attack' ? 'defense' : 'attack' })}
+          notificationBell={<NotificationBell />}
+          user={user}
+          onLogin={() => setShowAuthModal(true)}
+          onSave={handleSaveProgress}
+          onTemplates={() => setShowTemplates(true)}
           communityPanel={
             <>
               {showCommunity && commView === 'gallery' && (
