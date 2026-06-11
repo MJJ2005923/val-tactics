@@ -24,9 +24,13 @@ const TIER_MODELS: Record<string, string[]> = {
 }
 
 // 套餐对应每日限额
-const TIER_LIMITS: Record<string, number> = {
-  free: 5,
-  standard: 60,
+const TIER_LIMITS: Record<string, number> = { free: 5, standard: 60 }
+
+const MODEL_LIMITS: Record<string, number> = {
+  'deepseek-v4-flash': 20,
+  'deepseek-chat': 10,
+  'deepseek-reasoner': 3,
+  'deepseek-v4-pro': 2,
 }
 
 function loadConfig() {
@@ -178,7 +182,7 @@ export default function AISettings() {
         <div style={{ marginBottom: 12 }}>
           {models.map(m => {
             const locked = isFree && !isModelAvailable(tier, isFree, m)
-            const tierLimit = isFree ? TIER_LIMITS[tier] : Infinity
+            const tierLimit = MODEL_LIMITS[m.id] || TIER_LIMITS[tier]
             const cap = tierLimit
             const usage = cap !== undefined ? getTodayUsage(m.id) : getSharedUsage()
             const remaining = Math.max(0, (cap ?? tierLimit) - usage)

@@ -152,6 +152,14 @@ const TIER_MODELS: Record<string, string[]> = {
 // 每套餐总次数
 const TIER_TOTAL_LIMITS: Record<string, number> = { free: 5, standard: 60 }
 
+// 标准套餐按模型分拆日次数
+const MODEL_LIMITS: Record<string, number> = {
+  'deepseek-v4-flash': 20,
+  'deepseek-chat': 10,
+  'deepseek-reasoner': 3,
+  'deepseek-v4-pro': 2,
+}
+
 async function activateCode(code: string): Promise<{ ok: boolean; tier?: string; error?: string }> {
   try {
     const resp = await fetch('/api/activate', {
@@ -484,15 +492,14 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
                     {isExpanded && (
                       <div className={styles.planExpand} style={{ animationDelay: `${i * 0.12 + 0.05}s` }}>
                         <div style={{ marginBottom: 6, color: p.color, fontWeight: 600 }}>
-                          {p.price}/月 · 共 {TIER_TOTAL_LIMITS[p.tier]}次/天
+                          {p.price}/月 · 4 种模式独立配额
                         </div>
                         {planModelIds.map(mid => {
                           const model = models.find(m => m.id === mid)
-                          const cap = TIER_TOTAL_LIMITS[p.tier]
-                          const icon = model?.name?.includes('快速') ? '⚡' : model?.name?.includes('均衡') ? '⚖️' : model?.name?.includes('推理') ? '💭' : '🧠'
+                          const cap = MODEL_LIMITS[mid] || TIER_TOTAL_LIMITS[p.tier]
                           return (
                             <div key={mid} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,.03)' }}>
-                              <span>{icon} {model?.name || mid}</span>
+                              <span>{model?.name || mid}</span>
                               <span style={{ color: 'rgba(255,255,255,.35)', fontFamily: 'Consolas,monospace' }}>
                                 {cap !== undefined ? `${cap}次` : '共享'}
                               </span>
@@ -518,16 +525,12 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
               {models.map(m => {
                 const locked = isFree && !(TIER_MODELS[tier]?.includes(m.id))
                 const isCurrent = config.model === m.id
-                const cap = TIER_TOTAL_LIMITS[tier]
-                const tierTotal = TIER_TOTAL_LIMITS[tier]
-                // 独立上限模型用专属计数器，共享模型用共享池
-                const usage = cap !== undefined
-                  ? getTodayUsage(m.id)
-                  : getSharedUsage()
-                const remaining = Math.max(0, (cap ?? tierTotal) - usage)
+                const cap = MODEL_LIMITS[m.id] || TIER_TOTAL_LIMITS[tier]
+                const usage = getTodayUsage(m.id)
+                const remaining = Math.max(0, cap - usage)
                 const limitText = isFree
                   ? `剩余 ${remaining} 次`
-                  : `${cap ?? tierTotal}次/天`
+                  : `${cap}次/天`
                 const isFreeModel = m.tier === '免费'
                 return (
                   <button key={m.id}
