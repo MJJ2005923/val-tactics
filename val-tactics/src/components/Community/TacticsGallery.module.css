@@ -1,0 +1,104 @@
+.overlay {
+  position: fixed; inset: 0; background: #07040c;
+  z-index: 9990; display: flex; flex-direction: column;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+/* 顶栏 */
+.topBar {
+  display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  background: rgba(7,4,12,.95); backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 10;
+}
+.backBtn {
+  background: none; border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.5); padding: 6px 12px; border-radius: 8px;
+  cursor: pointer; font-size: 13px;
+}
+.backBtn:hover { background: rgba(255,255,255,.05); color: #fff }
+.searchBox {
+  flex: 1; max-width: 300px;
+  padding: 8px 14px; background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06); border-radius: 10px;
+  color: #fff; font-size: 13px; outline: none;
+}
+.searchBox::placeholder { color: rgba(255,255,255,.15) }
+.searchBox:focus { border-color: rgba(5,248,248,.2) }
+
+.sortBtns { display: flex; gap: 4px }
+.sortBtn {
+  padding: 6px 12px; background: none; border: 1px solid rgba(255,255,255,.06);
+  color: rgba(255,255,255,.35); border-radius: 8px; cursor: pointer; font-size: 12px;
+}
+.sortBtn:hover { color: #fff }
+.sortBtnActive { color: #05F8F8; border-color: rgba(5,248,248,.2); background: rgba(5,248,248,.05) }
+
+.createBtn {
+  padding: 7px 16px; background: #E349ED; color: #fff; border: none;
+  border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+  white-space: nowrap;
+}
+.createBtn:hover { background: #d030d8 }
+
+/* 地图过滤 */
+.mapFilter {
+  display: flex; gap: 4px; padding: 10px 20px; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.02);
+}
+.mapChip {
+  padding: 4px 10px; background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.05); border-radius: 14px;
+  color: rgba(255,255,255,.3); font-size: 11px; cursor: pointer; white-space: nowrap;
+}
+.mapChip:hover { color: rgba(255,255,255,.6); border-color: rgba(255,255,255,.1) }
+.mapChipActive { color: #05F8F8; border-color: rgba(5,248,248,.2); background: rgba(5,248,248,.06) }
+
+/* 卡片网格 */
+.grid {
+  flex: 1; overflow-y: auto; padding: 16px 20px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+/* 卡片 */
+.card {
+  background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.04);
+  border-radius: 14px; padding: 16px; cursor: pointer;
+  transition: border-color .15s, transform .15s;
+}
+.card:hover { border-color: rgba(5,248,248,.15); transform: translateY(-2px) }
+
+.cardMap {
+  font-size: 11px; color: #05F8F8; text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 8px;
+}
+.cardTitle {
+  font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cardDesc {
+  font-size: 12px; color: rgba(255,255,255,.25); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; margin-bottom: 12px;
+}
+.cardMeta {
+  display: flex; gap: 14px; font-size: 11px; color: rgba(255,255,255,.2);
+}
+.cardMeta span { display: flex; align-items: center; gap: 4px }
+
+/* 空状态 */
+.empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; color: rgba(255,255,255,.15); gap: 8px;
+}
+.emptyIcon { font-size: 48px; opacity: .3 }
+.emptyText { font-size: 14px }
+
+/* 加载 */
+.loading {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.2); font-size: 14px;
+}

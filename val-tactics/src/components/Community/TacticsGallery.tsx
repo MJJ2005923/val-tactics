@@ -1,0 +1,95 @@
+import { useState, useEffect, useCallback } from 'react'
+import { getTactics } from '../../lib/community/tactics'
+import { getProfiles } from '../../lib/community/profiles'
+import type { TacticalShare, Profile } from '../../types/community'
+import maps from '../../data/maps'
+import styles from './TacticsGallery.module.css'
+
+interface Props {
+  onBack: () => void
+  onViewTactic: (id: string) => void
+  onCreate: () => void
+}
+
+export default function TacticsGallery({ onBack, onViewTactic, onCreate }: Props) {
+  const [tactics, setTactics] = useState<TacticalShare[]>([])
+  const [profiles, setProfiles] = useState<Record<string, Profile>>({})
+  const [loading, setLoading] = useState(true)
+  const [sort, setSort] = useState<'latest' | 'hot'>('latest')
+  const [mapFilter, setMapFilter] = useState('')
+  const [search, setSearch] = useState('')
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const result = await getTactics({ sort, mapId: mapFilter || undefined, search: search || undefined })
+      setTactics(result.data)
+      // 批量查作者
+      const ids = [...new Set(result.data.map(t => t.user_id))]
+      if (ids.length > 0) {
+        const profs = await getProfiles(ids)
+        const map: Record<string, Profile> = {}
+        profs.forEach(p => { map[p.id] = p })
+        setProfiles(map)
+      }
+    } catch (e) { console.error(e) }
+    setLoading(false)
+  }, [sort, mapFilter, search])
+
+  useEffect(() => { load() }, [load])
+
+  const mapName = (id: string) => maps.find(m => m.id === id)?.name || id
+
+  return (
+    <div className={styles.overlay}>
+      <div className={styles.topBar}>
+        <button className={styles.backBtn} onClick={onBack}>← 返回</button>
+        <input
+          className={styles.searchBox}
+          placeholder="搜索战术…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <div className={styles.sortBtns}>
+          <button className={`${styles.sortBtn} ${sort === 'latest' ? styles.sortBtnActive : ''}`} onClick={() => setSort('latest')}>最新</button>
+          <button className={`${styles.sortBtn} ${sort === 'hot' ? styles.sortBtnActive : ''}`} onClick={() => setSort('hot')}>最热</button>
+        </div>
+        <button className={styles.createBtn} onClick={onCreate}>发布战术</button>
+      </div>
+
+      <div className={styles.mapFilter}>
+        <button className={`${styles.mapChip} ${!mapFilter ? styles.mapChipActive : ''}`} onClick={() => setMapFilter('')}>全部</button>
+        {maps.map(m => (
+          <button key={m.id} className={`${styles.mapChip} ${mapFilter === m.id ? styles.mapChipActive : ''}`} onClick={() => setMapFilter(m.id)}>
+            {m.name}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className={styles.loading}>加载中…</div>
+      ) : tactics.length === 0 ? (
+        <div className={styles.empty}>
+          <div className={styles.emptyIcon}>📭</div>
+          <div className={styles.emptyText}>还没有战术分享，快来发布第一个！</div>
+        </div>
+      ) : (
+        <div className={styles.grid}>
+          {tactics.map(t => (
+            <div key={t.id} className={styles.card} onClick={() => onViewTactic(t.id)}>
+              <div className={styles.cardMap}>{mapName(t.map_id)}</div>
+              <div className={styles.cardTitle}>{t.title}</div>
+              {t.description && <div className={styles.cardDesc}>{t.description}</div>}
+              <div className={styles.cardMeta}>
+                <span>👤 {profiles[t.user_id]?.username?.split('@')[0] || '用户'}</span>
+                <span>👁 {t.views}</span>
+                <span>❤️ {t.like_count}</span>
+                <span>💬 {t.comment_count}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

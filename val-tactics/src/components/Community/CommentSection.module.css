@@ -1,0 +1,38 @@
+.section { margin-top: 20px }
+.title { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.5); margin-bottom: 12px }
+
+.list { display: flex; flex-direction: column; gap: 10px }
+.comment {
+  padding: 10px 14px; background: rgba(255,255,255,.015);
+  border: 1px solid rgba(255,255,255,.03); border-radius: 10px;
+}
+.commentUser {
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.5); margin-bottom: 4px;
+}
+.commentText {
+  font-size: 13px; color: rgba(255,255,255,.7); line-height: 1.6;
+  word-break: break-word;
+}
+.commentTime {
+  font-size: 10px; color: rgba(255,255,255,.15); margin-top: 4px;
+}
+
+.inputRow { display: flex; gap: 8px; margin-top: 12px }
+.input {
+  flex: 1; padding: 8px 12px; background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06); border-radius: 10px;
+  color: #fff; font-size: 13px; outline: none;
+}
+.input::placeholder { color: rgba(255,255,255,.12) }
+.input:focus { border-color: rgba(5,248,248,.15) }
+.sendBtn {
+  padding: 8px 16px; background: rgba(5,248,248,.08);
+  border: 1px solid rgba(5,248,248,.15); color: #05F8F8;
+  border-radius: 10px; cursor: pointer; font-size: 13px; white-space: nowrap;
+}
+.sendBtn:hover { background: rgba(5,248,248,.15) }
+.sendBtn:disabled { opacity: .3; cursor: not-allowed }
+
+.empty { color: rgba(255,255,255,.1); font-size: 13px; text-align: center; padding: 20px }
+.error { color: #ff5555; font-size: 12px; margin-top: 6px }
+.loginHint { color: rgba(255,255,255,.15); font-size: 13px; text-align: center; padding: 12px }

@@ -17,6 +17,9 @@ import AuthModal from './components/Auth/AuthModal'
 import PrivacyPanel from './components/PrivacyPanel/PrivacyPanel'
 import SponsorPanel from './components/SponsorPanel/SponsorPanel'
 import AdminPanel from './components/AdminPanel/AdminPanel'
+import TacticsGallery from './components/Community/TacticsGallery'
+import TacticsDetail from './components/Community/TacticsDetail'
+import CreateShare from './components/Community/CreateShare'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 import { AuthProvider, useAuth } from './store/AuthContext'
@@ -35,8 +38,31 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showSponsor, setShowSponsor] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
   const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
+  const [showCommunity, setShowCommunity] = useState(false)
+  const [commView, setCommView] = useState<'gallery' | 'detail' | 'create'>('gallery')
+  const [commTacticId, setCommTacticId] = useState('')
   const { user } = useAuth()
   const [showMapDropdown, setShowMapDropdown] = useState(false)
+
+  // 从社区加载战术到战术板
+  const handleLoadCommunityTactic = (data: Record<string, unknown>, mapId: string) => {
+    const map = maps.find(m => m.id === mapId)
+    if (map) setSelectedMap(map)
+    dispatch({
+      type: 'LOAD_ALL',
+      markers: ((data as any).mk || []).map((m: any) => ({ ...m, id: '', abilityId: m.a, agentId: m.g })),
+      drawings: (data as any).dr || [],
+      texts: (data as any).tx || [],
+      agents: (data as any).ap || [],
+      shapes: (data as any).as || [],
+      name: (data as any).name || '',
+      desc: (data as any).desc || '',
+      roster: (data as any).roster || { attack: [], defense: [] },
+      tracks: (data as any).tracks || [],
+    })
+    setShowCommunity(false)
+  }
+
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
   const toast = useToast()
 
@@ -320,6 +346,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           </button>
           <a className="navbar__btn" href="/changelog.html" target="_blank" style={{ fontSize: 12, textDecoration: 'none' }}>📋 更新公告</a>
           <button className="navbar__btn" onClick={() => setShowPrivacy(true)} style={{ fontSize: 12 }}>📜 隐私条款</button>
+          <button className="navbar__btn" onClick={() => { setShowCommunity(true); setCommView('gallery') }} style={{ color: '#05F8F8', borderColor: 'rgba(5,248,248,.15)' }}>🌐 社区</button>
           <button className="navbar__btn" onClick={() => setShowHelp(true)}>📖 使用手册</button>
           <button className="navbar__btn" onClick={() => setShowSponsor(true)} style={{ color: '#ffd700', borderColor: 'rgba(255,215,0,.2)' }}>🏆 特别鸣谢</button>
           <button className="navbar__btn" onClick={() => setShowAdmin(true)} style={{ fontSize: 10, opacity: .3 }} title="管理">⚙</button>
@@ -363,6 +390,27 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
       {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+      {showCommunity && commView === 'gallery' && (
+        <TacticsGallery
+          onBack={() => setShowCommunity(false)}
+          onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }}
+          onCreate={() => setCommView('create')}
+        />
+      )}
+      {showCommunity && commView === 'detail' && (
+        <TacticsDetail
+          tacticId={commTacticId}
+          onBack={() => setCommView('gallery')}
+          onLoadToBoard={handleLoadCommunityTactic}
+        />
+      )}
+      {showCommunity && commView === 'create' && (
+        <CreateShare
+          mapId={selectedMap.id}
+          onClose={() => setCommView('gallery')}
+          onSuccess={(id) => { setCommTacticId(id); setCommView('detail') }}
+        />
+      )}
     </div>
   )
 }
