@@ -15,6 +15,7 @@ import MatchAnalysisPage from './components/MatchAnalysis/MatchAnalysisPage'
 import AuthModal from './components/Auth/AuthModal'
 import PrivacyPanel from './components/PrivacyPanel/PrivacyPanel'
 import SponsorPanel from './components/SponsorPanel/SponsorPanel'
+import AdminPanel from './components/AdminPanel/AdminPanel'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 import { AuthProvider, useAuth } from './store/AuthContext'
@@ -31,6 +32,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showSponsor, setShowSponsor] = useState(false)
+  const [showAdmin, setShowAdmin] = useState(false)
   const { user } = useAuth()
   const [showMapDropdown, setShowMapDropdown] = useState(false)
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
@@ -310,6 +312,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <button className="navbar__btn" onClick={() => setShowPrivacy(true)} style={{ fontSize: 12 }}>📜 隐私条款</button>
           <button className="navbar__btn" onClick={() => setShowHelp(true)}>📖 使用手册</button>
           <button className="navbar__btn" onClick={() => setShowSponsor(true)} style={{ color: '#ffd700', borderColor: 'rgba(255,215,0,.2)' }}>🏆 特别鸣谢</button>
+          <button className="navbar__btn" onClick={() => setShowAdmin(true)} style={{ fontSize: 10, opacity: .3 }} title="管理">⚙</button>
           <a className="navbar__btn" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#f0a0f0', borderColor: 'rgba(227,73,237,.25)', background: 'rgba(227,73,237,.06)' }}>❤️ 爱发电</a>
         </div>
       </nav>
@@ -349,6 +352,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
       {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
+      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
     </div>
   )
 }

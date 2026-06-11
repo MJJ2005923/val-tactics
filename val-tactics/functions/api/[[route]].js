@@ -233,6 +233,42 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ ok: true, count }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
+  // 管理后台：用户统计（需 ADMIN_KEY）
+  if (url.pathname === '/api/admin/stats') {
+    const key = new URL(request.url).searchParams.get('key') || ''
+    if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
+      return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    try {
+      const svcKey = env.SUPABASE_SERVICE_KEY || ''
+      // 查 Supabase 用户总数
+      const userResp = await fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/auth/v1/admin/users?per_page=1', {
+        headers: { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` }
+      })
+      const totalUsers = userResp.headers.get('x-total-count') || userResp.headers.get('content-range')?.split('/')[1] || '?'
+      // 查 KV 中的激活统计
+      let tierCounts = { free: 0, basic: 0, advanced: 0, pro: 0, ownkey: 0 }
+      if (env.AI_USAGE) {
+        const tierList = await env.AI_USAGE.list({ prefix: 'tier:' })
+        for (const k of tierList.keys) {
+          try {
+            const t = await env.AI_USAGE.get(k.name, { type: 'json' })
+            const tier = t?.tier || 'free'
+            tierCounts[tier] = (tierCounts[tier] || 0) + 1
+          } catch {}
+        }
+        tierCounts.ownkey = tierList.keys.filter(k => k.name.includes(':ownkey')).length // 估算
+      }
+      return new Response(JSON.stringify({
+        totalUsers: parseInt(totalUsers) || 0,
+        tierCounts,
+        online: 'https://val-tactics.pages.dev',
+      }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   let { apiKey, provider, model, messages, userId } = await request.json()
 
   const p = PROVIDERS[provider]
