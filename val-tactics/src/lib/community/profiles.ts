@@ -41,3 +41,16 @@ export async function getProfileStats(userId: string) {
   const { data } = await supabase.rpc('get_profile_stats', { p_user_id: userId })
   return (data as any) || { tacticCount: 0, postCount: 0, lineupCount: 0, totalLikes: 0, favoriteCount: 0 }
 }
+
+/** 上传头像到 Supabase Storage */
+export async function uploadAvatar(userId: string, file: File): Promise<string | null> {
+  const ext = file.name.split('.').pop() || 'webp'
+  const path = `${userId}/avatar.${ext}`
+  const { data, error } = await supabase.storage
+    .from('avatars')
+    .upload(path, file, { upsert: true, contentType: file.type })
+  if (error || !data) return null
+  const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(data.path)
+  await updateProfile(userId, { avatar_url: urlData.publicUrl })
+  return urlData.publicUrl
+}

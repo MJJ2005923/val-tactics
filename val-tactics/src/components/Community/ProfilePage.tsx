@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getProfile, getProfileStats, updateProfile } from '../../lib/community/profiles'
+import { getProfile, getProfileStats, updateProfile, uploadAvatar } from '../../lib/community/profiles'
 import { getFollowerCount, getFollowingCount } from '../../lib/community/follows'
 import { getTactics } from '../../lib/community/tactics'
 import { getPosts } from '../../lib/community/posts'
@@ -20,7 +20,7 @@ interface Props {
 }
 
 export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, onViewLineup }: Props) {
-  const { user } = useAuth()
+  const { user, signOut, resetPassword } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [followerCount, setFollowerCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
@@ -90,7 +90,31 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
       <div className={styles.content}>
         {/* 头部 */}
         <div className={styles.header}>
-          <div className={styles.avatar}>{(profile.username || '用')[0]}</div>
+          {editing ? (
+            <label className={styles.avatarUpload}>
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className={styles.avatarImg} />
+              ) : (
+                <span>{(editName || profile.username || '用')[0]}</span>
+              )}
+              <span className={styles.avatarOverlay}>更换</span>
+              <input type="file" accept="image/*" style={{ display: 'none' }}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file || !user) return
+                  const url = await uploadAvatar(user.id, file)
+                  if (url) setProfile(p => p ? { ...p, avatar_url: url } : null)
+                }} />
+            </label>
+          ) : (
+            <div className={styles.avatar}>
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className={styles.avatarImg} />
+              ) : (
+                (profile.username || '用')[0]
+              )}
+            </div>
+          )}
           <div className={styles.info}>
             {editing ? (
               <>
@@ -120,6 +144,32 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
             {subInfo.tier === 'free'
               ? '免费版 · 5次/天 · 升级解锁全部模式'
               : `标准版 · 剩余 ${subInfo.leftDays} 天`}
+          </div>
+        )}
+
+        {/* 账户设置 — 仅自己 */}
+        {user && user.id === userId && (
+          <div className={styles.settings}>
+            <div className={styles.settingsTitle}>账户设置</div>
+            <div className={styles.settingsRow}>
+              <button className={styles.settingsBtn}
+                onClick={() => {
+                  if (confirm('重置密码链接将发送到您的注册邮箱，确认？')) {
+                    resetPassword(user.email!).then((r: any) => {
+                      if (r?.error) alert(r.error)
+                      else alert('重置链接已发送，请查收邮件')
+                    })
+                  }
+                }}>
+                重置密码
+              </button>
+              <button className={styles.settingsBtnDanger}
+                onClick={() => {
+                  if (confirm('确定退出登录？')) signOut()
+                }}>
+                退出登录
+              </button>
+            </div>
           </div>
         )}
 

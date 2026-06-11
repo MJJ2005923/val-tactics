@@ -285,18 +285,17 @@ export async function onRequest(context) {
     }
     const svcKey = env.SUPABASE_SERVICE_KEY || ''
     try {
-      // 创建 lineups bucket（公开访问）
-      const resp = await fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/storage/v1/bucket', {
-        method: 'POST',
-        headers: { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: 'lineups', name: 'lineups', public: true, file_size_limit: 5242880 }),
-      })
-      if (resp.ok || (await resp.json()).statusCode === '409') {
-        // 409 = 已存在，也算成功
-        return new Response(JSON.stringify({ ok: true, message: 'Storage bucket 已就绪' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      const created = []
+      for (const bucketId of ['lineups', 'avatars']) {
+        const resp = await fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/storage/v1/bucket', {
+          method: 'POST',
+          headers: { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: bucketId, name: bucketId, public: true, file_size_limit: 5242880 }),
+        })
+        const body = await resp.json().catch(() => ({}))
+        if (resp.ok || body.statusCode === '409') created.push(bucketId)
       }
-      const err = await resp.json().catch(() => ({}))
-      return new Response(JSON.stringify({ ok: false, error: err.message || err.error || '创建失败' }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ ok: true, message: `Buckets 已就绪: ${created.join(', ')}` }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }
