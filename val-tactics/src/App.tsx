@@ -345,7 +345,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
                   </button>
                   <div className="navbar__aiDropdownDivider" style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 8px' }} />
                   <button className="navbar__aiDropdownItem" onClick={() => { setShowMatchAnalysis(true); setShowAIDropdown(false) }}>
-                    <span>📊 数据分析</span>
+                    <span>数据分析</span>
                   </button>
                 </div>
               </>
@@ -354,15 +354,15 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <NotificationBell />
           <button className="navbar__btn" onClick={() => setShowAuthModal(true)}
             style={user ? { color: '#05F8F8', borderColor: 'rgba(5,248,248,.2)' } : undefined}>
-            {user ? `👤 ${user.email?.split('@')[0]}` : '🔐 登录'}
+            {user ? `${user.email?.split('@')[0]}` : '登录'}
           </button>
-          <a className="navbar__btn" href="/changelog.html" target="_blank" style={{ fontSize: 12, textDecoration: 'none' }}>📋 更新公告</a>
+          <a className="navbar__btn" href="/changelog.html" target="_blank" style={{ fontSize: 12, textDecoration: 'none' }}>更新公告</a>
           <button className="navbar__btn" onClick={() => setShowPrivacy(true)} style={{ fontSize: 12 }}>📜 隐私条款</button>
-          <button className="navbar__btn" onClick={() => { setShowCommunity(true); setCommView('gallery') }} style={{ color: '#05F8F8', borderColor: 'rgba(5,248,248,.15)' }}>🌐 社区</button>
-          <button className="navbar__btn" onClick={() => setShowHelp(true)}>📖 使用手册</button>
-          <button className="navbar__btn" onClick={() => setShowSponsor(true)} style={{ color: '#ffd700', borderColor: 'rgba(255,215,0,.2)' }}>🏆 特别鸣谢</button>
+          <button className="navbar__btn" onClick={() => { setShowCommunity(true); setCommView('gallery') }} style={{ color: '#05F8F8', borderColor: 'rgba(5,248,248,.15)' }}>社区</button>
+          <button className="navbar__btn" onClick={() => setShowHelp(true)}>使用手册</button>
+          <button className="navbar__btn" onClick={() => setShowSponsor(true)} style={{ color: '#ffd700', borderColor: 'rgba(255,215,0,.2)' }}>特别鸣谢</button>
           <button className="navbar__btn" onClick={() => setShowAdmin(true)} style={{ fontSize: 10, opacity: .3 }} title="管理">⚙</button>
-          <a className="navbar__btn" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#f0a0f0', borderColor: 'rgba(227,73,237,.25)', background: 'rgba(227,73,237,.06)' }}>❤️ 爱发电</a>
+          <a className="navbar__btn" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#f0a0f0', borderColor: 'rgba(227,73,237,.25)', background: 'rgba(227,73,237,.06)' }}>爱发电</a>
         </div>
       </nav>
 

@@ -42,7 +42,7 @@ export default function LikeButton({ targetType, targetId, targetUserId, initial
         display: 'inline-flex', alignItems: 'center', gap: 4,
       }}
     >
-      {liked ? '♥' : '♡'} {count > 0 ? count : '赞'}
+      {liked ? '已赞' : '赞'} {count > 0 ? count : ''}
     </button>
   )
 }

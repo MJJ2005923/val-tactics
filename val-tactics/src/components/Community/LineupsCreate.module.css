@@ -24,3 +24,9 @@
 .submitBtn:hover { background: #d030d8 }
 .submitBtn:disabled { opacity: .4; cursor: not-allowed }
 .error { color: #ff5555; font-size: 12px }
+
+@media (max-width: 640px) {
+  .panel { width: 100%; margin: 0 8px; padding: 20px; border-radius: 14px }
+  .images4 { grid-template-columns: 1fr }
+  .row2 { grid-template-columns: 1fr }
+}

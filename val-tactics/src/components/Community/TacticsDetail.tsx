@@ -64,7 +64,7 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
 
         <div className={styles.actionBar}>
           <div className={styles.authorInfo}>
-            <span className={styles.authorName}>👤 {author?.username?.split('@')[0] || '用户'}</span>
+            <span className={styles.authorName}>{author?.username?.split('@')[0] || '用户'}</span>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,.2)' }}>
               {new Date(tactic.created_at).toLocaleDateString('zh')} · 👁 {tactic.views} · ❤️ {tactic.like_count}
             </span>

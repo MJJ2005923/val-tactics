@@ -29,3 +29,9 @@
 .diffStarActive { color: #f0c0ff }
 
 .empty { flex: 1; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.1); font-size: 14px }
+
+@media (max-width: 640px) {
+  .topBar { padding: 8px 12px; flex-wrap: wrap; gap: 4px }
+  .createBtn { margin-left: 0 }
+  .grid { grid-template-columns: 1fr; padding: 10px 12px; gap: 8px }
+}

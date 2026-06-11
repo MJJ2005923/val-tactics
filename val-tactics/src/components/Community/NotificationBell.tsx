@@ -64,7 +64,7 @@ export default function NotificationBell() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>{unread > 9 ? '9+' : unread}</span>
         )}
-        {'🔔'}
+        通知
       </button>
 
       {open && (

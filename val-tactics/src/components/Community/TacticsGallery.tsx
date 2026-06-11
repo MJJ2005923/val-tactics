@@ -75,8 +75,7 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
         <div className={styles.loading}>加载中…</div>
       ) : tactics.length === 0 ? (
         <div className={styles.empty}>
-          <div className={styles.emptyIcon}>📭</div>
-          <div className={styles.emptyText}>还没有战术分享，快来发布第一个！</div>
+          <div className={styles.emptyText}>还没有战术分享，快来发布第一个</div>
         </div>
       ) : (
         <div className={styles.grid}>
@@ -89,9 +88,9 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
                 <span onClick={(e) => { e.stopPropagation(); onViewProfile?.(t.user_id) }} style={{ cursor: 'pointer', color: onViewProfile ? 'rgba(255,255,255,.4)' : undefined }}>
     {profiles[t.user_id]?.username?.split('@')[0] || '用户'}
   </span>
-                <span>👁 {t.views}</span>
-                <span>❤️ {t.like_count}</span>
-                <span>💬 {t.comment_count}</span>
+                <span>{t.views} 浏览</span>
+                <span>{t.like_count} 赞</span>
+                <span>{t.comment_count} 评论</span>
               </div>
             </div>
           ))}

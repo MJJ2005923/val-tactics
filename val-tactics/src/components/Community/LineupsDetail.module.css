@@ -39,3 +39,10 @@
 /* 全屏放大 */
 .zoom { position: fixed; inset: 0; background: rgba(0,0,0,.95); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer }
 .zoom img { max-width: 95vw; max-height: 95vh; object-fit: contain }
+
+@media (max-width: 640px) {
+  .content { padding: 16px }
+  .grid4 { grid-template-columns: 1fr }
+  .meta { flex-wrap: wrap; gap: 8px }
+  .lineupTitle { font-size: 17px }
+}

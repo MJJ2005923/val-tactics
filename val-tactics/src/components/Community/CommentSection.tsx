@@ -60,7 +60,7 @@ export default function CommentSection({ targetType, targetId }: Props) {
 
   return (
     <div className={styles.section}>
-      <div className={styles.title}>💬 评论 ({comments.length})</div>
+      <div className={styles.title}>评论 ({comments.length})</div>
 
       {user ? (
         <div>

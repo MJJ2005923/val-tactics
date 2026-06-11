@@ -102,3 +102,15 @@
   flex: 1; display: flex; align-items: center; justify-content: center;
   color: rgba(255,255,255,.2); font-size: 14px;
 }
+
+@media (max-width: 640px) {
+  .topBar { padding: 8px 12px; gap: 6px; flex-wrap: wrap }
+  .searchBox { max-width: none; flex: 1 1 100%; order: 3 }
+  .sortBtns { order: 2 }
+  .createBtn { font-size: 11px; padding: 5px 10px }
+  .grid { grid-template-columns: 1fr; padding: 10px 12px; gap: 8px }
+  .mapFilter { padding: 8px 12px; gap: 2px }
+  .mapChip { font-size: 10px; padding: 3px 7px }
+  .card { padding: 12px }
+  .cardTitle { font-size: 13px }
+}
