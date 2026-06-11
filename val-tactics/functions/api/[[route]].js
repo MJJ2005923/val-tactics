@@ -26,10 +26,10 @@ const PRESET_MODELS = {
     { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', tier: '旗舰' },
   ],
   deepseek: [
-    { id: 'deepseek-v4-flash', name: '⚡ 快速模式', tier: '免费', perf: '日常问答 · 极速响应', limit: '5次/天', unlock: '免费可用' },
-    { id: 'deepseek-chat', name: '⚖️ 均衡模式', tier: '基础', perf: '战术分析 · 阵容推荐', limit: '30次/天', unlock: '¥24.9/月' },
-    { id: 'deepseek-reasoner', name: '💭 推理模式', tier: '进阶', perf: '极致推理 · 职业分析', limit: '3次/天', unlock: '¥59.9/月' },
-    { id: 'deepseek-v4-pro', name: '🧠 深度模式', tier: '专业', perf: '深度策略 · 复杂推演', limit: '2次/天', unlock: '¥99.9/月' },
+    { id: 'deepseek-v4-flash', name: '快速模式', tier: '免费', perf: '日常问答 · 极速响应', limit: '5次/天', unlock: '免费可用' },
+    { id: 'deepseek-chat', name: '均衡模式', tier: '标准', perf: '战术分析 · 阵容推荐', limit: '10次/天', unlock: '¥30/月' },
+    { id: 'deepseek-reasoner', name: '推理模式', tier: '标准', perf: '极致推理 · 职业分析', limit: '3次/天', unlock: '¥30/月' },
+    { id: 'deepseek-v4-pro', name: '深度模式', tier: '标准', perf: '深度策略 · 复杂推演', limit: '2次/天', unlock: '¥30/月' },
   ],
 }
 
