@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props) {
-  const { user } = useAuth()
+  const { user } = useAuth(); const isAdmin = !!sessionStorage.getItem("admin-key")
   const [tactic, setTactic] = useState<TacticalShare | null>(null)
   const [author, setAuthor] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -32,7 +32,8 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
   }, [tacticId])
 
   const handleDelete = async () => {
-    if (!tactic || !user || user.id !== tactic.user_id) return
+    if (!tactic || !user) return
+    if (user.id !== tactic.user_id && !isAdmin) return
     if (!confirm('确定删除这条战术分享？')) return
     await deleteTactic(tactic.id)
     setDeleted(true)
@@ -71,8 +72,8 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
           </div>
           <div className={styles.actionBtns}>
             <button className={styles.loadBtn} onClick={handleLoad}>📥 加载到战术板</button>
-            {user && user.id === tactic.user_id && (
-              <button className={styles.actionBtn} onClick={handleDelete} style={{ color: '#ff5555' }}>删除</button>
+            {user && (user.id === tactic.user_id || isAdmin) && (
+              <button className={styles.actionBtn} onClick={handleDelete} style={{ color: isAdmin && user.id !== tactic.user_id ? '#f0c0ff' : '#ff5555' }}>删除</button>
             )}
           </div>
         </div>

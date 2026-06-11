@@ -1,4 +1,5 @@
-.page { flex: 1; display: flex; flex-direction: column; overflow: hidden }
+.page { position: fixed; inset: 0; z-index: 9990; background: #07040c; display: flex; flex-direction: column; overflow: hidden; animation: fadeIn .2s ease }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 .topBar {
   display: flex; align-items: center; gap: 10px; padding: 10px 20px;
   border-bottom: 1px solid rgba(255,255,255,.04); flex-wrap: wrap;

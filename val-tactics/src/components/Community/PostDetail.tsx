@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function PostDetail({ postId, onBack }: Props) {
-  const { user } = useAuth()
+  const { user } = useAuth(); const isAdmin = !!sessionStorage.getItem("admin-key")
   const [post, setPost] = useState<Post | null>(null)
   const [author, setAuthor] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -33,7 +33,8 @@ export default function PostDetail({ postId, onBack }: Props) {
   }, [postId])
 
   const handleDelete = async () => {
-    if (!post || !user || user.id !== post.user_id) return
+    if (!post || !user) return
+    if (user.id !== post.user_id && !isAdmin) return
     if (!confirm('确定删除这篇帖子？')) return
     await deletePost(post.id)
     setDeleted(true)
@@ -56,7 +57,7 @@ export default function PostDetail({ postId, onBack }: Props) {
           <FollowButton targetUserId={post.user_id} />
           <span className={styles.date}>{new Date(post.created_at).toLocaleDateString('zh')} · {post.views} 浏览</span>
           <LikeButton targetType="post" targetId={post.id} targetUserId={post.user_id} initialLiked={false} likeCount={post.like_count} />
-          {user && user.id === post.user_id && (
+          {user && (user.id === post.user_id || isAdmin) && (
             <button onClick={handleDelete} className={styles.delBtn}>删除</button>
           )}
         </div>

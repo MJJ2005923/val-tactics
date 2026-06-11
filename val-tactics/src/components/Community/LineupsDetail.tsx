@@ -34,8 +34,11 @@ export default function LineupsDetail({ lineupId, onBack }: Props) {
     })()
   }, [lineupId])
 
+  const isAdmin = !!sessionStorage.getItem('admin-key')
+
   const handleDelete = async () => {
-    if (!lineup || !user || user.id !== lineup.user_id) return
+    if (!lineup || !user) return
+    if (user.id !== lineup.user_id && !isAdmin) return
     if (!confirm('确定删除？')) return
     await deleteLineup(lineup.id, lineup.user_id)
     setDeleted(true)
@@ -100,7 +103,7 @@ export default function LineupsDetail({ lineupId, onBack }: Props) {
           ))}</span>
           <span className={styles.date}>{new Date(lineup.created_at).toLocaleDateString('zh')} - {lineup.views} 浏览</span>
           <LikeButton targetType="lineup" targetId={lineup.id} targetUserId={lineup.user_id} initialLiked={false} likeCount={lineup.like_count} />
-          {user && user.id === lineup.user_id && <button className={styles.delBtn} onClick={handleDelete}>删除</button>}
+          {user && (user.id === lineup.user_id || isAdmin) && <button className={styles.delBtn} onClick={handleDelete} style={isAdmin && user.id !== lineup.user_id ? {color:'#f0c0ff'} : {}}>删除</button>}
         </div>
 
         <CommentSection targetType="lineup" targetId={lineup.id} />
