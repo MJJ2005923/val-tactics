@@ -1,0 +1,85 @@
+/* ═══ 移动端全局覆盖 ═══ */
+@media (max-width: 768px) {
+  /* === 导航栏 === */
+  .navbar {
+    padding: 0 8px; gap: 2px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .navbar__actions {
+    gap: 2px; overflow-x: auto; flex-shrink: 0;
+  }
+  .navbar__btn {
+    padding: 4px 7px; font-size: 10px;
+    white-space: nowrap; flex-shrink: 0; border-radius: 5px;
+  }
+  .navbar__mapDropdown,
+  .navbar__aiDropdownMenu {
+    position: fixed; top: 48px; left: 0; right: 0;
+    max-height: 55vh; overflow-y: auto; border-radius: 0 0 12px 12px;
+  }
+  .navbar__aiDropdownOverlay { position: fixed; inset: 0; }
+
+  /* === 社区页面 === */
+  [class*="topBar"] {
+    padding: 8px 10px !important; flex-wrap: wrap; gap: 4px !important;
+  }
+  [class*="searchBox"] { max-width: 110px; min-width: 0; }
+  [class*="grid"] { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  [class*="mapFilter"] {
+    padding: 6px 10px; overflow-x: auto; flex-wrap: nowrap;
+  }
+  [class*="cardTitle"] { font-size: 13px; -webkit-line-clamp: 2; }
+  [class*="cardDesc"] { display: none; }
+
+  /* === 弹窗全屏 === */
+  [class*="overlay"] > [class*="panel"] {
+    width: calc(100% - 16px) !important;
+    max-height: 88vh; overflow-y: auto;
+  }
+
+  /* === 通知铃铛 === */
+  [class*="Notification"] > div > div:last-child {
+    position: fixed !important; top: 48px !important;
+    left: 0 !important; right: 0 !important;
+    width: 100% !important; max-height: 55vh;
+    border-radius: 0 0 12px 12px;
+  }
+
+  /* === 4 图上传 === */
+  [class*="images4"] { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* === 评论输入 === */
+  [class*="inputRow"] { flex-direction: row; }
+  [class*="inputRow"] input { font-size: 16px; }
+
+  /* === 详情页 === */
+  [class*="content"] { padding: 14px !important; }
+  [class*="actionBar"], [class*="meta"] { flex-wrap: wrap; }
+
+  /* === 个人主页 === */
+  [class*="header"] [class*="avatar"] { width: 48px; height: 48px; font-size: 20px; }
+  [class*="stats"] { gap: 12px; }
+
+  /* === 时间轴 === */
+  .sidebar--right { display: none; }
+  .sidebar--right.mobile-open { display: block; position: fixed; bottom: 0; left: 0; right: 0; top: auto; height: 200px; z-index: 100; background: #07040c; border-top: 1px solid rgba(255,255,255,.06); }
+
+  /* === 工具条 === */
+  [class*="palette"] {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%) !important;
+    top: auto !important; right: auto !important;
+    flex-direction: row; padding: 6px 8px; gap: 4px; border-radius: 14px;
+    z-index: 80;
+  }
+
+  /* === 浮动按钮 === */
+  .mobile-float-btn {
+    position: fixed; z-index: 90;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(13,10,20,.9); border: 1px solid rgba(255,255,255,.1);
+    color: rgba(255,255,255,.5); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; backdrop-filter: blur(8px);
+  }
+  .mobile-float-btn:active { background: rgba(227,73,237,.1); color: #E349ED; }
+}

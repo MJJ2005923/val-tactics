@@ -45,6 +45,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showSponsor, setShowSponsor] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [mobileTimelineOpen, setMobileTimelineOpen] = useState(false)
   const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
   const [showCommunity, setShowCommunity] = useState(false)
   const [commView, setCommView] = useState<'gallery' | 'detail' | 'create' | 'forum' | 'post-detail' | 'post-create' | 'profile' | 'lineups' | 'lineup-detail' | 'lineup-create'>('gallery')
@@ -389,10 +390,17 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <ToolPalette />
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
         </div>
-        <aside className="sidebar sidebar--right">
+        <aside className={`sidebar sidebar--right ${mobileTimelineOpen ? 'mobile-open' : ''}`}>
           <Timeline animate={timelineAnimate} />
         </aside>
       </div>
+      {/* 移动端浮动按钮 */}
+      <button className="mobile-float-btn" style={{ bottom: 80, right: 16 }}
+        onClick={() => setMobileSidebarOpen(s => !s)}
+        aria-label="侧边栏">{mobileSidebarOpen ? 'x' : '+'}</button>
+      <button className="mobile-float-btn" style={{ bottom: 128, right: 16 }}
+        onClick={() => setMobileTimelineOpen(s => !s)}
+        aria-label="时间轴">...</button>
       {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} onExportImage={handleExportImage} onShareLink={handleShareLink} />}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showAIPanel && <AIPanel mapId={selectedMap.id} mapName={selectedMap.name} onClose={() => setShowAIPanel(false)} />}
