@@ -1,5 +1,5 @@
 /* ═══ 移动端全局覆盖 ═══ */
-@media (max-width: 768px) {
+@media (max-width: 768px) and (orientation: portrait) {
   /* === 导航栏 === */
   .navbar {
     padding: 0 8px; gap: 2px;
@@ -85,7 +85,7 @@
 }
 
 /* ═══ 横屏适配 ═══ */
-@media (max-width: 900px) and (orientation: landscape) {
+@media (max-width: 1024px) and (orientation: landscape) {
   .navbar { padding: 0 6px; gap: 2px; height: 40px; }
   .navbar__logo { font-size: 12px; }
   .navbar__dot, .navbar__divider { display: none; }
