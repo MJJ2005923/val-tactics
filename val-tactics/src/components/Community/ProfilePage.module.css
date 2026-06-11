@@ -147,3 +147,9 @@
   color: #ff5555; font-size: 11px; cursor: pointer; font-family: inherit;
 }
 .settingsBtnDanger:hover { background: rgba(255,70,85,.12) }
+.adminBadge {
+  display: inline-block; padding: 1px 6px; margin-left: 6px;
+  background: linear-gradient(135deg, #E349ED, #05F8F8);
+  border-radius: 4px; color: #07040c; font-size: 9px; font-weight: 800;
+  letter-spacing: 1px; vertical-align: middle;
+}

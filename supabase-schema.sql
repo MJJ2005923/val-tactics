@@ -398,3 +398,6 @@ BEGIN
   UPDATE public.profiles SET favorite_count = GREATEST(COALESCE(favorite_count,0) - 1, 0) WHERE id = p_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 开发者标识
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;

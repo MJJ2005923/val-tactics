@@ -127,7 +127,12 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
               </>
             ) : (
               <>
-                <div className={styles.username}>{profile.username?.split('@')[0] || '用户'}</div>
+                <div className={styles.username}>
+                {profile.username?.split('@')[0] || '用户'}
+                {profile.is_admin && (
+                  <span className={styles.adminBadge}>DEV</span>
+                )}
+              </div>
                 {profile.bio && <div className={styles.bio}>{profile.bio}</div>}
               </>
             )}
