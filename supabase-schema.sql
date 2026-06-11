@@ -303,3 +303,6 @@ BEGIN
   UPDATE public.lineups SET views = views + 1 WHERE id = lineup_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 战术分享加收藏计数
+ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS favorite_count INT DEFAULT 0;

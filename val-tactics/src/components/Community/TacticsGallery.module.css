@@ -57,37 +57,33 @@
 
 /* 卡片网格 */
 .grid {
-  flex: 1; overflow-y: auto; padding: 16px 20px;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 14px;
+  flex: 1; overflow-y: auto; padding: 12px 16px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
 }
 
 /* 卡片 */
 .card {
   background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.04);
-  border-radius: 14px; padding: 16px; cursor: pointer;
+  border-radius: 10px; padding: 10px; cursor: pointer;
   transition: border-color .15s, transform .15s;
 }
 .card:hover { border-color: rgba(5,248,248,.15); transform: translateY(-2px) }
 
-.cardMap {
-  font-size: 11px; color: #05F8F8; text-transform: uppercase;
-  letter-spacing: 1px; margin-bottom: 8px;
+/* 紧凑卡片内容 */
+.cardTop {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px;
 }
-.cardTitle {
-  font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+.cardMap { font-size: 10px; color: #05F8F8; }
+.cardAuthor { font-size: 10px; color: rgba(255,255,255,.25); cursor: pointer; white-space: nowrap }
+.cardAuthor:hover { color: rgba(255,255,255,.5) }
 .cardDesc {
-  font-size: 12px; color: rgba(255,255,255,.25); line-height: 1.5;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden; margin-bottom: 12px;
+  font-size: 11px; color: rgba(255,255,255,.3); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+  overflow: hidden; margin-bottom: 6px;
 }
-.cardMeta {
-  display: flex; gap: 14px; font-size: 11px; color: rgba(255,255,255,.2);
-}
-.cardMeta span { display: flex; align-items: center; gap: 4px }
+.cardStats { display: flex; gap: 8px; font-size: 10px; color: rgba(255,255,255,.2) }
 
 /* 空状态 */
 .empty {
@@ -108,9 +104,8 @@
   .searchBox { max-width: none; flex: 1 1 100%; order: 3 }
   .sortBtns { order: 2 }
   .createBtn { font-size: 11px; padding: 5px 10px }
-  .grid { grid-template-columns: 1fr; padding: 10px 12px; gap: 8px }
+  .grid { grid-template-columns: repeat(2, 1fr) !important; padding: 8px 10px; gap: 6px }
   .mapFilter { padding: 8px 12px; gap: 2px }
   .mapChip { font-size: 10px; padding: 3px 7px }
-  .card { padding: 12px }
-  .cardTitle { font-size: 13px }
+  .card { padding: 8px }
 }

@@ -25,7 +25,7 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await getTactics({ sort, mapId: mapFilter || undefined, search: search || undefined })
+      const result = await getTactics({ sort, mapId: mapFilter || undefined, search: search || undefined, pageSize: 36 })
       setTactics(result.data)
       // 批量查作者
       const ids = [...new Set(result.data.map(t => t.user_id))]
@@ -81,16 +81,20 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
         <div className={styles.grid}>
           {tactics.map(t => (
             <div key={t.id} className={styles.card} onClick={() => onViewTactic(t.id)}>
-              <div className={styles.cardMap}>{mapName(t.map_id)}</div>
-              <div className={styles.cardTitle}>{t.title}</div>
-              {t.description && <div className={styles.cardDesc}>{t.description}</div>}
-              <div className={styles.cardMeta}>
-                <span onClick={(e) => { e.stopPropagation(); onViewProfile?.(t.user_id) }} style={{ cursor: 'pointer', color: onViewProfile ? 'rgba(255,255,255,.4)' : undefined }}>
-    {profiles[t.user_id]?.username?.split('@')[0] || '用户'}
-  </span>
+              <div className={styles.cardTop}>
+                <span className={styles.cardMap}>
+                  {maps.find(m => m.id === t.map_id)?.nameEn || t.map_id} · {mapName(t.map_id)}
+                </span>
+                <span className={styles.cardAuthor} onClick={(e) => { e.stopPropagation(); onViewProfile?.(t.user_id) }}>
+                  {profiles[t.user_id]?.username?.split('@')[0] || '用户'}
+                </span>
+              </div>
+              <div className={styles.cardDesc}>{t.title}{t.description ? ' — ' + t.description : ''}</div>
+              <div className={styles.cardStats}>
                 <span>{t.views} 浏览</span>
                 <span>{t.like_count} 赞</span>
                 <span>{t.comment_count} 评论</span>
+                <span>{(t as any).favorite_count || 0} 收藏</span>
               </div>
             </div>
           ))}
