@@ -61,9 +61,6 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [commPostId, setCommPostId] = useState('')
   const [commProfileId, setCommProfileId] = useState('')
   const [commLineupId, setCommLineupId] = useState('')
-  const [coordPickMode, setCoordPickMode] = useState<'start' | 'target' | null>(null)
-  const [pickedStart, setPickedStart] = useState<{x:number;y:number}|null>(null)
-  const [pickedTarget, setPickedTarget] = useState<{x:number;y:number}|null>(null)
   const { user } = useAuth()
   const [showMapDropdown, setShowMapDropdown] = useState(false)
 
@@ -317,7 +314,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
               {showCommunity && commView === 'profile' && <ProfilePage userId={commProfileId} onBack={() => setCommView('gallery')} onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }} onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }} onViewLineup={(id) => { setCommLineupId(id); setCommView('lineup-detail') }} />}
               {showCommunity && commView === 'lineups' && <LineupsPage onBack={() => setCommView('gallery')} onViewLineup={(id) => { setCommLineupId(id); setCommView('lineup-detail') }} onCreateLineup={() => setCommView('lineup-create')} />}
               {showCommunity && commView === 'lineup-detail' && <LineupsDetail lineupId={commLineupId} onBack={() => setCommView('lineups')} />}
-              {showCommunity && commView === 'lineup-create' && <LineupsCreate mapId={selectedMap.id} onClose={() => { setCommView('lineups'); setCoordPickMode(null) }} onSuccess={(id) => { setCommLineupId(id); setCommView('lineup-detail') }} coordPickMode={coordPickMode} onPickCoord={(mode) => setCoordPickMode(mode)} pickedStart={pickedStart} pickedTarget={pickedTarget} clearPicks={() => { setPickedStart(null); setPickedTarget(null) }} />}
+              {showCommunity && commView === 'lineup-create' && <LineupsCreate mapId={selectedMap.id} onClose={() => setCommView('lineups')} onSuccess={(id) => { setCommLineupId(id); setCommView('lineup-detail') }} />}
             </>
           }
         />
@@ -448,41 +445,6 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <div className="canvas-particle p9" /><div className="canvas-particle p10" />
           <ToolPalette />
           <MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />
-          {/* 坐标拾取层 */}
-          {coordPickMode && (
-            <div style={{
-              position: 'absolute', inset: 0, zIndex: 60, cursor: 'crosshair',
-              background: 'rgba(227,73,237,.03)',
-            }} onClick={(e) => {
-              const t = transformRef.current
-              if (!t?.container) return
-              const rr = t.container.getBoundingClientRect()
-              const cx = (e.clientX - rr.left - (t.offset?.x || 0)) / (t.scale * t.mapW)
-              const cy = (e.clientY - rr.top - (t.offset?.y || 0)) / (t.scale * t.mapH)
-              const pt = { x: Math.round(cx * 100) / 100, y: Math.round(cy * 100) / 100 }
-              if (coordPickMode === 'start') setPickedStart(pt)
-              else setPickedTarget(pt)
-              setCoordPickMode(null)
-            }}>
-              <div style={{
-                position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-                padding: '6px 14px', background: 'rgba(0,0,0,.8)', borderRadius: 8,
-                color: '#E349ED', fontSize: 12, fontWeight: 600,
-                border: '1px solid rgba(227,73,237,.3)',
-              }}>
-                点击地图选择{coordPickMode === 'start' ? '站位点' : '落点'}
-              </div>
-              {pickedStart && coordPickMode === 'target' && (
-                <div style={{
-                  position: 'absolute',
-                  left: `${pickedStart.x * 100}%`, top: `${pickedStart.y * 100}%`,
-                  width: 10, height: 10, borderRadius: '50%',
-                  background: '#05F8F8', border: '2px solid #fff',
-                  transform: 'translate(-50%,-50%)', zIndex: 2,
-                }} />
-              )}
-            </div>
-          )}
         </div>
         <aside className={`sidebar sidebar--right ${mobileTimelineOpen ? 'mobile-open' : ''}`}>
           <Timeline animate={timelineAnimate} />
@@ -565,11 +527,8 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showCommunity && commView === 'lineup-create' && (
         <LineupsCreate
           mapId={selectedMap.id}
-          onClose={() => { setCommView('lineups'); setCoordPickMode(null) }}
+          onClose={() => setCommView('lineups')}
           onSuccess={(id) => { setCommLineupId(id); setCommView('lineup-detail') }}
-          coordPickMode={coordPickMode} onPickCoord={(mode) => setCoordPickMode(mode)}
-          pickedStart={pickedStart} pickedTarget={pickedTarget}
-          clearPicks={() => { setPickedStart(null); setPickedTarget(null) }}
         />
       )}
     </div>

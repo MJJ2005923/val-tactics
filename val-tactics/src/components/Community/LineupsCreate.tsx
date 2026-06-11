@@ -10,18 +10,13 @@ interface Props {
   mapId: string
   onClose: () => void
   onSuccess: (id: string) => void
-  coordPickMode: 'start' | 'target' | null
-  onPickCoord: (mode: 'start' | 'target') => void
-  pickedStart: {x:number;y:number}|null
-  pickedTarget: {x:number;y:number}|null
-  clearPicks: () => void
 }
 
 // 预生成 UUID 用于 Storage 路径
 let _counter = 0
 function tempId() { return `tmp_${Date.now()}_${++_counter}` }
 
-export default function LineupsCreate({ mapId, onClose, onSuccess, coordPickMode, onPickCoord, pickedStart, pickedTarget, clearPicks }: Props) {
+export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
   const { user } = useAuth()
   const lineupIdRef = useRef(tempId())
   const [agentId, setAgentId] = useState('')
@@ -31,6 +26,10 @@ export default function LineupsCreate({ mapId, onClose, onSuccess, coordPickMode
   const [difficulty, setDifficulty] = useState(3)
   const [posImg, setPosImg] = useState('')
   const [aimImg, setAimImg] = useState('')
+  const [startPt, setStartPt] = useState<{x:number;y:number}|null>(null)
+  const [targetPt, setTargetPt] = useState<{x:number;y:number}|null>(null)
+  const [pickingMode, setPickingMode] = useState<'start'|'target'|null>(null)
+  const mapImgRef = useRef<HTMLImageElement>(null)
   const [releaseImg, setReleaseImg] = useState('')
   const [effectImg, setEffectImg] = useState('')
   const [sending, setSending] = useState(false)
@@ -51,8 +50,8 @@ export default function LineupsCreate({ mapId, onClose, onSuccess, coordPickMode
         title: title.trim(), description: desc.trim(),
         positionImg: posImg || undefined, aimImg: aimImg || undefined,
         releaseImg: releaseImg || undefined, effectImg: effectImg || undefined,
-        startX: pickedStart?.x, startY: pickedStart?.y,
-        targetX: pickedTarget?.x, targetY: pickedTarget?.y,
+        startX: startPt?.x, startY: startPt?.y,
+        targetX: targetPt?.x, targetY: targetPt?.y,
         difficulty,
       })
       if (l) onSuccess(l.id)
@@ -110,28 +109,51 @@ export default function LineupsCreate({ mapId, onClose, onSuccess, coordPickMode
 
           <div>
             <div className={styles.fieldLabel}>地图坐标</div>
-          <div className={styles.row2}>
-            <div>
-              <button type="button" className={styles.coordBtn} onClick={() => onPickCoord('start')}
-                style={coordPickMode === 'start' ? {borderColor:'#E349ED',color:'#E349ED'} : {}}>
-                {pickedStart ? `站位 (${pickedStart.x}, ${pickedStart.y})` : '选择站位点'}
-              </button>
-            </div>
-            <div>
-              <button type="button" className={styles.coordBtn} onClick={() => onPickCoord('target')}
-                style={coordPickMode === 'target' ? {borderColor:'#E349ED',color:'#E349ED'} : {}}>
-                {pickedTarget ? `落点 (${pickedTarget.x}, ${pickedTarget.y})` : '选择落点'}
-              </button>
-            </div>
+          <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,.06)', marginBottom: 4 }}>
+            <img
+              ref={mapImgRef}
+              src={`/images/maps/${mapId}.png`}
+              alt=""
+              style={{ width: '100%', display: 'block', cursor: pickingMode ? 'crosshair' : 'default' }}
+              onClick={(e) => {
+                if (!pickingMode || !mapImgRef.current) return
+                const rect = mapImgRef.current.getBoundingClientRect()
+                const x = Math.round(((e.clientX - rect.left) / rect.width) * 100) / 100
+                const y = Math.round(((e.clientY - rect.top) / rect.height) * 100) / 100
+                if (pickingMode === 'start') setStartPt({ x, y })
+                else setTargetPt({ x, y })
+                setPickingMode(null)
+              }}
+            />
+            {/* 标记点和连线 */}
+            <svg style={{ position: 'absolute', inset: 0, pointerEvents: 'none', width: '100%', height: '100%' }}>
+              {startPt && (
+                <circle cx={`${startPt.x * 100}%`} cy={`${startPt.y * 100}%`} r="6" fill="#05F8F8" stroke="#fff" strokeWidth="2" />
+              )}
+              {targetPt && (
+                <circle cx={`${targetPt.x * 100}%`} cy={`${targetPt.y * 100}%`} r="6" fill="#E349ED" stroke="#fff" strokeWidth="2" />
+              )}
+              {startPt && targetPt && (
+                <>
+                  <line x1={`${startPt.x * 100}%`} y1={`${startPt.y * 100}%`} x2={`${targetPt.x * 100}%`} y2={`${targetPt.y * 100}%`} stroke="#f0c0ff" strokeWidth="1.5" strokeDasharray="4,3" opacity=".7" />
+                  <line x1={`${startPt.x * 100}%`} y1={`${startPt.y * 100}%`} x2={`${targetPt.x * 100}%`} y2={`${targetPt.y * 100}%`} stroke="#fff" strokeWidth=".5" opacity=".3" />
+                </>
+              )}
+            </svg>
           </div>
-          {(pickedStart || pickedTarget) && (
-            <button type="button" className={styles.coordBtn} onClick={clearPicks}
-              style={{ borderColor: 'rgba(255,85,85,.2)', color: '#ff5555', fontSize: 11, padding: '4px 10px' }}>
+          <div className={styles.row2}>
+            <button type="button" className={`${styles.coordBtn} ${pickingMode === 'start' ? styles.coordActive : ''}`} onClick={() => setPickingMode('start')}>
+              {startPt ? `站位 (${startPt.x.toFixed(2)}, ${startPt.y.toFixed(2)})` : '点击选择站位'}
+            </button>
+            <button type="button" className={`${styles.coordBtn} ${pickingMode === 'target' ? styles.coordActive : ''}`} onClick={() => setPickingMode('target')}>
+              {targetPt ? `落点 (${targetPt.x.toFixed(2)}, ${targetPt.y.toFixed(2)})` : '点击选择落点'}
+            </button>
+          </div>
+          {(startPt || targetPt) && (
+            <button type="button" className={styles.coordBtn} onClick={() => { setStartPt(null); setTargetPt(null); setPickingMode(null) }}
+              style={{ borderColor: 'rgba(255,85,85,.2)', color: '#ff5555', fontSize: 11, padding: '4px 10px', width: 'auto' }}>
               清除坐标
             </button>
-          )}
-          {coordPickMode && (
-            <div style={{ fontSize: 11, color: '#E349ED', marginTop: 4 }}>请在地图上点击选择位置</div>
           )}
 
           <div className={styles.fieldLabel}>截图</div>
