@@ -4,14 +4,21 @@
 import { supabase } from '../supabase'
 import type { Profile } from '../../types/community'
 
-/** 获取单个用户资料 */
+/** 获取单个用户资料（不存在则自动创建） */
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', userId)
     .single()
-  return data as Profile | null
+  if (data) return data as Profile
+  // 不存在则自动创建
+  const { data: created } = await supabase
+    .from('profiles')
+    .insert({ id: userId, username: userId })
+    .select()
+    .single()
+  return (created || null) as Profile | null
 }
 
 /** 批量获取用户资料 */
