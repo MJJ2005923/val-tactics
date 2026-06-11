@@ -17,6 +17,7 @@ import AuthModal from './components/Auth/AuthModal'
 import PrivacyPanel from './components/PrivacyPanel/PrivacyPanel'
 import SponsorPanel from './components/SponsorPanel/SponsorPanel'
 import AdminPanel from './components/AdminPanel/AdminPanel'
+import MobileLayout from './components/MobileLayout/MobileLayout'
 import TacticsGallery from './components/Community/TacticsGallery'
 import TacticsDetail from './components/Community/TacticsDetail'
 import CreateShare from './components/Community/CreateShare'
@@ -33,6 +34,13 @@ import { TacticsProvider, useTactics } from './store/TacticsContext'
 import { AuthProvider, useAuth } from './store/AuthContext'
 
 function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate }: { navbarAnimate: boolean; panelAnimate: boolean; canvasAnimate: boolean; timelineAnimate: boolean }) {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   const [selectedMap, setSelectedMap] = useState<MapData>(maps[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -274,6 +282,45 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // 移动端独立布局
+  if (isMobile) {
+    return (
+      <div className="app-container">
+        <MobileLayout
+          mapCanvas={<MapCanvas mapId={selectedMap.id} mapName={selectedMap.name} transformRef={transformRef} />}
+          agentPanel={<AgentPanel animate={panelAnimate} />}
+          timeline={<Timeline animate={timelineAnimate} />}
+          toolbar={<ToolPalette />}
+          communityPanel={
+            <>
+              {showCommunity && commView === 'gallery' && (
+                <TacticsGallery onBack={() => setShowCommunity(false)} onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }} onCreate={() => setCommView('create')} onViewProfile={(uid) => { setCommProfileId(uid); setCommView('profile') }} onViewForum={() => setCommView('forum')} onViewLineups={() => setCommView('lineups')} />
+              )}
+              {showCommunity && commView === 'detail' && <TacticsDetail tacticId={commTacticId} onBack={() => setCommView('gallery')} onLoadToBoard={handleLoadCommunityTactic} />}
+              {showCommunity && commView === 'create' && <CreateShare mapId={selectedMap.id} onClose={() => setCommView('gallery')} onSuccess={(id) => { setCommTacticId(id); setCommView('detail') }} />}
+              {showCommunity && commView === 'forum' && <ForumPage onBack={() => setCommView('gallery')} onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }} onCreatePost={() => setCommView('post-create')} />}
+              {showCommunity && commView === 'post-detail' && <PostDetail postId={commPostId} onBack={() => setCommView('forum')} />}
+              {showCommunity && commView === 'post-create' && <CreatePost onClose={() => setCommView('forum')} onSuccess={(id) => { setCommPostId(id); setCommView('post-detail') }} />}
+              {showCommunity && commView === 'profile' && <ProfilePage userId={commProfileId} onBack={() => setCommView('gallery')} onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }} onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }} />}
+              {showCommunity && commView === 'lineups' && <LineupsPage onBack={() => setCommView('gallery')} onViewLineup={(id) => { setCommLineupId(id); setCommView('lineup-detail') }} onCreateLineup={() => setCommView('lineup-create')} />}
+              {showCommunity && commView === 'lineup-detail' && <LineupsDetail lineupId={commLineupId} onBack={() => setCommView('lineups')} />}
+              {showCommunity && commView === 'lineup-create' && <LineupsCreate mapId={selectedMap.id} onClose={() => setCommView('lineups')} onSuccess={(id) => { setCommLineupId(id); setCommView('lineup-detail') }} />}
+            </>
+          }
+        />
+        {/* 全局弹窗 */}
+        {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} onExportImage={handleExportImage} onShareLink={handleShareLink} />}
+        {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
+        {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => { setShowAIPage(false); setTacticPrompt(undefined) }} initialPrompt={tacticPrompt} />}
+        {showMatchAnalysis && <MatchAnalysisPage onBack={() => setShowMatchAnalysis(false)} />}
+        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+        {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
+        {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
+        {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+      </div>
+    )
+  }
 
   return (
     <div className="app-container">
