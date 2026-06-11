@@ -97,6 +97,7 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
                 <span>{t.views} 浏览</span>
                 <span>{t.like_count} 赞</span>
                 <span>{t.comment_count} 评论</span>
+                {(t.tactic_data as any)?.lineupCount > 0 && <span>{(t.tactic_data as any).lineupCount} 点位</span>}
                 <span>{(t as any).favorite_count || 0} 收藏</span>
               </div>
             </div>

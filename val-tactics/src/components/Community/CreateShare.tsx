@@ -17,6 +17,7 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
   const [title, setTitle] = useState(strategyName || '')
   const [desc, setDesc] = useState(strategyDescription || '')
   const [previewImg, setPreviewImg] = useState('')
+  const [lineupCount, setLineupCount] = useState('')
   const [lineupImgs, setLineupImgs] = useState<string[]>([])
   const [effectImgs, setEffectImgs] = useState<string[]>([])
   const [sending, setSending] = useState(false)
@@ -43,6 +44,7 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
           tx: textAnnotations,
           ap: agentPositions,
           as: abilityShapes.map(s => ({ ...s, path: s.path?.map(p => ({ x: p.x, y: p.y })) })),
+          lineupCount: parseInt(lineupCount) || 0,
           roster,
         },
         previewImage: previewImg || undefined,
@@ -94,7 +96,13 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
           />
         </div>
 
-{/* 点位图 — 动态添加 */}
+<div className={styles.field}>
+          <div className={styles.label}>点位数量</div>
+          <input className={styles.input} placeholder="这个战术包含几个技能点位？" value={lineupCount}
+            onChange={e => setLineupCount(e.target.value.replace(/\D/g, ''))} maxLength={3} />
+        </div>
+
+        {/* 点位图 — 动态添加 */}
         <div className={styles.field}>
           <div className={styles.label}>点位图（战术中用到的技能点位截图）</div>
           {lineupImgs.map((url, i) => (
