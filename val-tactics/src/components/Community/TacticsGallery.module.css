@@ -57,33 +57,35 @@
 
 /* 卡片网格 */
 .grid {
-  flex: 1; overflow-y: auto; padding: 12px 16px;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
+  flex: 1; overflow-y: auto; padding: 10px 14px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  align-content: start;
 }
 
 /* 卡片 */
 .card {
   background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.04);
-  border-radius: 10px; padding: 10px; cursor: pointer;
+  border-radius: 8px; padding: 7px 9px; cursor: pointer;
   transition: border-color .15s, transform .15s;
 }
-.card:hover { border-color: rgba(5,248,248,.15); transform: translateY(-2px) }
+.card:hover { border-color: rgba(5,248,248,.15); transform: translateY(-1px) }
 
 /* 紧凑卡片内容 */
 .cardTop {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 2px; gap: 4px;
 }
-.cardMap { font-size: 10px; color: #05F8F8; }
-.cardAuthor { font-size: 10px; color: rgba(255,255,255,.25); cursor: pointer; white-space: nowrap }
-.cardAuthor:hover { color: rgba(255,255,255,.5) }
+.cardMap { font-size: 9px; color: #05F8F8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1 }
+.cardAuthor { font-size: 9px; color: rgba(255,255,255,.2); cursor: pointer; white-space: nowrap; flex-shrink: 0 }
+.cardAuthor:hover { color: rgba(255,255,255,.4) }
 .cardDesc {
-  font-size: 11px; color: rgba(255,255,255,.3); line-height: 1.4;
+  font-size: 10px; color: rgba(255,255,255,.25); line-height: 1.3;
   display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
-  overflow: hidden; margin-bottom: 6px;
+  overflow: hidden; margin-bottom: 4px;
 }
-.cardStats { display: flex; gap: 8px; font-size: 10px; color: rgba(255,255,255,.2) }
+.cardStats { display: flex; gap: 6px; font-size: 9px; color: rgba(255,255,255,.15); flex-wrap: wrap }
 
 /* 空状态 */
 .empty {
@@ -99,13 +101,19 @@
   color: rgba(255,255,255,.2); font-size: 14px;
 }
 
+@media (max-width: 1024px) {
+  .grid { grid-template-columns: repeat(4, 1fr) }
+}
 @media (max-width: 640px) {
   .topBar { padding: 8px 12px; gap: 6px; flex-wrap: wrap }
   .searchBox { max-width: none; flex: 1 1 100%; order: 3 }
   .sortBtns { order: 2 }
   .createBtn { font-size: 11px; padding: 5px 10px }
-  .grid { grid-template-columns: repeat(2, 1fr) !important; padding: 8px 10px; gap: 6px }
+  .grid { grid-template-columns: repeat(3, 1fr); padding: 8px 10px; gap: 6px }
   .mapFilter { padding: 8px 12px; gap: 2px }
   .mapChip { font-size: 10px; padding: 3px 7px }
-  .card { padding: 8px }
+  .card { padding: 6px 7px }
+}
+@media (max-width: 400px) {
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 5px; padding: 6px 8px }
 }
