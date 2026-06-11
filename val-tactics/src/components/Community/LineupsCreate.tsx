@@ -19,6 +19,7 @@ function tempId() { return `tmp_${Date.now()}_${++_counter}` }
 export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
   const { user } = useAuth()
   const lineupIdRef = useRef(tempId())
+  const [selectedMap, setSelectedMap] = useState(mapId)
   const [agentId, setAgentId] = useState('')
   const [abilityId, setAbilityId] = useState('')
   const [title, setTitle] = useState('')
@@ -46,7 +47,7 @@ export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
     setSending(true); setError('')
     try {
       const l = await createLineup({
-        userId: user.id, mapId, agentId, abilityId,
+        userId: user.id, mapId: selectedMap, agentId, abilityId,
         title: title.trim(), description: desc.trim(),
         positionImg: posImg || undefined, aimImg: aimImg || undefined,
         releaseImg: releaseImg || undefined, effectImg: effectImg || undefined,
@@ -67,7 +68,9 @@ export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
         <div className={styles.fields}>
           <div>
             <div className={styles.fieldLabel}>地图</div>
-            <div className={styles.input} style={{ color: '#05F8F8' }}>{maps.find(m => m.id === mapId)?.name}</div>
+            <select className={styles.select} value={selectedMap} onChange={e => { setSelectedMap(e.target.value); setStartPt(null); setTargetPt(null) }}>
+              {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
           </div>
 
           <div className={styles.row2}>
@@ -112,7 +115,7 @@ export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
           <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,.06)', marginBottom: 4 }}>
             <img
               ref={mapImgRef}
-              src={`/images/maps/${mapId}.png`}
+              src={`/images/maps/${selectedMap}.png`}
               alt=""
               style={{ width: '100%', display: 'block', cursor: pickingMode ? 'crosshair' : 'default' }}
               onClick={(e) => {
