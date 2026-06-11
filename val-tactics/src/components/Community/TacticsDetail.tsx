@@ -97,7 +97,7 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
           <div className={styles.authorInfo}>
             <span className={styles.authorName}>{author?.username?.split('@')[0] || '用户'}</span>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,.2)' }}>
-              {new Date(tactic.created_at).toLocaleDateString('zh')} · 👁 {tactic.views} · ❤️ {tactic.like_count}
+              {new Date(tactic.created_at).toLocaleDateString('zh')} · {tactic.views} 浏览 · {tactic.like_count} 赞 · {(tactic as any).favorite_count || 0} 收藏
             </span>
           </div>
           <div className={styles.actionBtns}>
