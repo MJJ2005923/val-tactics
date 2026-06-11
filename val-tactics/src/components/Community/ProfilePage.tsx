@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getProfile, getProfileStats } from '../../lib/community/profiles'
+import { getProfile, getProfileStats, updateProfile } from '../../lib/community/profiles'
 import { getFollowerCount, getFollowingCount } from '../../lib/community/follows'
 import { getTactics } from '../../lib/community/tactics'
 import { getPosts } from '../../lib/community/posts'
@@ -31,6 +31,21 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
   const [posts, setPosts] = useState<Post[]>([])
   const [lineups, setLineups] = useState<Lineup[]>([])
   const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editBio, setEditBio] = useState('')
+
+  const startEdit = () => {
+    setEditName(profile?.username?.split('@')[0] || '')
+    setEditBio(profile?.bio || '')
+    setEditing(true)
+  }
+  const saveEdit = async () => {
+    if (!editName.trim() || !user) return
+    await updateProfile(user.id, { username: editName.trim(), bio: editBio.trim() })
+    setProfile(p => p ? { ...p, username: editName.trim(), bio: editBio.trim() } : null)
+    setEditing(false)
+  }
 
   useEffect(() => {
     (async () => {
@@ -77,10 +92,26 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
         <div className={styles.header}>
           <div className={styles.avatar}>{(profile.username || '用')[0]}</div>
           <div className={styles.info}>
-            <div className={styles.username}>{profile.username?.split('@')[0] || '用户'}</div>
-            {profile.bio && <div className={styles.bio}>{profile.bio}</div>}
+            {editing ? (
+              <>
+                <input className={styles.editInput} value={editName} onChange={e => setEditName(e.target.value)} maxLength={20} placeholder="昵称" />
+                <textarea className={styles.editInput} value={editBio} onChange={e => setEditBio(e.target.value)} maxLength={100} placeholder="简介..." style={{ height: 40, resize: 'none' }} />
+                <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                  <button className={styles.editBtn} onClick={saveEdit}>保存</button>
+                  <button className={styles.editBtnCancel} onClick={() => setEditing(false)}>取消</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={styles.username}>{profile.username?.split('@')[0] || '用户'}</div>
+                {profile.bio && <div className={styles.bio}>{profile.bio}</div>}
+              </>
+            )}
           </div>
-          <FollowButton targetUserId={userId} />
+          {user && user.id === userId && !editing && (
+            <button className={styles.editBtn} onClick={startEdit} style={{ flexShrink: 0 }}>编辑</button>
+          )}
+          {user && user.id !== userId && <FollowButton targetUserId={userId} />}
         </div>
 
         {/* 套餐条 — 仅自己可见 */}
