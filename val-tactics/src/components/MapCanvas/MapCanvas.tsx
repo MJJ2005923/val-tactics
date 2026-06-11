@@ -163,7 +163,10 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const containerRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 })
-  const [scale, setScale] = useState(1)
+  const [scale, setScale] = useState(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return 1.5
+    return 1
+  })
   const [mapRotation, setMapRotation] = useState(0) // 0, 90, 180, 270
   const [mapSize, setMapSize] = useState({ w: 1800, h: 1200 })
   const [mapImgLoaded, setMapImgLoaded] = useState(false)
@@ -171,6 +174,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [panning, setPanning] = useState<{ sx: number; sy: number; ox: number; oy: number } | null>(null)
   const [panX, setPanX] = useState(0)
   const [panY, setPanY] = useState(0)
+  const [pinch, setPinch] = useState<{ dist: number; scale: number } | null>(null)
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
   const toast = useToast()
   const [isOver, setIsOver] = useState(false)
@@ -1001,6 +1005,50 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
           }})
         }
         setRectDrawing(null)
+      }}
+      onTouchStart={(e) => {
+        if (e.touches.length === 1) {
+          // 单指：开始平移
+          const t = e.touches[0]
+          setPanning({ sx: t.clientX, sy: t.clientY, ox: panX, oy: panY })
+          setPinch(null)
+        } else if (e.touches.length === 2) {
+          // 双指：开始缩放
+          const dx = e.touches[1].clientX - e.touches[0].clientX
+          const dy = e.touches[1].clientY - e.touches[0].clientY
+          setPinch({ dist: Math.sqrt(dx * dx + dy * dy), scale })
+          setPanning(null)
+        }
+        e.preventDefault()
+      }}
+      onTouchMove={(e) => {
+        if (e.touches.length === 1 && panning) {
+          const t = e.touches[0]
+          const dx = t.clientX - panning.sx
+          const dy = t.clientY - panning.sy
+          const nx = panning.ox + dx
+          const ny = panning.oy + dy
+          transformRef.current.offset.x = nx
+          transformRef.current.offset.y = ny
+          setPanX(nx); setPanY(ny)
+        } else if (e.touches.length === 2 && pinch) {
+          const dx = e.touches[1].clientX - e.touches[0].clientX
+          const dy = e.touches[1].clientY - e.touches[0].clientY
+          const newDist = Math.sqrt(dx * dx + dy * dy)
+          const factor = newDist / pinch.dist
+          const newScale = Math.max(0.5, Math.min(3, pinch.scale * factor))
+          setScale(newScale)
+        }
+        e.preventDefault()
+      }}
+      onTouchEnd={(e) => {
+        if (panning) { setPanning(null) }
+        if (pinch) { setPinch(null) }
+        // 如果还有手指在屏幕上，重新开始追踪
+        if (e.touches.length === 1 && !panning) {
+          const t = e.touches[0]
+          setPanning({ sx: t.clientX, sy: t.clientY, ox: panX, oy: panY })
+        }
       }}
     >
       <canvas ref={canvasRef} className={styles.canvas} />
