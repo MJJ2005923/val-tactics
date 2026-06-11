@@ -10,13 +10,18 @@ interface Props {
   mapId: string
   onClose: () => void
   onSuccess: (id: string) => void
+  coordPickMode: 'start' | 'target' | null
+  onPickCoord: (mode: 'start' | 'target') => void
+  pickedStart: {x:number;y:number}|null
+  pickedTarget: {x:number;y:number}|null
+  clearPicks: () => void
 }
 
 // 预生成 UUID 用于 Storage 路径
 let _counter = 0
 function tempId() { return `tmp_${Date.now()}_${++_counter}` }
 
-export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
+export default function LineupsCreate({ mapId, onClose, onSuccess, coordPickMode, onPickCoord, pickedStart, pickedTarget, clearPicks }: Props) {
   const { user } = useAuth()
   const lineupIdRef = useRef(tempId())
   const [agentId, setAgentId] = useState('')
@@ -46,6 +51,8 @@ export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
         title: title.trim(), description: desc.trim(),
         positionImg: posImg || undefined, aimImg: aimImg || undefined,
         releaseImg: releaseImg || undefined, effectImg: effectImg || undefined,
+        startX: pickedStart?.x, startY: pickedStart?.y,
+        targetX: pickedTarget?.x, targetY: pickedTarget?.y,
         difficulty,
       })
       if (l) onSuccess(l.id)
@@ -102,7 +109,32 @@ export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
           </div>
 
           <div>
-            <div className={styles.fieldLabel}>截图</div>
+            <div className={styles.fieldLabel}>地图坐标</div>
+          <div className={styles.row2}>
+            <div>
+              <button type="button" className={styles.coordBtn} onClick={() => onPickCoord('start')}
+                style={coordPickMode === 'start' ? {borderColor:'#E349ED',color:'#E349ED'} : {}}>
+                {pickedStart ? `站位 (${pickedStart.x}, ${pickedStart.y})` : '选择站位点'}
+              </button>
+            </div>
+            <div>
+              <button type="button" className={styles.coordBtn} onClick={() => onPickCoord('target')}
+                style={coordPickMode === 'target' ? {borderColor:'#E349ED',color:'#E349ED'} : {}}>
+                {pickedTarget ? `落点 (${pickedTarget.x}, ${pickedTarget.y})` : '选择落点'}
+              </button>
+            </div>
+          </div>
+          {(pickedStart || pickedTarget) && (
+            <button type="button" className={styles.coordBtn} onClick={clearPicks}
+              style={{ borderColor: 'rgba(255,85,85,.2)', color: '#ff5555', fontSize: 11, padding: '4px 10px' }}>
+              清除坐标
+            </button>
+          )}
+          {coordPickMode && (
+            <div style={{ fontSize: 11, color: '#E349ED', marginTop: 4 }}>请在地图上点击选择位置</div>
+          )}
+
+          <div className={styles.fieldLabel}>截图</div>
             <div className={styles.images4}>
               <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>站位图</div><ImageUploader hint="如: 站在箱子上" onImage={setPosImg} value={posImg} userId={user?.id} lineupId={lineupIdRef.current} slot="position" /></div>
               <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>瞄点图</div><ImageUploader hint="如: 准星对准墙角" onImage={setAimImg} value={aimImg} userId={user?.id} lineupId={lineupIdRef.current} slot="aim" /></div>

@@ -30,3 +30,10 @@
   .images4 { grid-template-columns: 1fr }
   .row2 { grid-template-columns: 1fr }
 }
+.coordBtn {
+  width: 100%; padding: 6px 10px; background: rgba(255,255,255,.015);
+  border: 1px solid rgba(255,255,255,.08); border-radius: 8px;
+  color: rgba(255,255,255,.35); font-size: 11px; cursor: pointer;
+  font-family: inherit; text-align: left;
+}
+.coordBtn:hover { border-color: rgba(5,248,248,.15); color: rgba(255,255,255,.6) }
