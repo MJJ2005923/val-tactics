@@ -70,6 +70,48 @@ export async function getLineup(id: string): Promise<Lineup | null> {
 }
 
 /** 删除点位 */
-export async function deleteLineup(id: string) {
+export async function deleteLineup(id: string, userId?: string) {
+  if (userId) { await deleteStorageImages(userId, id).catch(() => {}) }
   return supabase.from('lineups').delete().eq('id', id)
+}
+
+/** 前端压缩图片为 WebP，限制最大尺寸和文件大小 */
+export async function compressImage(file: File, maxKB = 300): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      // 限制最大尺寸 1200px
+      let { width, height } = img
+      const maxDim = 1200
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+      canvas.width = width; canvas.height = height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0, width, height)
+      // 尝试质量直到 ≤ maxKB
+      const tryQuality = (q: number) => {
+        canvas.toBlob((blob) => {
+          if (!blob) { reject(new Error('压缩失败')); return }
+          if (blob.size <= maxKB * 1024 || q <= 0.1) { resolve(blob) }
+          else { tryQuality(q - 0.15) }
+        }, 'image/webp', q)
+      }
+      tryQuality(0.8)
+    }
+    img.onerror = () => reject(new Error('图片加载失败'))
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+/** 删除点位时清理 Storage 图片 */
+export async function deleteStorageImages(userId: string, lineupId: string) {
+  const { data } = await supabase.storage.from(BUCKET).list(`${userId}/${lineupId}`)
+  if (data?.length) {
+    const paths = data.map(f => `${userId}/${lineupId}/${f.name}`)
+    await supabase.storage.from(BUCKET).remove(paths)
+  }
 }

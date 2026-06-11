@@ -156,12 +156,19 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
             <button className={styles.actionBtn} onClick={() => fetchStats(key)} disabled={loading}>
               🔄 刷新数据
             </button>
+            <button className={styles.actionBtn} onClick={async () => {
+              try {
+                const r = await fetch(`/api/admin/setup-storage?key=${encodeURIComponent(key)}`)
+                const d = await r.json()
+                alert(d.ok ? 'Storage bucket 已就绪' : `失败: ${d.error}`)
+              } catch { alert('网络错误') }
+            }}>初始化 Storage</button>
             <button className={styles.actionBtnDanger} onClick={() => {
               sessionStorage.removeItem('admin-key')
               setStats(null)
               setKey('')
             }}>
-              🚪 退出登录
+              退出登录
             </button>
           </div>
         </div>

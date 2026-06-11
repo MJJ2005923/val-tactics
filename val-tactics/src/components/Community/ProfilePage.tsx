@@ -3,7 +3,8 @@ import { getProfile } from '../../lib/community/profiles'
 import { getFollowerCount, getFollowingCount } from '../../lib/community/follows'
 import { getTactics } from '../../lib/community/tactics'
 import { getPosts } from '../../lib/community/posts'
-import type { Profile, TacticalShare, Post } from '../../types/community'
+import { getLineups } from '../../lib/community/lineups'
+import type { Profile, TacticalShare, Post, Lineup } from '../../types/community'
 import FollowButton from './FollowButton'
 import styles from './ProfilePage.module.css'
 
@@ -12,15 +13,17 @@ interface Props {
   onBack: () => void
   onViewTactic?: (id: string) => void
   onViewPost?: (id: string) => void
+  onViewLineup?: (id: string) => void
 }
 
-export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost }: Props) {
+export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, onViewLineup }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [followerCount, setFollowerCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
-  const [tab, setTab] = useState<'tactics' | 'posts'>('tactics')
+  const [tab, setTab] = useState<'tactics' | 'posts' | 'lineups'>('tactics')
   const [tactics, setTactics] = useState<TacticalShare[]>([])
   const [posts, setPosts] = useState<Post[]>([])
+  const [lineups, setLineups] = useState<Lineup[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -33,12 +36,14 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost }
       setProfile(prof)
       setFollowerCount(fc)
       setFollowingCount(fgc)
-      const [tr, pr] = await Promise.all([
+      const [tr, pr, lr] = await Promise.all([
         getTactics({ pageSize: 100 }),
         getPosts({ pageSize: 100 }),
+        getLineups({ pageSize: 100 }),
       ])
       setTactics(tr.data.filter(t => t.user_id === userId))
       setPosts(pr.data.filter(p => p.user_id === userId))
+      setLineups(lr.data.filter(l => l.user_id === userId))
       setLoading(false)
     })()
   }, [userId])
@@ -60,7 +65,7 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost }
             <div className={styles.username}>{profile.username?.split('@')[0] || '用户'}</div>
             {profile.bio && <div className={styles.bio}>{profile.bio}</div>}
             <div className={styles.stats}>
-              <div className={styles.stat}><div className={styles.statNum}>{tactics.length + posts.length}</div><div className={styles.statLabel}>内容</div></div>
+              <div className={styles.stat}><div className={styles.statNum}>{tactics.length + posts.length + lineups.length}</div><div className={styles.statLabel}>内容</div></div>
               <div className={styles.stat}><div className={styles.statNum}>{followerCount}</div><div className={styles.statLabel}>粉丝</div></div>
               <div className={styles.stat}><div className={styles.statNum}>{followingCount}</div><div className={styles.statLabel}>关注</div></div>
             </div>
@@ -71,6 +76,7 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost }
         <div className={styles.tabs}>
           <button className={`${styles.tab} ${tab === 'tactics' ? styles.tabActive : ''}`} onClick={() => setTab('tactics')}>战术 ({tactics.length})</button>
           <button className={`${styles.tab} ${tab === 'posts' ? styles.tabActive : ''}`} onClick={() => setTab('posts')}>帖子 ({posts.length})</button>
+          <button className={`${styles.tab} ${tab === 'lineups' ? styles.tabActive : ''}`} onClick={() => setTab('lineups')}>点位 ({lineups.length})</button>
         </div>
 
         <div className={styles.list}>
@@ -96,6 +102,19 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost }
                   <span>{p.views} 浏览</span>
                   <span>{p.like_count} 赞</span>
                   <span>{p.comment_count} 评论</span>
+                </div>
+              </div>
+            ))
+          )}
+          {tab === 'lineups' && (lineups.length === 0 ? <div className={styles.empty}>还没有发布点位</div> :
+            lineups.map(l => (
+              <div key={l.id} className={styles.item} onClick={() => onViewLineup?.(l.id)}>
+                <div className={styles.itemTitle}>{l.title}</div>
+                <div className={styles.itemMeta}>
+                  <span>{new Date(l.created_at).toLocaleDateString('zh')}</span>
+                  <span>{l.views} 浏览</span>
+                  <span>{l.like_count} 赞</span>
+                  <span>{l.comment_count} 评论</span>
                 </div>
               </div>
             ))

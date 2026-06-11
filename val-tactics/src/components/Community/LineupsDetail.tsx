@@ -37,7 +37,7 @@ export default function LineupsDetail({ lineupId, onBack }: Props) {
   const handleDelete = async () => {
     if (!lineup || !user || user.id !== lineup.user_id) return
     if (!confirm('确定删除？')) return
-    await deleteLineup(lineup.id)
+    await deleteLineup(lineup.id, lineup.user_id)
     setDeleted(true)
   }
 

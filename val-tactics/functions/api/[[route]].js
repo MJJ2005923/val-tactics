@@ -269,6 +269,31 @@ export async function onRequest(context) {
     }
   }
 
+  // 一键初始化 Storage bucket
+  if (url.pathname === '/api/admin/setup-storage') {
+    const key = new URL(request.url).searchParams.get('key') || ''
+    if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
+      return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    const svcKey = env.SUPABASE_SERVICE_KEY || ''
+    try {
+      // 创建 lineups bucket（公开访问）
+      const resp = await fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/storage/v1/bucket', {
+        method: 'POST',
+        headers: { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: 'lineups', name: 'lineups', public: true, file_size_limit: 5242880 }),
+      })
+      if (resp.ok || (await resp.json()).statusCode === '409') {
+        // 409 = 已存在，也算成功
+        return new Response(JSON.stringify({ ok: true, message: 'Storage bucket 已就绪' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+      const err = await resp.json().catch(() => ({}))
+      return new Response(JSON.stringify({ ok: false, error: err.message || err.error || '创建失败' }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   // 内容安全审核（供社区功能调用）
   if (url.pathname === '/api/content-filter') {
     const { text } = await request.json()

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createLineup } from '../../lib/community/lineups'
 import { useAuth } from '../../store/AuthContext'
 import maps from '../../data/maps'
@@ -12,8 +12,13 @@ interface Props {
   onSuccess: (id: string) => void
 }
 
+// 预生成 UUID 用于 Storage 路径
+let _counter = 0
+function tempId() { return `tmp_${Date.now()}_${++_counter}` }
+
 export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
   const { user } = useAuth()
+  const lineupIdRef = useRef(tempId())
   const [agentId, setAgentId] = useState('')
   const [abilityId, setAbilityId] = useState('')
   const [title, setTitle] = useState('')
@@ -99,10 +104,10 @@ export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
           <div>
             <div className={styles.fieldLabel}>截图</div>
             <div className={styles.images4}>
-              <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>站位图</div><ImageUploader hint="如: 站在箱子上" onImage={setPosImg} value={posImg} /></div>
-              <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>瞄点图</div><ImageUploader hint="如: 准星对准墙角" onImage={setAimImg} value={aimImg} /></div>
-              <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>释放方式</div><ImageUploader hint="如: 右键跳投" onImage={setReleaseImg} value={releaseImg} /></div>
-              <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>最终效果</div><ImageUploader hint="如: 烟落点位置" onImage={setEffectImg} value={effectImg} /></div>
+              <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>站位图</div><ImageUploader hint="如: 站在箱子上" onImage={setPosImg} value={posImg} userId={user?.id} lineupId={lineupIdRef.current} slot="position" /></div>
+              <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>瞄点图</div><ImageUploader hint="如: 准星对准墙角" onImage={setAimImg} value={aimImg} userId={user?.id} lineupId={lineupIdRef.current} slot="aim" /></div>
+              <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>释放方式</div><ImageUploader hint="如: 右键跳投" onImage={setReleaseImg} value={releaseImg} userId={user?.id} lineupId={lineupIdRef.current} slot="release" /></div>
+              <div><div className={styles.fieldLabel} style={{ fontSize: 10 }}>最终效果</div><ImageUploader hint="如: 烟落点位置" onImage={setEffectImg} value={effectImg} userId={user?.id} lineupId={lineupIdRef.current} slot="effect" /></div>
             </div>
           </div>
 
