@@ -59,6 +59,11 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
       <div className={styles.content}>
         <div className={styles.header}>
           <div className={styles.mapTag}>{mapName}</div>
+          {(tactic.tactic_data as any)?.lineupCount > 0 && (
+            <div className={styles.mapTag} style={{ background: 'rgba(227,73,237,.08)', borderColor: 'rgba(227,73,237,.15)', color: '#E349ED', marginLeft: 6 }}>
+              {(tactic.tactic_data as any).lineupCount} 个点位
+            </div>
+          )}
           <h1 className={styles.tacticTitle}>{tactic.title}</h1>
           {tactic.description && <p className={styles.tacticDesc}>{tactic.description}</p>}
         </div>
