@@ -59,11 +59,6 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
       <div className={styles.content}>
         <div className={styles.header}>
           <div className={styles.mapTag}>{mapName}</div>
-          {(tactic.tactic_data as any)?.lineupCount > 0 && (
-            <div className={styles.mapTag} style={{ background: 'rgba(227,73,237,.08)', borderColor: 'rgba(227,73,237,.15)', color: '#E349ED', marginLeft: 6 }}>
-              {(tactic.tactic_data as any).lineupCount} 个点位
-            </div>
-          )}
           <h1 className={styles.tacticTitle}>{tactic.title}</h1>
           {tactic.description && <p className={styles.tacticDesc}>{tactic.description}</p>}
         </div>
@@ -124,6 +119,7 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
               {data.ap && <div className={styles.previewItem}><b>特工站位</b>{data.ap.length} 个</div>}
               {data.as && <div className={styles.previewItem}><b>技能范围</b>{data.as.length} 个</div>}
               {data.name && <div className={styles.previewItem}><b>战术名称</b>{data.name}</div>}
+              {data.lineupCount > 0 && <div className={styles.previewItem}><b>点位数量</b>{data.lineupCount} 个</div>}
             </div>
           </div>
         )}
