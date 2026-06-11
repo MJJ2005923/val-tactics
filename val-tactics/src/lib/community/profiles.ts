@@ -28,3 +28,9 @@ export async function getProfiles(userIds: string[]): Promise<Profile[]> {
 export async function updateProfile(userId: string, updates: Partial<Pick<Profile, 'username' | 'avatar_url' | 'bio'>>) {
   return supabase.from('profiles').update(updates).eq('id', userId)
 }
+
+/** 获取用户统计（一次 RPC 调用） */
+export async function getProfileStats(userId: string) {
+  const { data } = await supabase.rpc('get_profile_stats', { p_user_id: userId })
+  return (data as any) || { tacticCount: 0, postCount: 0, lineupCount: 0, totalLikes: 0, favoriteCount: 0 }
+}

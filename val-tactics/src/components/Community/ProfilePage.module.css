@@ -54,3 +54,35 @@
 
 .empty { padding: 40px; text-align: center; color: rgba(255,255,255,.08); font-size: 13px }
 .loading { padding: 60px; text-align: center; color: rgba(255,255,255,.15); font-size: 14px }
+
+/* 套餐条 */
+.subscription {
+  padding: 6px 14px; margin-bottom: 12px;
+  background: rgba(5,248,248,.06); border: 1px solid rgba(5,248,248,.1);
+  border-radius: 8px; color: #05F8F8; font-size: 11px;
+  text-align: center;
+}
+
+/* 统计网格 2行6项 */
+.statsGrid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.04);
+  margin-bottom: 10px;
+}
+.statItem {
+  text-align: center; padding: 8px 4px;
+  background: rgba(255,255,255,.01); border-radius: 8px;
+}
+.statItem .statNum { font-size: 18px; font-weight: 700; color: #fff; line-height: 1.2 }
+.statItem .statLabel { font-size: 9px; color: rgba(255,255,255,.2); margin-top: 2px }
+
+/* 操作按钮 */
+.actions {
+  display: flex; gap: 6px; padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  margin-bottom: 10px;
+}
+
+/* 移除旧的 stats 样式 */
+.stats { display: none }
+.stat { display: none }

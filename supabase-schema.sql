@@ -313,3 +313,88 @@ ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS preview_image TEXT;
 -- 战术发布：多图支持
 ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS lineup_images TEXT[] DEFAULT '{}';
 ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS effect_images TEXT[] DEFAULT '{}';
+
+-- ================================================================
+-- 个人主页升级：收藏 + 统计
+-- ================================================================
+
+CREATE TABLE IF NOT EXISTS public.profile_favorites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  target_user_id UUID NOT NULL REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, target_user_id)
+);
+CREATE INDEX idx_favorites_target ON public.profile_favorites(target_user_id);
+
+ALTER TABLE public.profile_favorites ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "fav_read" ON public.profile_favorites FOR SELECT USING (true);
+CREATE POLICY "fav_insert" ON public.profile_favorites FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "fav_delete" ON public.profile_favorites FOR DELETE USING (auth.uid() = user_id);
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS favorite_count INT DEFAULT 0;
+
+-- 修复 toggle_like 支持 profile 类型
+CREATE OR REPLACE FUNCTION public.toggle_like(
+  p_user_id UUID, p_target_type TEXT, p_target_id UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+  existing UUID;
+BEGIN
+  SELECT id INTO existing FROM public.likes
+    WHERE user_id = p_user_id AND target_type = p_target_type AND target_id = p_target_id;
+  IF existing IS NOT NULL THEN
+    DELETE FROM public.likes WHERE id = existing;
+    IF p_target_type = 'tactic' THEN
+      UPDATE public.tactical_shares SET like_count = GREATEST(like_count - 1, 0) WHERE id = p_target_id;
+    ELSIF p_target_type = 'post' THEN
+      UPDATE public.posts SET like_count = GREATEST(like_count - 1, 0) WHERE id = p_target_id;
+    END IF;
+    RETURN false;
+  ELSE
+    INSERT INTO public.likes (user_id, target_type, target_id) VALUES (p_user_id, p_target_type, p_target_id);
+    IF p_target_type = 'tactic' THEN
+      UPDATE public.tactical_shares SET like_count = like_count + 1 WHERE id = p_target_id;
+    ELSIF p_target_type = 'post' THEN
+      UPDATE public.posts SET like_count = like_count + 1 WHERE id = p_target_id;
+    END IF;
+    RETURN true;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 用户统计一次性查询
+CREATE OR REPLACE FUNCTION public.get_profile_stats(p_user_id UUID)
+RETURNS JSON AS $$
+DECLARE
+  tc INT; pc INT; lc INT; tl INT; fc INT;
+BEGIN
+  SELECT COUNT(*)::INT INTO tc FROM public.tactical_shares WHERE user_id = p_user_id;
+  SELECT COUNT(*)::INT INTO pc FROM public.posts WHERE user_id = p_user_id;
+  SELECT COUNT(*)::INT INTO lc FROM public.lineups WHERE user_id = p_user_id;
+  SELECT COALESCE(SUM(like_count),0)::INT INTO tl FROM (
+    SELECT like_count FROM public.tactical_shares WHERE user_id = p_user_id
+    UNION ALL SELECT like_count FROM public.posts WHERE user_id = p_user_id
+    UNION ALL SELECT like_count FROM public.lineups WHERE user_id = p_user_id
+  ) t;
+  SELECT favorite_count INTO fc FROM public.profiles WHERE id = p_user_id;
+  RETURN json_build_object(
+    'tacticCount', tc, 'postCount', pc, 'lineupCount', lc,
+    'totalLikes', tl, 'favoriteCount', COALESCE(fc,0)
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.increment_favorite_count(p_user_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.profiles SET favorite_count = COALESCE(favorite_count,0) + 1 WHERE id = p_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.decrement_favorite_count(p_user_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.profiles SET favorite_count = GREATEST(COALESCE(favorite_count,0) - 1, 0) WHERE id = p_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
