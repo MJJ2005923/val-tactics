@@ -34,9 +34,7 @@ function getSharedUsage(): number {
 
 const PLANS = [
   { name: '免费', tier: 'free', detail: '快速模式 · 5 次 / 天', price: '¥0', color: '#05F8F8' },
-  { name: '基础', tier: 'basic', detail: '快速 + 均衡', price: '¥24.9/月', color: '#05F8F8' },
-  { name: '进阶', tier: 'advanced', detail: '全部模式', price: '¥59.9/月', color: '#E349ED' },
-  { name: '专业', tier: 'pro', detail: '全部模式', price: '¥99.9/月', color: '#f0c0ff' },
+  { name: '标准', tier: 'standard', detail: '全部 4 种模式 · 统一配额', price: '¥30/月', color: '#E349ED' },
 ]
 
 /** 模型专属 SVG 图标 — 方案F：魔方透视 */
@@ -112,34 +110,9 @@ function PlanIcon({ tier, color, size = 36 }: { tier: string; color: string; siz
       </svg>
     )
   }
-  // 基础 — 双层菱形 + 中心点
-  if (tier === 'basic') {
+  // 标准 — 三层菱形 + 粉青渐变
+  if (tier === 'standard') {
     return (
-      <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
-        <polygon points="18,4 32,18 18,32 4,18" fill="none" stroke={color} strokeWidth="1" opacity=".3"/>
-        <polygon points="18,9 27,18 18,27 9,18" fill={color} fillOpacity=".06" stroke={color} strokeWidth="1.3" strokeOpacity=".55"/>
-        <polygon points="18,14 22,18 18,22 14,18" fill={color} fillOpacity=".1" stroke={color} strokeWidth=".8" strokeOpacity=".35"/>
-        <circle cx="18" cy="18" r="2" fill={color} opacity=".55"/>
-      </svg>
-    )
-  }
-  // 进阶 — 三层菱形 + 十字星芒
-  if (tier === 'advanced') {
-    return (
-      <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
-        <polygon points="18,3 33,18 18,33 3,18" fill="none" stroke={color} strokeWidth=".8" opacity=".2"/>
-        <polygon points="18,8 28,18 18,28 8,18" fill={color} fillOpacity=".05" stroke={color} strokeWidth="1.2" strokeOpacity=".45"/>
-        <polygon points="18,13 23,18 18,23 13,18" fill={color} fillOpacity=".08" stroke={color} strokeWidth="1" strokeOpacity=".5"/>
-        <circle cx="18" cy="18" r="2" fill={color} opacity=".6"/>
-        <line x1="18" y1="5" x2="18" y2="9" stroke={color} strokeWidth=".8" opacity=".2"/>
-        <line x1="18" y1="27" x2="18" y2="31" stroke={color} strokeWidth=".8" opacity=".2"/>
-        <line x1="5" y1="18" x2="9" y2="18" stroke={color} strokeWidth=".8" opacity=".2"/>
-        <line x1="27" y1="18" x2="31" y2="18" stroke={color} strokeWidth=".8" opacity=".2"/>
-      </svg>
-    )
-  }
-  // 专业 — 五层旋转菱形 + 粉青渐变
-  return (
     <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
       <defs>
         <linearGradient id={`proGrad`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -159,23 +132,25 @@ function PlanIcon({ tier, color, size = 36 }: { tier: string; color: string; siz
       <circle cx="2" cy="18" r="1.2" fill="#fff" opacity=".25"/>
     </svg>
   )
+  }
+  // 默认：标准图标
+  return (
+    <svg width={s} height={s} viewBox="0 0 36 36" fill="none">
+      <polygon points="18,4 32,18 18,32 4,18" fill="none" stroke={color} strokeWidth="1" opacity=".3"/>
+      <polygon points="18,10 26,18 18,26 10,18" fill={color} fillOpacity=".06" stroke={color} strokeWidth="1.2" strokeOpacity=".45"/>
+      <circle cx="18" cy="18" r="2" fill={color} opacity=".55"/>
+    </svg>
+  )
 }
 
 // 套餐对应可用的模型
 const TIER_MODELS: Record<string, string[]> = {
   free: ['deepseek-v4-flash'],
-  basic: ['deepseek-v4-flash', 'deepseek-chat'],
-  advanced: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
-  pro: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
+  standard: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
 }
 
-// 每套餐总次数 + 特殊模型限制（基础模型共享总次数）
-const TIER_TOTAL_LIMITS: Record<string, number> = { free: 5, basic: 30, advanced: 40, pro: 100 }
-// 特殊限制：推理和深度有独立次数帽
-const MODEL_CAPS: Record<string, Record<string, number>> = {
-  'deepseek-reasoner':  { advanced: 3, pro: 20 },
-  'deepseek-v4-pro':    { advanced: 2, pro: 10 },
-}
+// 每套餐总次数
+const TIER_TOTAL_LIMITS: Record<string, number> = { free: 5, standard: 60 }
 
 async function activateCode(code: string): Promise<{ ok: boolean; tier?: string; error?: string }> {
   try {
@@ -513,7 +488,7 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
                         </div>
                         {planModelIds.map(mid => {
                           const model = models.find(m => m.id === mid)
-                          const cap = MODEL_CAPS[mid]?.[p.tier]
+                          const cap = TIER_TOTAL_LIMITS[p.tier]
                           const icon = model?.name?.includes('快速') ? '⚡' : model?.name?.includes('均衡') ? '⚖️' : model?.name?.includes('推理') ? '💭' : '🧠'
                           return (
                             <div key={mid} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,.03)' }}>
@@ -543,7 +518,7 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
               {models.map(m => {
                 const locked = isFree && !(TIER_MODELS[tier]?.includes(m.id))
                 const isCurrent = config.model === m.id
-                const cap = MODEL_CAPS[m.id]?.[tier]
+                const cap = TIER_TOTAL_LIMITS[tier]
                 const tierTotal = TIER_TOTAL_LIMITS[tier]
                 // 独立上限模型用专属计数器，共享模型用共享池
                 const usage = cap !== undefined

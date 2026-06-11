@@ -20,23 +20,13 @@ const PROVIDER = 'deepseek'
 // 套餐对应的解锁模型
 const TIER_MODELS: Record<string, string[]> = {
   free: ['deepseek-v4-flash'],
-  basic: ['deepseek-v4-flash', 'deepseek-chat'],
-  advanced: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
-  pro: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
+  standard: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro'],
 }
 
 // 套餐对应每日限额
 const TIER_LIMITS: Record<string, number> = {
   free: 5,
-  basic: 30,
-  advanced: 40,
-  pro: 100,
-}
-
-// 套餐总次数 + 特殊模型限制（推理/深度有独立上限）
-const MODEL_CAPS: Record<string, Record<string, number>> = {
-  'deepseek-reasoner':  { advanced: 3, pro: 20 },
-  'deepseek-v4-pro':    { advanced: 2, pro: 10 },
+  standard: 60,
 }
 
 function loadConfig() {
@@ -109,7 +99,7 @@ export default function AISettings() {
   const [actStatus, setActStatus] = useState('')
 
   const isFree = !config.apiKey
-  const tierLabel = tier === 'free' ? '免费' : tier === 'basic' ? '基础' : tier === 'advanced' ? '进阶' : tier === 'pro' ? '专业' : '免费'
+  const tierLabel = tier === 'free' ? '免费' : '标准'
 
   useEffect(() => { saveConfig(config) }, [config])
 
@@ -123,7 +113,7 @@ export default function AISettings() {
         }
         setTier(t)
       })
-    } else setTier('pro')
+    } else setTier('standard')
   }, [isFree])
 
   const fetchModels = useCallback(async () => {
@@ -189,7 +179,7 @@ export default function AISettings() {
           {models.map(m => {
             const locked = isFree && !isModelAvailable(tier, isFree, m)
             const tierLimit = isFree ? TIER_LIMITS[tier] : Infinity
-            const cap = MODEL_CAPS[m.id]?.[tier]
+            const cap = tierLimit
             const usage = cap !== undefined ? getTodayUsage(m.id) : getSharedUsage()
             const remaining = Math.max(0, (cap ?? tierLimit) - usage)
             const modelLimit = isFree ? `剩余 ${remaining} 次` : `${cap ?? tierLimit}次/天`
