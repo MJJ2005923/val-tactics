@@ -9,9 +9,11 @@ interface Props {
   onBack: () => void
   onViewTactic: (id: string) => void
   onCreate: () => void
+  onViewProfile?: (uid: string) => void
+  onViewForum?: () => void
 }
 
-export default function TacticsGallery({ onBack, onViewTactic, onCreate }: Props) {
+export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewProfile, onViewForum }: Props) {
   const [tactics, setTactics] = useState<TacticalShare[]>([])
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [loading, setLoading] = useState(true)
@@ -55,6 +57,7 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate }: Props
           <button className={`${styles.sortBtn} ${sort === 'hot' ? styles.sortBtnActive : ''}`} onClick={() => setSort('hot')}>最热</button>
         </div>
         <button className={styles.createBtn} onClick={onCreate}>发布战术</button>
+        {onViewForum && <button className={styles.createBtn} onClick={onViewForum} style={{ background: '#05F8F8', color: '#07040c' }}>论坛</button>}
       </div>
 
       <div className={styles.mapFilter}>
@@ -81,7 +84,9 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate }: Props
               <div className={styles.cardTitle}>{t.title}</div>
               {t.description && <div className={styles.cardDesc}>{t.description}</div>}
               <div className={styles.cardMeta}>
-                <span>👤 {profiles[t.user_id]?.username?.split('@')[0] || '用户'}</span>
+                <span onClick={(e) => { e.stopPropagation(); onViewProfile?.(t.user_id) }} style={{ cursor: 'pointer', color: onViewProfile ? 'rgba(255,255,255,.4)' : undefined }}>
+    {profiles[t.user_id]?.username?.split('@')[0] || '用户'}
+  </span>
                 <span>👁 {t.views}</span>
                 <span>❤️ {t.like_count}</span>
                 <span>💬 {t.comment_count}</span>

@@ -1,0 +1,38 @@
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.8);
+  display: flex; align-items: center; justify-content: center; z-index: 9995;
+}
+.panel {
+  background: #0d0a14; border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px; width: 500px; padding: 28px;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
+
+.title { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 18px }
+.field { margin-bottom: 14px }
+.label { font-size: 11px; color: rgba(255,255,255,.25); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px }
+.input, .textarea, .select {
+  width: 100%; padding: 8px 12px; background: rgba(255,255,255,.015);
+  border: 1px solid rgba(255,255,255,.06); border-radius: 10px;
+  color: #fff; font-size: 13px; outline: none; font-family: inherit;
+}
+.input::placeholder, .textarea::placeholder { color: rgba(255,255,255,.1) }
+.input:focus, .textarea:focus, .select:focus { border-color: rgba(227,73,237,.2) }
+.textarea { resize: vertical; min-height: 120px; line-height: 1.6 }
+.select { cursor: pointer; appearance: none; }
+.select option { background: #0d0a14; color: #fff }
+
+.actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px }
+.cancelBtn {
+  padding: 8px 16px; background: none; border: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.4); border-radius: 10px; cursor: pointer; font-size: 13px;
+}
+.cancelBtn:hover { color: #fff }
+.submitBtn {
+  padding: 8px 24px; background: #E349ED; color: #fff; border: none;
+  border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+}
+.submitBtn:hover { background: #d030d8 }
+.submitBtn:disabled { opacity: .4; cursor: not-allowed }
+.error { color: #ff5555; font-size: 12px; margin-top: 6px }

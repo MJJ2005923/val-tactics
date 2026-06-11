@@ -110,3 +110,150 @@ BEGIN
   UPDATE public.tactical_shares SET comment_count = comment_count + 1 WHERE id = share_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ================================================================
+-- 社区 V2 扩展：点赞 + 关注 + 通知 + 帖子
+-- ================================================================
+
+-- 4. 点赞表
+CREATE TABLE IF NOT EXISTS public.likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  target_type TEXT NOT NULL,  -- 'tactic' | 'post'
+  target_id UUID NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, target_type, target_id)  -- 一人只能点赞一次
+);
+CREATE INDEX idx_likes_target ON public.likes(target_type, target_id);
+
+-- 5. 关注表
+CREATE TABLE IF NOT EXISTS public.follows (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  follower_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  following_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(follower_id, following_id)  -- 不能重复关注
+);
+CREATE INDEX idx_follows_follower ON public.follows(follower_id);
+CREATE INDEX idx_follows_following ON public.follows(following_id);
+
+-- 6. 通知表
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,  -- 'like' | 'comment' | 'follow'
+  from_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  target_type TEXT,    -- 'tactic' | 'post' | null(follow时)
+  target_id UUID,
+  read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX idx_notifications_user ON public.notifications(user_id, read, created_at DESC);
+
+-- 7. 论坛帖子表
+CREATE TABLE IF NOT EXISTS public.posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'discussion',  -- 'discussion' | 'guide' | 'map' | 'team'
+  tags TEXT[] DEFAULT '{}',
+  views INT DEFAULT 0,
+  like_count INT DEFAULT 0,
+  comment_count INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX idx_posts_category ON public.posts(category, created_at DESC);
+CREATE INDEX idx_posts_user ON public.posts(user_id);
+CREATE INDEX idx_posts_created ON public.posts(created_at DESC);
+
+-- ================================================================
+-- RLS 策略 (V2)
+-- ================================================================
+
+ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+
+-- likes: 所有人可读, 登录用户可点赞/取消
+CREATE POLICY "likes_read" ON public.likes FOR SELECT USING (true);
+CREATE POLICY "likes_insert" ON public.likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "likes_delete" ON public.likes FOR DELETE USING (auth.uid() = user_id);
+
+-- follows: 所有人可读, 登录用户可关注/取关
+CREATE POLICY "follows_read" ON public.follows FOR SELECT USING (true);
+CREATE POLICY "follows_insert" ON public.follows FOR INSERT WITH CHECK (auth.uid() = follower_id);
+CREATE POLICY "follows_delete" ON public.follows FOR DELETE USING (auth.uid() = follower_id);
+
+-- notifications: 仅本人可读, 仅本人可标记已读
+CREATE POLICY "notif_read" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "notif_update" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+
+-- posts: 所有人可读, 仅作者可增/改/删
+CREATE POLICY "posts_read" ON public.posts FOR SELECT USING (true);
+CREATE POLICY "posts_insert" ON public.posts FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "posts_update" ON public.posts FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "posts_delete" ON public.posts FOR DELETE USING (auth.uid() = user_id);
+
+-- ================================================================
+-- RPC 函数 (V2)
+-- ================================================================
+
+-- 点赞：自动更新 like_count
+CREATE OR REPLACE FUNCTION public.toggle_like(
+  p_user_id UUID, p_target_type TEXT, p_target_id UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+  existing UUID;
+  col TEXT;
+BEGIN
+  SELECT id INTO existing FROM public.likes
+    WHERE user_id = p_user_id AND target_type = p_target_type AND target_id = p_target_id;
+  IF existing IS NOT NULL THEN
+    DELETE FROM public.likes WHERE id = existing;
+    IF p_target_type = 'tactic' THEN
+      UPDATE public.tactical_shares SET like_count = GREATEST(like_count - 1, 0) WHERE id = p_target_id;
+    ELSE
+      UPDATE public.posts SET like_count = GREATEST(like_count - 1, 0) WHERE id = p_target_id;
+    END IF;
+    RETURN false;  -- 已取消点赞
+  ELSE
+    INSERT INTO public.likes (user_id, target_type, target_id) VALUES (p_user_id, p_target_type, p_target_id);
+    IF p_target_type = 'tactic' THEN
+      UPDATE public.tactical_shares SET like_count = like_count + 1 WHERE id = p_target_id;
+    ELSE
+      UPDATE public.posts SET like_count = like_count + 1 WHERE id = p_target_id;
+    END IF;
+    RETURN true;   -- 已点赞
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 创建通知
+CREATE OR REPLACE FUNCTION public.create_notification(
+  p_user_id UUID, p_type TEXT, p_from_user_id UUID,
+  p_target_type TEXT DEFAULT NULL, p_target_id UUID DEFAULT NULL
+) RETURNS void AS $$
+BEGIN
+  IF p_user_id != p_from_user_id THEN  -- 不给自己发通知
+    INSERT INTO public.notifications (user_id, type, from_user_id, target_type, target_id)
+    VALUES (p_user_id, p_type, p_from_user_id, p_target_type, p_target_id);
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 未读通知数
+CREATE OR REPLACE FUNCTION public.unread_count(p_user_id UUID)
+RETURNS INT AS $$
+  SELECT COUNT(*)::INT FROM public.notifications WHERE user_id = p_user_id AND read = false;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- 帖子浏览量
+CREATE OR REPLACE FUNCTION public.increment_post_view(post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.posts SET views = views + 1 WHERE id = post_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

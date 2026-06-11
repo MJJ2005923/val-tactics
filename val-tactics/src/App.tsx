@@ -20,6 +20,11 @@ import AdminPanel from './components/AdminPanel/AdminPanel'
 import TacticsGallery from './components/Community/TacticsGallery'
 import TacticsDetail from './components/Community/TacticsDetail'
 import CreateShare from './components/Community/CreateShare'
+import ForumPage from './components/Community/ForumPage'
+import PostDetail from './components/Community/PostDetail'
+import CreatePost from './components/Community/CreatePost'
+import ProfilePage from './components/Community/ProfilePage'
+import NotificationBell from './components/Community/NotificationBell'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 import { AuthProvider, useAuth } from './store/AuthContext'
@@ -39,8 +44,10 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showAdmin, setShowAdmin] = useState(false)
   const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
   const [showCommunity, setShowCommunity] = useState(false)
-  const [commView, setCommView] = useState<'gallery' | 'detail' | 'create'>('gallery')
+  const [commView, setCommView] = useState<'gallery' | 'detail' | 'create' | 'forum' | 'post-detail' | 'post-create' | 'profile'>('gallery')
   const [commTacticId, setCommTacticId] = useState('')
+  const [commPostId, setCommPostId] = useState('')
+  const [commProfileId, setCommProfileId] = useState('')
   const { user } = useAuth()
   const [showMapDropdown, setShowMapDropdown] = useState(false)
 
@@ -340,6 +347,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
               </>
             )}
           </div>
+          <NotificationBell />
           <button className="navbar__btn" onClick={() => setShowAuthModal(true)}
             style={user ? { color: '#05F8F8', borderColor: 'rgba(5,248,248,.2)' } : undefined}>
             {user ? `👤 ${user.email?.split('@')[0]}` : '🔐 登录'}
@@ -395,6 +403,8 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           onBack={() => setShowCommunity(false)}
           onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }}
           onCreate={() => setCommView('create')}
+          onViewProfile={(uid) => { setCommProfileId(uid); setCommView('profile') }}
+          onViewForum={() => setCommView('forum')}
         />
       )}
       {showCommunity && commView === 'detail' && (
@@ -409,6 +419,30 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           mapId={selectedMap.id}
           onClose={() => setCommView('gallery')}
           onSuccess={(id) => { setCommTacticId(id); setCommView('detail') }}
+        />
+      )}
+      {showCommunity && commView === 'forum' && (
+        <ForumPage
+          onBack={() => setCommView('gallery')}
+          onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }}
+          onCreatePost={() => setCommView('post-create')}
+        />
+      )}
+      {showCommunity && commView === 'post-detail' && (
+        <PostDetail postId={commPostId} onBack={() => setCommView('forum')} />
+      )}
+      {showCommunity && commView === 'post-create' && (
+        <CreatePost
+          onClose={() => setCommView('forum')}
+          onSuccess={(id) => { setCommPostId(id); setCommView('post-detail') }}
+        />
+      )}
+      {showCommunity && commView === 'profile' && (
+        <ProfilePage
+          userId={commProfileId}
+          onBack={() => setCommView('gallery')}
+          onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }}
+          onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }}
         />
       )}
     </div>
