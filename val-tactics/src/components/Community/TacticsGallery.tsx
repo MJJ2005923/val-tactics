@@ -81,6 +81,9 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
         <div className={styles.grid}>
           {tactics.map(t => (
             <div key={t.id} className={styles.card} onClick={() => onViewTactic(t.id)}>
+              {t.preview_image && (
+                <img src={t.preview_image} alt="" className={styles.cardThumb} />
+              )}
               <div className={styles.cardTop}>
                 <span className={styles.cardMap}>
                   {maps.find(m => m.id === t.map_id)?.nameEn || t.map_id} · {mapName(t.map_id)}

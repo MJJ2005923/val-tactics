@@ -306,3 +306,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 战术分享加收藏计数
 ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS favorite_count INT DEFAULT 0;
+
+-- 战术分享加预览图
+ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS preview_image TEXT;

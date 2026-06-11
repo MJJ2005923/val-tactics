@@ -63,6 +63,10 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
           {tactic.description && <p className={styles.tacticDesc}>{tactic.description}</p>}
         </div>
 
+        {tactic.preview_image && (
+          <img src={tactic.preview_image} alt="" style={{ width: '100%', borderRadius: 12, marginBottom: 16, border: '1px solid rgba(255,255,255,.04)' }} />
+        )}
+
         <div className={styles.actionBar}>
           <div className={styles.authorInfo}>
             <span className={styles.authorName}>{author?.username?.split('@')[0] || '用户'}</span>

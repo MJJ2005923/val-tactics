@@ -30,6 +30,7 @@ export interface TacticalShare {
   updated_at?: string
   author?: Profile
   liked?: boolean  // 当前用户是否已点赞
+  preview_image?: string
 }
 
 export interface Comment {

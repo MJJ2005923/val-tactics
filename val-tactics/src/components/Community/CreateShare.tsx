@@ -16,6 +16,7 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, roster, strategyName, strategyDescription } = useTactics()
   const [title, setTitle] = useState(strategyName || '')
   const [desc, setDesc] = useState(strategyDescription || '')
+  const [previewImg, setPreviewImg] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
@@ -42,6 +43,7 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
           as: abilityShapes.map(s => ({ ...s, path: s.path?.map(p => ({ x: p.x, y: p.y })) })),
           roster,
         },
+        previewImage: previewImg || undefined,
       })
       if (tactic) {
         onSuccess(tactic.id)
@@ -85,6 +87,16 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
             value={desc}
             onChange={e => setDesc(e.target.value)}
             maxLength={500}
+          />
+        </div>
+
+<div className={styles.field}>
+          <div className={styles.label}>预览图</div>
+          <input
+            className={styles.input}
+            placeholder="粘贴战术截图的图片URL（可选）"
+            value={previewImg}
+            onChange={e => setPreviewImg(e.target.value)}
           />
         </div>
 
