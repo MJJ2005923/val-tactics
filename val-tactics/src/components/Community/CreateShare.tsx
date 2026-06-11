@@ -14,6 +14,7 @@ interface Props {
 export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
   const { user } = useAuth()
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, roster, strategyName, strategyDescription } = useTactics()
+  const [selectedMap, setSelectedMap] = useState(mapId)
   const [title, setTitle] = useState(strategyName || '')
   const [desc, setDesc] = useState(strategyDescription || '')
   const [previewImg, setPreviewImg] = useState('')
@@ -33,10 +34,10 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
         userId: user.id,
         title: title.trim(),
         description: desc.trim(),
-        mapId,
+        mapId: selectedMap,
         tacticData: {
           v: 2,
-          m: mapId,
+          m: selectedMap,
           name: strategyName,
           desc: strategyDescription,
           mk: markers.map(m => ({ a: m.abilityId, g: m.agentId, x: m.x, y: m.y, s: m.step, t: m.time, n: m.note || undefined })),
@@ -69,9 +70,10 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
 
         <div className={styles.field}>
           <div className={styles.label}>地图</div>
-          <div className={styles.input} style={{ color: '#05F8F8' }}>
-            {maps.find(m => m.id === mapId)?.name || mapId}
-          </div>
+          <select className={styles.input} value={selectedMap} onChange={e => setSelectedMap(e.target.value)}
+            style={{ color: '#05F8F8', cursor: 'pointer' }}>
+            {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
         </div>
 
         <div className={styles.field}>
