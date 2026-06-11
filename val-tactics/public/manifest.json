@@ -1,0 +1,15 @@
+{
+  "name": "无畏契约战术板 - T教练",
+  "short_name": "T教练",
+  "description": "VALORANT战术布置工具，AI教练辅助生成进攻防守方案",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07040c",
+  "theme_color": "#07040c",
+  "orientation": "any",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "categories": ["games", "utilities"],
+  "lang": "zh-CN"
+}
