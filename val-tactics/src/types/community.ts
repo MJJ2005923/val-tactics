@@ -109,3 +109,34 @@ export type CommunityView =
   | 'post-detail'
   | 'post-create'
   | 'profile'
+  | 'lineups'
+  | 'lineup-detail'
+  | 'lineup-create'
+
+export interface Lineup {
+  id: string
+  user_id: string
+  map_id: string
+  agent_id: string
+  ability_id: string
+  title: string
+  description: string
+  start_x: number | null
+  start_y: number | null
+  target_x: number | null
+  target_y: number | null
+  position_img: string | null
+  aim_img: string | null
+  release_img: string | null
+  effect_img: string | null
+  views: number
+  like_count: number
+  comment_count: number
+  difficulty: number
+  tags: string[]
+  created_at: string
+  updated_at?: string
+  author?: Profile
+  liked?: boolean
+}
+

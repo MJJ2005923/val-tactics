@@ -11,9 +11,10 @@ interface Props {
   onCreate: () => void
   onViewProfile?: (uid: string) => void
   onViewForum?: () => void
+  onViewLineups?: () => void
 }
 
-export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewProfile, onViewForum }: Props) {
+export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewProfile, onViewForum, onViewLineups }: Props) {
   const [tactics, setTactics] = useState<TacticalShare[]>([])
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [loading, setLoading] = useState(true)
@@ -58,6 +59,7 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
         </div>
         <button className={styles.createBtn} onClick={onCreate}>发布战术</button>
         {onViewForum && <button className={styles.createBtn} onClick={onViewForum} style={{ background: '#05F8F8', color: '#07040c' }}>论坛</button>}
+        {onViewLineups && <button className={styles.createBtn} onClick={onViewLineups} style={{ background: '#f0c0ff', color: '#07040c' }}>点位</button>}
       </div>
 
       <div className={styles.mapFilter}>

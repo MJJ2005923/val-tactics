@@ -24,6 +24,9 @@ import ForumPage from './components/Community/ForumPage'
 import PostDetail from './components/Community/PostDetail'
 import CreatePost from './components/Community/CreatePost'
 import ProfilePage from './components/Community/ProfilePage'
+import LineupsPage from './components/Community/LineupsPage'
+import LineupsDetail from './components/Community/LineupsDetail'
+import LineupsCreate from './components/Community/LineupsCreate'
 import NotificationBell from './components/Community/NotificationBell'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
@@ -44,10 +47,11 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showAdmin, setShowAdmin] = useState(false)
   const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
   const [showCommunity, setShowCommunity] = useState(false)
-  const [commView, setCommView] = useState<'gallery' | 'detail' | 'create' | 'forum' | 'post-detail' | 'post-create' | 'profile'>('gallery')
+  const [commView, setCommView] = useState<'gallery' | 'detail' | 'create' | 'forum' | 'post-detail' | 'post-create' | 'profile' | 'lineups' | 'lineup-detail' | 'lineup-create'>('gallery')
   const [commTacticId, setCommTacticId] = useState('')
   const [commPostId, setCommPostId] = useState('')
   const [commProfileId, setCommProfileId] = useState('')
+  const [commLineupId, setCommLineupId] = useState('')
   const { user } = useAuth()
   const [showMapDropdown, setShowMapDropdown] = useState(false)
 
@@ -405,6 +409,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           onCreate={() => setCommView('create')}
           onViewProfile={(uid) => { setCommProfileId(uid); setCommView('profile') }}
           onViewForum={() => setCommView('forum')}
+          onViewLineups={() => setCommView('lineups')}
         />
       )}
       {showCommunity && commView === 'detail' && (
@@ -443,6 +448,23 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           onBack={() => setCommView('gallery')}
           onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }}
           onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }}
+        />
+      )}
+      {showCommunity && commView === 'lineups' && (
+        <LineupsPage
+          onBack={() => setCommView('gallery')}
+          onViewLineup={(id) => { setCommLineupId(id); setCommView('lineup-detail') }}
+          onCreateLineup={() => setCommView('lineup-create')}
+        />
+      )}
+      {showCommunity && commView === 'lineup-detail' && (
+        <LineupsDetail lineupId={commLineupId} onBack={() => setCommView('lineups')} />
+      )}
+      {showCommunity && commView === 'lineup-create' && (
+        <LineupsCreate
+          mapId={selectedMap.id}
+          onClose={() => setCommView('lineups')}
+          onSuccess={(id) => { setCommLineupId(id); setCommView('lineup-detail') }}
         />
       )}
     </div>

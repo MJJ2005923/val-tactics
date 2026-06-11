@@ -257,3 +257,49 @@ BEGIN
   UPDATE public.posts SET views = views + 1 WHERE id = post_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ================================================================
+-- 技能点位 Lineups
+-- ================================================================
+
+CREATE TABLE IF NOT EXISTS public.lineups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  map_id TEXT NOT NULL,
+  agent_id TEXT NOT NULL,
+  ability_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  start_x DECIMAL, start_y DECIMAL,
+  target_x DECIMAL, target_y DECIMAL,
+  position_img TEXT,
+  aim_img TEXT,
+  release_img TEXT,
+  effect_img TEXT,
+  views INT DEFAULT 0,
+  like_count INT DEFAULT 0,
+  comment_count INT DEFAULT 0,
+  difficulty INT DEFAULT 1 CHECK(difficulty BETWEEN 1 AND 5),
+  tags TEXT[] DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX idx_lineups_map ON public.lineups(map_id);
+CREATE INDEX idx_lineups_agent ON public.lineups(agent_id);
+CREATE INDEX idx_lineups_ability ON public.lineups(ability_id);
+CREATE INDEX idx_lineups_user ON public.lineups(user_id);
+CREATE INDEX idx_lineups_created ON public.lineups(created_at DESC);
+
+ALTER TABLE public.lineups ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "lineups_read" ON public.lineups FOR SELECT USING (true);
+CREATE POLICY "lineups_insert" ON public.lineups FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "lineups_update" ON public.lineups FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "lineups_delete" ON public.lineups FOR DELETE USING (auth.uid() = user_id);
+
+-- 点位浏览量
+CREATE OR REPLACE FUNCTION public.increment_lineup_view(lineup_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.lineups SET views = views + 1 WHERE id = lineup_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
