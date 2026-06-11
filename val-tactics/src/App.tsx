@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import maps, { type MapData } from './data/maps'
 import agents, { agentImages } from './data/agents'
+import { buildTacticRequest } from './data/knowledgeBase'
 import MapCanvas from './components/MapCanvas/MapCanvas'
 import AgentPanel from './components/AgentPanel/AgentPanel'
 import Timeline from './components/Timeline/Timeline'
@@ -33,6 +34,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showSponsor, setShowSponsor] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
   const { user } = useAuth()
   const [showMapDropdown, setShowMapDropdown] = useState(false)
   const { dispatch, side, markers, drawings, textAnnotations, agentPositions, abilityShapes, strategyName, strategyDescription, roster, tracks } = useTactics()
@@ -297,6 +299,14 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
                     <span>主页面</span>
                   </button>
                   <div className="navbar__aiDropdownDivider" style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 8px' }} />
+                  <button className="navbar__aiDropdownItem" onClick={() => {
+                    setTacticPrompt(buildTacticRequest(selectedMap.name, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster))
+                    setShowAIPage(true)
+                    setShowAIDropdown(false)
+                  }} style={{ color: '#f0c0ff' }}>
+                    <span>🎯 AI 生成战术</span>
+                  </button>
+                  <div className="navbar__aiDropdownDivider" style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 8px' }} />
                   <button className="navbar__aiDropdownItem" onClick={() => { setShowMatchAnalysis(true); setShowAIDropdown(false) }}>
                     <span>📊 数据分析</span>
                   </button>
@@ -347,7 +357,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} onExportImage={handleExportImage} onShareLink={handleShareLink} />}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showAIPanel && <AIPanel mapId={selectedMap.id} mapName={selectedMap.name} onClose={() => setShowAIPanel(false)} />}
-      {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => setShowAIPage(false)} />}
+      {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => { setShowAIPage(false); setTacticPrompt(undefined) }} initialPrompt={tacticPrompt} />}
       {showMatchAnalysis && <MatchAnalysisPage onBack={() => setShowMatchAnalysis(false)} />}
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}

@@ -209,7 +209,7 @@ function saveConfig(c: AIConfig) {
   localStorage.setItem('val-tactics-ai-config', JSON.stringify(safe))
 }
 
-export default function AIPage({ mapName, onBack }: { mapId: string; mapName: string; onBack: () => void }) {
+export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: string; mapName: string; onBack: () => void; initialPrompt?: string }) {
   const { abilityShapes, side, agentPositions, drawings, textAnnotations, markers, roster } = useTactics()
   const { user } = useAuth()
 
@@ -287,6 +287,15 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
   useEffect(() => { localStorage.setItem('val-tactics-chat', JSON.stringify(messages)) }, [messages])
   useEffect(() => { saveConfig(config) }, [config])
 
+  // AI 自动生成战术：收到 initialPrompt 后自动发送
+  const autoSentRef = useRef(false)
+  useEffect(() => {
+    if (initialPrompt && config.model && !autoSentRef.current && !loading) {
+      autoSentRef.current = true
+      send(initialPrompt)
+    }
+  }, [initialPrompt, config.model, loading])
+
   // 登录时从 Supabase 恢复套餐
   useEffect(() => {
     if (!user) return
@@ -352,8 +361,8 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
     setTimeout(() => fetchModels(), 100)
   }
 
-  const send = async () => {
-    const text = input.trim()
+  const send = async (overrideText?: string) => {
+    const text = (overrideText || input).trim()
     if (!text || loading) return
     if (!isFree && !config.apiKey) return
     if (!config.model) return
@@ -858,7 +867,7 @@ export default function AIPage({ mapName, onBack }: { mapId: string; mapName: st
             onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,.3)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)' }}
             title="清除对话历史，重新开始"
           >重置</button>
-          <button className={styles.sendBtn} onClick={send} disabled={loading || !input.trim() || !config.model}>发送消息</button>
+          <button className={styles.sendBtn} onClick={() => send()} disabled={loading || !input.trim() || !config.model}>发送消息</button>
         </div>
       </main>
     </div>

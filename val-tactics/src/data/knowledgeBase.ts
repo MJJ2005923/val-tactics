@@ -222,3 +222,55 @@ export function formatBoardStateForAI(
 
   return text
 }
+
+/**
+ * 构建「AI 生成战术」专用提示词
+ * 包含完整板状态 + 结构化输出要求
+ */
+export function buildTacticRequest(
+  mapName: string,
+  side: string,
+  agentPositions: AgentPosition[],
+  abilityShapes: AbilityShape[],
+  drawings: DrawPath[],
+  textAnnotations: TextAnnotation[],
+  markers: Marker[],
+  roster: { attack: string[]; defense: string[] },
+): string {
+  const sideCN = side === 'attack' ? '进攻方' : '防守方'
+  const boardState = formatBoardStateForAI(mapName, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster)
+
+  return `${boardState}
+
+===
+请根据以上战术板实时状态，为我生成一份完整的战术方案，按以下结构输出：
+
+## 一、阵容分析
+- 我方阵容的优势和劣势
+- 对方阵容（如有）的威胁点
+- 关键特工对位分析
+
+## 二、${sideCN}战术方案
+### 核心思路
+用一句话概括本回合的战术核心
+
+### 特工站位
+- 每个特工的具体站位和职责
+- 进攻路线/防守位置
+
+### 技能配合
+- 列出 3-5 个关键技能连招
+- 说明使用时机和顺序
+
+### 执行步骤
+1. 开局阶段（前15秒）
+2. 中期推进/防守（15-45秒）
+3. 终局阶段（最后45秒）
+4. 下包/拆包策略
+
+## 三、备用方案
+- 如果主方案被破解，备选策略是什么
+- 快速转点/调整建议
+
+请用中文、简洁实用、像教练一样表达。直接给方案，不要寒暄。`
+}
