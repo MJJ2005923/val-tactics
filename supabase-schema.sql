@@ -309,3 +309,7 @@ ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS favorite_count INT D
 
 -- 战术分享加预览图
 ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS preview_image TEXT;
+
+-- 战术发布：多图支持
+ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS lineup_images TEXT[] DEFAULT '{}';
+ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS effect_images TEXT[] DEFAULT '{}';

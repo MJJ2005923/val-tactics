@@ -52,6 +52,8 @@ export async function createTactic(params: {
   mapId: string
   tacticData: Record<string, unknown>
   previewImage?: string
+  lineupImages?: string[]
+  effectImages?: string[]
 }): Promise<TacticalShare | null> {
   const { data } = await supabase
     .from('tactical_shares')
@@ -62,6 +64,8 @@ export async function createTactic(params: {
       map_id: params.mapId,
       tactic_data: params.tacticData,
       preview_image: params.previewImage || null,
+      lineup_images: params.lineupImages || [],
+      effect_images: params.effectImages || [],
     })
     .select()
     .single()

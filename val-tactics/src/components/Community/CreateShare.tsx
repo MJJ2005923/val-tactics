@@ -17,6 +17,8 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
   const [title, setTitle] = useState(strategyName || '')
   const [desc, setDesc] = useState(strategyDescription || '')
   const [previewImg, setPreviewImg] = useState('')
+  const [lineupImgs, setLineupImgs] = useState<string[]>([])
+  const [effectImgs, setEffectImgs] = useState<string[]>([])
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
@@ -44,6 +46,8 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
           roster,
         },
         previewImage: previewImg || undefined,
+        lineupImages: lineupImgs.filter(u => u.trim()),
+        effectImages: effectImgs.filter(u => u.trim()),
       })
       if (tactic) {
         onSuccess(tactic.id)
@@ -90,14 +94,40 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
           />
         </div>
 
-<div className={styles.field}>
-          <div className={styles.label}>预览图</div>
-          <input
-            className={styles.input}
-            placeholder="粘贴战术截图的图片URL（可选）"
-            value={previewImg}
-            onChange={e => setPreviewImg(e.target.value)}
-          />
+{/* 点位图 — 动态添加 */}
+        <div className={styles.field}>
+          <div className={styles.label}>点位图（战术中用到的技能点位截图）</div>
+          {lineupImgs.map((url, i) => (
+            <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+              <input className={styles.input} placeholder="粘贴图片URL" value={url}
+                onChange={e => { const arr = [...lineupImgs]; arr[i] = e.target.value; setLineupImgs(arr) }} />
+              <button type="button" onClick={() => setLineupImgs(lineupImgs.filter((_, j) => j !== i))}
+                style={{ background: 'none', border: '1px solid rgba(255,85,85,.2)', color: '#ff5555', borderRadius: 8, cursor: 'pointer', fontSize: 11, padding: '0 8px' }}>删</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setLineupImgs([...lineupImgs, ''])}
+            style={{ background: 'rgba(5,248,248,.06)', border: '1px solid rgba(5,248,248,.15)', color: '#05F8F8', borderRadius: 8, cursor: 'pointer', fontSize: 11, padding: '4px 12px' }}>+ 添加点位图</button>
+        </div>
+
+        {/* 预览效果图 — 动态添加 */}
+        <div className={styles.field}>
+          <div className={styles.label}>预览效果图（战术最终效果展示）</div>
+          {effectImgs.map((url, i) => (
+            <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+              <input className={styles.input} placeholder="粘贴图片URL" value={url}
+                onChange={e => { const arr = [...effectImgs]; arr[i] = e.target.value; setEffectImgs(arr) }} />
+              <button type="button" onClick={() => setEffectImgs(effectImgs.filter((_, j) => j !== i))}
+                style={{ background: 'none', border: '1px solid rgba(255,85,85,.2)', color: '#ff5555', borderRadius: 8, cursor: 'pointer', fontSize: 11, padding: '0 8px' }}>删</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setEffectImgs([...effectImgs, ''])}
+            style={{ background: 'rgba(5,248,248,.06)', border: '1px solid rgba(5,248,248,.15)', color: '#05F8F8', borderRadius: 8, cursor: 'pointer', fontSize: 11, padding: '4px 12px' }}>+ 添加预览图</button>
+        </div>
+
+        {/* 主预览图 */}
+        <div className={styles.field}>
+          <div className={styles.label}>封面缩略图</div>
+          <input className={styles.input} placeholder="展示在卡片上的封面图URL（可选）" value={previewImg} onChange={e => setPreviewImg(e.target.value)} />
         </div>
 
         {error && <div className={styles.error}>{error}</div>}

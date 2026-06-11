@@ -67,6 +67,32 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
           <img src={tactic.preview_image} alt="" style={{ width: '100%', borderRadius: 12, marginBottom: 16, border: '1px solid rgba(255,255,255,.04)' }} />
         )}
 
+        {/* 点位图组 */}
+        {tactic.lineup_images && tactic.lineup_images.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.3)', marginBottom: 8 }}>点位图 ({tactic.lineup_images.length})</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
+              {tactic.lineup_images.map((url, i) => (
+                <img key={i} src={url} alt={`点位${i+1}`} style={{ width: '100%', borderRadius: 10, border: '1px solid rgba(255,255,255,.04)', cursor: 'pointer' }}
+                  onClick={() => window.open(url, '_blank')} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 预览效果图组 */}
+        {tactic.effect_images && tactic.effect_images.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.3)', marginBottom: 8 }}>效果预览 ({tactic.effect_images.length})</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
+              {tactic.effect_images.map((url, i) => (
+                <img key={i} src={url} alt={`效果${i+1}`} style={{ width: '100%', borderRadius: 10, border: '1px solid rgba(255,255,255,.04)', cursor: 'pointer' }}
+                  onClick={() => window.open(url, '_blank')} />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className={styles.actionBar}>
           <div className={styles.authorInfo}>
             <span className={styles.authorName}>{author?.username?.split('@')[0] || '用户'}</span>

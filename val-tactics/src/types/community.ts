@@ -31,6 +31,8 @@ export interface TacticalShare {
   author?: Profile
   liked?: boolean  // 当前用户是否已点赞
   preview_image?: string
+  lineup_images?: string[]
+  effect_images?: string[]
 }
 
 export interface Comment {
