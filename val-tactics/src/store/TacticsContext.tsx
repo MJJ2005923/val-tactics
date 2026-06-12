@@ -402,7 +402,7 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       let el = cursorElsRef.current.get(userId)
       if (!el) {
         el = document.createElement('div')
-        el.style.cssText = 'position:absolute;width:12px;height:12px;border-radius:50%;background:' + (color || '#05F8F8') + ';border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 6px ' + (color || '#05F8F8') + ';transition:left .08s ease,top .08s ease;pointer-events:none'
+        el.style.cssText = 'position:fixed;width:12px;height:12px;border-radius:50%;background:' + (color || '#05F8F8') + ';border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 6px ' + (color || '#05F8F8') + ';transition:left .08s ease,top .08s ease;pointer-events:none;z-index:9999'
         const label = document.createElement('div')
         label.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:9px;color:' + (color || '#05F8F8') + ';white-space:nowrap;background:rgba(0,0,0,.7);padding:1px 5px;border-radius:4px'
         label.textContent = userId.slice(0, 6)
@@ -410,8 +410,8 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
         layer.appendChild(el)
         cursorElsRef.current.set(userId, el)
       }
-      el.style.left = x * 100 + '%'
-      el.style.top = y * 100 + '%'
+      el.style.left = x + 'px'
+      el.style.top = y + 'px'
     }).subscribe()
     channelRef.current = ch
     // 定期清理过期光标

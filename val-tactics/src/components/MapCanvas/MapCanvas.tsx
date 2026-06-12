@@ -1004,12 +1004,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         setRectDrawing(p => p ? { ...p, drawing: true, startX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), startY: (e.clientY - rr.top - offsetY) / (displayScale * mapH), currentX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), currentY: (e.clientY - rr.top - offsetY) / (displayScale * mapH) } : null)
       }}
       onMouseMove={(e) => {
-        // 广播光标位置
-        const t3c = transformRef.current?.container
-        if (t3c) {
-          const rrC = t3c.getBoundingClientRect()
-          broadcastCursor((e.clientX - rrC.left) / rrC.width, (e.clientY - rrC.top) / rrC.height, myUserId)
-        }
+        // 广播光标位置（绝对像素坐标）
+        broadcastCursor(e.clientX, e.clientY, myUserId)
         if (panning) {
           const dx = e.clientX - panning.sx, dy = e.clientY - panning.sy
           const nx = panning.ox + dx, ny = panning.oy + dy
