@@ -544,6 +544,38 @@ export async function onRequest(context) {
     }
   }
 
+  // === POST /api/room/snapshot (编辑者上传画布快照) ===
+  if (url.pathname === '/api/room/snapshot' && request.method === 'POST') {
+    try {
+      const { roomId, userId, snapshot } = await request.json()
+      if (!roomId || !snapshot) return new Response(JSON.stringify({ error: '缺少参数' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      const r = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${roomId.toUpperCase()}&editor_id=eq.${userId}`, {
+        method: 'PATCH', headers: SB_HEADERS_POST,
+        body: JSON.stringify({ canvas_snapshot: snapshot, updated_at: new Date().toISOString() }),
+      })
+      if (!r.ok) {
+        console.log('[room/snapshot] save failed:', r.status, await r.text())
+      }
+      return new Response(JSON.stringify({ ok: r.ok }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
+  // === GET /api/room/snapshot (观察者拉取画布快照) ===
+  if (url.pathname === '/api/room/snapshot' && request.method === 'GET') {
+    try {
+      const roomId = new URL(request.url).searchParams.get('roomId')
+      if (!roomId) return new Response(JSON.stringify({ error: '缺少roomId' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      const r = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${roomId.toUpperCase()}&select=canvas_snapshot,updated_at`, { headers: SB_HEADERS_GET })
+      const data = await r.json()
+      if (!data.length) return new Response(JSON.stringify({ snapshot: null }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ snapshot: data[0].canvas_snapshot, updatedAt: data[0].updated_at }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   let { apiKey, provider, model, messages, userId } = await request.json()
 
   const p = PROVIDERS[provider]

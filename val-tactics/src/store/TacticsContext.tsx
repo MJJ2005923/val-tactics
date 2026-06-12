@@ -498,6 +498,43 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     return () => { ch.unsubscribe(); clearInterval(t) }
   }, [activeRoomId])
 
+  // ====== 画布快照保存/轮询（绕过 Realtime 广播不可靠问题） ======
+  const snapshotSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const saveSnapshot = useCallback(async () => {
+    const roomId = localStorage.getItem('room-id')
+    if (!roomId || !user?.id) return
+    const s = stateRef.current
+    const snapshot = { markers: s.markers, drawings: s.drawings, texts: s.textAnnotations, agents: s.agentPositions, shapes: s.abilityShapes, roster: s.roster }
+    try {
+      await fetch('/api/room/snapshot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ roomId, userId: user.id, snapshot }) })
+    } catch {}
+  }, [user?.id])
+
+  // 观察者模式：每 2 秒轮询编辑者的画布快照
+  const lastSnapshotRef = useRef('')
+  useEffect(() => {
+    if (!activeRoomId || isRoomEditor) return
+    const poll = async () => {
+      try {
+        const resp = await fetch(`/api/room/snapshot?roomId=${activeRoomId}`)
+        const data = await resp.json()
+        if (data.snapshot) {
+          const raw = typeof data.snapshot === 'string' ? data.snapshot : JSON.stringify(data.snapshot)
+          if (raw !== lastSnapshotRef.current) {
+            lastSnapshotRef.current = raw
+            const snap = typeof data.snapshot === 'string' ? JSON.parse(data.snapshot) : data.snapshot
+            rawDispatch({ type: 'APPLY_SNAPSHOT', markers: snap.markers || [], drawings: snap.drawings || [], texts: snap.texts || [], agents: snap.agents || [], shapes: snap.shapes || [], roster: snap.roster || { attack: [], defense: [] }, _remote: true } as any)
+          }
+        }
+      } catch {}
+    }
+    poll()
+    const t = setInterval(poll, 2000)
+    return () => { clearInterval(t); lastSnapshotRef.current = '' }
+  }, [activeRoomId, isRoomEditor])
+
+  // ====== dispatch 包装 ======
   const pendingAction = useRef<any>(null)
   const sendTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -547,6 +584,12 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
         type: 'broadcast', event: 'action',
         payload: JSON.parse(JSON.stringify(action)),
       })
+    }
+
+    // 编辑者：每次修改后延迟 1s 保存画布快照到 Worker（观察者轮询用）
+    if (!isRemote && roomEditorId && roomEditorId === user?.id && editActions.has(action.type)) {
+      if (snapshotSaveTimer.current) clearTimeout(snapshotSaveTimer.current)
+      snapshotSaveTimer.current = setTimeout(() => saveSnapshot(), 1000)
     }
   }
 
