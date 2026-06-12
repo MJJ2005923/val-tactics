@@ -387,6 +387,8 @@ export async function onRequest(context) {
       const t = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
       if (t) return t
     } catch {}
+    // dev 分支放行测试
+    if (isDev) return { tier: 'standard' }
     return { tier: 'free' }
   }
 
