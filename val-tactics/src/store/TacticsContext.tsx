@@ -352,6 +352,7 @@ interface TacticsCtx extends TacticsState {
   history: History
   remoteCursors: RemoteCursor[]
   broadcastCursor: (x: number, y: number, userId: string) => void
+  setCursorLayer: (el: HTMLDivElement | null) => void
   myUserId: string
 }
 
@@ -364,7 +365,14 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   )
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([])
+  const cursorElsRef = useRef<Map<string, HTMLDivElement>>(new Map())
+  const cursorLayerRef = useRef<HTMLDivElement | null>(null)
   const myUserId = useRef('u' + Math.random().toString(36).slice(2, 8))
+
+  // 注册光标层 DOM 引用
+  const setCursorLayer = useCallback((el: HTMLDivElement | null) => {
+    cursorLayerRef.current = el
+  }, [])
 
   // 广播光标位置
   const broadcastCursor = useCallback((x: number, y: number, userId: string) => {
@@ -389,11 +397,21 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       rawDispatch(action)
     }).on('broadcast', { event: 'cursor' }, (payload: any) => {
       const { x, y, userId, color } = payload.payload
-      setRemoteCursors(prev => {
-        const next = prev.filter(c => c.userId !== userId)
-        next.push({ userId, x, y, color: color || '#05F8F8', lastSeen: Date.now() })
-        return next.slice(-8) // 最多8个光标
-      })
+      const layer = cursorLayerRef.current
+      if (!layer) return
+      let el = cursorElsRef.current.get(userId)
+      if (!el) {
+        el = document.createElement('div')
+        el.style.cssText = 'position:absolute;width:12px;height:12px;border-radius:50%;background:' + (color || '#05F8F8') + ';border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 6px ' + (color || '#05F8F8') + ';transition:left .08s ease,top .08s ease;pointer-events:none'
+        const label = document.createElement('div')
+        label.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:9px;color:' + (color || '#05F8F8') + ';white-space:nowrap;background:rgba(0,0,0,.7);padding:1px 5px;border-radius:4px'
+        label.textContent = userId.slice(0, 6)
+        el.appendChild(label)
+        layer.appendChild(el)
+        cursorElsRef.current.set(userId, el)
+      }
+      el.style.left = x * 100 + '%'
+      el.style.top = y * 100 + '%'
     }).subscribe()
     channelRef.current = ch
     // 定期清理过期光标
@@ -415,7 +433,7 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <TacticsContext.Provider value={{ ...state, dispatch, history: hist, remoteCursors, broadcastCursor, myUserId: myUserId.current }}>
+    <TacticsContext.Provider value={{ ...state, dispatch, history: hist, remoteCursors, broadcastCursor, setCursorLayer, myUserId: myUserId.current }}>
       {children}
     </TacticsContext.Provider>
   )

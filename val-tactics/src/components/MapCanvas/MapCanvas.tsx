@@ -177,26 +177,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [pinch, setPinch] = useState<{ dist: number; scale: number } | null>(null)
   const [longPressMenu, setLongPressMenu] = useState<{ x: number; y: number } | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const cursorLayerRef = useRef<HTMLDivElement>(null)
 
-  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges, remoteCursors, broadcastCursor, myUserId } = useTactics()
-
-  // 远程光标 — DOM 直接更新，不触发 React 重渲染
-  useEffect(() => {
-    const layer = cursorLayerRef.current
-    if (!layer) return
-    layer.innerHTML = ''
-    for (const c of remoteCursors) {
-      if (c.userId === myUserId) continue
-      const el = document.createElement('div')
-      el.style.cssText = `position:absolute;left:${c.x * 100}%;top:${c.y * 100}%;width:12px;height:12px;border-radius:50%;background:${c.color};border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 6px ${c.color};transition:left .05s linear,top .05s linear`
-      const label = document.createElement('div')
-      label.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:9px;color:' + c.color + ';white-space:nowrap;background:rgba(0,0,0,.7);padding:1px 5px;border-radius:4px'
-      label.textContent = c.userId.slice(0, 6)
-      el.appendChild(label)
-      layer.appendChild(el)
-    }
-  }, [remoteCursors, myUserId])
+  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges, broadcastCursor, myUserId, setCursorLayer } = useTactics()
   const toast = useToast()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
@@ -1172,8 +1154,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setLongPressMenu(null)} />
       )}
 
-      {/* 远程光标层 — DOM直接操作，不走React渲染 */}
-      <div ref={cursorLayerRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }} />
+      {/* 远程光标层 — 广播回调直接写DOM */}
+      <div ref={setCursorLayer} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }} />
 
             {/* 画线模式预览 */}
       {lineDrawing && (() => {
