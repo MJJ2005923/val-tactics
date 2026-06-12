@@ -45,12 +45,18 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
   const handleCreate = async () => {
     if (!user) { setError('请先登录'); return }
     setLoading(true); setError('')
-    const r = await createRoom(user.id, mapId, side)
-    if (r) {
-      sessionStorage.setItem('room-id', r.id)
-      onJoined?.(r.id)
-      setRoom(r)
-    } else setError('创建失败，请重试')
+    try {
+      const r = await createRoom(user.id, mapId, side)
+      if (r) {
+        sessionStorage.setItem('room-id', r.id)
+        onJoined?.(r.id)
+        setRoom(r)
+      } else {
+        setError('创建失败：数据库未响应，检查 Supabase 连接')
+      }
+    } catch (e: any) {
+      setError(`创建失败：${e.message || '未知错误'}`)
+    }
     setLoading(false)
   }
 
