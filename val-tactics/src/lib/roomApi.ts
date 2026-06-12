@@ -18,9 +18,9 @@ export async function canCreateRoom(userId: string): Promise<{ allowed: boolean;
     return { allowed: false, reason: '自备Key套餐不含协作功能，请升级标准套餐' }
   }
 
-  // 2. 检查套餐未过期
+  // 2. 检查套餐未过期（激活时间 + 30天）
   const expiry = localStorage.getItem('val-tactics-tier-at')
-  if (expiry && Number(expiry) < Date.now()) {
+  if (expiry && Number(expiry) + 30 * 86400000 < Date.now()) {
     return { allowed: false, reason: '套餐已过期，请续费' }
   }
 
