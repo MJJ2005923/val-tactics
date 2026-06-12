@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTactics } from '../../store/TacticsContext'
 import { useToast } from '../Toast/Toast'
 import agents, { getAbilityShapeConfig, agentImages } from '../../data/agents'
@@ -1155,8 +1156,11 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setLongPressMenu(null)} />
       )}
 
-      {/* 远程光标层 — 广播回调直接写DOM */}
-      <div ref={setCursorLayer} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }} />
+      {/* 远程光标层 — Portal到body，避免transform偏移 */}
+      {createPortal(
+        <div ref={setCursorLayer} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999 }} />,
+        document.body
+      )}
 
             {/* 画线模式预览 */}
       {lineDrawing && (() => {
