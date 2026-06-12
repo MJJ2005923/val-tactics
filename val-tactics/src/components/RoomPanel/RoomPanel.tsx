@@ -9,7 +9,7 @@ interface Props {
   mapId: string
   side: string
   onClose: () => void
-  onJoined: (roomId: string) => void
+  onJoined?: (roomId: string) => void
 }
 
 export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
@@ -46,8 +46,11 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     if (!user) { setError('请先登录'); return }
     setLoading(true); setError('')
     const r = await createRoom(user.id, mapId, side)
-    if (r) { setRoom(r); onJoined(r.id) }
-    else setError('创建失败，请重试')
+    if (r) {
+      sessionStorage.setItem('room-id', r.id)
+      onJoined?.(r.id)
+      setRoom(r)
+    } else setError('创建失败，请重试')
     setLoading(false)
   }
 
@@ -56,8 +59,11 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     if (code.length !== 6) { setError('请输入6位房间码'); return }
     setLoading(true); setError('')
     const r = await joinRoom(code.trim().toUpperCase(), user.id)
-    if (r) { setRoom(r); onJoined(r.id) }
-    else setError('房间不存在或已满')
+    if (r) {
+      sessionStorage.setItem('room-id', r.id)
+      onJoined?.(r.id)
+      setRoom(r)
+    } else setError('房间不存在或已满')
     setLoading(false)
   }
 
