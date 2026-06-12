@@ -434,15 +434,35 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     return () => { ch.unsubscribe(); clearInterval(t) }
   }, [activeRoomId])
 
-  // 包装 dispatch：本地操作自动广播
+  const pendingAction = useRef<any>(null)
+  const sendTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // 包装 dispatch：UPDATE类操作debounce广播
   const dispatch = (action: Action) => {
     rawDispatch(action)
     const roomId = localStorage.getItem('room-id')
     const isRemote = !!(action as any)._remote
-    if (roomId && !isRemote && channelRef.current) {
-      // JSON序列化确保可传输
-      const toSend = JSON.parse(JSON.stringify(action))
-      channelRef.current.send({ type: 'broadcast', event: 'action', payload: toSend })
+    if (!roomId || isRemote || !channelRef.current) return
+
+    // ADD/DELETE 立即发送，UPDATE debounce 100ms
+    if (action.type.startsWith('UPDATE_')) {
+      pendingAction.current = action
+      if (sendTimer.current) return
+      sendTimer.current = setTimeout(() => {
+        sendTimer.current = null
+        if (pendingAction.current) {
+          channelRef.current!.send({
+            type: 'broadcast', event: 'action',
+            payload: JSON.parse(JSON.stringify(pendingAction.current)),
+          })
+          pendingAction.current = null
+        }
+      }, 100)
+    } else {
+      channelRef.current.send({
+        type: 'broadcast', event: 'action',
+        payload: JSON.parse(JSON.stringify(action)),
+      })
     }
   }
 
