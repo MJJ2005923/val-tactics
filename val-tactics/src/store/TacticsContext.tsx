@@ -1,5 +1,6 @@
-import { createContext, useContext, useReducer, type ReactNode } from 'react'
+import { createContext, useContext, useReducer, useRef, useEffect, type ReactNode } from 'react'
 import type { Marker, DrawPath, TextAnnotation, AgentPosition, AbilityShape, RecordedTrack, ToolMode } from '../types'
+import { supabase } from '../lib/supabase'
 
 // ====== 完整状态 ======
 export interface TacticsState {
@@ -346,10 +347,40 @@ interface TacticsCtx extends TacticsState {
 const TacticsContext = createContext<TacticsCtx | null>(null)
 
 export function TacticsProvider({ children }: { children: ReactNode }) {
-  const [{ state, history: hist }, dispatch] = useReducer(
+  const [{ state, history: hist }, rawDispatch] = useReducer(
     (prev: { state: TacticsState; history: History }, action: Action) => reducer(prev.state, action, prev.history),
     { state: initialState, history: { past: [], future: [] } }
   )
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+
+  // Realtime 订阅（从 sessionStorage 读 roomId）
+  useEffect(() => {
+    const roomId = sessionStorage.getItem('room-id')
+    if (!roomId) {
+      channelRef.current?.unsubscribe()
+      channelRef.current = null
+      return
+    }
+    const ch = supabase.channel(`room:${roomId}`)
+    ch.on('broadcast', { event: 'action' }, (payload: any) => {
+      const action: any = { ...payload.payload, _remote: true }
+      if (!action.type) return
+      rawDispatch(action)
+    }).subscribe()
+    channelRef.current = ch
+    return () => { ch.unsubscribe() }
+  }, [])
+
+  // 包装 dispatch：本地操作自动广播
+  const dispatch = (action: Action) => {
+    rawDispatch(action)
+    const roomId = sessionStorage.getItem('room-id')
+    if (roomId && !(action as any)._remote) {
+      const toSend: any = { ...action }
+      delete toSend._remote
+      channelRef.current?.send({ type: 'broadcast', event: 'action', payload: toSend })
+    }
+  }
 
   return (
     <TacticsContext.Provider value={{ ...state, dispatch, history: hist }}>

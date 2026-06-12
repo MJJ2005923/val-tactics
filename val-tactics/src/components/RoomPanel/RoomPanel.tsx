@@ -64,6 +64,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
   const handleLeave = async () => {
     if (!room || !user) return
     await leaveRoom(room.id, user.id)
+    sessionStorage.removeItem('room-id')
     setRoom(null); setMembers([])
   }
 
@@ -83,6 +84,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     if (!room) return
     if (!confirm('确定解散房间？所有人将被移除')) return
     await leaveRoom(room.id, room.host_id)
+    sessionStorage.removeItem('room-id')
     setRoom(null); setMembers([])
   }
 
