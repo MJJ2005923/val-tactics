@@ -452,6 +452,10 @@ export async function onRequest(context) {
 
       // 查房间
       const roomResp = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&status=eq.open&select=*`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+      console.log('[room/join] rooms query:', roomResp.status, await roomResp.clone().text())
+      if (!roomResp.ok) {
+        return new Response(JSON.stringify({ error: `查询房间失败(${roomResp.status})` }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
       const rooms = await roomResp.json()
       if (!rooms.length) return new Response(JSON.stringify({ error: '房间不存在或已关闭' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
