@@ -401,11 +401,10 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       return
     }
     const ch = supabase.channel(`room:${roomId}`)
-    console.log('[REALTIME] Subscribing to room:', roomId)
     ch.on('broadcast', { event: 'action' }, (payload: any) => {
-      const action: any = { ...payload.payload, _remote: true }
-      console.log('[REALTIME] RECV:', action.type, action.id)
+      const action = payload.payload as Action
       if (!action.type) return
+      (action as any)._remote = true
       rawDispatch(action)
     }).on('broadcast', { event: 'cursor' }, (payload: any) => {
       const { x, y, userId, color } = payload.payload
@@ -441,12 +440,9 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     const roomId = localStorage.getItem('room-id')
     const isRemote = !!(action as any)._remote
     if (roomId && !isRemote && channelRef.current) {
-      const toSend: any = { ...action }
-      delete toSend._remote
-      console.log('[REALTIME] SEND:', toSend.type, toSend.id)
-      channelRef.current.send({ type: 'broadcast', event: 'action', payload: toSend }).catch((e: any) => {
-        console.error('[REALTIME] SEND ERROR:', e)
-      })
+      // JSON序列化确保可传输
+      const toSend = JSON.parse(JSON.stringify(action))
+      channelRef.current.send({ type: 'broadcast', event: 'action', payload: toSend })
     }
   }
 
