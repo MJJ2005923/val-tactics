@@ -429,19 +429,20 @@ CREATE TABLE IF NOT EXISTS public.room_members (
 ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.room_members ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "rooms_read" ON public.rooms FOR SELECT USING (true);
+-- rooms: 成员和房主可读
+DROP POLICY IF EXISTS "rooms_read" ON public.rooms;
+CREATE POLICY "rooms_read" ON public.rooms FOR SELECT
+  USING (auth.uid() = host_id OR EXISTS (SELECT 1 FROM room_members WHERE room_id = id AND user_id = auth.uid()));
 CREATE POLICY "rooms_insert" ON public.rooms FOR INSERT WITH CHECK (auth.uid() = host_id);
 CREATE POLICY "rooms_update" ON public.rooms FOR UPDATE USING (auth.uid() = host_id);
 CREATE POLICY "rooms_delete" ON public.rooms FOR DELETE USING (auth.uid() = host_id);
 
-CREATE POLICY "rm_read" ON public.room_members FOR SELECT USING (true);
+-- room_members: 房间成员和房主可读
+DROP POLICY IF EXISTS "rm_read" ON public.room_members;
+CREATE POLICY "rm_read" ON public.room_members FOR SELECT
+  USING (user_id = auth.uid() OR EXISTS (SELECT 1 FROM rooms WHERE id = room_id AND host_id = auth.uid()));
 CREATE POLICY "rm_insert" ON public.room_members FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "rm_delete" ON public.room_members FOR DELETE USING (auth.uid() = user_id OR auth.uid() = (SELECT host_id FROM rooms WHERE id = room_id));
-
--- 修正 rooms RLS（仅成员可读）
-DROP POLICY IF EXISTS "rooms_read" ON public.rooms;
-CREATE POLICY "rooms_read" ON public.rooms FOR SELECT
-  USING (EXISTS (SELECT 1 FROM room_members WHERE room_id = id AND user_id = auth.uid()));
 
 -- rooms 外键加级联删除
 ALTER TABLE public.rooms DROP CONSTRAINT IF EXISTS rooms_host_id_fkey;
