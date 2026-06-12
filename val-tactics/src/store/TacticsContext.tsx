@@ -427,6 +427,7 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       const action = payload.payload as Action
       if (!action.type) return
       (action as any)._remote = true
+      console.log('[Realtime] RX action:', action.type, 'id:', (action as any).id?.slice(0,8))
       rawDispatch(action)
     }).on('broadcast', { event: 'cursor' }, (payload: any) => {
       const { x, y, userId, color } = payload.payload
@@ -446,21 +447,23 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       el.style.left = x + 'px'
       el.style.top = y + 'px'
     }).on('broadcast', { event: 'request_snapshot' }, () => {
-      // 收到快照请求 → 有状态则回复完整快照
+      console.log('[Realtime] RX request_snapshot')
       const cur = stateRef.current
-      if (cur.markers.length > 0 || cur.drawings.length > 0 || cur.textAnnotations.length > 0 || cur.agentPositions.length > 0 || cur.abilityShapes.length > 0) {
-        ch.send({
-          type: 'broadcast', event: 'snapshot',
-          payload: {
-            markers: cur.markers, drawings: cur.drawings, texts: cur.textAnnotations,
-            agents: cur.agentPositions, shapes: cur.abilityShapes, roster: cur.roster,
-          }
-        })
+      const hasState = cur.markers.length > 0 || cur.drawings.length > 0 || cur.textAnnotations.length > 0 || cur.agentPositions.length > 0 || cur.abilityShapes.length > 0
+      console.log('[Realtime] hasState:', hasState, 'shapes:', cur.abilityShapes.length, 'agents:', cur.agentPositions.length)
+      if (hasState) {
+        const snapPayload = {
+          markers: cur.markers, drawings: cur.drawings, texts: cur.textAnnotations,
+          agents: cur.agentPositions, shapes: cur.abilityShapes, roster: cur.roster,
+        }
+        console.log('[Realtime] TX snapshot, size:', JSON.stringify(snapPayload).length)
+        ch.send({ type: 'broadcast', event: 'snapshot', payload: snapPayload })
       }
     }).on('broadcast', { event: 'snapshot' }, (payload: any) => {
-      // 收到快照 → 仅当等待中时应用（用 ref 防竞态）
+      console.log('[Realtime] RX snapshot, wantsSnapshot:', wantsSnapshotRef.current)
       if (!wantsSnapshotRef.current) return
       const snap = payload.payload
+      console.log('[Realtime] APPLY_SNAPSHOT shapes:', snap.shapes?.length, 'agents:', snap.agents?.length)
       rawDispatch({ type: 'APPLY_SNAPSHOT', markers: snap.markers || [], drawings: snap.drawings || [], texts: snap.texts || [], agents: snap.agents || [], shapes: snap.shapes || [], roster: snap.roster || { attack: [], defense: [] }, _remote: true } as any)
       wantsSnapshotRef.current = false
     }).on('broadcast', { event: 'editor_change' }, (payload: any) => {
@@ -474,10 +477,16 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('room-editor-id')
       setActiveRoomId(null)
       setRoomEditorId(null)
-    }).subscribe()
+    }).subscribe((status) => {
+      console.log('[Realtime] channel status:', status, 'room:', roomId)
+      if (status === 'SUBSCRIBED') {
+        console.log('[Realtime] 已连接房间', roomId)
+      }
+    })
     channelRef.current = ch
     // 加入房间后总是请求快照（覆盖本地残留状态）
     setTimeout(() => {
+      console.log('[Realtime] TX request_snapshot, wantsSnapshot:', wantsSnapshotRef.current)
       ch.send({ type: 'broadcast', event: 'request_snapshot', payload: {} })
     }, 600)
     // 定期清理过期光标
@@ -523,14 +532,17 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       sendTimer.current = setTimeout(() => {
         sendTimer.current = null
         if (pendingAction.current) {
+          const a = pendingAction.current
+          console.log('[Realtime] TX', a.type, 'id:', a.id?.slice(0,8), a.updates ? JSON.stringify(a.updates).slice(0,60) : '')
           channelRef.current!.send({
             type: 'broadcast', event: 'action',
-            payload: JSON.parse(JSON.stringify(pendingAction.current)),
+            payload: JSON.parse(JSON.stringify(a)),
           })
           pendingAction.current = null
         }
       }, 100)
     } else {
+      console.log('[Realtime] TX', action.type, 'id:', (action as any).id?.slice(0,8))
       channelRef.current.send({
         type: 'broadcast', event: 'action',
         payload: JSON.parse(JSON.stringify(action)),
