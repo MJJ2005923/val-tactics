@@ -435,7 +435,7 @@ export async function onRequest(context) {
 
       await fetch(`${SB_URL}/rest/v1/room_members`, {
         method: 'POST', headers: SB_HEADERS_POST,
-        body: JSON.stringify({ room_id: code, user_id: userId, role: 'host' }),
+        body: JSON.stringify({ room_id: code, user_id: userId }),
       })
 
       const room = (await r.json())[0]
@@ -471,7 +471,7 @@ export async function onRequest(context) {
       // 加入
       const joinResp = await fetch(`${SB_URL}/rest/v1/room_members`, {
         method: 'POST', headers: SB_HEADERS_POST,
-        body: JSON.stringify({ room_id: code, user_id: userId, role: 'member' }),
+        body: JSON.stringify({ room_id: code, user_id: userId }),
       })
       if (!joinResp.ok && joinResp.status !== 409) {
         const err = await joinResp.text()
