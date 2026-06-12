@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react'
-import { createRoom, joinRoom, leaveRoom, getRoom, getRoomMembers, transferEditor, kickMember } from '../../lib/roomApi'
+import { canCreateRoom, createRoom, joinRoom, leaveRoom, getRoom, getRoomMembers, transferEditor, kickMember } from '../../lib/roomApi'
+import { supabase } from '../../lib/supabase'
 import { getProfiles } from '../../lib/community/profiles'
 import { useAuth } from '../../store/AuthContext'
 import type { Room, RoomMember } from '../../lib/roomApi'
 import styles from './RoomPanel.module.css'
+
+/** 广播编辑权变更 */
+function broadcastEditorChange(roomId: string, editorId: string) {
+  const ch = supabase.channel(`room:${roomId}`)
+  ch.subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      ch.send({ type: 'broadcast', event: 'editor_change', payload: { editorId } })
+      setTimeout(() => ch.unsubscribe(), 500)
+    }
+  })
+}
 
 interface Props {
   mapId: string
@@ -39,8 +51,13 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     const existingId = localStorage.getItem('room-id')
     if (existingId && !room) {
       getRoom(existingId).then(r => {
-        if (r && r.status === 'open') { setRoom(r); onJoined?.(r.id) }
-        else localStorage.removeItem('room-id')
+        if (r && r.status === 'open') {
+          setRoom(r); onJoined?.(r.id)
+          localStorage.setItem('room-editor-id', r.editor_id || '')
+        } else {
+          localStorage.removeItem('room-id')
+          localStorage.removeItem('room-editor-id')
+        }
       })
     }
   }, [])
@@ -57,9 +74,13 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     if (!user) { setError('请先登录'); return }
     setLoading(true); setError('')
     try {
+      // 付费检查
+      const perm = await canCreateRoom(user.id)
+      if (!perm.allowed) { setError(perm.reason || '无权限创建房间'); setLoading(false); return }
       const r = await createRoom(user.id, mapId, side)
       if (r.room) {
         localStorage.setItem('room-id', r.room.id)
+        localStorage.setItem('room-editor-id', user.id) // 房主=编辑者
         onJoined?.(r.room.id)
         setRoom(r.room)
       } else {
@@ -78,6 +99,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     const r = await joinRoom(code.trim().toUpperCase(), user.id)
     if (r) {
       localStorage.setItem('room-id', r.id)
+      localStorage.setItem('room-editor-id', r.editor_id || '')
       onJoined?.(r.id)
       setRoom(r)
     } else setError('房间不存在或已满')
@@ -88,12 +110,15 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     if (!room || !user) return
     await leaveRoom(room.id, user.id)
     localStorage.removeItem('room-id')
+    localStorage.removeItem('room-editor-id')
     setRoom(null); setMembers([])
   }
 
   const handleTransfer = async (toUserId: string) => {
     if (!room) return
     await transferEditor(room.id, toUserId)
+    localStorage.setItem('room-editor-id', toUserId)
+    broadcastEditorChange(room.id, toUserId)
     setRoom({ ...room, editor_id: toUserId })
   }
 
@@ -106,8 +131,17 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
   const handleDissolve = async () => {
     if (!room) return
     if (!confirm('确定解散房间？所有人将被移除')) return
-    await leaveRoom(room.id, room.host_id)
+    await supabase.from('rooms').update({ status: 'closed', closed_at: new Date().toISOString() }).eq('id', room.id)
     localStorage.removeItem('room-id')
+    localStorage.removeItem('room-editor-id')
+    // 广播房间关闭
+    const ch = supabase.channel(`room:${room.id}`)
+    ch.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        ch.send({ type: 'broadcast', event: 'room_close', payload: {} })
+        setTimeout(() => ch.unsubscribe(), 500)
+      }
+    })
     setRoom(null); setMembers([])
   }
 

@@ -357,6 +357,8 @@ interface TacticsCtx extends TacticsState {
   broadcastCursor: (x: number, y: number, userId: string) => void
   setCursorLayer: (el: HTMLDivElement | null) => void
   myUserId: string
+  isRoomEditor: boolean
+  roomEditorId: string | null
 }
 
 const TacticsContext = createContext<TacticsCtx | null>(null)
@@ -386,12 +388,16 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  // Realtime 订阅（用 state 追踪 roomId，确保变化时重连）
+  // Realtime 订阅（用 state 追踪 roomId + editorId，确保变化时重连）
   const [activeRoomId, setActiveRoomId] = useState<string | null>(localStorage.getItem('room-id'))
+  const [roomEditorId, setRoomEditorId] = useState<string | null>(localStorage.getItem('room-editor-id'))
+  const isRoomEditor = !roomEditorId || roomEditorId === myUserId.current
   useEffect(() => {
     const check = () => {
       const id = localStorage.getItem('room-id')
       setActiveRoomId(prev => prev !== id ? id : prev)
+      const eid = localStorage.getItem('room-editor-id')
+      setRoomEditorId(prev => prev !== eid ? eid : prev)
     }
     check()
     window.addEventListener('storage', check)
@@ -409,10 +415,8 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       wantsSnapshotRef.current = false
       return
     }
-    // 重置快照标记
-    const s = stateRef.current
-    const isEmpty = s.markers.length === 0 && s.drawings.length === 0 && s.textAnnotations.length === 0 && s.agentPositions.length === 0 && s.abilityShapes.length === 0
-    wantsSnapshotRef.current = isEmpty
+    // 加入房间时总是请求快照（覆盖本地残留状态）
+    wantsSnapshotRef.current = true
     const ch = supabase.channel(`room:${roomId}`)
     ch.on('broadcast', { event: 'action' }, (payload: any) => {
       const action = payload.payload as Action
@@ -454,14 +458,23 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       const snap = payload.payload
       rawDispatch({ type: 'APPLY_SNAPSHOT', markers: snap.markers || [], drawings: snap.drawings || [], texts: snap.texts || [], agents: snap.agents || [], shapes: snap.shapes || [], roster: snap.roster || { attack: [], defense: [] }, _remote: true } as any)
       wantsSnapshotRef.current = false
+    }).on('broadcast', { event: 'editor_change' }, (payload: any) => {
+      const newEditorId = payload.payload?.editorId
+      if (newEditorId) {
+        localStorage.setItem('room-editor-id', newEditorId)
+        setRoomEditorId(newEditorId)
+      }
+    }).on('broadcast', { event: 'room_close' }, () => {
+      localStorage.removeItem('room-id')
+      localStorage.removeItem('room-editor-id')
+      setActiveRoomId(null)
+      setRoomEditorId(null)
     }).subscribe()
     channelRef.current = ch
-    // 新加入房间时请求快照（状态为空 = 观察者需要同步）
-    if (isEmpty) {
-      setTimeout(() => {
-        ch.send({ type: 'broadcast', event: 'request_snapshot', payload: {} })
-      }, 600)
-    }
+    // 加入房间后总是请求快照（覆盖本地残留状态）
+    setTimeout(() => {
+      ch.send({ type: 'broadcast', event: 'request_snapshot', payload: {} })
+    }, 600)
     // 定期清理过期光标
     const t = setInterval(() => {
       for (const [uid, el] of cursorElsRef.current) {
@@ -474,11 +487,26 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   const pendingAction = useRef<any>(null)
   const sendTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // 包装 dispatch：UPDATE类操作debounce广播
+  // 非编辑者的修改操作列表
+  const editActions = new Set([
+    'ADD_MARKER','UPDATE_MARKER','REMOVE_MARKER',
+    'ADD_DRAWING','UPDATE_DRAWING','REMOVE_DRAWING',
+    'ADD_TEXT','UPDATE_TEXT','REMOVE_TEXT',
+    'ADD_AGENT_POS','UPDATE_AGENT_POS','REMOVE_AGENT_POS',
+    'ADD_ABILITY_SHAPE','UPDATE_ABILITY_SHAPE','REMOVE_ABILITY_SHAPE',
+    'CLEAR_ALL','LOAD_ALL','UNDO','REDO',
+    'ADD_TO_ROSTER','REMOVE_FROM_ROSTER',
+  ])
+
+  // 包装 dispatch：UPDATE类操作debounce广播，非编辑者封锁修改
   const dispatch = (action: Action) => {
+    // 非编辑者封锁修改操作（远程操作除外）
+    const isRemote = !!(action as any)._remote
+    if (!isRemote && roomEditorId && roomEditorId !== myUserId.current) {
+      if (editActions.has(action.type)) return // 静默忽略
+    }
     rawDispatch(action)
     const roomId = localStorage.getItem('room-id')
-    const isRemote = !!(action as any)._remote
     // CLEAR_ALL/LOAD_ALL 不广播（会清空队友画面）
     if (!roomId || isRemote || !channelRef.current) return
     if (action.type === 'CLEAR_ALL' || action.type === 'LOAD_ALL' || action.type === 'APPLY_SNAPSHOT') return
@@ -506,7 +534,7 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <TacticsContext.Provider value={{ ...state, dispatch, history: hist, broadcastCursor, setCursorLayer, myUserId: myUserId.current }}>
+    <TacticsContext.Provider value={{ ...state, dispatch, history: hist, broadcastCursor, setCursorLayer, myUserId: myUserId.current, isRoomEditor, roomEditorId }}>
       {children}
     </TacticsContext.Provider>
   )

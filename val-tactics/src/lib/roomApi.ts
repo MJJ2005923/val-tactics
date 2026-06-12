@@ -3,6 +3,46 @@
  */
 import { supabase } from './supabase'
 
+const MAX_ROOMS_PER_USER = 3
+
+/** 检查用户是否能创建房间（付费套餐 + 数量限制） */
+export async function canCreateRoom(userId: string): Promise<{ allowed: boolean; reason?: string }> {
+  // 1. 检查本地套餐
+  const tier = localStorage.getItem('val-tactics-tier') || 'free'
+  const ownkey = localStorage.getItem('val-tactics-ownkey') === '1'
+
+  if (tier === 'free' && !ownkey) {
+    return { allowed: false, reason: '请先升级到标准套餐（¥30/月）' }
+  }
+  if (ownkey) {
+    return { allowed: false, reason: '自备Key套餐不含协作功能，请升级标准套餐' }
+  }
+
+  // 2. 检查套餐未过期
+  const expiry = localStorage.getItem('val-tactics-tier-at')
+  if (expiry && Number(expiry) < Date.now()) {
+    return { allowed: false, reason: '套餐已过期，请续费' }
+  }
+
+  // 3. 检查活跃房间数量 ≤ 3
+  const { count, error } = await supabase
+    .from('rooms')
+    .select('*', { count: 'exact', head: true })
+    .eq('host_id', userId)
+    .eq('status', 'open')
+
+  if (error) {
+    console.error('canCreateRoom count error:', error.message)
+    return { allowed: false, reason: '网络错误，请重试' }
+  }
+
+  if ((count || 0) >= MAX_ROOMS_PER_USER) {
+    return { allowed: false, reason: `最多创建 ${MAX_ROOMS_PER_USER} 个活跃房间，请先关闭旧房间` }
+  }
+
+  return { allowed: true }
+}
+
 export interface Room {
   id: string
   host_id: string
