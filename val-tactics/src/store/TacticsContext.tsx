@@ -520,19 +520,23 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
         const resp = await fetch(`/api/room/snapshot?roomId=${activeRoomId}`)
         const data = await resp.json()
         if (data.snapshot) {
+          const snap = typeof data.snapshot === 'string' ? JSON.parse(data.snapshot) : data.snapshot
+          // 空快照不应用（等待编辑者首次保存）
+          const hasData = (snap.markers?.length || 0) + (snap.drawings?.length || 0) + (snap.texts?.length || 0) + (snap.agents?.length || 0) + (snap.shapes?.length || 0) > 0
+          if (!hasData) return
           const raw = typeof data.snapshot === 'string' ? data.snapshot : JSON.stringify(data.snapshot)
           if (raw !== lastSnapshotRef.current) {
             lastSnapshotRef.current = raw
-            const snap = typeof data.snapshot === 'string' ? JSON.parse(data.snapshot) : data.snapshot
             console.log('[Snapshot] poll apply — shapes:', snap.shapes?.length, 'agents:', snap.agents?.length)
             rawDispatch({ type: 'APPLY_SNAPSHOT', markers: snap.markers || [], drawings: snap.drawings || [], texts: snap.texts || [], agents: snap.agents || [], shapes: snap.shapes || [], roster: snap.roster || { attack: [], defense: [] }, _remote: true } as any)
           }
         }
       } catch (e) { console.log('[Snapshot] poll error:', e) }
     }
-    poll()
+    // 首次延迟 3s，给 Realtime 快照先行
+    const t0 = setTimeout(poll, 3000)
     const t = setInterval(poll, 2000)
-    return () => { clearInterval(t); lastSnapshotRef.current = '' }
+    return () => { clearTimeout(t0); clearInterval(t); lastSnapshotRef.current = '' }
   }, [activeRoomId, isRoomEditor])
 
   // ====== dispatch 包装 ======
