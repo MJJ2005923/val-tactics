@@ -352,6 +352,190 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ allowed: true, level: 'pass', reason: '审核通过', flags: [] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
+  // ====================================================================
+  // 房间协作 API（service_key 绕过 RLS）
+  // ====================================================================
+  const SB_URL = 'https://zwtpeyvqbllrpregjpyd.supabase.co'
+  const SB_KEY = env.SUPABASE_SERVICE_KEY || ''
+  const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+  const MAX_ROOMS = 3
+  const MAX_MEMBERS = 8
+  const ROOM_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+  function genCode() {
+    let c = ''
+    for (let i = 0; i < 6; i++) c += ROOM_CHARS[Math.floor(Math.random() * ROOM_CHARS.length)]
+    return c
+  }
+
+  // 检查用户套餐（从 KV，不可篡改）
+  async function checkTier(userId) {
+    if (!env.AI_USAGE) {
+      // 本地开发无 KV：查 Supabase
+      try {
+        const r = await fetch(`${SB_URL}/rest/v1/user_tiers?user_id=eq.${userId}&select=tier`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+        if (r.ok) {
+          const data = await r.json()
+          if (data[0]) return { tier: data[0].tier }
+        }
+      } catch {}
+      return { tier: 'free' }
+    }
+    try {
+      const t = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
+      if (t) return t
+    } catch {}
+    return { tier: 'free' }
+  }
+
+  // === POST /api/room/create ===
+  if (url.pathname === '/api/room/create' && request.method === 'POST') {
+    try {
+      const { userId, mapId, side } = await request.json()
+      if (!userId) return new Response(JSON.stringify({ error: '缺少userId' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      // 1. 套餐检查
+      const tierData = await checkTier(userId)
+      if (tierData.tier === 'free' || tierData.tier === 'ownkey') {
+        return new Response(JSON.stringify({ room: null, error: '请先升级到标准套餐（¥30/月）' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+
+      // 2. 房间数量检查
+      const countResp = await fetch(`${SB_URL}/rest/v1/rooms?host_id=eq.${userId}&status=eq.open&select=id`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+      if (countResp.ok) {
+        const rooms = await countResp.json()
+        if (rooms.length >= MAX_ROOMS) {
+          return new Response(JSON.stringify({ room: null, error: `最多创建${MAX_ROOMS}个活跃房间` }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+        }
+      }
+
+      // 3. 生成唯一房间码
+      let code = ''
+      for (let i = 0; i < 20; i++) {
+        code = genCode()
+        const check = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&select=id`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+        const existing = await check.json()
+        if (!existing.length) break
+        if (i === 19) return new Response(JSON.stringify({ room: null, error: '生成房间码失败，请重试' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+
+      // 4. 创建房间 + 成员
+      const r = await fetch(`${SB_URL}/rest/v1/rooms`, {
+        method: 'POST', headers: SB_HEADERS,
+        body: JSON.stringify({ id: code, host_id: userId, editor_id: userId, map_id: mapId || 'ascent', side: side || 'attack' }),
+      })
+      if (!r.ok) {
+        const err = await r.text()
+        return new Response(JSON.stringify({ room: null, error: `创建失败：${err}` }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+
+      await fetch(`${SB_URL}/rest/v1/room_members`, {
+        method: 'POST', headers: SB_HEADERS,
+        body: JSON.stringify({ room_id: code, user_id: userId, role: 'host' }),
+      })
+
+      const room = (await r.json())[0]
+      return new Response(JSON.stringify({ room: { id: room.id, host_id: room.host_id, editor_id: room.editor_id, map_id: room.map_id, side: room.side, status: room.status } }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ room: null, error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
+  // === POST /api/room/join ===
+  if (url.pathname === '/api/room/join' && request.method === 'POST') {
+    try {
+      const { roomId, userId } = await request.json()
+      if (!roomId || !userId) return new Response(JSON.stringify({ error: '缺少参数' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      const code = roomId.toUpperCase().trim()
+
+      // 查房间
+      const roomResp = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&status=eq.open&select=*`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+      const rooms = await roomResp.json()
+      if (!rooms.length) return new Response(JSON.stringify({ error: '房间不存在或已关闭' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      // 查人数
+      const cntResp = await fetch(`${SB_URL}/rest/v1/room_members?room_id=eq.${code}&select=user_id`, { headers: { ...SB_HEADERS, 'Accept': 'application/json', 'Prefer': 'count=exact' } })
+      const cntHeader = cntResp.headers.get('content-range')
+      const count = cntHeader ? parseInt(cntHeader.split('/')[1]) : 99
+      if (count >= MAX_MEMBERS) return new Response(JSON.stringify({ error: '房间已满（最多8人）' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      // 加入
+      const joinResp = await fetch(`${SB_URL}/rest/v1/room_members`, {
+        method: 'POST', headers: SB_HEADERS,
+        body: JSON.stringify({ room_id: code, user_id: userId, role: 'member' }),
+      })
+      if (!joinResp.ok && joinResp.status !== 409) {
+        const err = await joinResp.text()
+        return new Response(JSON.stringify({ error: `加入失败：${err}` }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+
+      return new Response(JSON.stringify({ room: rooms[0] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
+  // === POST /api/room/leave ===
+  if (url.pathname === '/api/room/leave' && request.method === 'POST') {
+    try {
+      const { roomId, userId } = await request.json()
+      if (!roomId || !userId) return new Response(JSON.stringify({ error: '缺少参数' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      const code = roomId.toUpperCase().trim()
+
+      // 查当前房间
+      const rResp = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&select=*`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+      const rData = await rResp.json()
+      const room = rData[0]
+      if (!room) return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      // 删除成员
+      await fetch(`${SB_URL}/rest/v1/room_members?room_id=eq.${code}&user_id=eq.${userId}`, { method: 'DELETE', headers: SB_HEADERS })
+
+      // 如果离开的是房主，转让或关闭
+      if (room.host_id === userId) {
+        const memResp = await fetch(`${SB_URL}/rest/v1/room_members?room_id=eq.${code}&select=user_id&order=joined_at.asc&limit=1`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+        const members = await memResp.json()
+        if (members.length > 0) {
+          await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}`, { method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify({ host_id: members[0].user_id, editor_id: members[0].user_id }) })
+        } else {
+          await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}`, { method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify({ status: 'closed' }) })
+        }
+      } else if (room.editor_id === userId) {
+        // 离开的是编辑者，归还房主
+        await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}`, { method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify({ editor_id: room.host_id }) })
+      }
+
+      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
+  // === POST /api/room/check-permission ===
+  if (url.pathname === '/api/room/check-permission' && request.method === 'POST') {
+    try {
+      const { userId } = await request.json()
+      if (!userId) return new Response(JSON.stringify({ allowed: false, reason: '请先登录' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      const tierData = await checkTier(userId)
+      if (tierData.tier === 'free') return new Response(JSON.stringify({ allowed: false, reason: '请先升级到标准套餐（¥30/月）' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      if (tierData.tier === 'ownkey') return new Response(JSON.stringify({ allowed: false, reason: '自备Key套餐不含协作功能' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      // 检查房间数
+      const countResp = await fetch(`${SB_URL}/rest/v1/rooms?host_id=eq.${userId}&status=eq.open&select=id`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+      if (countResp.ok) {
+        const rooms = await countResp.json()
+        if (rooms.length >= MAX_ROOMS) return new Response(JSON.stringify({ allowed: false, reason: `最多创建${MAX_ROOMS}个活跃房间` }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+
+      return new Response(JSON.stringify({ allowed: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   let { apiKey, provider, model, messages, userId } = await request.json()
 
   const p = PROVIDERS[provider]
