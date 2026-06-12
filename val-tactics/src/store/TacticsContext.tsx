@@ -1,15 +1,5 @@
-import { createContext, useContext, useReducer, useRef, useEffect, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useReducer, type ReactNode } from 'react'
 import type { Marker, DrawPath, TextAnnotation, AgentPosition, AbilityShape, RecordedTrack, ToolMode } from '../types'
-import { supabase } from '../lib/supabase'
-import { useAuth } from './AuthContext'
-
-export interface RemoteCursor {
-  userId: string
-  x: number
-  y: number
-  color: string
-  lastSeen: number
-}
 
 // ====== 完整状态 ======
 export interface TacticsState {
@@ -104,7 +94,6 @@ type Action =
   | { type: 'SELECT'; id: string | null; selType: TacticsState['selectedType'] }
   | { type: 'CLEAR_ALL' }
   | { type: 'LOAD_ALL'; markers: Marker[]; drawings: DrawPath[]; texts: TextAnnotation[]; agents: AgentPosition[]; shapes: AbilityShape[]; name: string; desc: string; roster: { attack: string[]; defense: string[] }; tracks: RecordedTrack[] }
-  | { type: 'APPLY_SNAPSHOT'; markers: Marker[]; drawings: DrawPath[]; texts: TextAnnotation[]; agents: AgentPosition[]; shapes: AbilityShape[]; roster: { attack: string[]; defense: string[] } }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'PLAY_START' }
@@ -169,7 +158,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     'ADD_TEXT', 'UPDATE_TEXT', 'REMOVE_TEXT',
     'ADD_AGENT_POS', 'UPDATE_AGENT_POS', 'REMOVE_AGENT_POS',
     'ADD_ABILITY_SHAPE', 'UPDATE_ABILITY_SHAPE', 'REMOVE_ABILITY_SHAPE',
-    'CLEAR_ALL', 'LOAD_ALL', 'APPLY_SNAPSHOT', 'REPLAY_START', 'REPLAY_STOP', 'CREATE_TRACK', 'DELETE_TRACK'
+    'CLEAR_ALL', 'LOAD_ALL', 'REPLAY_START', 'REPLAY_STOP', 'CREATE_TRACK', 'DELETE_TRACK'
   ])
 
   let newHistory = { ...history }
@@ -271,9 +260,6 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       return { state: { ...initialState, toolMode: state.toolMode, drawColor: state.drawColor, drawWidth: state.drawWidth, side: state.side }, history: newHistory }
     case 'LOAD_ALL':
       return { state: { ...state, markers: action.markers, drawings: action.drawings, textAnnotations: action.texts, agentPositions: action.agents, abilityShapes: action.shapes, strategyName: action.name, strategyDescription: action.desc, selectedId: null, selectedType: null, roster: action.roster, tracks: action.tracks }, history: newHistory }
-    case 'APPLY_SNAPSHOT':
-      // 远程快照同步 — 替换整个画布状态（保留工具设置）
-      return { state: { ...state, markers: action.markers, drawings: action.drawings, textAnnotations: action.texts, agentPositions: action.agents, abilityShapes: action.shapes, roster: action.roster, selectedId: null, selectedType: null }, history: newHistory }
 
     // Undo / Redo
     case 'UNDO': {
@@ -355,254 +341,18 @@ function reducer(state: TacticsState, action: Action, history: History): { state
 interface TacticsCtx extends TacticsState {
   dispatch: React.Dispatch<Action>
   history: History
-  broadcastCursor: (x: number, y: number, userId: string) => void
-  setCursorLayer: (el: HTMLDivElement | null) => void
-  myUserId: string
-  isRoomEditor: boolean
-  roomEditorId: string | null
 }
 
 const TacticsContext = createContext<TacticsCtx | null>(null)
 
 export function TacticsProvider({ children }: { children: ReactNode }) {
-  const [{ state, history: hist }, rawDispatch] = useReducer(
+  const [{ state, history: hist }, dispatch] = useReducer(
     (prev: { state: TacticsState; history: History }, action: Action) => reducer(prev.state, action, prev.history),
     { state: initialState, history: { past: [], future: [] } }
   )
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
-  const cursorElsRef = useRef<Map<string, HTMLDivElement>>(new Map())
-  const cursorLayerRef = useRef<HTMLDivElement | null>(null)
-  const { user } = useAuth()
-  const fallbackIdRef = useRef('u' + Math.random().toString(36).slice(2, 8))
-  const myUserId = useRef(user?.id || fallbackIdRef.current)
-  // 始终同步真实 UUID（用于编辑权匹配）
-  if (user?.id && myUserId.current !== user.id) myUserId.current = user.id
-  const stateRef = useRef(state)
-  stateRef.current = state // 保持 ref 始终指向最新 state
-
-  // 注册光标层 DOM 引用
-  const setCursorLayer = useCallback((el: HTMLDivElement | null) => {
-    cursorLayerRef.current = el
-  }, [])
-
-  // 广播光标位置
-  const broadcastCursor = useCallback((x: number, y: number, userId: string) => {
-    channelRef.current?.send({
-      type: 'broadcast', event: 'cursor',
-      payload: { x, y, userId, color: '#E349ED' },
-    })
-  }, [])
-
-  // Realtime 订阅（用 state 追踪 roomId + editorId，确保变化时重连）
-  const [activeRoomId, setActiveRoomId] = useState<string | null>(localStorage.getItem('room-id'))
-  const [roomEditorId, setRoomEditorId] = useState<string | null>(localStorage.getItem('room-editor-id'))
-  const isRoomEditor = !roomEditorId || roomEditorId === user?.id
-  useEffect(() => {
-    const check = () => {
-      const id = localStorage.getItem('room-id')
-      setActiveRoomId(prev => prev !== id ? id : prev)
-      const eid = localStorage.getItem('room-editor-id')
-      setRoomEditorId(prev => prev !== eid ? eid : prev)
-    }
-    check()
-    window.addEventListener('storage', check)
-    const t = setInterval(check, 2000)
-    return () => { window.removeEventListener('storage', check); clearInterval(t) }
-  }, [])
-
-  const wantsSnapshotRef = useRef(false)
-
-  useEffect(() => {
-    const roomId = activeRoomId
-    if (!roomId) {
-      channelRef.current?.unsubscribe()
-      channelRef.current = null
-      wantsSnapshotRef.current = false
-      return
-    }
-    // 加入房间时总是请求快照（覆盖本地残留状态）
-    wantsSnapshotRef.current = true
-    const ch = supabase.channel(`room:${roomId}`)
-    ch.on('broadcast', { event: 'action' }, (payload: any) => {
-      const action = payload.payload as Action
-      if (!action.type) return
-      (action as any)._remote = true
-      console.log('[Realtime] RX action:', action.type, 'id:', (action as any).id?.slice(0,8))
-      rawDispatch(action)
-    }).on('broadcast', { event: 'cursor' }, (payload: any) => {
-      const { x, y, userId, color } = payload.payload
-      const layer = cursorLayerRef.current
-      if (!layer) return
-      let el = cursorElsRef.current.get(userId)
-      if (!el) {
-        el = document.createElement('div')
-        el.style.cssText = 'position:fixed;width:12px;height:12px;border-radius:50%;background:' + (color || '#05F8F8') + ';border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 6px ' + (color || '#05F8F8') + ';transition:left .08s ease,top .08s ease;pointer-events:none;z-index:9999'
-        const label = document.createElement('div')
-        label.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:9px;color:' + (color || '#05F8F8') + ';white-space:nowrap;background:rgba(0,0,0,.7);padding:1px 5px;border-radius:4px'
-        label.textContent = userId.slice(0, 6)
-        el.appendChild(label)
-        layer.appendChild(el)
-        cursorElsRef.current.set(userId, el)
-      }
-      el.style.left = x + 'px'
-      el.style.top = y + 'px'
-    }).on('broadcast', { event: 'request_snapshot' }, () => {
-      console.log('[Realtime] RX request_snapshot')
-      const cur = stateRef.current
-      const hasState = cur.markers.length > 0 || cur.drawings.length > 0 || cur.textAnnotations.length > 0 || cur.agentPositions.length > 0 || cur.abilityShapes.length > 0
-      console.log('[Realtime] hasState:', hasState, 'shapes:', cur.abilityShapes.length, 'agents:', cur.agentPositions.length)
-      if (hasState) {
-        const snapPayload = {
-          markers: cur.markers, drawings: cur.drawings, texts: cur.textAnnotations,
-          agents: cur.agentPositions, shapes: cur.abilityShapes, roster: cur.roster,
-        }
-        console.log('[Realtime] TX snapshot, size:', JSON.stringify(snapPayload).length)
-        ch.send({ type: 'broadcast', event: 'snapshot', payload: snapPayload })
-      }
-    }).on('broadcast', { event: 'snapshot' }, (payload: any) => {
-      console.log('[Realtime] RX snapshot, wantsSnapshot:', wantsSnapshotRef.current)
-      if (!wantsSnapshotRef.current) return
-      const snap = payload.payload
-      console.log('[Realtime] APPLY_SNAPSHOT shapes:', snap.shapes?.length, 'agents:', snap.agents?.length)
-      rawDispatch({ type: 'APPLY_SNAPSHOT', markers: snap.markers || [], drawings: snap.drawings || [], texts: snap.texts || [], agents: snap.agents || [], shapes: snap.shapes || [], roster: snap.roster || { attack: [], defense: [] }, _remote: true } as any)
-      wantsSnapshotRef.current = false
-    }).on('broadcast', { event: 'editor_change' }, (payload: any) => {
-      const newEditorId = payload.payload?.editorId
-      if (newEditorId) {
-        localStorage.setItem('room-editor-id', newEditorId)
-        setRoomEditorId(newEditorId)
-      }
-    }).on('broadcast', { event: 'room_close' }, () => {
-      localStorage.removeItem('room-id')
-      localStorage.removeItem('room-editor-id')
-      setActiveRoomId(null)
-      setRoomEditorId(null)
-    }).subscribe((status) => {
-      console.log('[Realtime] channel status:', status, 'room:', roomId)
-      if (status === 'SUBSCRIBED') {
-        console.log('[Realtime] 已连接房间', roomId)
-      }
-    })
-    channelRef.current = ch
-    // 加入房间后总是请求快照（覆盖本地残留状态）
-    setTimeout(() => {
-      console.log('[Realtime] TX request_snapshot, wantsSnapshot:', wantsSnapshotRef.current)
-      ch.send({ type: 'broadcast', event: 'request_snapshot', payload: {} })
-    }, 600)
-    // 定期清理过期光标
-    const t = setInterval(() => {
-      for (const [uid, el] of cursorElsRef.current) {
-        if (!document.body.contains(el)) { cursorElsRef.current.delete(uid); el.remove() }
-      }
-    }, 5000)
-    return () => { ch.unsubscribe(); clearInterval(t) }
-  }, [activeRoomId])
-
-  // ====== 画布快照保存/轮询（绕过 Realtime 广播不可靠问题） ======
-  const snapshotSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const saveSnapshot = useCallback(async () => {
-    const roomId = localStorage.getItem('room-id')
-    if (!roomId || !user?.id) return
-    const s = stateRef.current
-    const snapshot = { markers: s.markers, drawings: s.drawings, texts: s.textAnnotations, agents: s.agentPositions, shapes: s.abilityShapes, roster: s.roster }
-    try {
-      await fetch('/api/room/snapshot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ roomId, userId: user.id, snapshot }) })
-    } catch {}
-  }, [user?.id])
-
-  // 观察者模式：每 2 秒轮询编辑者的画布快照
-  const lastSnapshotRef = useRef('')
-  useEffect(() => {
-    if (!activeRoomId || isRoomEditor) return
-    const poll = async () => {
-      try {
-        const resp = await fetch(`/api/room/snapshot?roomId=${activeRoomId}`)
-        const data = await resp.json()
-        if (data.snapshot) {
-          const snap = typeof data.snapshot === 'string' ? JSON.parse(data.snapshot) : data.snapshot
-          // 空快照不应用（等待编辑者首次保存）
-          const hasData = (snap.markers?.length || 0) + (snap.drawings?.length || 0) + (snap.texts?.length || 0) + (snap.agents?.length || 0) + (snap.shapes?.length || 0) > 0
-          if (!hasData) return
-          const raw = typeof data.snapshot === 'string' ? data.snapshot : JSON.stringify(data.snapshot)
-          if (raw !== lastSnapshotRef.current) {
-            lastSnapshotRef.current = raw
-            console.log('[Snapshot] poll apply — shapes:', snap.shapes?.length, 'agents:', snap.agents?.length)
-            rawDispatch({ type: 'APPLY_SNAPSHOT', markers: snap.markers || [], drawings: snap.drawings || [], texts: snap.texts || [], agents: snap.agents || [], shapes: snap.shapes || [], roster: snap.roster || { attack: [], defense: [] }, _remote: true } as any)
-          }
-        }
-      } catch (e) { console.log('[Snapshot] poll error:', e) }
-    }
-    // 首次延迟 3s，给 Realtime 快照先行
-    const t0 = setTimeout(poll, 3000)
-    const t = setInterval(poll, 2000)
-    return () => { clearTimeout(t0); clearInterval(t); lastSnapshotRef.current = '' }
-  }, [activeRoomId, isRoomEditor])
-
-  // ====== dispatch 包装 ======
-  const pendingAction = useRef<any>(null)
-  const sendTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // 非编辑者的修改操作列表
-  const editActions = new Set([
-    'ADD_MARKER','UPDATE_MARKER','REMOVE_MARKER',
-    'ADD_DRAWING','UPDATE_DRAWING','REMOVE_DRAWING',
-    'ADD_TEXT','UPDATE_TEXT','REMOVE_TEXT',
-    'ADD_AGENT_POS','UPDATE_AGENT_POS','REMOVE_AGENT_POS',
-    'ADD_ABILITY_SHAPE','UPDATE_ABILITY_SHAPE','REMOVE_ABILITY_SHAPE',
-    'CLEAR_ALL','LOAD_ALL','UNDO','REDO',
-    'ADD_TO_ROSTER','REMOVE_FROM_ROSTER',
-  ])
-
-  // 包装 dispatch：UPDATE类操作debounce广播，非编辑者封锁修改
-  const dispatch = (action: Action) => {
-    // 非编辑者封锁修改操作（远程操作除外）
-    const isRemote = !!(action as any)._remote
-    if (!isRemote && roomEditorId && roomEditorId !== user?.id) {
-      if (editActions.has(action.type)) return // 静默忽略
-    }
-    rawDispatch(action)
-    const roomId = localStorage.getItem('room-id')
-    // CLEAR_ALL/LOAD_ALL 不广播（会清空队友画面）
-    if (!roomId || isRemote || !channelRef.current) return
-    if (action.type === 'CLEAR_ALL' || action.type === 'LOAD_ALL' || action.type === 'APPLY_SNAPSHOT') return
-
-    // ADD/DELETE 立即发送，UPDATE debounce 100ms
-    if (action.type.startsWith('UPDATE_')) {
-      pendingAction.current = action
-      if (sendTimer.current) return
-      sendTimer.current = setTimeout(() => {
-        sendTimer.current = null
-        if (pendingAction.current) {
-          const a = pendingAction.current
-          console.log('[Realtime] TX', a.type, 'id:', a.id?.slice(0,8), a.updates ? JSON.stringify(a.updates).slice(0,60) : '')
-          channelRef.current!.send({
-            type: 'broadcast', event: 'action',
-            payload: JSON.parse(JSON.stringify(a)),
-          })
-          pendingAction.current = null
-        }
-      }, 100)
-    } else {
-      console.log('[Realtime] TX', action.type, 'id:', (action as any).id?.slice(0,8))
-      channelRef.current.send({
-        type: 'broadcast', event: 'action',
-        payload: JSON.parse(JSON.stringify(action)),
-      })
-    }
-
-    // 编辑者：每次修改后延迟 1s 保存画布快照到 Worker（观察者轮询用）
-    if (!isRemote && roomEditorId && roomEditorId === user?.id && editActions.has(action.type)) {
-      if (snapshotSaveTimer.current) clearTimeout(snapshotSaveTimer.current)
-      snapshotSaveTimer.current = setTimeout(() => {
-        console.log('[Snapshot] save triggered, shapes:', stateRef.current.abilityShapes.length, 'agents:', stateRef.current.agentPositions.length)
-        saveSnapshot()
-      }, 1000)
-    }
-  }
 
   return (
-    <TacticsContext.Provider value={{ ...state, dispatch, history: hist, broadcastCursor, setCursorLayer, myUserId: myUserId.current, isRoomEditor, roomEditorId }}>
+    <TacticsContext.Provider value={{ ...state, dispatch, history: hist }}>
       {children}
     </TacticsContext.Provider>
   )

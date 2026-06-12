@@ -1,5 +1,4 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useTactics } from '../../store/TacticsContext'
 import { useToast } from '../Toast/Toast'
 import agents, { getAbilityShapeConfig, agentImages } from '../../data/agents'
@@ -178,8 +177,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [pinch, setPinch] = useState<{ dist: number; scale: number } | null>(null)
   const [longPressMenu, setLongPressMenu] = useState<{ x: number; y: number } | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges, broadcastCursor, myUserId, setCursorLayer, isRoomEditor, roomEditorId } = useTactics()
+  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
   const toast = useToast()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
@@ -263,13 +261,6 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     el.addEventListener('touch-agent-drop', handler)
     return () => el.removeEventListener('touch-agent-drop', handler)
   }, [offsetX, offsetY, displayScale, mapW, mapH, dispatch])
-
-  // 全局鼠标位置广播（window级别，不受画布限制）
-  useEffect(() => {
-    const handler = (e: MouseEvent) => broadcastCursor(e.clientX, e.clientY, myUserId)
-    window.addEventListener('mousemove', handler)
-    return () => window.removeEventListener('mousemove', handler)
-  }, [broadcastCursor, myUserId])
 
   // 暴露给外部用于坐标转换
   useEffect(() => {
@@ -1156,12 +1147,6 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setLongPressMenu(null)} />
       )}
 
-      {/* 远程光标层 — Portal到body，避免transform偏移 */}
-      {createPortal(
-        <div ref={setCursorLayer} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999 }} />,
-        document.body
-      )}
-
             {/* 画线模式预览 */}
       {lineDrawing && (() => {
         const sx = offsetX + lineDrawing.startX * mapW * displayScale
@@ -1412,26 +1397,14 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         <button className={styles.zoomBtn} onClick={() => setMapRotation(r => (r + 90) % 360)} data-tooltip="旋转地图">↻</button>
       </div>
 
-      {/* 观察者模式横幅 */}
-      {roomEditorId && !isRoomEditor && (
-        <div style={{
-          position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 100,
-          background: 'rgba(255,70,85,.85)', color: '#fff', padding: '4px 16px', borderRadius: 20,
-          fontSize: 12, fontWeight: 600, letterSpacing: '.5px',
-          backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,.15)',
-        }}>
-          🔒 观察模式 — 仅编辑者可操作
-        </div>
-      )}
-
       {/* 底部状态栏 */}
       <div className={styles.statusBar}>
         <div className={styles.statusEq}>
           <span /><span /><span /><span />
         </div>
-        <span>就绪 · {_mapName} · {side === 'attack' ? '进攻方' : '防守方'}{roomEditorId && !isRoomEditor ? ' · 观察中' : ''}</span>
-        <div className={styles.statusDot} style={{ background: roomEditorId && !isRoomEditor ? '#f0c850' : undefined }} />
-        <span>{roomEditorId && !isRoomEditor ? '观察者' : '在线'}</span>
+        <span>就绪 · {_mapName} · {side === 'attack' ? '进攻方' : '防守方'}</span>
+        <div className={styles.statusDot} />
+        <span>在线</span>
       </div>
 
       {/* 地图切换过渡遮罩 */}
