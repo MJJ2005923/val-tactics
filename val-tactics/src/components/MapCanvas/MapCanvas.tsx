@@ -177,7 +177,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [pinch, setPinch] = useState<{ dist: number; scale: number } | null>(null)
   const [longPressMenu, setLongPressMenu] = useState<{ x: number; y: number } | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
+  const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges, remoteCursors, broadcastCursor, myUserId } = useTactics()
   const toast = useToast()
   const [isOver, setIsOver] = useState(false)
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number; y: number } | null>(null)
@@ -1003,6 +1003,12 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         setRectDrawing(p => p ? { ...p, drawing: true, startX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), startY: (e.clientY - rr.top - offsetY) / (displayScale * mapH), currentX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), currentY: (e.clientY - rr.top - offsetY) / (displayScale * mapH) } : null)
       }}
       onMouseMove={(e) => {
+        // 广播光标位置
+        const t3c = transformRef.current?.container
+        if (t3c) {
+          const rrC = t3c.getBoundingClientRect()
+          broadcastCursor((e.clientX - rrC.left) / rrC.width, (e.clientY - rrC.top) / rrC.height, myUserId)
+        }
         if (panning) {
           const dx = e.clientX - panning.sx, dy = e.clientY - panning.sy
           const nx = panning.ox + dx, ny = panning.oy + dy
@@ -1146,6 +1152,26 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       {longPressMenu && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setLongPressMenu(null)} />
       )}
+
+      {/* 远程光标 */}
+      {remoteCursors.filter(c => c.userId !== myUserId).map(c => (
+        <div key={c.userId} style={{
+          position: 'absolute',
+          left: `${c.x * 100}%`, top: `${c.y * 100}%`,
+          width: 12, height: 12, borderRadius: '50%',
+          background: c.color, border: '2px solid #fff',
+          transform: 'translate(-50%, -50%)', zIndex: 100,
+          pointerEvents: 'none', boxShadow: `0 0 6px ${c.color}`,
+        }}>
+          <div style={{
+            position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)',
+            fontSize: 9, color: c.color, whiteSpace: 'nowrap',
+            background: 'rgba(0,0,0,.7)', padding: '1px 5px', borderRadius: 4,
+          }}>
+            {c.userId.slice(0, 6)}
+          </div>
+        </div>
+      ))}
 
             {/* 画线模式预览 */}
       {lineDrawing && (() => {

@@ -1,6 +1,14 @@
-import { createContext, useContext, useReducer, useRef, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useReducer, useRef, useEffect, useState, useCallback, type ReactNode } from 'react'
 import type { Marker, DrawPath, TextAnnotation, AgentPosition, AbilityShape, RecordedTrack, ToolMode } from '../types'
 import { supabase } from '../lib/supabase'
+
+export interface RemoteCursor {
+  userId: string
+  x: number
+  y: number
+  color: string
+  lastSeen: number
+}
 
 // ====== 完整状态 ======
 export interface TacticsState {
@@ -342,6 +350,9 @@ function reducer(state: TacticsState, action: Action, history: History): { state
 interface TacticsCtx extends TacticsState {
   dispatch: React.Dispatch<Action>
   history: History
+  remoteCursors: RemoteCursor[]
+  broadcastCursor: (x: number, y: number, userId: string) => void
+  myUserId: string
 }
 
 const TacticsContext = createContext<TacticsCtx | null>(null)
@@ -352,6 +363,16 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     { state: initialState, history: { past: [], future: [] } }
   )
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([])
+  const myUserId = useRef('u' + Math.random().toString(36).slice(2, 8))
+
+  // 广播光标位置
+  const broadcastCursor = useCallback((x: number, y: number, userId: string) => {
+    channelRef.current?.send({
+      type: 'broadcast', event: 'cursor',
+      payload: { x, y, userId, color: '#E349ED' },
+    })
+  }, [])
 
   // Realtime 订阅（从 localStorage 读 roomId）
   useEffect(() => {
@@ -366,9 +387,20 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       const action: any = { ...payload.payload, _remote: true }
       if (!action.type) return
       rawDispatch(action)
+    }).on('broadcast', { event: 'cursor' }, (payload: any) => {
+      const { x, y, userId, color } = payload.payload
+      setRemoteCursors(prev => {
+        const next = prev.filter(c => c.userId !== userId)
+        next.push({ userId, x, y, color: color || '#05F8F8', lastSeen: Date.now() })
+        return next.slice(-8) // 最多8个光标
+      })
     }).subscribe()
     channelRef.current = ch
-    return () => { ch.unsubscribe() }
+    // 定期清理过期光标
+    const t = setInterval(() => {
+      setRemoteCursors(prev => prev.filter(c => Date.now() - c.lastSeen < 10000))
+    }, 3000)
+    return () => { ch.unsubscribe(); clearInterval(t) }
   }, [])
 
   // 包装 dispatch：本地操作自动广播
@@ -383,7 +415,7 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <TacticsContext.Provider value={{ ...state, dispatch, history: hist }}>
+    <TacticsContext.Provider value={{ ...state, dispatch, history: hist, remoteCursors, broadcastCursor, myUserId: myUserId.current }}>
       {children}
     </TacticsContext.Provider>
   )
