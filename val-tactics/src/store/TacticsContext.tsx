@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer, useRef, useEffect, useState, useCallback, type ReactNode } from 'react'
 import type { Marker, DrawPath, TextAnnotation, AgentPosition, AbilityShape, RecordedTrack, ToolMode } from '../types'
 import { supabase } from '../lib/supabase'
+import { useAuth } from './AuthContext'
 
 export interface RemoteCursor {
   userId: string
@@ -371,7 +372,11 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const cursorElsRef = useRef<Map<string, HTMLDivElement>>(new Map())
   const cursorLayerRef = useRef<HTMLDivElement | null>(null)
-  const myUserId = useRef('u' + Math.random().toString(36).slice(2, 8))
+  const { user } = useAuth()
+  const fallbackIdRef = useRef('u' + Math.random().toString(36).slice(2, 8))
+  const myUserId = useRef(user?.id || fallbackIdRef.current)
+  // 始终同步真实 UUID（用于编辑权匹配）
+  if (user?.id && myUserId.current !== user.id) myUserId.current = user.id
   const stateRef = useRef(state)
   stateRef.current = state // 保持 ref 始终指向最新 state
 
@@ -391,7 +396,7 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   // Realtime 订阅（用 state 追踪 roomId + editorId，确保变化时重连）
   const [activeRoomId, setActiveRoomId] = useState<string | null>(localStorage.getItem('room-id'))
   const [roomEditorId, setRoomEditorId] = useState<string | null>(localStorage.getItem('room-editor-id'))
-  const isRoomEditor = !roomEditorId || roomEditorId === myUserId.current
+  const isRoomEditor = !roomEditorId || roomEditorId === user?.id
   useEffect(() => {
     const check = () => {
       const id = localStorage.getItem('room-id')
@@ -502,7 +507,7 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   const dispatch = (action: Action) => {
     // 非编辑者封锁修改操作（远程操作除外）
     const isRemote = !!(action as any)._remote
-    if (!isRemote && roomEditorId && roomEditorId !== myUserId.current) {
+    if (!isRemote && roomEditorId && roomEditorId !== user?.id) {
       if (editActions.has(action.type)) return // 静默忽略
     }
     rawDispatch(action)

@@ -53,7 +53,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
       getRoom(existingId).then(r => {
         if (r && r.status === 'open') {
           setRoom(r); onJoined?.(r.id)
-          localStorage.setItem('room-editor-id', r.editor_id || '')
+          if (r.editor_id) localStorage.setItem('room-editor-id', r.editor_id)
         } else {
           localStorage.removeItem('room-id')
           localStorage.removeItem('room-editor-id')
@@ -99,7 +99,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     const r = await joinRoom(code.trim().toUpperCase(), user.id)
     if (r) {
       localStorage.setItem('room-id', r.id)
-      localStorage.setItem('room-editor-id', r.editor_id || '')
+      if (r.editor_id) localStorage.setItem('room-editor-id', r.editor_id)
       onJoined?.(r.id)
       setRoom(r)
     } else setError('房间不存在或已满')
@@ -131,7 +131,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
   const handleDissolve = async () => {
     if (!room) return
     if (!confirm('确定解散房间？所有人将被移除')) return
-    await supabase.from('rooms').update({ status: 'closed', closed_at: new Date().toISOString() }).eq('id', room.id)
+    await supabase.from('rooms').update({ status: 'closed' }).eq('id', room.id)
     localStorage.removeItem('room-id')
     localStorage.removeItem('room-editor-id')
     // 广播房间关闭
