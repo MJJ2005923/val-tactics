@@ -437,3 +437,17 @@ CREATE POLICY "rooms_delete" ON public.rooms FOR DELETE USING (auth.uid() = host
 CREATE POLICY "rm_read" ON public.room_members FOR SELECT USING (true);
 CREATE POLICY "rm_insert" ON public.room_members FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "rm_delete" ON public.room_members FOR DELETE USING (auth.uid() = user_id OR auth.uid() = (SELECT host_id FROM rooms WHERE id = room_id));
+
+-- 修正 rooms RLS（仅成员可读）
+DROP POLICY IF EXISTS "rooms_read" ON public.rooms;
+CREATE POLICY "rooms_read" ON public.rooms FOR SELECT
+  USING (EXISTS (SELECT 1 FROM room_members WHERE room_id = id AND user_id = auth.uid()));
+
+-- rooms 外键加级联删除
+ALTER TABLE public.rooms DROP CONSTRAINT IF EXISTS rooms_host_id_fkey;
+ALTER TABLE public.rooms ADD CONSTRAINT rooms_host_id_fkey FOREIGN KEY (host_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE public.rooms DROP CONSTRAINT IF EXISTS rooms_editor_id_fkey;
+ALTER TABLE public.rooms ADD CONSTRAINT rooms_editor_id_fkey FOREIGN KEY (editor_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+-- 房间解散改为标记 closed
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ;

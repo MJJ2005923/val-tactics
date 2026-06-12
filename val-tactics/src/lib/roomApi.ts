@@ -39,7 +39,10 @@ export async function createRoom(userId: string, mapId: string, side: string): P
       id: code, host_id: userId, editor_id: userId,
       map_id: mapId, side,
     }).select().single()
-    if (error) { console.error('createRoom error:', error.message, error.details); return null }
+    if (error) {
+      if (error.code === '23505') continue // 码冲突，重试
+      console.error('createRoom error:', error.message, error.details); return null
+    }
     if (!data) { console.error('createRoom: no data returned'); return null }
     await supabase.from('room_members').insert({ room_id: code, user_id: userId })
     return data as Room
@@ -58,7 +61,7 @@ export async function joinRoom(roomId: string, userId: string): Promise<Room | n
   const { count } = await supabase.from('room_members').select('*', { count: 'exact', head: true }).eq('room_id', room.id)
   if ((count || 0) >= 8) return null
   // 加入
-  await supabase.from('room_members').insert({ room_id: room.id, user_id: userId })
+  await supabase.from('room_members').upsert({ room_id: room.id, user_id: userId, joined_at: new Date().toISOString() }, { onConflict: 'room_id,user_id' })
   return room as Room
 }
 

@@ -329,7 +329,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
         {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
         {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
         {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
-      {showRoom && <RoomPanel mapId={selectedMap.id} side={side} onClose={() => setShowRoom(false)} onJoined={(id) => { sessionStorage.setItem('room-id', id); }} />}
+      {showRoom && <RoomPanel mapId={selectedMap.id} side={side} onClose={() => setShowRoom(false)} onJoined={(id) => { localStorage.setItem('room-id', id); }} />}
       </div>
     )
   }
@@ -475,7 +475,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
       {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
-      {showRoom && <RoomPanel mapId={selectedMap.id} side={side} onClose={() => setShowRoom(false)} onJoined={(id) => { sessionStorage.setItem('room-id', id); }} />}
+      {showRoom && <RoomPanel mapId={selectedMap.id} side={side} onClose={() => setShowRoom(false)} onJoined={(id) => { localStorage.setItem('room-id', id); }} />}
       {showCommunity && commView === 'gallery' && (
         <TacticsGallery
           onBack={() => setShowCommunity(false)}

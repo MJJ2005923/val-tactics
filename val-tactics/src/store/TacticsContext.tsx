@@ -442,7 +442,9 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     rawDispatch(action)
     const roomId = localStorage.getItem('room-id')
     const isRemote = !!(action as any)._remote
+    // CLEAR_ALL/LOAD_ALL 不广播（会清空队友画面）
     if (!roomId || isRemote || !channelRef.current) return
+    if (action.type === 'CLEAR_ALL' || action.type === 'LOAD_ALL') return
 
     // ADD/DELETE 立即发送，UPDATE debounce 100ms
     if (action.type.startsWith('UPDATE_')) {
