@@ -524,10 +524,11 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
           if (raw !== lastSnapshotRef.current) {
             lastSnapshotRef.current = raw
             const snap = typeof data.snapshot === 'string' ? JSON.parse(data.snapshot) : data.snapshot
+            console.log('[Snapshot] poll apply — shapes:', snap.shapes?.length, 'agents:', snap.agents?.length)
             rawDispatch({ type: 'APPLY_SNAPSHOT', markers: snap.markers || [], drawings: snap.drawings || [], texts: snap.texts || [], agents: snap.agents || [], shapes: snap.shapes || [], roster: snap.roster || { attack: [], defense: [] }, _remote: true } as any)
           }
         }
-      } catch {}
+      } catch (e) { console.log('[Snapshot] poll error:', e) }
     }
     poll()
     const t = setInterval(poll, 2000)
@@ -589,7 +590,10 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     // 编辑者：每次修改后延迟 1s 保存画布快照到 Worker（观察者轮询用）
     if (!isRemote && roomEditorId && roomEditorId === user?.id && editActions.has(action.type)) {
       if (snapshotSaveTimer.current) clearTimeout(snapshotSaveTimer.current)
-      snapshotSaveTimer.current = setTimeout(() => saveSnapshot(), 1000)
+      snapshotSaveTimer.current = setTimeout(() => {
+        console.log('[Snapshot] save triggered, shapes:', stateRef.current.abilityShapes.length, 'agents:', stateRef.current.agentPositions.length)
+        saveSnapshot()
+      }, 1000)
     }
   }
 
