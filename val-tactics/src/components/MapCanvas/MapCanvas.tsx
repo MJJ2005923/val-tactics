@@ -263,6 +263,13 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     return () => el.removeEventListener('touch-agent-drop', handler)
   }, [offsetX, offsetY, displayScale, mapW, mapH, dispatch])
 
+  // 全局鼠标位置广播（window级别，不受画布限制）
+  useEffect(() => {
+    const handler = (e: MouseEvent) => broadcastCursor(e.clientX, e.clientY, myUserId)
+    window.addEventListener('mousemove', handler)
+    return () => window.removeEventListener('mousemove', handler)
+  }, [broadcastCursor, myUserId])
+
   // 暴露给外部用于坐标转换
   useEffect(() => {
     transformRef.current = {
@@ -1004,8 +1011,6 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         setRectDrawing(p => p ? { ...p, drawing: true, startX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), startY: (e.clientY - rr.top - offsetY) / (displayScale * mapH), currentX: (e.clientX - rr.left - offsetX) / (displayScale * mapW), currentY: (e.clientY - rr.top - offsetY) / (displayScale * mapH) } : null)
       }}
       onMouseMove={(e) => {
-        // 广播光标位置（绝对像素坐标）
-        broadcastCursor(e.clientX, e.clientY, myUserId)
         if (panning) {
           const dx = e.clientX - panning.sx, dy = e.clientY - panning.sy
           const nx = panning.ox + dx, ny = panning.oy + dy
