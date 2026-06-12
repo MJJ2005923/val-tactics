@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createRoom, joinRoom, leaveRoom, getRoomMembers, transferEditor, kickMember } from '../../lib/roomApi'
+import { createRoom, joinRoom, leaveRoom, getRoom, getRoomMembers, transferEditor, kickMember } from '../../lib/roomApi'
 import { getProfiles } from '../../lib/community/profiles'
 import { useAuth } from '../../store/AuthContext'
 import type { Room, RoomMember } from '../../lib/roomApi'
@@ -33,6 +33,17 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
       setMemberNames(map)
     }
   }
+
+  // 自动重连已有房间
+  useEffect(() => {
+    const existingId = sessionStorage.getItem('room-id')
+    if (existingId && !room) {
+      getRoom(existingId).then(r => {
+        if (r && r.status === 'open') { setRoom(r); onJoined?.(r.id) }
+        else sessionStorage.removeItem('room-id')
+      })
+    }
+  }, [])
 
   // 轮询成员列表
   useEffect(() => {
