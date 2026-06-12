@@ -365,13 +365,9 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([])
   const myUserId = useRef('u' + Math.random().toString(36).slice(2, 8))
-  const lastCursorSent = useRef(0)
 
-  // 广播光标位置（100ms 节流）
+  // 广播光标位置
   const broadcastCursor = useCallback((x: number, y: number, userId: string) => {
-    const now = Date.now()
-    if (now - lastCursorSent.current < 100) return
-    lastCursorSent.current = now
     channelRef.current?.send({
       type: 'broadcast', event: 'cursor',
       payload: { x, y, userId, color: '#E349ED' },
