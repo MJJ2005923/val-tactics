@@ -39,10 +39,10 @@ export async function createRoom(userId: string, mapId: string, side: string): P
       id: code, host_id: userId, editor_id: userId,
       map_id: mapId, side,
     }).select().single()
-    if (!error && data) {
-      await supabase.from('room_members').insert({ room_id: code, user_id: userId })
-      return data as Room
-    }
+    if (error) { console.error('createRoom error:', error.message, error.details); return null }
+    if (!data) { console.error('createRoom: no data returned'); return null }
+    await supabase.from('room_members').insert({ room_id: code, user_id: userId })
+    return data as Room
     // 码冲突重试
   }
   return null
