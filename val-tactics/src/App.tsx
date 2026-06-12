@@ -29,6 +29,7 @@ import LineupsPage from './components/Community/LineupsPage'
 import LineupsDetail from './components/Community/LineupsDetail'
 import LineupsCreate from './components/Community/LineupsCreate'
 import NotificationBell from './components/Community/NotificationBell'
+import RoomPanel from './components/RoomPanel/RoomPanel'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 import { AuthProvider, useAuth } from './store/AuthContext'
@@ -53,6 +54,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showSponsor, setShowSponsor] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [showRoom, setShowRoom] = useState(false)
   const [mobileTimelineOpen, setMobileTimelineOpen] = useState(false)
   const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
   const [showCommunity, setShowCommunity] = useState(false)
@@ -327,6 +329,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
         {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
         {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
         {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+      {showRoom && <RoomPanel mapId={selectedMap.id} side={side} onClose={() => setShowRoom(false)} onJoined={() => setShowRoom(false)} />}
       </div>
     )
   }
@@ -421,6 +424,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           </button>
           <a className="navbar__btn" href="/changelog.html" target="_blank" style={{ fontSize: 12, textDecoration: 'none' }}>更新公告</a>
           <button className="navbar__btn" onClick={() => setShowPrivacy(true)} style={{ fontSize: 12 }}>📜 隐私条款</button>
+          <button className="navbar__btn" onClick={() => setShowRoom(true)} style={{ color: '#f0c0ff', borderColor: 'rgba(240,192,255,.15)' }}>协作</button>
           <button className="navbar__btn" onClick={() => { setShowCommunity(true); setCommView('gallery') }} style={{ color: '#05F8F8', borderColor: 'rgba(5,248,248,.15)' }}>社区</button>
           <button className="navbar__btn" onClick={() => setShowHelp(true)}>使用手册</button>
           <button className="navbar__btn" onClick={() => setShowSponsor(true)} style={{ color: '#ffd700', borderColor: 'rgba(255,215,0,.2)' }}>特别鸣谢</button>
@@ -472,6 +476,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
       {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+      {showRoom && <RoomPanel mapId={selectedMap.id} side={side} onClose={() => setShowRoom(false)} onJoined={() => setShowRoom(false)} />}
       {showCommunity && commView === 'gallery' && (
         <TacticsGallery
           onBack={() => setShowCommunity(false)}

@@ -401,3 +401,39 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 开发者标识
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
+
+-- ================================================================
+-- 多人实时协作
+-- ================================================================
+
+CREATE TABLE IF NOT EXISTS public.rooms (
+  id TEXT PRIMARY KEY,
+  host_id UUID NOT NULL REFERENCES auth.users(id),
+  editor_id UUID REFERENCES auth.users(id),
+  map_id TEXT NOT NULL DEFAULT 'ascent',
+  atk_roster TEXT[] DEFAULT '{}',
+  def_roster TEXT[] DEFAULT '{}',
+  side TEXT DEFAULT 'attack',
+  status TEXT DEFAULT 'open',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.room_members (
+  room_id TEXT REFERENCES rooms(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  joined_at TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (room_id, user_id)
+);
+
+ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.room_members ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "rooms_read" ON public.rooms FOR SELECT USING (true);
+CREATE POLICY "rooms_insert" ON public.rooms FOR INSERT WITH CHECK (auth.uid() = host_id);
+CREATE POLICY "rooms_update" ON public.rooms FOR UPDATE USING (auth.uid() = host_id);
+CREATE POLICY "rooms_delete" ON public.rooms FOR DELETE USING (auth.uid() = host_id);
+
+CREATE POLICY "rm_read" ON public.room_members FOR SELECT USING (true);
+CREATE POLICY "rm_insert" ON public.room_members FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "rm_delete" ON public.room_members FOR DELETE USING (auth.uid() = user_id OR auth.uid() = (SELECT host_id FROM rooms WHERE id = room_id));
