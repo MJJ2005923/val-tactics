@@ -401,8 +401,10 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       return
     }
     const ch = supabase.channel(`room:${roomId}`)
+    console.log('[REALTIME] Subscribing to room:', roomId)
     ch.on('broadcast', { event: 'action' }, (payload: any) => {
       const action: any = { ...payload.payload, _remote: true }
+      console.log('[REALTIME] RECV:', action.type, action.id)
       if (!action.type) return
       rawDispatch(action)
     }).on('broadcast', { event: 'cursor' }, (payload: any) => {
@@ -437,10 +439,14 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   const dispatch = (action: Action) => {
     rawDispatch(action)
     const roomId = localStorage.getItem('room-id')
-    if (roomId && !(action as any)._remote && channelRef.current) {
+    const isRemote = !!(action as any)._remote
+    if (roomId && !isRemote && channelRef.current) {
       const toSend: any = { ...action }
       delete toSend._remote
-      channelRef.current.send({ type: 'broadcast', event: 'action', payload: toSend }).catch(() => {})
+      console.log('[REALTIME] SEND:', toSend.type, toSend.id)
+      channelRef.current.send({ type: 'broadcast', event: 'action', payload: toSend }).catch((e: any) => {
+        console.error('[REALTIME] SEND ERROR:', e)
+      })
     }
   }
 
