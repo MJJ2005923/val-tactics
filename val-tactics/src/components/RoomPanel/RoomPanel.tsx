@@ -36,11 +36,11 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
 
   // 自动重连已有房间
   useEffect(() => {
-    const existingId = sessionStorage.getItem('room-id')
+    const existingId = localStorage.getItem('room-id')
     if (existingId && !room) {
       getRoom(existingId).then(r => {
         if (r && r.status === 'open') { setRoom(r); onJoined?.(r.id) }
-        else sessionStorage.removeItem('room-id')
+        else localStorage.removeItem('room-id')
       })
     }
   }, [])
@@ -59,7 +59,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     try {
       const r = await createRoom(user.id, mapId, side)
       if (r) {
-        sessionStorage.setItem('room-id', r.id)
+        localStorage.setItem('room-id', r.id)
         onJoined?.(r.id)
         setRoom(r)
       } else {
@@ -77,7 +77,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     setLoading(true); setError('')
     const r = await joinRoom(code.trim().toUpperCase(), user.id)
     if (r) {
-      sessionStorage.setItem('room-id', r.id)
+      localStorage.setItem('room-id', r.id)
       onJoined?.(r.id)
       setRoom(r)
     } else setError('房间不存在或已满')
@@ -87,7 +87,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
   const handleLeave = async () => {
     if (!room || !user) return
     await leaveRoom(room.id, user.id)
-    sessionStorage.removeItem('room-id')
+    localStorage.removeItem('room-id')
     setRoom(null); setMembers([])
   }
 
@@ -107,7 +107,7 @@ export default function RoomPanel({ mapId, side, onClose, onJoined }: Props) {
     if (!room) return
     if (!confirm('确定解散房间？所有人将被移除')) return
     await leaveRoom(room.id, room.host_id)
-    sessionStorage.removeItem('room-id')
+    localStorage.removeItem('room-id')
     setRoom(null); setMembers([])
   }
 

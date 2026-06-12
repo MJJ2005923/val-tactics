@@ -353,9 +353,9 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   )
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
-  // Realtime 订阅（从 sessionStorage 读 roomId）
+  // Realtime 订阅（从 localStorage 读 roomId）
   useEffect(() => {
-    const roomId = sessionStorage.getItem('room-id')
+    const roomId = localStorage.getItem('room-id')
     if (!roomId) {
       channelRef.current?.unsubscribe()
       channelRef.current = null
@@ -374,7 +374,7 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   // 包装 dispatch：本地操作自动广播
   const dispatch = (action: Action) => {
     rawDispatch(action)
-    const roomId = sessionStorage.getItem('room-id')
+    const roomId = localStorage.getItem('room-id')
     if (roomId && !(action as any)._remote) {
       const toSend: any = { ...action }
       delete toSend._remote
