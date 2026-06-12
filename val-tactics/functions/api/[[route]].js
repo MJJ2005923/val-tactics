@@ -357,7 +357,8 @@ export async function onRequest(context) {
   // ====================================================================
   const SB_URL = 'https://zwtpeyvqbllrpregjpyd.supabase.co'
   const SB_KEY = env.SUPABASE_SERVICE_KEY || ''
-  const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+  const SB_HEADERS_GET = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Accept': 'application/json' }
+  const SB_HEADERS_POST = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
   const MAX_ROOMS = 3
   const MAX_MEMBERS = 8
   const ROOM_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -373,7 +374,7 @@ export async function onRequest(context) {
     if (!env.AI_USAGE) {
       // 本地开发无 KV：查 Supabase
       try {
-        const r = await fetch(`${SB_URL}/rest/v1/user_tiers?user_id=eq.${userId}&select=tier`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+        const r = await fetch(`${SB_URL}/rest/v1/user_tiers?user_id=eq.${userId}&select=tier`, { headers: SB_HEADERS_GET })
         if (r.ok) {
           const data = await r.json()
           if (data[0]) return { tier: data[0].tier }
@@ -402,7 +403,7 @@ export async function onRequest(context) {
       }
 
       // 2. 房间数量检查
-      const countResp = await fetch(`${SB_URL}/rest/v1/rooms?host_id=eq.${userId}&status=eq.open&select=id`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+      const countResp = await fetch(`${SB_URL}/rest/v1/rooms?host_id=eq.${userId}&status=eq.open&select=id`, { headers: SB_HEADERS_GET })
       if (countResp.ok) {
         const rooms = await countResp.json()
         if (rooms.length >= MAX_ROOMS) {
@@ -414,7 +415,7 @@ export async function onRequest(context) {
       let code = ''
       for (let i = 0; i < 20; i++) {
         code = genCode()
-        const check = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&select=id`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+        const check = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&select=id`, { headers: SB_HEADERS_GET })
         const existing = await check.json()
         if (!existing.length) break
         if (i === 19) return new Response(JSON.stringify({ room: null, error: '生成房间码失败，请重试' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
@@ -422,8 +423,8 @@ export async function onRequest(context) {
 
       // 4. 创建房间 + 成员
       const r = await fetch(`${SB_URL}/rest/v1/rooms`, {
-        method: 'POST', headers: SB_HEADERS,
-        body: JSON.stringify({ id: code, host_id: userId, editor_id: userId, map_id: mapId || 'ascent', side: side || 'attack' }),
+        method: 'POST', headers: SB_HEADERS_POST,
+        body: JSON.stringify({ id: code, host_id: userId, editor_id: userId, map_id: mapId || 'ascent', side: side || 'attack', status: 'open' }),
       })
       if (!r.ok) {
         const err = await r.text()
@@ -431,7 +432,7 @@ export async function onRequest(context) {
       }
 
       await fetch(`${SB_URL}/rest/v1/room_members`, {
-        method: 'POST', headers: SB_HEADERS,
+        method: 'POST', headers: SB_HEADERS_POST,
         body: JSON.stringify({ room_id: code, user_id: userId, role: 'host' }),
       })
 
@@ -451,7 +452,7 @@ export async function onRequest(context) {
       const code = roomId.toUpperCase().trim()
 
       // 查房间
-      const roomResp = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&status=eq.open&select=*`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+      const roomResp = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&status=eq.open&select=*`, { headers: SB_HEADERS_GET })
       console.log('[room/join] rooms query:', roomResp.status, await roomResp.clone().text())
       if (!roomResp.ok) {
         return new Response(JSON.stringify({ error: `查询房间失败(${roomResp.status})` }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
@@ -460,14 +461,14 @@ export async function onRequest(context) {
       if (!rooms.length) return new Response(JSON.stringify({ error: '房间不存在或已关闭' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
       // 查人数
-      const cntResp = await fetch(`${SB_URL}/rest/v1/room_members?room_id=eq.${code}&select=user_id`, { headers: { ...SB_HEADERS, 'Accept': 'application/json', 'Prefer': 'count=exact' } })
+      const cntResp = await fetch(`${SB_URL}/rest/v1/room_members?room_id=eq.${code}&select=user_id`, { headers: { ...SB_HEADERS_GET, 'Prefer': 'count=exact' } })
       const cntHeader = cntResp.headers.get('content-range')
       const count = cntHeader ? parseInt(cntHeader.split('/')[1]) : 99
       if (count >= MAX_MEMBERS) return new Response(JSON.stringify({ error: '房间已满（最多8人）' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
       // 加入
       const joinResp = await fetch(`${SB_URL}/rest/v1/room_members`, {
-        method: 'POST', headers: SB_HEADERS,
+        method: 'POST', headers: SB_HEADERS_POST,
         body: JSON.stringify({ room_id: code, user_id: userId, role: 'member' }),
       })
       if (!joinResp.ok && joinResp.status !== 409) {
@@ -490,26 +491,26 @@ export async function onRequest(context) {
       const code = roomId.toUpperCase().trim()
 
       // 查当前房间
-      const rResp = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&select=*`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+      const rResp = await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}&select=*`, { headers: SB_HEADERS_GET })
       const rData = await rResp.json()
       const room = rData[0]
       if (!room) return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
       // 删除成员
-      await fetch(`${SB_URL}/rest/v1/room_members?room_id=eq.${code}&user_id=eq.${userId}`, { method: 'DELETE', headers: SB_HEADERS })
+      await fetch(`${SB_URL}/rest/v1/room_members?room_id=eq.${code}&user_id=eq.${userId}`, { method: 'DELETE', headers: SB_HEADERS_POST })
 
       // 如果离开的是房主，转让或关闭
       if (room.host_id === userId) {
-        const memResp = await fetch(`${SB_URL}/rest/v1/room_members?room_id=eq.${code}&select=user_id&order=joined_at.asc&limit=1`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+        const memResp = await fetch(`${SB_URL}/rest/v1/room_members?room_id=eq.${code}&select=user_id&order=joined_at.asc&limit=1`, { headers: SB_HEADERS_GET })
         const members = await memResp.json()
         if (members.length > 0) {
-          await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}`, { method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify({ host_id: members[0].user_id, editor_id: members[0].user_id }) })
+          await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}`, { method: 'PATCH', headers: SB_HEADERS_POST, body: JSON.stringify({ host_id: members[0].user_id, editor_id: members[0].user_id }) })
         } else {
-          await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}`, { method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify({ status: 'closed' }) })
+          await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}`, { method: 'PATCH', headers: SB_HEADERS_POST, body: JSON.stringify({ status: 'closed' }) })
         }
       } else if (room.editor_id === userId) {
         // 离开的是编辑者，归还房主
-        await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}`, { method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify({ editor_id: room.host_id }) })
+        await fetch(`${SB_URL}/rest/v1/rooms?id=eq.${code}`, { method: 'PATCH', headers: SB_HEADERS_POST, body: JSON.stringify({ editor_id: room.host_id }) })
       }
 
       return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
@@ -529,7 +530,7 @@ export async function onRequest(context) {
       if (tierData.tier === 'ownkey') return new Response(JSON.stringify({ allowed: false, reason: '自备Key套餐不含协作功能' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
       // 检查房间数
-      const countResp = await fetch(`${SB_URL}/rest/v1/rooms?host_id=eq.${userId}&status=eq.open&select=id`, { headers: { ...SB_HEADERS, 'Accept': 'application/json' } })
+      const countResp = await fetch(`${SB_URL}/rest/v1/rooms?host_id=eq.${userId}&status=eq.open&select=id`, { headers: SB_HEADERS_GET })
       if (countResp.ok) {
         const rooms = await countResp.json()
         if (rooms.length >= MAX_ROOMS) return new Response(JSON.stringify({ allowed: false, reason: `最多创建${MAX_ROOMS}个活跃房间` }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
