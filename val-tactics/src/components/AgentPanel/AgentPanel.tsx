@@ -87,6 +87,7 @@ function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAge
           const agent = agentId ? agents.find(a => a.id === agentId) : null
           return (
             <div key={i} className={styles.rosterSlot}
+              data-roster-slot={team}
               style={agent ? { borderStyle: 'solid', borderColor: color + '60', background: color + '10' } : { borderColor: color + '20' }}
               onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
               onDrop={e => {
@@ -106,6 +107,47 @@ function RosterSlots({ team, onAgentClick }: { team: 'attack' | 'defense'; onAge
                     onDragStart={e => {
                       e.dataTransfer.setData('application/json', JSON.stringify({ type: 'agent', agentId: agent.id, team }))
                       e.dataTransfer.effectAllowed = 'copy'
+                    }}
+                    onTouchStart={e => {
+                      // 移动端触摸拖拽
+                      const touch = e.touches[0]
+                      const clone = (e.currentTarget as HTMLElement).cloneNode(true) as HTMLElement
+                      clone.style.position = 'fixed'; clone.style.zIndex = '9999'
+                      clone.style.pointerEvents = 'none'; clone.style.opacity = '.85'
+                      clone.style.width = '48px'; clone.style.height = '48px'
+                      clone.style.left = (touch.clientX - 24) + 'px'
+                      clone.style.top = (touch.clientY - 24) + 'px'
+                      clone.id = '__touch_drag_clone'
+                      document.body.appendChild(clone)
+                      const move = (ev: TouchEvent) => {
+                        const t = ev.touches[0]
+                        clone.style.left = (t.clientX - 24) + 'px'
+                        clone.style.top = (t.clientY - 24) + 'px'
+                      }
+                      const end = (ev: TouchEvent) => {
+                        document.removeEventListener('touchmove', move)
+                        document.removeEventListener('touchend', end)
+                        clone.remove()
+                        const t = ev.changedTouches[0]
+                        const el = document.elementFromPoint(t.clientX, t.clientY)
+                        // 检查是否落在阵容槽上
+                        const slot = el?.closest('[data-roster-slot]')
+                        if (slot) {
+                          const slotTeam = slot.getAttribute('data-roster-slot')
+                          if (slotTeam) dispatch({ type: 'ADD_TO_ROSTER', team: slotTeam as 'attack' | 'defense', agentId: agent.id })
+                          return
+                        }
+                        // 否则落到地图上 → 用自定义事件通知 MapCanvas
+                        const mapEl = document.querySelector('[data-map-drop]')
+                        if (mapEl) {
+                          const event = new CustomEvent('touch-agent-drop', {
+                            bubbles: true, detail: { agentId: agent.id, team, clientX: t.clientX, clientY: t.clientY }
+                          })
+                          mapEl.dispatchEvent(event)
+                        }
+                      }
+                      document.addEventListener('touchmove', move)
+                      document.addEventListener('touchend', end)
                     }}
                     key={agent.id}>
                     <img src={getAgentImage(agent)} alt={agent.name} className={styles.rosterAvatar}

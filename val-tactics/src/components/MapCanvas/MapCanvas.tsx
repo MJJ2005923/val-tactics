@@ -175,6 +175,8 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   const [panX, setPanX] = useState(0)
   const [panY, setPanY] = useState(0)
   const [pinch, setPinch] = useState<{ dist: number; scale: number } | null>(null)
+  const [longPressMenu, setLongPressMenu] = useState<{ x: number; y: number } | null>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { markers, drawings, textAnnotations, agentPositions, abilityShapes, selectedId, selectedType, toolMode, drawColor, fontSize, dispatch, side, showAllRanges } = useTactics()
   const toast = useToast()
   const [isOver, setIsOver] = useState(false)
@@ -235,6 +237,30 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
     window.addEventListener('resize', updateSize)
     return () => window.removeEventListener('resize', updateSize)
   }, [])
+
+  // 响应触摸拖拽 agent drop
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const handler = (e: Event) => {
+      const { agentId, team, clientX, clientY } = (e as CustomEvent).detail
+      const rect = el.getBoundingClientRect()
+      const x = (clientX - rect.left - offsetX) / (displayScale * mapW)
+      const y = (clientY - rect.top - offsetY) / (displayScale * mapH)
+      if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
+        dispatch({
+          type: 'ADD_AGENT_POS',
+          pos: {
+            agentId,
+            x, y,
+            team: team || undefined,
+          } as any,
+        })
+      }
+    }
+    el.addEventListener('touch-agent-drop', handler)
+    return () => el.removeEventListener('touch-agent-drop', handler)
+  }, [offsetX, offsetY, displayScale, mapW, mapH, dispatch])
 
   // 暴露给外部用于坐标转换
   useEffect(() => {
@@ -917,6 +943,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
   return (
     <div
       ref={(node) => { containerRef.current = node }}
+      data-map-drop="true"
       className={`${styles.container} ${isOver ? styles.containerOver : ''} ${toolMode === 'text' ? styles.containerText : ''}`}
       style={toolMode === 'pan' ? { cursor: 'grab' } : panning ? { cursor: 'grabbing' } : undefined}
       onWheel={handleWheel}
@@ -1007,30 +1034,58 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         setRectDrawing(null)
       }}
       onTouchStart={(e) => {
+        const isDrawTool = toolMode === 'freehand' || toolMode === 'line' || toolMode === 'arrow' || toolMode === 'rect' || toolMode === 'circle'
         if (e.touches.length === 1) {
-          // 单指：开始平移
-          const t = e.touches[0]
-          setPanning({ sx: t.clientX, sy: t.clientY, ox: panX, oy: panY })
-          setPinch(null)
+          if (isDrawTool) {
+            const t = e.touches[0]
+            const t3 = transformRef.current
+            if (t3?.container) {
+              const rr = t3.container.getBoundingClientRect()
+              const w = { x: (t.clientX - rr.left - offsetX) / (displayScale * mapW), y: (t.clientY - rr.top - offsetY) / (displayScale * mapH) }
+              setLineDrawing({ mode: 'freehand', startX: w.x, startY: w.y, currentX: w.x, currentY: w.y, abilityId: '', agentId: '', config: {} as any, path: [{ x: w.x, y: w.y }] })
+            }
+          } else {
+            const t = e.touches[0]
+            setPanning({ sx: t.clientX, sy: t.clientY, ox: panX, oy: panY })
+            setPinch(null)
+          }
         } else if (e.touches.length === 2) {
-          // 双指：开始缩放
           const dx = e.touches[1].clientX - e.touches[0].clientX
           const dy = e.touches[1].clientY - e.touches[0].clientY
           setPinch({ dist: Math.sqrt(dx * dx + dy * dy), scale })
           setPanning(null)
         }
+        // 长按检测
+        if (e.touches.length === 1) {
+          longPressTimer.current = setTimeout(() => {
+            setLongPressMenu({ x: e.touches[0].clientX, y: e.touches[0].clientY })
+          }, 600)
+        }
         e.preventDefault()
       }}
       onTouchMove={(e) => {
-        if (e.touches.length === 1 && panning) {
-          const t = e.touches[0]
-          const dx = t.clientX - panning.sx
-          const dy = t.clientY - panning.sy
-          const nx = panning.ox + dx
-          const ny = panning.oy + dy
-          transformRef.current.offset.x = nx
-          transformRef.current.offset.y = ny
-          setPanX(nx); setPanY(ny)
+        // 移动时取消长按
+        if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
+        if (e.touches.length === 1) {
+          if (lineDrawing) {
+            // 更新画线
+            const t = e.touches[0]
+            const t3 = transformRef.current
+            if (t3?.container) {
+              const rr = t3.container.getBoundingClientRect()
+              const w = { x: (t.clientX - rr.left - offsetX) / (displayScale * mapW), y: (t.clientY - rr.top - offsetY) / (displayScale * mapH) }
+              setLineDrawing(prev => prev ? { ...prev, currentX: w.x, currentY: w.y, path: prev.mode === 'freehand' ? [...(prev.path || []), { x: w.x, y: w.y }] : prev.path } : null)
+            }
+          } else if (panning) {
+            const t = e.touches[0]
+            const dx = t.clientX - panning.sx
+            const dy = t.clientY - panning.sy
+            const nx = panning.ox + dx
+            const ny = panning.oy + dy
+            transformRef.current.offset.x = nx
+            transformRef.current.offset.y = ny
+            setPanX(nx); setPanY(ny)
+          }
         } else if (e.touches.length === 2 && pinch) {
           const dx = e.touches[1].clientX - e.touches[0].clientX
           const dy = e.touches[1].clientY - e.touches[0].clientY
@@ -1042,9 +1097,18 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
         e.preventDefault()
       }}
       onTouchEnd={(e) => {
+        if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
+        if (lineDrawing && e.touches.length === 0) {
+          if (lineDrawing.mode === 'freehand' && (lineDrawing.path?.length || 0) > 1) {
+            dispatch({
+              type: 'ADD_DRAWING',
+              drawing: { id: '', type: 'freehand', color: drawColor, width: 2, points: lineDrawing.path || [] },
+            })
+          }
+          setLineDrawing(null)
+        }
         if (panning) { setPanning(null) }
         if (pinch) { setPinch(null) }
-        // 如果还有手指在屏幕上，重新开始追踪
         if (e.touches.length === 1 && !panning) {
           const t = e.touches[0]
           setPanning({ sx: t.clientX, sy: t.clientY, ox: panX, oy: panY })
@@ -1058,6 +1122,30 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       <div className={lineDrawing ? styles.noPointer : undefined}>
         <AbilityShapeLayer offset={{ x: offsetX, y: offsetY }} scale={displayScale} mapW={mapW} mapH={mapH} containerRef={containerRef} />
       </div>
+
+      {/* 长按菜单 */}
+      {longPressMenu && (
+        <div style={{
+          position: 'fixed', left: longPressMenu.x + 10, top: longPressMenu.y - 10,
+          zIndex: 9999, background: '#0d0a14', border: '1px solid rgba(255,255,255,.08)',
+          borderRadius: 10, padding: '6px 0', minWidth: 120,
+          boxShadow: '0 4px 16px rgba(0,0,0,.5)',
+        }}>
+          <div style={{ padding: '6px 14px', fontSize: 11, color: 'rgba(255,255,255,.3)', borderBottom: '1px solid rgba(255,255,255,.04)' }}>操作</div>
+          <button onClick={() => { dispatch({ type: 'UNDO' }); setLongPressMenu(null) }}
+            style={{ display: 'block', width: '100%', padding: '6px 14px', background: 'none', border: 'none', color: 'rgba(255,255,255,.5)', fontSize: 12, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
+            撤销
+          </button>
+          <button onClick={() => { setLongPressMenu(null) }}
+            style={{ display: 'block', width: '100%', padding: '6px 14px', background: 'none', border: 'none', color: 'rgba(255,255,255,.3)', fontSize: 12, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
+            取消
+          </button>
+        </div>
+      )}
+      {/* 长按遮罩 */}
+      {longPressMenu && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setLongPressMenu(null)} />
+      )}
 
             {/* 画线模式预览 */}
       {lineDrawing && (() => {
