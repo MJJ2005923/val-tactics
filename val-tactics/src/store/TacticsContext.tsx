@@ -103,6 +103,7 @@ type Action =
   | { type: 'SELECT'; id: string | null; selType: TacticsState['selectedType'] }
   | { type: 'CLEAR_ALL' }
   | { type: 'LOAD_ALL'; markers: Marker[]; drawings: DrawPath[]; texts: TextAnnotation[]; agents: AgentPosition[]; shapes: AbilityShape[]; name: string; desc: string; roster: { attack: string[]; defense: string[] }; tracks: RecordedTrack[] }
+  | { type: 'APPLY_SNAPSHOT'; markers: Marker[]; drawings: DrawPath[]; texts: TextAnnotation[]; agents: AgentPosition[]; shapes: AbilityShape[]; roster: { attack: string[]; defense: string[] } }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'PLAY_START' }
@@ -167,7 +168,7 @@ function reducer(state: TacticsState, action: Action, history: History): { state
     'ADD_TEXT', 'UPDATE_TEXT', 'REMOVE_TEXT',
     'ADD_AGENT_POS', 'UPDATE_AGENT_POS', 'REMOVE_AGENT_POS',
     'ADD_ABILITY_SHAPE', 'UPDATE_ABILITY_SHAPE', 'REMOVE_ABILITY_SHAPE',
-    'CLEAR_ALL', 'LOAD_ALL', 'REPLAY_START', 'REPLAY_STOP', 'CREATE_TRACK', 'DELETE_TRACK'
+    'CLEAR_ALL', 'LOAD_ALL', 'APPLY_SNAPSHOT', 'REPLAY_START', 'REPLAY_STOP', 'CREATE_TRACK', 'DELETE_TRACK'
   ])
 
   let newHistory = { ...history }
@@ -269,6 +270,9 @@ function reducer(state: TacticsState, action: Action, history: History): { state
       return { state: { ...initialState, toolMode: state.toolMode, drawColor: state.drawColor, drawWidth: state.drawWidth, side: state.side }, history: newHistory }
     case 'LOAD_ALL':
       return { state: { ...state, markers: action.markers, drawings: action.drawings, textAnnotations: action.texts, agentPositions: action.agents, abilityShapes: action.shapes, strategyName: action.name, strategyDescription: action.desc, selectedId: null, selectedType: null, roster: action.roster, tracks: action.tracks }, history: newHistory }
+    case 'APPLY_SNAPSHOT':
+      // 远程快照同步 — 替换整个画布状态（保留工具设置）
+      return { state: { ...state, markers: action.markers, drawings: action.drawings, textAnnotations: action.texts, agentPositions: action.agents, abilityShapes: action.shapes, roster: action.roster, selectedId: null, selectedType: null }, history: newHistory }
 
     // Undo / Redo
     case 'UNDO': {
@@ -366,6 +370,8 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
   const cursorElsRef = useRef<Map<string, HTMLDivElement>>(new Map())
   const cursorLayerRef = useRef<HTMLDivElement | null>(null)
   const myUserId = useRef('u' + Math.random().toString(36).slice(2, 8))
+  const stateRef = useRef(state)
+  stateRef.current = state // 保持 ref 始终指向最新 state
 
   // 注册光标层 DOM 引用
   const setCursorLayer = useCallback((el: HTMLDivElement | null) => {
@@ -393,13 +399,20 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     return () => { window.removeEventListener('storage', check); clearInterval(t) }
   }, [])
 
+  const wantsSnapshotRef = useRef(false)
+
   useEffect(() => {
     const roomId = activeRoomId
     if (!roomId) {
       channelRef.current?.unsubscribe()
       channelRef.current = null
+      wantsSnapshotRef.current = false
       return
     }
+    // 重置快照标记
+    const s = stateRef.current
+    const isEmpty = s.markers.length === 0 && s.drawings.length === 0 && s.textAnnotations.length === 0 && s.agentPositions.length === 0 && s.abilityShapes.length === 0
+    wantsSnapshotRef.current = isEmpty
     const ch = supabase.channel(`room:${roomId}`)
     ch.on('broadcast', { event: 'action' }, (payload: any) => {
       const action = payload.payload as Action
@@ -423,8 +436,32 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
       }
       el.style.left = x + 'px'
       el.style.top = y + 'px'
+    }).on('broadcast', { event: 'request_snapshot' }, () => {
+      // 收到快照请求 → 有状态则回复完整快照
+      const cur = stateRef.current
+      if (cur.markers.length > 0 || cur.drawings.length > 0 || cur.textAnnotations.length > 0 || cur.agentPositions.length > 0 || cur.abilityShapes.length > 0) {
+        ch.send({
+          type: 'broadcast', event: 'snapshot',
+          payload: {
+            markers: cur.markers, drawings: cur.drawings, texts: cur.textAnnotations,
+            agents: cur.agentPositions, shapes: cur.abilityShapes, roster: cur.roster,
+          }
+        })
+      }
+    }).on('broadcast', { event: 'snapshot' }, (payload: any) => {
+      // 收到快照 → 仅当等待中时应用（用 ref 防竞态）
+      if (!wantsSnapshotRef.current) return
+      const snap = payload.payload
+      rawDispatch({ type: 'APPLY_SNAPSHOT', markers: snap.markers || [], drawings: snap.drawings || [], texts: snap.texts || [], agents: snap.agents || [], shapes: snap.shapes || [], roster: snap.roster || { attack: [], defense: [] }, _remote: true } as any)
+      wantsSnapshotRef.current = false
     }).subscribe()
     channelRef.current = ch
+    // 新加入房间时请求快照（状态为空 = 观察者需要同步）
+    if (isEmpty) {
+      setTimeout(() => {
+        ch.send({ type: 'broadcast', event: 'request_snapshot', payload: {} })
+      }, 600)
+    }
     // 定期清理过期光标
     const t = setInterval(() => {
       for (const [uid, el] of cursorElsRef.current) {
@@ -444,7 +481,7 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     const isRemote = !!(action as any)._remote
     // CLEAR_ALL/LOAD_ALL 不广播（会清空队友画面）
     if (!roomId || isRemote || !channelRef.current) return
-    if (action.type === 'CLEAR_ALL' || action.type === 'LOAD_ALL') return
+    if (action.type === 'CLEAR_ALL' || action.type === 'LOAD_ALL' || action.type === 'APPLY_SNAPSHOT') return
 
     // ADD/DELETE 立即发送，UPDATE debounce 100ms
     if (action.type.startsWith('UPDATE_')) {
