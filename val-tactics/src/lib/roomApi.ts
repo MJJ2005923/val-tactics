@@ -32,7 +32,7 @@ function genRoomCode(): string {
 }
 
 /** 创建房间 */
-export async function createRoom(userId: string, mapId: string, side: string): Promise<Room | null> {
+export async function createRoom(userId: string, mapId: string, side: string): Promise<{ room: Room; error?: string }> {
   for (let i = 0; i < 5; i++) {
     const code = genRoomCode()
     const { data, error } = await supabase.from('rooms').insert({
@@ -41,14 +41,20 @@ export async function createRoom(userId: string, mapId: string, side: string): P
     }).select().single()
     if (error) {
       if (error.code === '23505') continue // 码冲突，重试
-      console.error('createRoom error:', error.message, error.details); return null
+      console.error('createRoom error:', error.message, error.details, error.hint)
+      return { room: null as any, error: error.message || error.details || '数据库错误' }
     }
-    if (!data) { console.error('createRoom: no data returned'); return null }
-    await supabase.from('room_members').insert({ room_id: code, user_id: userId })
-    return data as Room
-    // 码冲突重试
+    if (!data) { console.error('createRoom: no data returned'); return { room: null as any, error: '数据库未返回数据' } }
+    const { error: memErr } = await supabase.from('room_members').insert({ room_id: code, user_id: userId })
+    if (memErr) {
+      console.error('createRoom member insert error:', memErr.message, memErr.details)
+      // 成员插入失败，清理已创建的房间
+      await supabase.from('rooms').delete().eq('id', code)
+      return { room: null as any, error: `成员添加失败：${memErr.message || memErr.details}` }
+    }
+    return { room: data as Room }
   }
-  return null
+  return { room: null as any, error: '房间码重复，请重试' }
 }
 
 /** 加入房间 */
