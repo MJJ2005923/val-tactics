@@ -379,7 +379,8 @@ export async function onRequest(context) {
           if (data[0]) return { tier: data[0].tier }
         }
       } catch {}
-      return { tier: 'free' }
+      // 本地开发兜底：放行（允许测试协作功能）
+      return { tier: 'standard' }
     }
     try {
       const t = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
