@@ -17,6 +17,7 @@ interface Props {
   onLogin: () => void
   onSave: () => void
   onTemplates: () => void
+  onOpenRoom: () => void
   children?: ReactNode
 }
 
@@ -49,8 +50,15 @@ const SAVE_ICON = (
 const FOLDER_ICON = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
 )
+const COLLAB_ICON = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <circle cx="9" cy="7" r="3"/><path d="M3 20c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5"/>
+    <circle cx="17" cy="9" r="2.5"/><path d="M21 16c0-2-2-4-4-4"/>
+    <line x1="13" y1="10" x2="15" y2="11"/><line x1="15" y1="13" x2="13" y2="14"/>
+  </svg>
+)
 
-export default function MobileLayout({ mapCanvas, agentPanel, timeline, communityPanel, toolbar, selectedMap, onMapChange, side, onSideToggle, notificationBell, user, onLogin, onSave, onTemplates }: Props) {
+export default function MobileLayout({ mapCanvas, agentPanel, timeline, communityPanel, toolbar, selectedMap, onMapChange, side, onSideToggle, notificationBell, user, onLogin, onSave, onTemplates, onOpenRoom }: Props) {
   const [activeTab, setActiveTab] = useState<'map' | 'agents' | 'timeline' | 'community'>('map')
   const [showMapDropdown, setShowMapDropdown] = useState(false)
 
@@ -78,6 +86,9 @@ export default function MobileLayout({ mapCanvas, agentPanel, timeline, communit
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button className={styles.sideBtn} onClick={onOpenRoom} title="多人协作" style={{ color: '#E349ED' }}>
+              {COLLAB_ICON}
+            </button>
             <button className={styles.sideBtn} onClick={onSideToggle}>
               {side === 'attack' ? '攻' : '守'}
             </button>

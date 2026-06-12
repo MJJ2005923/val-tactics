@@ -303,6 +303,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           onLogin={() => setShowAuthModal(true)}
           onSave={handleSaveProgress}
           onTemplates={() => setShowTemplates(true)}
+          onOpenRoom={() => setShowRoom(true)}
           communityPanel={
             <>
               {showCommunity && commView === 'gallery' && (
