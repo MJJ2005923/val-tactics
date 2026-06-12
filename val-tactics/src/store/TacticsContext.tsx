@@ -350,7 +350,6 @@ function reducer(state: TacticsState, action: Action, history: History): { state
 interface TacticsCtx extends TacticsState {
   dispatch: React.Dispatch<Action>
   history: History
-  remoteCursors: RemoteCursor[]
   broadcastCursor: (x: number, y: number, userId: string) => void
   setCursorLayer: (el: HTMLDivElement | null) => void
   myUserId: string
@@ -364,7 +363,6 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     { state: initialState, history: { past: [], future: [] } }
   )
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
-  const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([])
   const cursorElsRef = useRef<Map<string, HTMLDivElement>>(new Map())
   const cursorLayerRef = useRef<HTMLDivElement | null>(null)
   const myUserId = useRef('u' + Math.random().toString(36).slice(2, 8))
@@ -382,9 +380,21 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  // Realtime 订阅（从 localStorage 读 roomId）
+  // Realtime 订阅（用 state 追踪 roomId，确保变化时重连）
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(localStorage.getItem('room-id'))
   useEffect(() => {
-    const roomId = localStorage.getItem('room-id')
+    const check = () => {
+      const id = localStorage.getItem('room-id')
+      setActiveRoomId(prev => prev !== id ? id : prev)
+    }
+    check()
+    window.addEventListener('storage', check)
+    const t = setInterval(check, 2000)
+    return () => { window.removeEventListener('storage', check); clearInterval(t) }
+  }, [])
+
+  useEffect(() => {
+    const roomId = activeRoomId
     if (!roomId) {
       channelRef.current?.unsubscribe()
       channelRef.current = null
@@ -416,24 +426,26 @@ export function TacticsProvider({ children }: { children: ReactNode }) {
     channelRef.current = ch
     // 定期清理过期光标
     const t = setInterval(() => {
-      setRemoteCursors(prev => prev.filter(c => Date.now() - c.lastSeen < 10000))
-    }, 3000)
+      for (const [uid, el] of cursorElsRef.current) {
+        if (!document.body.contains(el)) { cursorElsRef.current.delete(uid); el.remove() }
+      }
+    }, 5000)
     return () => { ch.unsubscribe(); clearInterval(t) }
-  }, [])
+  }, [activeRoomId])
 
   // 包装 dispatch：本地操作自动广播
   const dispatch = (action: Action) => {
     rawDispatch(action)
     const roomId = localStorage.getItem('room-id')
-    if (roomId && !(action as any)._remote) {
+    if (roomId && !(action as any)._remote && channelRef.current) {
       const toSend: any = { ...action }
       delete toSend._remote
-      channelRef.current?.send({ type: 'broadcast', event: 'action', payload: toSend })
+      channelRef.current.send({ type: 'broadcast', event: 'action', payload: toSend }).catch(() => {})
     }
   }
 
   return (
-    <TacticsContext.Provider value={{ ...state, dispatch, history: hist, remoteCursors, broadcastCursor, setCursorLayer, myUserId: myUserId.current }}>
+    <TacticsContext.Provider value={{ ...state, dispatch, history: hist, broadcastCursor, setCursorLayer, myUserId: myUserId.current }}>
       {children}
     </TacticsContext.Provider>
   )
