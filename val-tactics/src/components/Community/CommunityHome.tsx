@@ -28,7 +28,7 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
       if (error) console.error('[CommunityHome] posts:', error.message)
       setHotPosts((data || []) as any)
     })
-    supabase.from('lineups').select('id,title,user_id,views,like_count,difficulty,created_at').order('views', { ascending: false }).limit(4).then(({ data, error }) => {
+    supabase.from('lineups').select('id,title,user_id,views,like_count,difficulty,created_at,position_img,aim_img').order('views', { ascending: false }).limit(4).then(({ data, error }) => {
       if (error) console.error('[CommunityHome] lineups:', error.message)
       setHotLineups((data || []) as any)
     })
@@ -53,7 +53,9 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
             ? <div style={{ padding: 16, fontSize: 12, color: 'rgba(255,255,255,.1)', textAlign: 'center' }}>暂无战术</div>
             : filteredTactics.map(t => (
               <div key={t.id} className={styles.cardBig} onClick={() => onViewTactic(t.id)}>
-                {t.preview_image && <img src={t.preview_image} alt="" className={styles.cardImg} />}
+                <div className={styles.cardImgWrap}>
+                  {t.preview_image ? <img src={t.preview_image} alt="" className={styles.cardImg} /> : <div className={styles.cardImgEmpty}>📐</div>}
+                </div>
                 <div className={styles.cardBody}>
                   <div className={styles.cardTitle}>{t.title}</div>
                   <div className={styles.cardMeta}>{t.views} 浏览 · 赞 {t.like_count || 0}</div>
@@ -84,6 +86,11 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
             ? <div style={{ padding: 16, fontSize: 12, color: 'rgba(255,255,255,.1)', textAlign: 'center' }}>暂无点位</div>
             : filteredLineups.map(l => (
               <div key={l.id} className={styles.cardBig} onClick={() => onViewLineup(l.id)}>
+                <div className={styles.cardImgWrap}>
+                  {(l as any).position_img ? <img src={(l as any).position_img} alt="" className={styles.cardImg} />
+                    : (l as any).aim_img ? <img src={(l as any).aim_img} alt="" className={styles.cardImg} />
+                    : <div className={styles.cardImgEmpty}>🎯</div>}
+                </div>
                 <div className={styles.cardBody}>
                   <div className={styles.cardTitle}>{l.title}</div>
                   <div className={styles.cardMeta}>难度 {l.difficulty || 3}/5 · {l.views} 浏览</div>
