@@ -75,21 +75,33 @@ export async function deleteLineup(id: string, userId?: string) {
   return supabase.from('lineups').delete().eq('id', id)
 }
 
-/** 原图转无损 WebP — 像素100%一致，体积比PNG小40-60% */
-export async function toLosslessWebP(file: File): Promise<Blob> {
-  const img = await createImageBitmap(file)
-  const canvas = document.createElement('canvas')
-  canvas.width = img.width   // 原尺寸，不缩放
-  canvas.height = img.height
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(img, 0, 0)
-  img.close()
-
+/** 压缩图片为 WebP，限制最大尺寸和文件大小 */
+export async function compressImage(file: File, maxKB = 300): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    // quality=1 在 Chrome 中走无损 WebP
-    canvas.toBlob(blob => {
-      blob ? resolve(blob) : reject(new Error('转换失败'))
-    }, 'image/webp', 1)
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      let { width, height } = img
+      const maxDim = 1200
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+      canvas.width = width; canvas.height = height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0, width, height)
+      const tryQuality = (q: number) => {
+        canvas.toBlob((blob) => {
+          if (!blob) { reject(new Error('压缩失败')); return }
+          if (blob.size <= maxKB * 1024 || q <= 0.2) { resolve(blob) }
+          else { tryQuality(q - 0.15) }
+        }, 'image/webp', q)
+      }
+      tryQuality(0.8)
+    }
+    img.onerror = () => reject(new Error('图片加载失败'))
+    img.src = URL.createObjectURL(file)
   })
 }
 
