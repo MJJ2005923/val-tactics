@@ -3,14 +3,14 @@ import type { Lineup, PaginatedResponse } from '../../types/community'
 
 const BUCKET = 'lineups'
 
-/** 上传图片到 Supabase Storage，返回公开 URL */
-export async function uploadLineupImage(file: File, userId: string, lineupId: string, slot: string): Promise<string | null> {
-  const ext = file.name.split('.').pop() || 'webp'
-  const path = `${userId}/${lineupId}/${slot}.${ext}`
-  const { data } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true, contentType: file.type })
-  if (!data) return null
-  const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(data.path)
-  return urlData.publicUrl
+/** 上传图片到 COS（通过 Worker 代理），返回公开 URL */
+export async function uploadLineupImage(file: File, userId: string, lineupId: string, _slot: string): Promise<string | null> {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('folder', `lineups/${userId}/${lineupId}`)
+  const resp = await fetch('/api/cos/upload', { method: 'POST', body: form })
+  const data = await resp.json()
+  return data.url || null
 }
 
 /** 浏览点位列表 */

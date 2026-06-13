@@ -135,6 +135,65 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
+  // ====================================================================
+  // COS 上传代理（密钥在 Worker，前端不可见）
+  // ====================================================================
+  if (url.pathname === '/api/cos/upload' && request.method === 'POST') {
+    const form = await request.formData()
+    const file = form.get('file')
+    const folder = form.get('folder') || 'uploads'
+    if (!file || !file.name) return new Response(JSON.stringify({ error: '缺少文件' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+    const COS_BUCKET = env.COS_BUCKET || 'val-tactics-1443009345'
+    const COS_REGION = env.COS_REGION || 'ap-shanghai'
+    const SECRET_ID = env.COS_SECRET_ID || ''
+    const SECRET_KEY = env.COS_SECRET_KEY || ''
+
+    if (!SECRET_ID || !SECRET_KEY) {
+      return new Response(JSON.stringify({ error: 'COS 未配置' }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+
+    const ext = file.name.split('.').pop() || 'webp'
+    const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`
+    const host = `${COS_BUCKET}.cos.${COS_REGION}.myqcloud.com`
+    const cosUrl = `https://${host}/${key}`
+    const method = 'put'
+    const now = Math.floor(Date.now() / 1000)
+    const expire = now + 900 // 15 分钟有效
+    const keyTime = `${now};${expire}`
+
+    // COS HMAC-SHA1 签名
+    async function hmacSha1(key, msg) {
+      const enc = new TextEncoder()
+      const k = await crypto.subtle.importKey('raw', typeof key === 'string' ? enc.encode(key) : key, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign'])
+      const sig = await crypto.subtle.sign('HMAC', k, enc.encode(msg))
+      return new Uint8Array(sig)
+    }
+    function buf2hex(buf) { return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('') }
+
+    const signKey = await hmacSha1(SECRET_KEY, keyTime)
+    const httpStr = `${method}\n/${key}\n\nhost=${host}\n`
+    const httpSha1 = buf2hex(new Uint8Array(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(httpStr))))
+    const strToSign = `sha1\n${keyTime}\n${httpSha1}\n`
+    const signature = buf2hex(await hmacSha1(signKey, strToSign))
+
+    const auth = `q-sign-algorithm=sha1&q-ak=${SECRET_ID}&q-sign-time=${keyTime}&q-key-time=${keyTime}&q-header-list=host&q-url-param-list=&q-signature=${signature}`
+
+    try {
+      const cosResp = await fetch(cosUrl, {
+        method: 'PUT', headers: { Authorization: auth, 'Content-Type': file.type || 'image/webp', Host: host },
+        body: file.stream(),
+      })
+      if (!cosResp.ok) {
+        console.error('COS upload failed:', cosResp.status, await cosResp.text().catch(()=>''))
+        return new Response(JSON.stringify({ error: `上传失败 (${cosResp.status})` }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+      return new Response(JSON.stringify({ url: cosUrl }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   // 开发环境测试激活码（KV 不可用时的 fallback）
   const isDev = env.CF_PAGES_BRANCH === 'dev' || !env.CF_PAGES
   const DEV_CODES = isDev ? {
