@@ -216,14 +216,26 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
           </div>
         )}
 
-        {/* 统计 2行6项 */}
+        {/* 统计 2行6项 — 点击跳转对应 Tab */}
         <div className={styles.statsGrid}>
-          <div className={styles.statItem}><div className={styles.statNum}>{stats.tacticCount}</div><div className={styles.statLabel}>战术</div></div>
-          <div className={styles.statItem}><div className={styles.statNum}>{stats.postCount + stats.lineupCount}</div><div className={styles.statLabel}>点位/帖子</div></div>
-          <div className={styles.statItem}><div className={styles.statNum}>{stats.totalLikes}</div><div className={styles.statLabel}>获赞</div></div>
-          <div className={styles.statItem}><div className={styles.statNum}>{stats.favoriteCount}</div><div className={styles.statLabel}>被收藏</div></div>
-          <div className={styles.statItem}><div className={styles.statNum}>{followerCount}</div><div className={styles.statLabel}>粉丝</div></div>
-          <div className={styles.statItem}><div className={styles.statNum}>{followingCount}</div><div className={styles.statLabel}>关注</div></div>
+          <div className={styles.statItem} onClick={() => setTab('tactics')} style={{ cursor: 'pointer' }} title="查看发布的战术">
+            <div className={styles.statNum}>{stats.tacticCount}</div><div className={styles.statLabel}>战术</div>
+          </div>
+          <div className={styles.statItem} onClick={() => setTab('posts')} style={{ cursor: 'pointer' }} title="查看帖子/点位">
+            <div className={styles.statNum}>{stats.postCount + stats.lineupCount}</div><div className={styles.statLabel}>点位/帖子</div>
+          </div>
+          <div className={styles.statItem} onClick={() => setTab('likes')} style={{ cursor: 'pointer' }} title="查看赞过的内容">
+            <div className={styles.statNum}>{stats.totalLikes}</div><div className={styles.statLabel}>获赞</div>
+          </div>
+          <div className={styles.statItem} onClick={() => setTab('favs')} style={{ cursor: 'pointer' }} title="查看收藏的内容">
+            <div className={styles.statNum}>{stats.favoriteCount}</div><div className={styles.statLabel}>被收藏</div>
+          </div>
+          <div className={styles.statItem}>
+            <div className={styles.statNum}>{followerCount}</div><div className={styles.statLabel}>粉丝</div>
+          </div>
+          <div className={styles.statItem}>
+            <div className={styles.statNum}>{followingCount}</div><div className={styles.statLabel}>关注</div>
+          </div>
         </div>
 
         {/* 操作按钮 */}
