@@ -46,12 +46,14 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
     <div className={embedded ? styles.overlayEmbedded : styles.overlay}>
       <div className={styles.topBar}>
         {!embedded && <button className={styles.backBtn} onClick={onBack}>← 返回</button>}
-        <input
-          className={styles.searchBox}
-          placeholder="搜索战术…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        {!embedded && (
+          <input
+            className={styles.searchBox}
+            placeholder="搜索战术…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        )}
         <div className={styles.sortBtns}>
           <button className={`${styles.sortBtn} ${sort === 'latest' ? styles.sortBtnActive : ''}`} onClick={() => setSort('latest')}>最新</button>
           <button className={`${styles.sortBtn} ${sort === 'hot' ? styles.sortBtnActive : ''}`} onClick={() => setSort('hot')}>最热</button>
