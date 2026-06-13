@@ -135,6 +135,51 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
+  // COS 签名诊断
+  if (url.pathname === '/api/cos/diag') {
+    const COS_BUCKET = env.COS_BUCKET || 'val-tactics-1443009345'
+    const COS_REGION = env.COS_REGION || 'ap-shanghai'
+    const SECRET_ID = env.COS_SECRET_ID || ''
+    const SECRET_KEY = env.COS_SECRET_KEY || ''
+    if (!SECRET_ID || !SECRET_KEY) return new Response(JSON.stringify({ error: 'COS 未配置' }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+    async function hmacSha1(key, msg) {
+      const enc = new TextEncoder()
+      const k = await crypto.subtle.importKey('raw', typeof key === 'string' ? enc.encode(key) : key, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign'])
+      const sig = await crypto.subtle.sign('HMAC', k, enc.encode(msg))
+      return new Uint8Array(sig)
+    }
+    function buf2hex(buf) { return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('') }
+
+    const host = `${COS_BUCKET}.cos.${COS_REGION}.myqcloud.com`
+    const testKey = 'test/diag.txt'
+    const contentType = 'text/plain'
+    const now = Math.floor(Date.now() / 1000)
+    const keyTime = `${now};${now + 900}`
+
+    const headerPart = `content-type=${encodeURIComponent(contentType)}&host=${host}`
+    const httpStr = `put\n/${testKey}\n\n${headerPart}\n`
+    const httpSha1 = buf2hex(new Uint8Array(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(httpStr))))
+    const strToSign = `sha1\n${keyTime}\n${httpSha1}\n`
+    const signKey = await hmacSha1(SECRET_KEY, keyTime)
+    const signature = buf2hex(await hmacSha1(signKey, strToSign))
+    const auth = `q-sign-algorithm=sha1&q-ak=${SECRET_ID}&q-sign-time=${keyTime}&q-key-time=${keyTime}&q-header-list=content-type;host&q-url-param-list=&q-signature=${signature}`
+
+    // 用签名尝试 PUT 一个测试文件
+    const putResp = await fetch(`https://${host}/${testKey}`, {
+      method: 'PUT', headers: { Authorization: auth, 'Content-Type': contentType, 'Content-Length': '4' }, body: 'test'
+    }).catch(e => ({ status: 0, text: () => e.message }))
+
+    return new Response(JSON.stringify({
+      ok: putResp.ok || false,
+      status: putResp.status,
+      cosError: putResp.ok ? null : await putResp.text().catch(()=>'-'),
+      httpStr, strToSign,
+      auth: auth.slice(0, 120) + '...',
+      host, keyTime,
+    }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+  }
+
   // ====================================================================
   // COS 上传代理（密钥在 Worker，前端不可见）
   // ====================================================================
@@ -187,7 +232,7 @@ export async function onRequest(context) {
       const fileBytes = await file.arrayBuffer()
       const cosResp = await fetch(cosUrl, {
         method: 'PUT',
-        headers: { Authorization: auth, 'Content-Type': contentType, 'Content-Length': String(fileBytes.byteLength), 'Host': host },
+        headers: { Authorization: auth, 'Content-Type': contentType, 'Content-Length': String(fileBytes.byteLength) },
         body: fileBytes,
       })
       if (!cosResp.ok) {
