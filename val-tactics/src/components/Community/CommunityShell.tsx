@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useAuth } from '../../store/AuthContext'
 import CommunityTopBar from './CommunityTopBar'
 import CommunitySidebar from './CommunitySidebar'
 import CommunityHome from './CommunityHome'
@@ -22,6 +23,8 @@ interface Props {
 }
 
 export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: Props) {
+  const { user } = useAuth()
+  const myId = user?.id || ''
   const [nav, setNav] = useState<CommunityNav>('home')
   const [detailId, setDetailId] = useState('')
   const [detailType, setDetailType] = useState<'tactic' | 'post' | 'lineup'>('tactic')
@@ -106,9 +109,11 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
       />
     )
 
+    const shownUserId = profileUserId || myId
+
     if (nav === 'profile') return (
       <ProfilePage
-        userId={profileUserId || ''}
+        userId={shownUserId}
         onBack={() => setNav('home')}
         onViewTactic={(id) => openDetail(id, 'tactic')}
         onViewPost={(id) => openDetail(id, 'post')}
@@ -118,7 +123,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
 
     if (nav === 'favorites' || nav === 'liked') return (
       <ProfilePage
-        userId={profileUserId || ''}
+        userId={myId}
         onBack={() => setNav('home')}
         onViewTactic={(id) => openDetail(id, 'tactic')}
         onViewPost={(id) => openDetail(id, 'post')}
