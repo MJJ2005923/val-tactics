@@ -172,17 +172,17 @@ export async function onRequest(context) {
     function buf2hex(buf) { return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('') }
 
     const signKey = await hmacSha1(SECRET_KEY, keyTime)
-    const httpStr = `${method}\n/${key}\n\nhost=${host}\n`
+    const httpStr = `${method}\n/${key}\n\content-type=${file.type || 'image/webp'}\n`
     const httpSha1 = buf2hex(new Uint8Array(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(httpStr))))
     const strToSign = `sha1\n${keyTime}\n${httpSha1}\n`
     const signature = buf2hex(await hmacSha1(signKey, strToSign))
 
-    const auth = `q-sign-algorithm=sha1&q-ak=${SECRET_ID}&q-sign-time=${keyTime}&q-key-time=${keyTime}&q-header-list=host&q-url-param-list=&q-signature=${signature}`
+    const auth = `q-sign-algorithm=sha1&q-ak=${SECRET_ID}&q-sign-time=${keyTime}&q-key-time=${keyTime}&q-header-list=content-type&q-url-param-list=&q-signature=${signature}`
 
     try {
       const cosResp = await fetch(cosUrl, {
-        method: 'PUT', headers: { Authorization: auth, 'Content-Type': file.type || 'image/webp', Host: host },
-        body: file.stream(),
+        method: 'PUT', headers: { Authorization: auth, 'Content-Type': file.type || 'image/webp' },
+        body: file,
       })
       if (!cosResp.ok) {
         console.error('COS upload failed:', cosResp.status, await cosResp.text().catch(()=>''))
