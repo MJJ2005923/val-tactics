@@ -183,9 +183,12 @@ export async function onRequest(context) {
     const auth = `q-sign-algorithm=sha1&q-ak=${SECRET_ID}&q-sign-time=${keyTime}&q-key-time=${keyTime}&q-header-list=content-type&q-url-param-list=&q-signature=${signature}`
 
     try {
+      // 读文件内容为 ArrayBuffer（Worker 环境 fetch body 需要明确长度）
+      const fileBytes = await file.arrayBuffer()
       const cosResp = await fetch(cosUrl, {
-        method: 'PUT', headers: { Authorization: auth, 'Content-Type': contentType },
-        body: file,
+        method: 'PUT',
+        headers: { Authorization: auth, 'Content-Type': contentType, 'Content-Length': String(fileBytes.byteLength) },
+        body: fileBytes,
       })
       if (!cosResp.ok) {
         const cosErr = await cosResp.text().catch(()=>'')
