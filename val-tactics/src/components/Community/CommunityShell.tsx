@@ -56,13 +56,13 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
     // 详情页（嵌入显示）
     if (detailId) {
       if (detailType === 'tactic') return (
-        <TacticsDetail tacticId={detailId} onBack={closeDetail} onLoadToBoard={onLoadTactic || (() => {})} />
+        <TacticsDetail embedded tacticId={detailId} onBack={closeDetail} onLoadToBoard={onLoadTactic || (() => {})} />
       )
       if (detailType === 'post') return (
-        <PostDetail postId={detailId} onBack={closeDetail} />
+        <PostDetail embedded postId={detailId} onBack={closeDetail} />
       )
       if (detailType === 'lineup') return (
-        <LineupsDetail lineupId={detailId} onBack={closeDetail} />
+        <LineupsDetail embedded lineupId={detailId} onBack={closeDetail} />
       )
     }
 

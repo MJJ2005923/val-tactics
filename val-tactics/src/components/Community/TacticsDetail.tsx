@@ -11,9 +11,10 @@ interface Props {
   tacticId: string
   onBack: () => void
   onLoadToBoard: (data: Record<string, unknown>, mapId: string) => void
+  embedded?: boolean
 }
 
-export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props) {
+export default function TacticsDetail({ tacticId, onBack, onLoadToBoard, embedded }: Props) {
   const { user } = useAuth(); const isAdmin = !!sessionStorage.getItem("admin-key")
   const [tactic, setTactic] = useState<TacticalShare | null>(null)
   const [author, setAuthor] = useState<Profile | null>(null)
@@ -44,16 +45,16 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard }: Props
     onLoadToBoard(tactic.tactic_data, tactic.map_id)
   }
 
-  if (loading) return <div className={styles.overlay}><div className={styles.topBar}><button className={styles.backBtn} onClick={onBack}>← 返回</button></div><div className={styles.loading}>加载中…</div></div>
-  if (deleted || !tactic) return <div className={styles.overlay}><div className={styles.topBar}><button className={styles.backBtn} onClick={onBack}>← 返回</button></div><div className={styles.deleted}>战术已删除或不存在</div></div>
+  if (loading) return <div className={embedded ? styles.overlayEmbedded : styles.overlay}><div className={styles.topBar}>{!embedded ? <button className={styles.backBtn} onClick={onBack}>← 返回</button> : null}</div><div className={styles.loading}>加载中…</div></div>
+  if (deleted || !tactic) return <div className={embedded ? styles.overlayEmbedded : styles.overlay}><div className={styles.topBar}>{!embedded ? <button className={styles.backBtn} onClick={onBack}>← 返回</button> : null}</div><div className={styles.deleted}>战术已删除或不存在</div></div>
 
   const mapName = maps.find(m => m.id === tactic.map_id)?.name || tactic.map_id
   const data = tactic.tactic_data as any
 
   return (
-    <div className={styles.overlay}>
+    <div className={embedded ? styles.overlayEmbedded : styles.overlay}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={onBack}>← 返回广场</button>
+        {!embedded && <button className={styles.backBtn} onClick={onBack}>← 返回广场</button>}
       </div>
 
       <div className={styles.content}>

@@ -12,9 +12,10 @@ import styles from './PostDetail.module.css'
 interface Props {
   postId: string
   onBack: () => void
+  embedded?: boolean
 }
 
-export default function PostDetail({ postId, onBack }: Props) {
+export default function PostDetail({ postId, onBack, embedded }: Props) {
   const { user } = useAuth(); const isAdmin = !!sessionStorage.getItem("admin-key")
   const [post, setPost] = useState<Post | null>(null)
   const [author, setAuthor] = useState<Profile | null>(null)
@@ -40,8 +41,8 @@ export default function PostDetail({ postId, onBack }: Props) {
     setDeleted(true)
   }
 
-  if (loading) return <div className={styles.page}><div className={styles.topBar}><button className={styles.backBtn} onClick={onBack}>返回论坛</button></div><div className={styles.loading}>加载中...</div></div>
-  if (deleted || !post) return <div className={styles.page}><div className={styles.topBar}><button className={styles.backBtn} onClick={onBack}>返回论坛</button></div><div className={styles.deleted}>帖子已删除或不存在</div></div>
+  if (loading) return <div className={embedded ? styles.pageEmbedded : styles.page}><div className={styles.topBar}>{!embedded && <button className={styles.backBtn} onClick={onBack}>返回论坛</button>}</div><div className={styles.loading}>加载中...</div></div>
+  if (deleted || !post) return <div className={embedded ? styles.pageEmbedded : styles.page}><div className={styles.topBar}>{!embedded && <button className={styles.backBtn} onClick={onBack}>返回论坛</button>}</div><div className={styles.deleted}>帖子已删除或不存在</div></div>
 
   return (
     <div className={styles.page}>
