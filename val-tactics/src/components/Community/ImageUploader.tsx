@@ -20,10 +20,17 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 本地预览
-    const reader = new FileReader()
-    reader.onload = () => setPreview(reader.result as string)
-    reader.readAsDataURL(file)
+    // 先用 FileReader 拿到 data URL（本地预览 + Storage 失败时兜底）
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result as string
+        setPreview(result)
+        resolve(result)
+      }
+      reader.onerror = () => resolve('')
+      reader.readAsDataURL(file)
+    })
 
     // 压缩 + 上传到 Storage（需要 userId + lineupId + slot）
     if (userId && lineupId && slot) {
@@ -39,11 +46,11 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
           onImage(storageUrl)
           return
         }
-      } catch {}
+      } catch { console.error('[ImageUploader] 上传失败') }
       setUploading(false)
     }
-    // 回退：data URL
-    onImage(preview)
+    // Storage 不可用回退为 data URL
+    if (dataUrl) onImage(dataUrl)
   }
 
   return (
