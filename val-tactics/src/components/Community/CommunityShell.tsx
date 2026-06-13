@@ -139,6 +139,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
         onClose={onClose}
         search={search}
         onSearch={setSearch}
+        showSearch={nav === 'home'}
       />
       <div className={styles.main}>
         <CommunitySidebar active={nav} onNav={setNav} />

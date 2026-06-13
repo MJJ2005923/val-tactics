@@ -5,14 +5,15 @@ interface Props {
   onClose: () => void
   search?: string
   onSearch?: (v: string) => void
+  showSearch?: boolean
 }
 
-export default function CommunityTopBar({ title, onClose, search, onSearch }: Props) {
+export default function CommunityTopBar({ title, onClose, search, onSearch, showSearch }: Props) {
   return (
     <div className={styles.topbar}>
       <button className={styles.backBtn} onClick={onClose}>← 返回战术板</button>
       <span className={styles.title}>{title}</span>
-      {onSearch && (
+      {showSearch && onSearch && (
         <input
           className={styles.search}
           placeholder="搜索..."
