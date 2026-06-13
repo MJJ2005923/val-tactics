@@ -8,9 +8,10 @@ import styles from './CommentSection.module.css'
 interface Props {
   targetType: string
   targetId: string
+  title?: string
 }
 
-export default function CommentSection({ targetType, targetId }: Props) {
+export default function CommentSection({ targetType, targetId, title }: Props) {
   const { user } = useAuth()
   const [comments, setComments] = useState<Comment[]>([])
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
@@ -60,7 +61,7 @@ export default function CommentSection({ targetType, targetId }: Props) {
 
   return (
     <div className={styles.section}>
-      <div className={styles.title}>评论 ({comments.length})</div>
+      <div className={styles.title}>{title || '评论'} ({comments.length})</div>
 
       {user ? (
         <div>

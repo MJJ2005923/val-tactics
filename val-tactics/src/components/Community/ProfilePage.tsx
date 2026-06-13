@@ -319,7 +319,7 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
         </div>
 
         {/* 留言板 */}
-        <CommentSection targetType="profile" targetId={userId} />
+        <CommentSection targetType="profile" targetId={userId} title="留言板" />
       </div>
     </div>
   )
