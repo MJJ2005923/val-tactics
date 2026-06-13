@@ -173,21 +173,21 @@ export async function onRequest(context) {
 
     const contentType = file.type || 'image/webp'
     const signKey = await hmacSha1(SECRET_KEY, keyTime)
-    // COS签名: Method\nURI\nParameters\nHeaders\n（Parameters为空=两个连续\n）
-    const headerPart = `content-type=${encodeURIComponent(contentType)}`
+    // COS签名: Method\nURI\nParameters\nHeaders\n — 虚拟托管域名必须签 host
+    const headerPart = `content-type=${encodeURIComponent(contentType)}&host=${host}`
     const httpStr = `${method}\n/${key}\n\n${headerPart}\n`
     const httpSha1 = buf2hex(new Uint8Array(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(httpStr))))
     const strToSign = `sha1\n${keyTime}\n${httpSha1}\n`
     const signature = buf2hex(await hmacSha1(signKey, strToSign))
 
-    const auth = `q-sign-algorithm=sha1&q-ak=${SECRET_ID}&q-sign-time=${keyTime}&q-key-time=${keyTime}&q-header-list=content-type&q-url-param-list=&q-signature=${signature}`
+    const auth = `q-sign-algorithm=sha1&q-ak=${SECRET_ID}&q-sign-time=${keyTime}&q-key-time=${keyTime}&q-header-list=content-type;host&q-url-param-list=&q-signature=${signature}`
 
     try {
       // 读文件内容为 ArrayBuffer（Worker 环境 fetch body 需要明确长度）
       const fileBytes = await file.arrayBuffer()
       const cosResp = await fetch(cosUrl, {
         method: 'PUT',
-        headers: { Authorization: auth, 'Content-Type': contentType, 'Content-Length': String(fileBytes.byteLength) },
+        headers: { Authorization: auth, 'Content-Type': contentType, 'Content-Length': String(fileBytes.byteLength), 'Host': host },
         body: fileBytes,
       })
       if (!cosResp.ok) {
