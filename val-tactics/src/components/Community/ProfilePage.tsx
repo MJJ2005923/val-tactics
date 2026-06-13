@@ -10,6 +10,7 @@ import { useAuth } from '../../store/AuthContext'
 import FollowButton from './FollowButton'
 import LikeButton from './LikeButton'
 import FavoriteProfileButton from './FavoriteProfileButton'
+import FollowListPopup from './FollowListPopup'
 import CommentSection from './CommentSection'
 import styles from './ProfilePage.module.css'
 
@@ -38,6 +39,8 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editBio, setEditBio] = useState('')
+  const [followPopup, setFollowPopup] = useState<'followers' | 'following' | null>(null)
+  const [showFollows, setShowFollows] = useState(true)
 
   const startEdit = () => {
     setEditName(profile?.username?.split('@')[0] || '')
@@ -63,6 +66,7 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
       setFollowerCount(fc)
       setFollowingCount(fgc)
       setStats(st)
+      if (prof?.show_follows !== undefined) setShowFollows(prof.show_follows)
 
       // 套餐信息（本地计算）
       const tier = localStorage.getItem('val-tactics-tier') || 'free'
@@ -194,7 +198,15 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
         {user && user.id === userId && (
           <div className={styles.settings}>
             <div className={styles.settingsTitle}>账户设置</div>
-            <div className={styles.settingsRow}>
+            <div className={styles.settingsRow} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: 'rgba(255,255,255,.4)', cursor: 'pointer' }}>
+                <span>{showFollows ? '公开关注列表' : '隐藏关注列表'}</span>
+                <input type="checkbox" checked={showFollows} onChange={async () => {
+                  const next = !showFollows
+                  setShowFollows(next)
+                  await supabase.from('profiles').update({ show_follows: next }).eq('id', userId)
+                }} style={{ accentColor: '#E349ED' }} />
+              </label>
               <button className={styles.settingsBtn}
                 onClick={() => {
                   if (confirm('重置密码链接将发送到您的注册邮箱，确认？')) {
@@ -230,10 +242,10 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
           <div className={styles.statItem} onClick={() => setTab('favs')} style={{ cursor: 'pointer' }} title="查看收藏的内容">
             <div className={styles.statNum}>{stats.favoriteCount}</div><div className={styles.statLabel}>被收藏</div>
           </div>
-          <div className={styles.statItem}>
+          <div className={styles.statItem} onClick={() => setFollowPopup('followers')} style={{ cursor: 'pointer' }} title="查看粉丝列表">
             <div className={styles.statNum}>{followerCount}</div><div className={styles.statLabel}>粉丝</div>
           </div>
-          <div className={styles.statItem}>
+          <div className={styles.statItem} onClick={() => setFollowPopup('following')} style={{ cursor: 'pointer' }} title="查看关注列表">
             <div className={styles.statNum}>{followingCount}</div><div className={styles.statLabel}>关注</div>
           </div>
         </div>
@@ -333,6 +345,16 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
         {/* 留言板 */}
         <CommentSection targetType="profile" targetId={userId} title="留言板" />
       </div>
+
+      {/* 关注/粉丝弹窗 */}
+      {followPopup && (
+        <FollowListPopup
+          userId={userId}
+          type={followPopup}
+          onClose={() => setFollowPopup(null)}
+          onViewProfile={() => setFollowPopup(null)}
+        />
+      )}
     </div>
   )
 }

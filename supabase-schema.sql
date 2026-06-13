@@ -402,6 +402,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 开发者标识
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
 
+-- 关注列表隐私
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS show_follows BOOLEAN DEFAULT true;
+
 -- ================================================================
 -- 点位收藏
 -- ================================================================

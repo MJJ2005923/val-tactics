@@ -15,6 +15,9 @@ export interface Profile {
   post_count?: number
   follower_count?: number
   following_count?: number
+  favorite_count?: number
+  // 隐私
+  show_follows?: boolean
 }
 
 export interface TacticalShare {
