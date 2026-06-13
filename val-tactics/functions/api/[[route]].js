@@ -171,8 +171,11 @@ export async function onRequest(context) {
     }
     function buf2hex(buf) { return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('') }
 
+    const contentType = file.type || 'image/webp'
     const signKey = await hmacSha1(SECRET_KEY, keyTime)
-    const httpStr = `${method}\n/${key}\n\content-type=${file.type || 'image/webp'}\n`
+    // COS签名: Method\nURI\nParameters\nHeaders\n（Parameters为空=两个连续\n）
+    const headerPart = `content-type=${encodeURIComponent(contentType)}`
+    const httpStr = `${method}\n/${key}\n\n${headerPart}\n`
     const httpSha1 = buf2hex(new Uint8Array(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(httpStr))))
     const strToSign = `sha1\n${keyTime}\n${httpSha1}\n`
     const signature = buf2hex(await hmacSha1(signKey, strToSign))
@@ -181,12 +184,13 @@ export async function onRequest(context) {
 
     try {
       const cosResp = await fetch(cosUrl, {
-        method: 'PUT', headers: { Authorization: auth, 'Content-Type': file.type || 'image/webp' },
+        method: 'PUT', headers: { Authorization: auth, 'Content-Type': contentType },
         body: file,
       })
       if (!cosResp.ok) {
-        console.error('COS upload failed:', cosResp.status, await cosResp.text().catch(()=>''))
-        return new Response(JSON.stringify({ error: `上传失败 (${cosResp.status})` }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+        const cosErr = await cosResp.text().catch(()=>'')
+        console.error('COS upload failed:', cosResp.status, cosErr)
+        return new Response(JSON.stringify({ error: `COS ${cosResp.status}: ${cosErr.slice(0, 200)}` }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
       }
       return new Response(JSON.stringify({ url: cosUrl }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
