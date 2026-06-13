@@ -19,6 +19,7 @@ import SponsorPanel from './components/SponsorPanel/SponsorPanel'
 import AdminPanel from './components/AdminPanel/AdminPanel'
 import MobileLayout from './components/MobileLayout/MobileLayout'
 import CommunityShell from './components/Community/CommunityShell'
+import PWAInstallButton from './components/PWAInstallButton'
 import NotificationBell from './components/Community/NotificationBell'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
@@ -395,6 +396,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <a className="navbar__btn" href="/changelog.html" target="_blank" style={{ fontSize: 12, textDecoration: 'none' }}>更新公告</a>
           <button className="navbar__btn" onClick={() => setShowPrivacy(true)} style={{ fontSize: 12 }}>📜 隐私条款</button>
           <button className="navbar__btn" onClick={() => setShowCommunity(true)} style={{ color: '#05F8F8', borderColor: 'rgba(5,248,248,.15)' }}>社区</button>
+          <PWAInstallButton />
           <button className="navbar__btn" onClick={() => setShowHelp(true)}>使用手册</button>
           <button className="navbar__btn" onClick={() => setShowSponsor(true)} style={{ color: '#ffd700', borderColor: 'rgba(255,215,0,.2)' }}>特别鸣谢</button>
           <button className="navbar__btn" onClick={() => setShowAdmin(true)} style={{ fontSize: 10, opacity: .3 }} title="管理">⚙</button>
