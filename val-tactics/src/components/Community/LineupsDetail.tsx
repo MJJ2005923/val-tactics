@@ -91,7 +91,36 @@ export default function LineupsDetail({ lineupId, onBack }: Props) {
           ))}
         </div>
 
-        {/* 坐标 */}
+        {/* 地图坐标可视化 */}
+        {(lineup.start_x != null || lineup.target_x != null) && (
+          <div style={{
+            position: 'relative', borderRadius: 12, overflow: 'hidden',
+            border: '1px solid rgba(255,255,255,.06)', marginBottom: 16,
+          }}>
+            <img src={`/images/maps/${lineup.map_id}.png`} alt="" style={{ width: '100%', display: 'block' }} />
+            <svg style={{ position: 'absolute', inset: 0, pointerEvents: 'none', width: '100%', height: '100%' }}>
+              {lineup.start_x != null && lineup.start_y != null && (
+                <>
+                  <circle cx={`${lineup.start_x * 100}%`} cy={`${lineup.start_y * 100}%`} r="6" fill="#05F8F8" stroke="#fff" strokeWidth="2" />
+                  <text x={`${lineup.start_x * 100}%`} y={`${lineup.start_y * 100 - 2}%`} fill="#fff" fontSize="10" textAnchor="middle"
+                    style={{ textShadow: '0 1px 3px black', paintOrder: 'stroke', stroke: 'rgba(0,0,0,.6)', strokeWidth: 3 }}>站位</text>
+                </>
+              )}
+              {lineup.target_x != null && lineup.target_y != null && (
+                <>
+                  <circle cx={`${lineup.target_x * 100}%`} cy={`${lineup.target_y * 100}%`} r="6" fill="#E349ED" stroke="#fff" strokeWidth="2" />
+                  <text x={`${lineup.target_x * 100}%`} y={`${lineup.target_y * 100 - 2}%`} fill="#fff" fontSize="10" textAnchor="middle"
+                    style={{ textShadow: '0 1px 3px black', paintOrder: 'stroke', stroke: 'rgba(0,0,0,.6)', strokeWidth: 3 }}>落点</text>
+                </>
+              )}
+              {lineup.start_x != null && lineup.start_y != null && lineup.target_x != null && lineup.target_y != null && (
+                <line x1={`${lineup.start_x * 100}%`} y1={`${lineup.start_y * 100}%`} x2={`${lineup.target_x * 100}%`} y2={`${lineup.target_y * 100}%`}
+                  stroke="#f0c0ff" strokeWidth="1.5" strokeDasharray="4,3" opacity=".7" />
+              )}
+            </svg>
+          </div>
+        )}
+        {/* 坐标文字 */}
         {(lineup.start_x != null || lineup.target_x != null) && (
           <div className={styles.coords}>
             {lineup.start_x != null && <div className={styles.coordItem}><b>站位</b> ({lineup.start_x?.toFixed(1)}, {lineup.start_y?.toFixed(1)})</div>}
