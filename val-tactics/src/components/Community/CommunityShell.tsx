@@ -87,8 +87,6 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
         onViewTactic={(id) => openDetail(id, 'tactic')}
         onCreate={() => setShowCreate('tactic')}
         onViewProfile={viewProfile}
-        onViewForum={() => setNav('forum')}
-        onViewLineups={() => setNav('lineups')}
       />
     )
 

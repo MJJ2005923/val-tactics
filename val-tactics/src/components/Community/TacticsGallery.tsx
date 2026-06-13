@@ -10,12 +10,10 @@ interface Props {
   onViewTactic: (id: string) => void
   onCreate: () => void
   onViewProfile?: (uid: string) => void
-  onViewForum?: () => void
-  onViewLineups?: () => void
   embedded?: boolean
 }
 
-export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewProfile, onViewForum, onViewLineups, embedded }: Props) {
+export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewProfile, embedded }: Props) {
   const [tactics, setTactics] = useState<TacticalShare[]>([])
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [loading, setLoading] = useState(true)
@@ -59,8 +57,6 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
           <button className={`${styles.sortBtn} ${sort === 'hot' ? styles.sortBtnActive : ''}`} onClick={() => setSort('hot')}>最热</button>
         </div>
         <button className={styles.createBtn} onClick={onCreate}>发布战术</button>
-        {onViewForum && <button className={styles.createBtn} onClick={onViewForum} style={{ background: '#05F8F8', color: '#07040c' }}>论坛</button>}
-        {onViewLineups && <button className={styles.createBtn} onClick={onViewLineups} style={{ background: '#f0c0ff', color: '#07040c' }}>点位</button>}
       </div>
 
       <div className={styles.mapFilter}>
