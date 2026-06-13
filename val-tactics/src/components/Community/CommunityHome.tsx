@@ -14,7 +14,6 @@ interface Props {
 }
 
 export default function CommunityHome({ search, onViewTactic, onViewPost, onViewLineup, onCreateTactic, onCreatePost }: Props) {
-  const [contentTab, setContentTab] = useState<'all' | 'tactics' | 'posts' | 'lineups'>('all')
   const [hotTactics, setHotTactics] = useState<TacticalShare[]>([])
   const [hotPosts, setHotPosts] = useState<Post[]>([])
   const [hotLineups, setHotLineups] = useState<Lineup[]>([])
@@ -45,69 +44,57 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
 
   return (
     <div className={styles.home}>
-      {/* 标签栏 */}
-      <div className={styles.tabs}>
-        {(['all', 'tactics', 'posts', 'lineups'] as const).map(t => (
-          <button key={t} className={`${styles.tab} ${contentTab === t ? styles.tabActive : ''}`} onClick={() => setContentTab(t)}>
-            {t === 'all' ? '全部' : t === 'tactics' ? '战术' : t === 'posts' ? '论坛' : '点位'}
-          </button>
-        ))}
+      {/* 三栏布局 */}
+      <div className={styles.grid3}>
+        {/* 战术列 */}
+        <div className={styles.column}>
+          <div className={styles.colTitle}><span className={`${styles.dot} ${styles.dotTactic}`} />推荐战术</div>
+          {filteredTactics.length === 0
+            ? <div style={{ padding: 16, fontSize: 12, color: 'rgba(255,255,255,.1)', textAlign: 'center' }}>暂无战术</div>
+            : filteredTactics.map(t => (
+              <div key={t.id} className={styles.cardBig} onClick={() => onViewTactic(t.id)}>
+                {t.preview_image && <img src={t.preview_image} alt="" className={styles.cardImg} />}
+                <div className={styles.cardBody}>
+                  <div className={styles.cardTitle}>{t.title}</div>
+                  <div className={styles.cardMeta}>{t.views} 浏览 · 赞 {t.like_count || 0}</div>
+                </div>
+              </div>
+            ))}
+          <button className={styles.moreBtn} onClick={onCreateTactic}>+ 发布战术</button>
+        </div>
+
+        {/* 帖子列 */}
+        <div className={styles.column}>
+          <div className={styles.colTitle}><span className={`${styles.dot} ${styles.dotPost}`} />热门帖子</div>
+          {filteredPosts.length === 0
+            ? <div style={{ padding: 16, fontSize: 12, color: 'rgba(255,255,255,.1)', textAlign: 'center' }}>暂无帖子</div>
+            : filteredPosts.map(p => (
+              <div key={p.id} className={styles.cardCompact} onClick={() => onViewPost(p.id)}>
+                <span className={styles.cardCompactTitle}>{p.title}</span>
+                {(p.comment_count || 0) > 0 && <span className={styles.replyBadge}>{p.comment_count}回复</span>}
+              </div>
+            ))}
+          <button className={styles.moreBtn} onClick={onCreatePost}>+ 发帖</button>
+        </div>
+
+        {/* 点位列 */}
+        <div className={styles.column}>
+          <div className={styles.colTitle}><span className={`${styles.dot} ${styles.dotLineup}`} />精选点位</div>
+          {filteredLineups.length === 0
+            ? <div style={{ padding: 16, fontSize: 12, color: 'rgba(255,255,255,.1)', textAlign: 'center' }}>暂无点位</div>
+            : filteredLineups.map(l => (
+              <div key={l.id} className={styles.cardBig} onClick={() => onViewLineup(l.id)}>
+                <div className={styles.cardBody}>
+                  <div className={styles.cardTitle}>{l.title}</div>
+                  <div className={styles.cardMeta}>难度 {l.difficulty || 3}/5 · {l.views} 浏览</div>
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
 
-      {/* 三栏布局 */}
-      {contentTab !== 'all' ? null : (
-        <div className={styles.grid3}>
-          {/* 战术列 */}
-          {(contentTab === 'all' || contentTab === 'tactics') && (
-            <div className={styles.column}>
-              <div className={styles.colTitle}><span className={`${styles.dot} ${styles.dotTactic}`} />推荐战术</div>
-              {filteredTactics.length === 0 ? <div style={{ padding: 16, fontSize: 12, color: 'rgba(255,255,255,.1)', textAlign: 'center' }}>暂无战术</div> :
-              filteredTactics.map(t => (
-                <div key={t.id} className={styles.cardBig} onClick={() => onViewTactic(t.id)}>
-                  {t.preview_image && <img src={t.preview_image} alt="" className={styles.cardImg} />}
-                  <div className={styles.cardBody}>
-                    <div className={styles.cardTitle}>{t.title}</div>
-                    <div className={styles.cardMeta}>{t.views} 浏览 · 赞 {t.like_count || 0}</div>
-                  </div>
-                </div>
-              ))}
-              <button className={styles.moreBtn} onClick={onCreateTactic}>+ 发布战术</button>
-            </div>
-          )}
-
-          {/* 帖子列 */}
-          {(contentTab === 'all' || contentTab === 'posts') && (
-            <div className={styles.column}>
-              <div className={styles.colTitle}><span className={`${styles.dot} ${styles.dotPost}`} />热门帖子</div>
-              {filteredPosts.map(p => (
-                <div key={p.id} className={styles.cardCompact} onClick={() => onViewPost(p.id)}>
-                  <span className={styles.cardCompactTitle}>{p.title}</span>
-                  {(p.comment_count || 0) > 0 && <span className={styles.replyBadge}>{p.comment_count}回复</span>}
-                </div>
-              ))}
-              <button className={styles.moreBtn} onClick={onCreatePost}>+ 发帖</button>
-            </div>
-          )}
-
-          {/* 点位列 */}
-          {(contentTab === 'all' || contentTab === 'lineups') && (
-            <div className={styles.column}>
-              <div className={styles.colTitle}><span className={`${styles.dot} ${styles.dotLineup}`} />精选点位</div>
-              {filteredLineups.map(l => (
-                <div key={l.id} className={styles.cardBig} onClick={() => onViewLineup(l.id)}>
-                  <div className={styles.cardBody}>
-                    <div className={styles.cardTitle}>{l.title}</div>
-                    <div className={styles.cardMeta}>难度 {l.difficulty || 3}/5 · {l.views} 浏览</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* 社区动态 */}
-      {contentTab === 'all' && activities.length > 0 && (
+      {activities.length > 0 && (
         <div className={styles.feed}>
           <div className={styles.feedTitle}>📡 社区动态</div>
           {activities.slice(0, 6).map((a, i) => (
@@ -115,20 +102,6 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
               <div className={styles.feedAvatar}>{a.user_id?.slice(0, 2) || '?'}</div>
               <span className={styles.feedAction}>用户 {a.action}了 {a.target_type === 'tactic' ? '战术' : a.target_type === 'post' ? '帖子' : '点位'}</span>
               <span className={styles.feedTime}>{new Date(a.created_at).toLocaleDateString('zh')}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 仅帖子 Tag 时显示列表 */}
-      {contentTab === 'posts' && (
-        <div className={styles.column} style={{ maxWidth: 600 }}>
-          {filteredPosts.map(p => (
-            <div key={p.id} className={styles.cardCompact} onClick={() => onViewPost(p.id)} style={{ padding: '12px 14px' }}>
-              <div>
-                <div className={styles.cardTitle} style={{ marginBottom: 4 }}>{p.title}</div>
-                <div className={styles.cardMeta}>{p.views} 浏览 · {p.like_count || 0} 赞 · {p.comment_count || 0} 评论</div>
-              </div>
             </div>
           ))}
         </div>
