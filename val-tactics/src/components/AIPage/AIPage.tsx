@@ -494,8 +494,16 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
                         <div style={{ marginBottom: 4, color: p.color, fontWeight: 600, fontSize: 11 }}>
                           全部 4 种 AI 模式
                         </div>
-                        {['快速模式', '均衡模式', '推理模式', '深度模式'].map(name => (
-                          <div key={name} style={{ padding: '2px 0', fontSize: 11, color: 'rgba(255,255,255,.35)' }}>{name}</div>
+                        {[
+                          { name: '快速模式', limit: '20次/天' },
+                          { name: '均衡模式', limit: '10次/天' },
+                          { name: '推理模式', limit: '3次/天' },
+                          { name: '深度模式', limit: '2次/天' },
+                        ].map(m => (
+                          <div key={m.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontSize: 11 }}>
+                            <span style={{ color: 'rgba(255,255,255,.35)' }}>{m.name}</span>
+                            <span style={{ color: 'rgba(255,255,255,.2)' }}>{m.limit}</span>
+                          </div>
                         ))}
                       </div>
                     )}
