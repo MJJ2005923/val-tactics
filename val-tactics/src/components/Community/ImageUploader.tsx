@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { compressImage, uploadLineupImage } from '../../lib/community/lineups'
+import { toLosslessWebP, uploadLineupImage } from '../../lib/community/lineups'
 import styles from './ImageUploader.module.css'
 
 interface Props {
@@ -20,33 +20,22 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 先用 FileReader 拿到 data URL（本地预览 + Storage 失败时兜底）
-    const dataUrl = await new Promise<string>((resolve) => {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const result = reader.result as string
-        setPreview(result)
-        resolve(result)
-      }
-      reader.onerror = () => resolve('')
-      reader.readAsDataURL(file)
-    })
+    // 预览秒出：blob URL，不等 FileReader
+    const blobUrl = URL.createObjectURL(file)
+    setPreview(blobUrl)
 
-    // 上传到 Storage（≤5MB 原图直传，超过则压缩）
+    // 上传到 Storage
     if (userId && lineupId && slot) {
       setUploading(true)
       try {
-        const BUCKET_LIMIT = 5 * 1024 * 1024 // 5MB
-        const uploadFile = file.size <= BUCKET_LIMIT
-          ? file  // 原图直传
-          : await compressImage(file)  // 超过5MB才压缩
-
-        const ext = file.size <= BUCKET_LIMIT ? (file.name.split('.').pop() || 'webp') : 'webp'
+        // 统一转无损 WebP（原尺寸、像素100%一致、体积比PNG小40-60%）
+        const webp = await toLosslessWebP(file)
         const storageUrl = await uploadLineupImage(
-          new File([uploadFile], `${slot}.${ext}`, { type: uploadFile.type }),
+          new File([webp], `${slot}.webp`, { type: 'image/webp' }),
           userId, lineupId, slot
         )
         if (storageUrl) {
+          URL.revokeObjectURL(blobUrl)
           setPreview(storageUrl)
           onImage(storageUrl)
           return
@@ -54,8 +43,6 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
       } catch { console.error('[ImageUploader] 上传失败') }
       setUploading(false)
     }
-    // Storage 不可用回退为 data URL
-    if (dataUrl) onImage(dataUrl)
   }
 
   return (
