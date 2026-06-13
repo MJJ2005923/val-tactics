@@ -10,6 +10,7 @@ import { useAuth } from '../../store/AuthContext'
 import FollowButton from './FollowButton'
 import LikeButton from './LikeButton'
 import FavoriteProfileButton from './FavoriteProfileButton'
+import CommentSection from './CommentSection'
 import styles from './ProfilePage.module.css'
 
 interface Props {
@@ -316,6 +317,9 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
             ))
           )}
         </div>
+
+        {/* 留言板 */}
+        <CommentSection targetType="profile" targetId={userId} />
       </div>
     </div>
   )
