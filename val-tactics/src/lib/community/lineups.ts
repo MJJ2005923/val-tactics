@@ -1,15 +1,16 @@
 import { supabase } from '../supabase'
 import type { Lineup, PaginatedResponse } from '../../types/community'
 
-/** 上传图片到 COS（通过 Worker 代理），返回公开 URL */
-export async function uploadLineupImage(file: File, userId: string, lineupId: string, _slot: string): Promise<string | null> {
-  const form = new FormData()
-  form.append('file', file)
-  form.append('folder', `lineups/${userId}/${lineupId}`)
-  const resp = await fetch('/api/cos/upload', { method: 'POST', body: form })
-  const data = await resp.json()
-  if (data.error) throw new Error(data.error)
-  return data.url || null
+const BUCKET = 'lineups'
+
+/** 上传图片到 Supabase Storage，返回公开 URL */
+export async function uploadLineupImage(file: File, userId: string, lineupId: string, slot: string): Promise<string | null> {
+  const ext = file.name.split('.').pop() || 'webp'
+  const path = `${userId}/${lineupId}/${slot}.${ext}`
+  const { data } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true, contentType: file.type })
+  if (!data) return null
+  const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(data.path)
+  return urlData.publicUrl
 }
 
 /** 浏览点位列表 */
@@ -92,8 +93,11 @@ export async function toLosslessWebP(file: File): Promise<Blob> {
   })
 }
 
-/** TODO: 删除点位时清理 COS 图片（需新增 Worker /api/cos/delete 路由） */
-export async function deleteStorageImages(_userId: string, _lineupId: string) {
-  // 当前 COS 上传路径: lineups/{userId}/{lineupId}/{timestamp}.webp
-  // COS 删除需 Worker 代理 + 遍历 listObjects
+/** 删除点位时清理 Storage 图片 */
+export async function deleteStorageImages(userId: string, lineupId: string) {
+  const { data } = await supabase.storage.from(BUCKET).list(`${userId}/${lineupId}`)
+  if (data?.length) {
+    const paths = data.map(f => `${userId}/${lineupId}/${f.name}`)
+    await supabase.storage.from(BUCKET).remove(paths)
+  }
 }
