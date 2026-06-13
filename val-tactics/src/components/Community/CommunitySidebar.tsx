@@ -25,20 +25,22 @@ const myItems: { id: CommunityNav; icon: string; label: string }[] = [
 export default function CommunitySidebar({ active, onNav, favCount, likeCount }: Props) {
   return (
     <div className={styles.sidebar}>
-      <div className={styles.section}>探索</div>
-      {items.map(item => (
+      <div className={styles.section} style={{ animationDelay: '0s' }}>探索</div>
+      {items.map((item, i) => (
         <div key={item.id}
           className={`${styles.navItem} ${active === item.id ? styles.active : ''}`}
+          style={{ animationDelay: `${.06 + i * .06}s` }}
           onClick={() => onNav(item.id)}>
           <span className={styles.icon}>{item.icon}</span>
           {item.label}
         </div>
       ))}
-      <div className={styles.divider} />
-      <div className={styles.section}>我的</div>
-      {myItems.map(item => (
+      <div className={styles.divider} style={{ animationDelay: '.36s' }} />
+      <div className={styles.section} style={{ animationDelay: '.4s' }}>我的</div>
+      {myItems.map((item, i) => (
         <div key={item.id}
           className={`${styles.navItem} ${active === item.id ? styles.active : ''}`}
+          style={{ animationDelay: `${.44 + i * .06}s` }}
           onClick={() => onNav(item.id)}>
           <span className={styles.icon}>{item.icon}</span>
           {item.label}
