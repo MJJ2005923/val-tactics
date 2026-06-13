@@ -24,6 +24,7 @@ export default function CollectionPage({ type, onViewTactic, onViewPost, onViewL
   const { user } = useAuth()
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | '战术' | '帖子' | '点位'>('all')
 
   useEffect(() => {
     if (!user) { setLoading(false); return }
@@ -59,17 +60,30 @@ export default function CollectionPage({ type, onViewTactic, onViewPost, onViewL
   if (loading) return <div className={styles.page}><div className={styles.loading}>加载中...</div></div>
   if (!user) return <div className={styles.page}><div className={styles.empty}>请先登录</div></div>
 
+  const filteredItems = filter === 'all' ? items : items.filter(item => item.type === filter)
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <h3>{type === 'favorites' ? '⭐ 我的收藏' : '❤️ 我的赞过'}</h3>
         <span className={styles.count}>{items.length} 条</span>
       </div>
-      {items.length === 0 ? (
-        <div className={styles.empty}>{type === 'favorites' ? '还没有收藏任何内容' : '还没有赞过任何内容'}</div>
+
+      {/* 分类筛选 */}
+      <div className={styles.filters}>
+        {(['all', '战术', '帖子', '点位'] as const).map(f => (
+          <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`}
+            onClick={() => setFilter(f)}>
+            {f === 'all' ? '全部' : f}
+          </button>
+        ))}
+      </div>
+
+      {filteredItems.length === 0 ? (
+        <div className={styles.empty}>{filter === 'all' ? (type === 'favorites' ? '还没有收藏任何内容' : '还没有赞过任何内容') : `还没有${filter}相关`}</div>
       ) : (
         <div className={styles.list}>
-          {items.map(item => (
+          {filteredItems.map(item => (
             <div key={item.id} className={styles.item}
               onClick={() => {
                 if (item.type === '战术') onViewTactic(item.id)
