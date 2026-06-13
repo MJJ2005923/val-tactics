@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getLineup, deleteLineup } from '../../lib/community/lineups'
 import { getProfile } from '../../lib/community/profiles'
 import { useAuth } from '../../store/AuthContext'
@@ -22,6 +22,10 @@ export default function LineupsDetail({ lineupId, onBack }: Props) {
   const [loading, setLoading] = useState(true)
   const [deleted, setDeleted] = useState(false)
   const [zoomImg, setZoomImg] = useState('')
+  const [zoomScale, setZoomScale] = useState(1)
+  const [zoomPan, setZoomPan] = useState({ x: 0, y: 0 })
+  const zoomDragging = useRef(false)
+  const zoomLast = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
     (async () => {
@@ -109,10 +113,38 @@ export default function LineupsDetail({ lineupId, onBack }: Props) {
         <CommentSection targetType="lineup" targetId={lineup.id} />
       </div>
 
-      {/* 全屏放大 */}
+      {/* 全屏图片查看器（缩放+拖拽） */}
       {zoomImg && (
-        <div className={styles.zoom} onClick={() => setZoomImg('')}>
-          <img src={zoomImg} alt="" />
+        <div className={styles.zoom}
+          onClick={(e) => { if (e.target === e.currentTarget) { setZoomImg(''); setZoomScale(1) } }}
+          onWheel={(e) => {
+            e.preventDefault()
+            setZoomScale(s => Math.max(0.5, Math.min(5, s + (e.deltaY > 0 ? -0.3 : 0.3))))
+          }}
+          onMouseDown={(e) => { zoomDragging.current = true; zoomLast.current = { x: e.clientX, y: e.clientY } }}
+          onMouseMove={(e) => {
+            if (!zoomDragging.current) return
+            const dx = e.clientX - zoomLast.current.x
+            const dy = e.clientY - zoomLast.current.y
+            zoomLast.current = { x: e.clientX, y: e.clientY }
+            setZoomPan(p => ({ x: p.x + dx, y: p.y + dy }))
+          }}
+          onMouseUp={() => { zoomDragging.current = false }}
+          onMouseLeave={() => { zoomDragging.current = false }}
+        >
+          <img src={zoomImg} alt="" style={{
+            transform: `translate(${zoomPan.x}px, ${zoomPan.y}px) scale(${zoomScale})`,
+            cursor: zoomScale > 1 ? (zoomDragging.current ? 'grabbing' : 'grab') : 'default',
+            transition: zoomDragging.current ? 'none' : 'transform .15s ease',
+          }} />
+          {/* 缩放控制栏 */}
+          <div className={styles.zoomControls}>
+            <button onClick={(e) => { e.stopPropagation(); setZoomScale(s => Math.max(0.5, s - 0.3)) }}>−</button>
+            <span>{Math.round(zoomScale * 100)}%</span>
+            <button onClick={(e) => { e.stopPropagation(); setZoomScale(s => Math.min(5, s + 0.3)) }}>+</button>
+            <button onClick={(e) => { e.stopPropagation(); setZoomScale(1); setZoomPan({x:0,y:0}) }}>1:1</button>
+            <button onClick={(e) => { e.stopPropagation(); setZoomImg(''); setZoomScale(1) }}>x</button>
+          </div>
         </div>
       )}
     </div>

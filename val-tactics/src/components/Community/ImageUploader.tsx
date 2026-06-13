@@ -32,13 +32,18 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
       reader.readAsDataURL(file)
     })
 
-    // 压缩 + 上传到 Storage（需要 userId + lineupId + slot）
+    // 上传到 Storage（≤5MB 原图直传，超过则压缩）
     if (userId && lineupId && slot) {
       setUploading(true)
       try {
-        const compressed = await compressImage(file)
+        const BUCKET_LIMIT = 5 * 1024 * 1024 // 5MB
+        const uploadFile = file.size <= BUCKET_LIMIT
+          ? file  // 原图直传
+          : await compressImage(file)  // 超过5MB才压缩
+
+        const ext = file.size <= BUCKET_LIMIT ? (file.name.split('.').pop() || 'webp') : 'webp'
         const storageUrl = await uploadLineupImage(
-          new File([compressed], `${slot}.webp`, { type: 'image/webp' }),
+          new File([uploadFile], `${slot}.${ext}`, { type: uploadFile.type }),
           userId, lineupId, slot
         )
         if (storageUrl) {
