@@ -74,6 +74,11 @@ export default function LineupsDetail({ lineupId, onBack }: Props) {
           <span className={styles.mapTag}>{maps.find(m => m.id === lineup.map_id)?.name}</span>
           <span className={styles.agentTag}>{agentName(lineup.agent_id)} - {abilityName(lineup.agent_id, lineup.ability_id)}</span>
           <div className={styles.lineupTitle}>{lineup.title}</div>
+          <div className={styles.titleStats}>
+            <span className={styles.statBadge}>{lineup.views} 浏览</span>
+            <span className={styles.statBadge}>{lineup.like_count || 0} 点赞</span>
+            <span className={styles.statBadge}>难度 {lineup.difficulty}/5</span>
+          </div>
           {lineup.description && <div className={styles.lineupDesc}>{lineup.description}</div>}
         </div>
 
