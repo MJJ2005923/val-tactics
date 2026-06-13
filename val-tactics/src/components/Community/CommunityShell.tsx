@@ -12,6 +12,7 @@ import LineupsPage from './LineupsPage'
 import LineupsDetail from './LineupsDetail'
 import LineupsCreate from './LineupsCreate'
 import ProfilePage from './ProfilePage'
+import CollectionPage from './CollectionPage'
 import CreateShare from './CreateShare'
 import type { CommunityNav } from './CommunitySidebar'
 import styles from './CommunityShell.module.css'
@@ -122,15 +123,12 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
       />
     )
 
-    if (nav === 'favorites' || nav === 'liked') return (
-      <ProfilePage
-        embedded
-        userId={myId}
-        onBack={() => setNav('home')}
-        onViewTactic={(id) => openDetail(id, 'tactic')}
-        onViewPost={(id) => openDetail(id, 'post')}
-        onViewLineup={(id) => openDetail(id, 'lineup')}
-      />
+    if (nav === 'favorites') return (
+      <CollectionPage type="favorites" onViewTactic={(id) => openDetail(id, 'tactic')} onViewPost={(id) => openDetail(id, 'post')} onViewLineup={(id) => openDetail(id, 'lineup')} />
+    )
+
+    if (nav === 'liked') return (
+      <CollectionPage type="liked" onViewTactic={(id) => openDetail(id, 'tactic')} onViewPost={(id) => openDetail(id, 'post')} onViewLineup={(id) => openDetail(id, 'lineup')} />
     )
 
     return null
