@@ -102,11 +102,10 @@ export default function HelpPanel({ onClose }: Props) {
           <div className={styles.section}>
             <h3>💳 套餐与收费</h3>
             <ul>
-              <li><strong>免费套餐</strong>：⚡ 快速模式，每日 2 次</li>
-              <li><strong>基础 ¥24.9/月</strong>：⚡ 快速 + ⚖️ 均衡，每日 30 次</li>
-              <li><strong>进阶 ¥59.9/月</strong>：全部模式，每日 40 次，推理限 3、深度限 2</li>
-              <li><strong>专业 ¥99.9/月</strong>：全部模式，每日 100 次，推理限 20、深度限 10</li>
-              <li><strong>🔌 自备 API ¥19.9</strong>：使用你自己的 API Key，不限次数和模型</li>
+              <li><strong>免费套餐</strong>：快速模式，每日 5 次</li>
+              <li><strong>标准 ¥30/月</strong>：全部 4 种模式，Fast 20 / Balanced 10 / Reasoning 3 / Deep 2 次/天</li>
+              <li><strong>季付 ¥75/季（¥25/月）</strong>：省 ¥15，同标准配额</li>
+              <li><strong>年付 ¥288/年（¥24/月）</strong>：省 ¥72，同标准配额</li>
               <li>激活码通过社群渠道购买，在侧边栏输入激活即可升级套餐</li>
             </ul>
           </div>
