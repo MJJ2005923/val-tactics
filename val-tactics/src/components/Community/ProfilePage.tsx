@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
 import { getProfile, getProfileStats, updateProfile, uploadAvatar } from '../../lib/community/profiles'
 import { getFollowerCount, getFollowingCount } from '../../lib/community/follows'
 import { getTactics } from '../../lib/community/tactics'
@@ -26,10 +27,12 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
   const [followingCount, setFollowingCount] = useState(0)
   const [stats, setStats] = useState({ tacticCount: 0, postCount: 0, lineupCount: 0, totalLikes: 0, favoriteCount: 0 })
   const [subInfo, setSubInfo] = useState({ tier: 'free', leftDays: 0 })
-  const [tab, setTab] = useState<'tactics' | 'posts' | 'lineups'>('tactics')
+  const [tab, setTab] = useState<'tactics' | 'posts' | 'lineups' | 'likes' | 'favs'>('tactics')
   const [tactics, setTactics] = useState<TacticalShare[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [lineups, setLineups] = useState<Lineup[]>([])
+  const [likedItems, setLikedItems] = useState<{ id: string; title: string; type: string; date: string; views?: number; like_count?: number; comment_count?: number }[]>([])
+  const [favedItems, setFavedItems] = useState<{ id: string; title: string; type: string; date: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
@@ -75,6 +78,40 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
       setTactics(tr.data.filter(t => t.user_id === userId))
       setPosts(pr.data.filter(p => p.user_id === userId))
       setLineups(lr.data.filter(l => l.user_id === userId))
+
+      // 用户点赞/收藏的内容
+      const { data: likes } = await supabase.from('likes').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50)
+      if (likes) {
+        const tacticLikes = likes.filter((l: any) => l.target_type === 'tactic')
+        const postLikes = likes.filter((l: any) => l.target_type === 'post')
+        const lineupLikes = likes.filter((l: any) => l.target_type === 'lineup')
+        const items: any[] = []
+        for (const l of tacticLikes) {
+          const { data: d } = await supabase.from('tactical_shares').select('id,title,created_at,views,like_count,comment_count').eq('id', l.target_id).maybeSingle()
+          if (d) items.push({ ...d, type: '战术' })
+        }
+        for (const l of postLikes) {
+          const { data: d } = await supabase.from('posts').select('id,title,created_at,views,like_count,comment_count').eq('id', l.target_id).maybeSingle()
+          if (d) items.push({ ...d, type: '帖子' })
+        }
+        for (const l of lineupLikes) {
+          const { data: d } = await supabase.from('lineups').select('id,title,created_at,views,like_count,comment_count').eq('id', l.target_id).maybeSingle()
+          if (d) items.push({ ...d, type: '点位' })
+        }
+        items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        setLikedItems(items)
+      }
+
+      const { data: favs } = await supabase.from('lineup_favorites').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50)
+      const favItems: any[] = []
+      if (favs) {
+        for (const f of favs) {
+          const { data: d } = await supabase.from('lineups').select('id,title,created_at').eq('id', f.lineup_id).maybeSingle()
+          if (d) favItems.push({ ...d, type: '点位' })
+        }
+      }
+      setFavedItems(favItems)
+
       setLoading(false)
     })()
   }, [userId])
@@ -200,6 +237,8 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
           <button className={`${styles.tab} ${tab === 'tactics' ? styles.tabActive : ''}`} onClick={() => setTab('tactics')}>战术 ({stats.tacticCount})</button>
           <button className={`${styles.tab} ${tab === 'posts' ? styles.tabActive : ''}`} onClick={() => setTab('posts')}>帖子 ({stats.postCount})</button>
           <button className={`${styles.tab} ${tab === 'lineups' ? styles.tabActive : ''}`} onClick={() => setTab('lineups')}>点位 ({stats.lineupCount})</button>
+          <button className={`${styles.tab} ${tab === 'likes' ? styles.tabActive : ''}`} onClick={() => setTab('likes')}>赞过 ({likedItems.length})</button>
+          <button className={`${styles.tab} ${tab === 'favs' ? styles.tabActive : ''}`} onClick={() => setTab('favs')}>收藏 ({favedItems.length})</button>
         </div>
 
         {/* 列表 */}
@@ -239,6 +278,39 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
                   <span>{l.views} 浏览</span>
                   <span>{l.like_count} 赞</span>
                   <span>{l.comment_count} 评论</span>
+                </div>
+              </div>
+            ))
+          )}
+          {tab === 'likes' && (likedItems.length === 0 ? <div className={styles.empty}>还没有赞过内容</div> :
+            likedItems.map((item: any) => (
+              <div key={item.id} className={styles.item} onClick={() => {
+                if (item.type === '战术') onViewTactic?.(item.id)
+                else if (item.type === '帖子') onViewPost?.(item.id)
+                else if (item.type === '点位') onViewLineup?.(item.id)
+              }}>
+                <div className={styles.itemTitle}>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginRight: 6 }}>[{item.type}]</span>
+                  {item.title}
+                </div>
+                <div className={styles.itemMeta}>
+                  <span>{new Date(item.created_at).toLocaleDateString('zh')}</span>
+                  {item.views != null && <span>{item.views} 浏览</span>}
+                  {item.like_count != null && <span>{item.like_count} 赞</span>}
+                  {item.comment_count != null && <span>{item.comment_count} 评论</span>}
+                </div>
+              </div>
+            ))
+          )}
+          {tab === 'favs' && (favedItems.length === 0 ? <div className={styles.empty}>还没有收藏内容</div> :
+            favedItems.map((item: any) => (
+              <div key={item.id} className={styles.item} onClick={() => onViewLineup?.(item.id)}>
+                <div className={styles.itemTitle}>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginRight: 6 }}>[{item.type}]</span>
+                  {item.title}
+                </div>
+                <div className={styles.itemMeta}>
+                  <span>{new Date(item.created_at).toLocaleDateString('zh')}</span>
                 </div>
               </div>
             ))
