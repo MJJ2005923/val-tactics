@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import AIChat from './AIChat'
+import AISettings from './AISettings'
 import MatchContextSelector from '../MatchHistory/MatchContextSelector'
 import styles from './AIPanel.module.css'
 
@@ -94,6 +95,9 @@ export default function AIPanel({ mapId, mapName, onClose }: Props) {
           <div style={{ padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,.04)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <BoardInfoToggle />
             <MatchContextSelector />
+          </div>
+          <div style={{ padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,.04)', flexShrink: 0 }}>
+            <AISettings />
           </div>
           <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <AIChat mapId={mapId} mapName={mapName} />
