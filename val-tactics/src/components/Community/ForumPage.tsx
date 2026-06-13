@@ -17,6 +17,7 @@ export default function ForumPage({ onBack, onViewPost, onCreatePost, embedded }
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [cat, setCat] = useState<PostCategory | ''>('')
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<'latest' | 'hot'>('latest')
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -37,13 +38,18 @@ export default function ForumPage({ onBack, onViewPost, onCreatePost, embedded }
 
   useEffect(() => { load() }, [load])
 
-  const filtered = search ? posts.filter(p => p.title.toLowerCase().includes(search.toLowerCase())) : posts
+  const filtered = (search ? posts.filter(p => p.title.toLowerCase().includes(search.toLowerCase())) : posts)
+    .sort((a, b) => sort === 'hot' ? (b.like_count + b.comment_count) - (a.like_count + a.comment_count) : new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   return (
     <div className={embedded ? styles.pageEmbedded : styles.page}>
       <div className={styles.topBar}>
         {!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}
         <input className={styles.searchInput} placeholder="搜索帖子..." value={search} onChange={e => setSearch(e.target.value)} />
+        <div className={styles.sortBtns}>
+          <button className={`${styles.sortBtn} ${sort === 'latest' ? styles.sortBtnActive : ''}`} onClick={() => setSort('latest')}>最新</button>
+          <button className={`${styles.sortBtn} ${sort === 'hot' ? styles.sortBtnActive : ''}`} onClick={() => setSort('hot')}>最热</button>
+        </div>
         {(['', 'discussion', 'guide', 'map', 'team'] as (PostCategory | '')[]).map(c => (
           <button key={c} className={`${styles.catTab} ${cat === c ? styles.catTabActive : ''}`} onClick={() => setCat(c)}>
             {c === '' ? '全部' : POST_CATEGORIES[c]}

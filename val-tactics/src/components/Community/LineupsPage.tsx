@@ -19,6 +19,7 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
   const [mapFilter, setMapFilter] = useState('')
   const [agentFilter, setAgentFilter] = useState('')
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<'latest' | 'hot'>('latest')
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -50,6 +51,10 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
       <div className={styles.topBar}>
         {!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}
         <input className={styles.searchInput} placeholder="搜索点位..." value={search} onChange={e => setSearch(e.target.value)} />
+        <div className={styles.sortBtns}>
+          <button className={`${styles.sortBtn} ${sort === 'latest' ? styles.sortBtnActive : ''}`} onClick={() => setSort('latest')}>最新</button>
+          <button className={`${styles.sortBtn} ${sort === 'hot' ? styles.sortBtnActive : ''}`} onClick={() => setSort('hot')}>最热</button>
+        </div>
         <select className={styles.filterSelect} value={mapFilter} onChange={e => setMapFilter(e.target.value)}>
           <option value="">全部地图</option>
           {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -64,10 +69,13 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
       {loading && <div className={styles.empty}>加载中...</div>}
       {!loading && (() => {
         const filtered = search ? lineups.filter(l => l.title.toLowerCase().includes(search.toLowerCase()) || (l as any).description?.toLowerCase().includes(search.toLowerCase())) : lineups
-        if (filtered.length === 0) return <div className={styles.empty}>{search ? '没有匹配的点位' : '还没有点位，快来发布第一个'}</div>
+        const sorted = sort === 'hot'
+          ? [...filtered].sort((a, b) => (b.like_count || 0) - (a.like_count || 0))
+          : filtered
+        if (sorted.length === 0) return <div className={styles.empty}>{search ? '没有匹配的点位' : '还没有点位，快来发布第一个'}</div>
         return (
         <div className={styles.grid}>
-          {filtered.map(l => (
+          {sorted.map(l => (
             <div key={l.id} className={styles.card} onClick={() => onViewLineup(l.id)}>
               <img className={styles.cardImg} src={l.effect_img || l.position_img || ''} alt="" />
               <div className={styles.cardBody}>

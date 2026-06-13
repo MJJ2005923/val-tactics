@@ -10,6 +10,11 @@
 .catTab:hover { color: #fff }
 .catTabActive { color: #E349ED; border-color: rgba(227,73,237,.2); background: rgba(227,73,237,.05) }
 
+.sortBtns { display: flex; gap: 4px }
+.sortBtn { padding: 6px 12px; background: none; border: 1px solid rgba(255,255,255,.06); color: rgba(255,255,255,.3); border-radius: 8px; cursor: pointer; font-size: 12px; font-family: inherit }
+.sortBtn:hover { color: #fff }
+.sortBtnActive { color: #05F8F8; border-color: rgba(5,248,248,.25); background: rgba(5,248,248,.06) }
+
 .searchInput { flex: 1; max-width: 260px; padding: 8px 14px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; color: #fff; font-size: 13px; outline: none; font-family: inherit }
 .searchInput:focus { border-color: rgba(227,73,237,.25) }
 .searchInput::placeholder { color: rgba(255,255,255,.15) }
