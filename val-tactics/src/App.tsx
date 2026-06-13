@@ -18,16 +18,7 @@ import PrivacyPanel from './components/PrivacyPanel/PrivacyPanel'
 import SponsorPanel from './components/SponsorPanel/SponsorPanel'
 import AdminPanel from './components/AdminPanel/AdminPanel'
 import MobileLayout from './components/MobileLayout/MobileLayout'
-import TacticsGallery from './components/Community/TacticsGallery'
-import TacticsDetail from './components/Community/TacticsDetail'
-import CreateShare from './components/Community/CreateShare'
-import ForumPage from './components/Community/ForumPage'
-import PostDetail from './components/Community/PostDetail'
-import CreatePost from './components/Community/CreatePost'
-import ProfilePage from './components/Community/ProfilePage'
-import LineupsPage from './components/Community/LineupsPage'
-import LineupsDetail from './components/Community/LineupsDetail'
-import LineupsCreate from './components/Community/LineupsCreate'
+import CommunityShell from './components/Community/CommunityShell'
 import NotificationBell from './components/Community/NotificationBell'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
@@ -56,11 +47,6 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [mobileTimelineOpen, setMobileTimelineOpen] = useState(false)
   const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
   const [showCommunity, setShowCommunity] = useState(false)
-  const [commView, setCommView] = useState<'gallery' | 'detail' | 'create' | 'forum' | 'post-detail' | 'post-create' | 'profile' | 'lineups' | 'lineup-detail' | 'lineup-create'>('gallery')
-  const [commTacticId, setCommTacticId] = useState('')
-  const [commPostId, setCommPostId] = useState('')
-  const [commProfileId, setCommProfileId] = useState('')
-  const [commLineupId, setCommLineupId] = useState('')
   const { user } = useAuth()
   const [showMapDropdown, setShowMapDropdown] = useState(false)
 
@@ -302,20 +288,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           onSave={handleSaveProgress}
           onTemplates={() => setShowTemplates(true)}
           communityPanel={
-            <>
-              {showCommunity && commView === 'gallery' && (
-                <TacticsGallery onBack={() => setShowCommunity(false)} onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }} onCreate={() => setCommView('create')} onViewProfile={(uid) => { setCommProfileId(uid); setCommView('profile') }} onViewForum={() => setCommView('forum')} onViewLineups={() => setCommView('lineups')} />
-              )}
-              {showCommunity && commView === 'detail' && <TacticsDetail tacticId={commTacticId} onBack={() => setCommView('gallery')} onLoadToBoard={handleLoadCommunityTactic} />}
-              {showCommunity && commView === 'create' && <CreateShare mapId={selectedMap.id} onClose={() => setCommView('gallery')} onSuccess={(id) => { setCommTacticId(id); setCommView('detail') }} />}
-              {showCommunity && commView === 'forum' && <ForumPage onBack={() => setCommView('gallery')} onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }} onCreatePost={() => setCommView('post-create')} />}
-              {showCommunity && commView === 'post-detail' && <PostDetail postId={commPostId} onBack={() => setCommView('forum')} />}
-              {showCommunity && commView === 'post-create' && <CreatePost onClose={() => setCommView('forum')} onSuccess={(id) => { setCommPostId(id); setCommView('post-detail') }} />}
-              {showCommunity && commView === 'profile' && <ProfilePage userId={commProfileId} onBack={() => setCommView('gallery')} onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }} onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }} onViewLineup={(id) => { setCommLineupId(id); setCommView('lineup-detail') }} />}
-              {showCommunity && commView === 'lineups' && <LineupsPage onBack={() => setCommView('gallery')} onViewLineup={(id) => { setCommLineupId(id); setCommView('lineup-detail') }} onCreateLineup={() => setCommView('lineup-create')} />}
-              {showCommunity && commView === 'lineup-detail' && <LineupsDetail lineupId={commLineupId} onBack={() => setCommView('lineups')} />}
-              {showCommunity && commView === 'lineup-create' && <LineupsCreate mapId={selectedMap.id} onClose={() => setCommView('lineups')} onSuccess={(id) => { setCommLineupId(id); setCommView('lineup-detail') }} />}
-            </>
+            showCommunity ? <CommunityShell selectedMap={selectedMap.id} onClose={() => setShowCommunity(false)} onLoadTactic={handleLoadCommunityTactic} /> : null
           }
         />
         {/* 全局弹窗 */}
@@ -411,7 +384,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <NotificationBell />
           <button className="navbar__btn" onClick={() => {
             if (user) {
-              setCommProfileId(user.id); setCommView('profile'); setShowCommunity(true)
+              setShowCommunity(true)
             } else {
               setShowAuthModal(true)
             }
@@ -421,7 +394,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           </button>
           <a className="navbar__btn" href="/changelog.html" target="_blank" style={{ fontSize: 12, textDecoration: 'none' }}>更新公告</a>
           <button className="navbar__btn" onClick={() => setShowPrivacy(true)} style={{ fontSize: 12 }}>📜 隐私条款</button>
-          <button className="navbar__btn" onClick={() => { setShowCommunity(true); setCommView('gallery') }} style={{ color: '#05F8F8', borderColor: 'rgba(5,248,248,.15)' }}>社区</button>
+          <button className="navbar__btn" onClick={() => setShowCommunity(true)} style={{ color: '#05F8F8', borderColor: 'rgba(5,248,248,.15)' }}>社区</button>
           <button className="navbar__btn" onClick={() => setShowHelp(true)}>使用手册</button>
           <button className="navbar__btn" onClick={() => setShowSponsor(true)} style={{ color: '#ffd700', borderColor: 'rgba(255,215,0,.2)' }}>特别鸣谢</button>
           <button className="navbar__btn" onClick={() => setShowAdmin(true)} style={{ fontSize: 10, opacity: .3 }} title="管理">⚙</button>
@@ -472,71 +445,8 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
       {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
-      {showCommunity && commView === 'gallery' && (
-        <TacticsGallery
-          onBack={() => setShowCommunity(false)}
-          onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }}
-          onCreate={() => setCommView('create')}
-          onViewProfile={(uid) => { setCommProfileId(uid); setCommView('profile') }}
-          onViewForum={() => setCommView('forum')}
-          onViewLineups={() => setCommView('lineups')}
-        />
-      )}
-      {showCommunity && commView === 'detail' && (
-        <TacticsDetail
-          tacticId={commTacticId}
-          onBack={() => setCommView('gallery')}
-          onLoadToBoard={handleLoadCommunityTactic}
-        />
-      )}
-      {showCommunity && commView === 'create' && (
-        <CreateShare
-          mapId={selectedMap.id}
-          onClose={() => setCommView('gallery')}
-          onSuccess={(id) => { setCommTacticId(id); setCommView('detail') }}
-        />
-      )}
-      {showCommunity && commView === 'forum' && (
-        <ForumPage
-          onBack={() => setCommView('gallery')}
-          onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }}
-          onCreatePost={() => setCommView('post-create')}
-        />
-      )}
-      {showCommunity && commView === 'post-detail' && (
-        <PostDetail postId={commPostId} onBack={() => setCommView('forum')} />
-      )}
-      {showCommunity && commView === 'post-create' && (
-        <CreatePost
-          onClose={() => setCommView('forum')}
-          onSuccess={(id) => { setCommPostId(id); setCommView('post-detail') }}
-        />
-      )}
-      {showCommunity && commView === 'profile' && (
-        <ProfilePage
-          userId={commProfileId}
-          onBack={() => setCommView('gallery')}
-          onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }}
-          onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }}
-          onViewLineup={(id) => { setCommLineupId(id); setCommView('lineup-detail') }}
-        />
-      )}
-      {showCommunity && commView === 'lineups' && (
-        <LineupsPage
-          onBack={() => setCommView('gallery')}
-          onViewLineup={(id) => { setCommLineupId(id); setCommView('lineup-detail') }}
-          onCreateLineup={() => setCommView('lineup-create')}
-        />
-      )}
-      {showCommunity && commView === 'lineup-detail' && (
-        <LineupsDetail lineupId={commLineupId} onBack={() => setCommView('lineups')} />
-      )}
-      {showCommunity && commView === 'lineup-create' && (
-        <LineupsCreate
-          mapId={selectedMap.id}
-          onClose={() => setCommView('lineups')}
-          onSuccess={(id) => { setCommLineupId(id); setCommView('lineup-detail') }}
-        />
+      {showCommunity && (
+        <CommunityShell selectedMap={selectedMap.id} onClose={() => setShowCommunity(false)} onLoadTactic={handleLoadCommunityTactic} />
       )}
     </div>
   )

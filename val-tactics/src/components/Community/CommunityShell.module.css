@@ -1,0 +1,8 @@
+.shell { position: fixed; inset: 0; z-index: 9990; background: #05020c; display: flex; flex-direction: column; animation: fadeIn .2s ease }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+.main { display: flex; flex: 1; overflow: hidden }
+.content { flex: 1; overflow-y: auto }
+
+@media (max-width: 768px) {
+  .main { flex-direction: column }
+}
