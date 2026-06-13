@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { uploadLineupImage } from '../../lib/community/lineups'
+import { toLosslessWebP, uploadLineupImage } from '../../lib/community/lineups'
 import styles from './ImageUploader.module.css'
 
 interface Props {
@@ -30,7 +30,13 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
     if (userId && lineupId && slot) {
       setUploading(true)
       try {
-        const storageUrl = await uploadLineupImage(file, userId, lineupId, slot)
+        // 仅PNG转无损WebP（体积减半=上传快一倍），JPEG/WebP原样直传
+        const isPNG = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')
+        const uploadFile = isPNG
+          ? new File([await toLosslessWebP(file)], `${slot}.webp`, { type: 'image/webp' })
+          : file
+
+        const storageUrl = await uploadLineupImage(uploadFile, userId, lineupId, slot)
         if (storageUrl) {
           URL.revokeObjectURL(blobUrl)
           setPreview(storageUrl)
