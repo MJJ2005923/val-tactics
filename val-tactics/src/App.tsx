@@ -518,6 +518,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           onBack={() => setCommView('gallery')}
           onViewTactic={(id) => { setCommTacticId(id); setCommView('detail') }}
           onViewPost={(id) => { setCommPostId(id); setCommView('post-detail') }}
+          onViewLineup={(id) => { setCommLineupId(id); setCommView('lineup-detail') }}
         />
       )}
       {showCommunity && commView === 'lineups' && (
