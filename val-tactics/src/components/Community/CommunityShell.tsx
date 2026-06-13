@@ -113,6 +113,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
 
     if (nav === 'profile') return (
       <ProfilePage
+        embedded
         userId={shownUserId}
         onBack={() => setNav('home')}
         onViewTactic={(id) => openDetail(id, 'tactic')}
@@ -123,6 +124,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
 
     if (nav === 'favorites' || nav === 'liked') return (
       <ProfilePage
+        embedded
         userId={myId}
         onBack={() => setNav('home')}
         onViewTactic={(id) => openDetail(id, 'tactic')}

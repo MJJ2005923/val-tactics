@@ -20,9 +20,10 @@ interface Props {
   onViewTactic?: (id: string) => void
   onViewPost?: (id: string) => void
   onViewLineup?: (id: string) => void
+  embedded?: boolean
 }
 
-export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, onViewLineup }: Props) {
+export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, onViewLineup, embedded }: Props) {
   const { user, signOut, resetPassword } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [followerCount, setFollowerCount] = useState(0)
@@ -121,13 +122,13 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
     })()
   }, [userId])
 
-  if (loading) return <div className={styles.page}><div className={styles.topBar}><button className={styles.backBtn} onClick={onBack}>返回</button></div><div className={styles.loading}>加载中...</div></div>
-  if (!profile) return <div className={styles.page}><div className={styles.topBar}><button className={styles.backBtn} onClick={onBack}>返回</button></div><div className={styles.empty}>用户不存在</div></div>
+  if (loading) return <div className={embedded ? styles.pageEmbedded : styles.page}><div className={styles.topBar}>{!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}</div><div className={styles.loading}>加载中...</div></div>
+  if (!profile) return <div className={embedded ? styles.pageEmbedded : styles.page}><div className={styles.topBar}>{!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}</div><div className={styles.empty}>用户不存在</div></div>
 
   return (
-    <div className={styles.page}>
+    <div className={embedded ? styles.pageEmbedded : styles.page}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={onBack}>返回</button>
+        {!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}
       </div>
       <div className={styles.content}>
         {/* 头部 */}
