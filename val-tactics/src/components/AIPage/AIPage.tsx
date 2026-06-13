@@ -471,8 +471,6 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
                 const isCurrentTier = planIdx === currentIdx && isFree
                 const isLocked = isFree && planIdx > currentIdx
                 const isExpanded = expandedPlan === p.tier
-                // 该套餐可用的模型ID列表
-                const planModelIds = TIER_MODELS[p.tier] || []
                 return (
                   <React.Fragment key={i}>
                     <div
@@ -493,21 +491,12 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
                     </div>
                     {isExpanded && (
                       <div className={styles.planExpand} style={{ animationDelay: `${i * 0.12 + 0.05}s` }}>
-                        <div style={{ marginBottom: 6, color: p.color, fontWeight: 600 }}>
-                          {p.price}/月 · 4 种模式独立配额
+                        <div style={{ marginBottom: 4, color: p.color, fontWeight: 600, fontSize: 11 }}>
+                          全部 4 种 AI 模式
                         </div>
-                        {planModelIds.map(mid => {
-                          const model = models.find(m => m.id === mid)
-                          const cap = MODEL_LIMITS[mid] || TIER_TOTAL_LIMITS[p.tier]
-                          return (
-                            <div key={mid} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,.03)' }}>
-                              <span>{model?.name || mid}</span>
-                              <span style={{ color: 'rgba(255,255,255,.35)', fontFamily: 'Consolas,monospace' }}>
-                                {cap !== undefined ? `${cap}次` : '共享'}
-                              </span>
-                            </div>
-                          )
-                        })}
+                        {['快速模式', '均衡模式', '推理模式', '深度模式'].map(name => (
+                          <div key={name} style={{ padding: '2px 0', fontSize: 11, color: 'rgba(255,255,255,.35)' }}>{name}</div>
+                        ))}
                       </div>
                     )}
                   </React.Fragment>
