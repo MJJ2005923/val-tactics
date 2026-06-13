@@ -14,34 +14,43 @@ interface Props {
 export default function ImageUploader({ hint, onImage, value, userId, lineupId, slot }: Props) {
   const [preview, setPreview] = useState(value || '')
   const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    setError('')
     // 预览秒出：blob URL，不等 FileReader
     const blobUrl = URL.createObjectURL(file)
     setPreview(blobUrl)
 
-    // 上传到 Storage
+    // 上传到 COS
     if (userId && lineupId && slot) {
       setUploading(true)
       try {
-        // 统一转无损 WebP（原尺寸、像素100%一致、体积比PNG小40-60%）
-        const webp = await toLosslessWebP(file)
-        const storageUrl = await uploadLineupImage(
-          new File([webp], `${slot}.webp`, { type: 'image/webp' }),
-          userId, lineupId, slot
-        )
+        // PNG → 无损 WebP，JPEG/WebP → 原样直传
+        const isPNG = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')
+        const uploadFile = isPNG
+          ? new File([await toLosslessWebP(file)], `${slot}.webp`, { type: 'image/webp' })
+          : file
+
+        const storageUrl = await uploadLineupImage(uploadFile, userId, lineupId, slot)
         if (storageUrl) {
           URL.revokeObjectURL(blobUrl)
           setPreview(storageUrl)
           onImage(storageUrl)
+          setUploading(false)
           return
         }
-      } catch { console.error('[ImageUploader] 上传失败') }
+      } catch { /* 上传失败，回退预览 */ }
+      // 上传失败 — 清除预览 + 提示
       setUploading(false)
+      URL.revokeObjectURL(blobUrl)
+      setPreview('')
+      onImage('')
+      setError('上传失败，请重试')
     }
   }
 
@@ -61,6 +70,7 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
         )}
         <input ref={fileRef} type="file" accept="image/*" className={styles.zoneInput} onChange={handleFile} />
       </div>
+      {error && <div style={{ color: '#ff5555', fontSize: 10, marginTop: 4 }}>{error}</div>}
     </div>
   )
 }

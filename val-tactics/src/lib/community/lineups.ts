@@ -1,8 +1,6 @@
 import { supabase } from '../supabase'
 import type { Lineup, PaginatedResponse } from '../../types/community'
 
-const BUCKET = 'lineups'
-
 /** 上传图片到 COS（通过 Worker 代理），返回公开 URL */
 export async function uploadLineupImage(file: File, userId: string, lineupId: string, _slot: string): Promise<string | null> {
   const form = new FormData()
@@ -93,11 +91,8 @@ export async function toLosslessWebP(file: File): Promise<Blob> {
   })
 }
 
-/** 删除点位时清理 Storage 图片 */
-export async function deleteStorageImages(userId: string, lineupId: string) {
-  const { data } = await supabase.storage.from(BUCKET).list(`${userId}/${lineupId}`)
-  if (data?.length) {
-    const paths = data.map(f => `${userId}/${lineupId}/${f.name}`)
-    await supabase.storage.from(BUCKET).remove(paths)
-  }
+/** TODO: 删除点位时清理 COS 图片（需新增 Worker /api/cos/delete 路由） */
+export async function deleteStorageImages(_userId: string, _lineupId: string) {
+  // 当前 COS 上传路径: lineups/{userId}/{lineupId}/{timestamp}.webp
+  // COS 删除需 Worker 代理 + 遍历 listObjects
 }
