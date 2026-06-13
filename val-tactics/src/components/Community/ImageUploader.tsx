@@ -31,7 +31,7 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
       setUploading(true)
       try {
         // 统一压缩为 WebP — 快传优先
-        const compressed = await compressImage(file, 300) // 目标~300KB
+        const compressed = await compressImage(file, 600) // 目标~600KB，画质优先
         const storageUrl = await uploadLineupImage(
           new File([compressed], `${slot}.webp`, { type: 'image/webp' }),
           userId, lineupId, slot

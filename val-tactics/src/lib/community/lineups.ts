@@ -76,13 +76,13 @@ export async function deleteLineup(id: string, userId?: string) {
 }
 
 /** 压缩图片为 WebP，限制最大尺寸和文件大小 */
-export async function compressImage(file: File, maxKB = 300): Promise<Blob> {
+export async function compressImage(file: File, maxKB = 600): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
       let { width, height } = img
-      const maxDim = 1200
+      const maxDim = 1920
       if (width > maxDim || height > maxDim) {
         const ratio = Math.min(maxDim / width, maxDim / height)
         width = Math.round(width * ratio)
@@ -94,11 +94,11 @@ export async function compressImage(file: File, maxKB = 300): Promise<Blob> {
       const tryQuality = (q: number) => {
         canvas.toBlob((blob) => {
           if (!blob) { reject(new Error('压缩失败')); return }
-          if (blob.size <= maxKB * 1024 || q <= 0.2) { resolve(blob) }
-          else { tryQuality(q - 0.15) }
+          if (blob.size <= maxKB * 1024 || q <= 0.6) { resolve(blob) }
+          else { tryQuality(q - 0.1) }
         }, 'image/webp', q)
       }
-      tryQuality(0.8)
+      tryQuality(0.95)
     }
     img.onerror = () => reject(new Error('图片加载失败'))
     img.src = URL.createObjectURL(file)
