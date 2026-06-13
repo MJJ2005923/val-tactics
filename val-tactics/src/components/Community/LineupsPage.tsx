@@ -49,6 +49,7 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
     <div className={embedded ? styles.pageEmbedded : styles.page}>
       <div className={styles.topBar}>
         {!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}
+        <input className={styles.searchInput} placeholder="搜索点位..." value={search} onChange={e => setSearch(e.target.value)} />
         <select className={styles.filterSelect} value={mapFilter} onChange={e => setMapFilter(e.target.value)}>
           <option value="">全部地图</option>
           {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -57,7 +58,6 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
           <option value="">全部特工</option>
           {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
         </select>
-        <input className={styles.searchInput} placeholder="搜索点位..." value={search} onChange={e => setSearch(e.target.value)} />
         <button className={styles.createBtn} onClick={onCreateLineup}>发布点位</button>
       </div>
 

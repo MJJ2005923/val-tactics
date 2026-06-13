@@ -43,12 +43,12 @@ export default function ForumPage({ onBack, onViewPost, onCreatePost, embedded }
     <div className={embedded ? styles.pageEmbedded : styles.page}>
       <div className={styles.topBar}>
         {!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}
+        <input className={styles.searchInput} placeholder="搜索帖子..." value={search} onChange={e => setSearch(e.target.value)} />
         {(['', 'discussion', 'guide', 'map', 'team'] as (PostCategory | '')[]).map(c => (
           <button key={c} className={`${styles.catTab} ${cat === c ? styles.catTabActive : ''}`} onClick={() => setCat(c)}>
             {c === '' ? '全部' : POST_CATEGORIES[c]}
           </button>
         ))}
-        <input className={styles.searchInput} placeholder="搜索帖子..." value={search} onChange={e => setSearch(e.target.value)} />
         <button className={styles.createBtn} onClick={onCreatePost}>发帖</button>
       </div>
 
