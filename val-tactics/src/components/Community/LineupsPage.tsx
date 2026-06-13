@@ -18,6 +18,7 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [mapFilter, setMapFilter] = useState('')
   const [agentFilter, setAgentFilter] = useState('')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -56,14 +57,17 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
           <option value="">全部特工</option>
           {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
         </select>
+        <input className={styles.searchInput} placeholder="搜索点位..." value={search} onChange={e => setSearch(e.target.value)} />
         <button className={styles.createBtn} onClick={onCreateLineup}>发布点位</button>
       </div>
 
       {loading && <div className={styles.empty}>加载中...</div>}
-      {!loading && lineups.length === 0 && <div className={styles.empty}>还没有点位，快来发布第一个</div>}
-      {!loading && lineups.length > 0 && (
+      {!loading && (() => {
+        const filtered = search ? lineups.filter(l => l.title.toLowerCase().includes(search.toLowerCase()) || (l as any).description?.toLowerCase().includes(search.toLowerCase())) : lineups
+        if (filtered.length === 0) return <div className={styles.empty}>{search ? '没有匹配的点位' : '还没有点位，快来发布第一个'}</div>
+        return (
         <div className={styles.grid}>
-          {lineups.map(l => (
+          {filtered.map(l => (
             <div key={l.id} className={styles.card} onClick={() => onViewLineup(l.id)}>
               <img className={styles.cardImg} src={l.effect_img || l.position_img || ''} alt="" />
               <div className={styles.cardBody}>
@@ -87,7 +91,8 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
             </div>
           ))}
         </div>
-      )}
+      )
+      })()}
     </div>
   )
 }

@@ -6,6 +6,9 @@
 }
 .backBtn { background: none; border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.4); padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px }
 .backBtn:hover { color: #fff }
+.searchInput { width: 140px; padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); color: #fff; font-size: 12px; outline: none; font-family: inherit }
+.searchInput:focus { border-color: rgba(5,248,248,.25) }
+.searchInput::placeholder { color: rgba(255,255,255,.12) }
 .filterSelect {
   padding: 5px 8px; background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.06);
   border-radius: 8px; color: rgba(255,255,255,.4); font-size: 12px; outline: none;

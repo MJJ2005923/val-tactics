@@ -16,6 +16,7 @@ export default function ForumPage({ onBack, onViewPost, onCreatePost, embedded }
   const [posts, setPosts] = useState<Post[]>([])
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [cat, setCat] = useState<PostCategory | ''>('')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -36,6 +37,8 @@ export default function ForumPage({ onBack, onViewPost, onCreatePost, embedded }
 
   useEffect(() => { load() }, [load])
 
+  const filtered = search ? posts.filter(p => p.title.toLowerCase().includes(search.toLowerCase())) : posts
+
   return (
     <div className={embedded ? styles.pageEmbedded : styles.page}>
       <div className={styles.topBar}>
@@ -45,26 +48,31 @@ export default function ForumPage({ onBack, onViewPost, onCreatePost, embedded }
             {c === '' ? '全部' : POST_CATEGORIES[c]}
           </button>
         ))}
+        <input className={styles.searchInput} placeholder="搜索帖子..." value={search} onChange={e => setSearch(e.target.value)} />
         <button className={styles.createBtn} onClick={onCreatePost}>发帖</button>
       </div>
 
       {loading ? (
         <div className={styles.empty}>加载中...</div>
-      ) : posts.length === 0 ? (
-        <div className={styles.empty}>还没有帖子，快来发第一个</div>
+      ) : filtered.length === 0 ? (
+        <div className={styles.empty}>{search ? '没有匹配的帖子' : '还没有帖子，快来发第一个'}</div>
       ) : (
         <div className={styles.list}>
-          {posts.map(p => (
+          {filtered.map(p => (
             <div key={p.id} className={styles.card} onClick={() => onViewPost(p.id)}>
-              <div className={styles.cardCat}>{POST_CATEGORIES[p.category] || p.category}</div>
-              <div className={styles.cardTitle}>{p.title}</div>
-              <div className={styles.cardPreview}>{p.content.slice(0, 120)}</div>
-              <div className={styles.cardMeta}>
-                <span>{profiles[p.user_id]?.username?.split('@')[0] || '用户'}</span>
-                <span>{new Date(p.created_at).toLocaleDateString('zh')}</span>
-                <span>{p.views} 浏览</span>
-                <span>{p.like_count} 赞</span>
-                <span>{p.comment_count} 评论</span>
+              <div className={styles.cardLeft}>
+                <div className={styles.cardCat}>{POST_CATEGORIES[p.category] || p.category}</div>
+                <div className={styles.cardTitle}>{p.title}</div>
+                <div className={styles.cardPreview}>{p.content.slice(0, 80)}</div>
+                <div className={styles.cardMeta}>
+                  <span>{profiles[p.user_id]?.username?.split('@')[0] || '用户'}</span>
+                  <span>{new Date(p.created_at).toLocaleDateString('zh')}</span>
+                </div>
+              </div>
+              <div className={styles.cardStats}>
+                <span>{p.views} <small>浏览</small></span>
+                <span>{p.like_count} <small>赞</small></span>
+                <span>{p.comment_count} <small>评论</small></span>
               </div>
             </div>
           ))}
