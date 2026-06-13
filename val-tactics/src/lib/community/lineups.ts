@@ -8,6 +8,7 @@ export async function uploadLineupImage(file: File, userId: string, lineupId: st
   form.append('folder', `lineups/${userId}/${lineupId}`)
   const resp = await fetch('/api/cos/upload', { method: 'POST', body: form })
   const data = await resp.json()
+  if (data.error) throw new Error(data.error)
   return data.url || null
 }
 

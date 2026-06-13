@@ -44,13 +44,15 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
           setUploading(false)
           return
         }
-      } catch { /* 上传失败，回退预览 */ }
-      // 上传失败 — 清除预览 + 提示
+      } catch (e: any) {
+        console.error('[ImageUploader]', e?.message || e)
+        setError(e?.message || '上传失败')
+      }
+      // 上传失败 — 清除预览
       setUploading(false)
       URL.revokeObjectURL(blobUrl)
       setPreview('')
       onImage('')
-      setError('上传失败，请重试')
     }
   }
 
