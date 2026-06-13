@@ -21,14 +21,20 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
   const [activities, setActivities] = useState<any[]>([])
 
   useEffect(() => {
-    // 热门战术
-    supabase.from('tactical_shares').select('id,title,user_id,views,like_count,comment_count,created_at,preview_image').order('like_count', { ascending: false }).limit(4).then(({ data }) => setHotTactics((data || []) as any))
-    // 热门帖子
-    supabase.from('posts').select('id,title,user_id,views,like_count,comment_count,created_at').order('comment_count', { ascending: false }).limit(5).then(({ data }) => setHotPosts((data || []) as any))
-    // 精选点位
-    supabase.from('lineups').select('id,title,user_id,views,like_count,difficulty,created_at').order('views', { ascending: false }).limit(4).then(({ data }) => setHotLineups((data || []) as any))
-    // 社区动态
-    supabase.from('likes').select('user_id,created_at,target_type,target_id').order('created_at', { ascending: false }).limit(10).then(({ data }) => {
+    supabase.from('tactical_shares').select('id,title,user_id,views,like_count,comment_count,created_at,preview_image').order('like_count', { ascending: false }).limit(4).then(({ data, error }) => {
+      if (error) console.error('[CommunityHome] tactics:', error.message)
+      setHotTactics((data || []) as any)
+    })
+    supabase.from('posts').select('id,title,user_id,views,like_count,comment_count,created_at').order('comment_count', { ascending: false }).limit(5).then(({ data, error }) => {
+      if (error) console.error('[CommunityHome] posts:', error.message)
+      setHotPosts((data || []) as any)
+    })
+    supabase.from('lineups').select('id,title,user_id,views,like_count,difficulty,created_at').order('views', { ascending: false }).limit(4).then(({ data, error }) => {
+      if (error) console.error('[CommunityHome] lineups:', error.message)
+      setHotLineups((data || []) as any)
+    })
+    supabase.from('likes').select('user_id,created_at,target_type,target_id').order('created_at', { ascending: false }).limit(10).then(({ data, error }) => {
+      if (error) console.error('[CommunityHome] activities:', error.message)
       setActivities((data || []).map((a: any) => ({ ...a, action: '赞了' })))
     })
   }, [])
@@ -55,7 +61,8 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
           {(contentTab === 'all' || contentTab === 'tactics') && (
             <div className={styles.column}>
               <div className={styles.colTitle}><span className={`${styles.dot} ${styles.dotTactic}`} />推荐战术</div>
-              {filteredTactics.map(t => (
+              {filteredTactics.length === 0 ? <div style={{ padding: 16, fontSize: 12, color: 'rgba(255,255,255,.1)', textAlign: 'center' }}>暂无战术</div> :
+              filteredTactics.map(t => (
                 <div key={t.id} className={styles.cardBig} onClick={() => onViewTactic(t.id)}>
                   {t.preview_image && <img src={t.preview_image} alt="" className={styles.cardImg} />}
                   <div className={styles.cardBody}>
