@@ -78,7 +78,7 @@
     width: 40px; height: 40px; border-radius: 50%;
     background: rgba(13,10,20,.9); border: 1px solid rgba(255,255,255,.1);
     color: rgba(255,255,255,.5); font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex !important; align-items: center; justify-content: center;
     cursor: pointer; backdrop-filter: blur(8px);
   }
   .mobile-float-btn:active { background: rgba(227,73,237,.1); color: #E349ED; }
@@ -115,3 +115,6 @@
 
   .mobile-float-btn { display: none; }
 }
+
+/* 桌面端默认隐藏移动浮动按钮 */
+.mobile-float-btn { display: none; }
