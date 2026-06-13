@@ -27,3 +27,5 @@
 
 .loading { padding: 60px; text-align: center; color: rgba(255,255,255,.15); font-size: 14px }
 .deleted { padding: 60px; text-align: center; color: rgba(255,255,255,.1); font-size: 14px }
+
+.pageEmbedded { display: flex; flex-direction: column; min-height: 100%; animation: fadeIn .2s ease }

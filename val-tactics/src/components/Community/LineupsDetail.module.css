@@ -54,3 +54,5 @@
   .meta { flex-wrap: wrap; gap: 8px }
   .lineupTitle { font-size: 17px }
 }
+
+.pageEmbedded { display: flex; flex-direction: column; min-height: 100%; animation: fadeIn .2s ease }

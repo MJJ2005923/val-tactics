@@ -3,6 +3,9 @@ import { useTactics } from '../../store/TacticsContext'
 import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import MatchContextSelector, { loadMatchContext } from '../MatchHistory/MatchContextSelector'
+import RosterPicker from '../AIPanel/RosterPicker'
+import maps from '../../data/maps'
+import agents from '../../data/agents'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../store/AuthContext'
 import { encryptKey, decryptKey } from '../../utils/crypto'
@@ -369,6 +372,23 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
         { role: 'user' as const, content: formatBoardStateForAI(mapName, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster) },
         { role: 'assistant' as const, content: '收到，我已了解当前战术板的详细状态。' },
       ] : []),
+      // 注入对局前置信息（阵容+地图）
+      ...(() => {
+        const preMap = localStorage.getItem('val-tactics-pre-map') || ''
+        const ally = (() => { try { return JSON.parse(localStorage.getItem('val-tactics-ally-roster') || '[]') } catch { return [] } })()
+        const enemy = (() => { try { return JSON.parse(localStorage.getItem('val-tactics-enemy-roster') || '[]') } catch { return [] } })()
+        if (!preMap && ally.length === 0 && enemy.length === 0) return []
+        const mapName2 = preMap ? maps.find(m => m.id === preMap)?.name : ''
+        const getNames = (ids: string[]) => ids.map(id => agents.find(a => a.id === id)?.name || id)
+        const lines = ['【用户补充的对局信息】']
+        if (mapName2) lines.push(`- 地图：${mapName2}`)
+        if (ally.length > 0) lines.push(`- 我方阵容：${getNames(ally).join('、')}`)
+        if (enemy.length > 0) lines.push(`- 敌方阵容：${getNames(enemy).join('、')}`)
+        return [
+          { role: 'user' as const, content: lines.join('\n') },
+          { role: 'assistant' as const, content: '收到，我已了解对局的基本信息。' },
+        ]
+      })(),
       // 注入比赛数据（根据用户选择）
       ...(() => {
         const ctx = loadMatchContext()
@@ -677,6 +697,7 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
             </div>
           )}
         </div>
+        <RosterPicker />
         <div className={styles.sidebarSection}>
           <h3>🗺️ 基础信息</h3>
           <div

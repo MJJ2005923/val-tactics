@@ -78,6 +78,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
     // 各子页面
     if (nav === 'tactics') return (
       <TacticsGallery
+        embedded
         onBack={() => setNav('home')}
         onViewTactic={(id) => openDetail(id, 'tactic')}
         onCreate={() => setShowCreate('tactic')}
@@ -89,6 +90,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
 
     if (nav === 'forum') return (
       <ForumPage
+        embedded
         onBack={() => setNav('home')}
         onViewPost={(id) => openDetail(id, 'post')}
         onCreatePost={() => setShowCreate('post')}
@@ -97,6 +99,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
 
     if (nav === 'lineups') return (
       <LineupsPage
+        embedded
         onBack={() => setNav('home')}
         onViewLineup={(id) => openDetail(id, 'lineup')}
         onCreateLineup={() => setShowCreate('lineup')}

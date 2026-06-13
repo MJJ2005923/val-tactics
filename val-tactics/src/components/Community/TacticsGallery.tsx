@@ -12,9 +12,10 @@ interface Props {
   onViewProfile?: (uid: string) => void
   onViewForum?: () => void
   onViewLineups?: () => void
+  embedded?: boolean
 }
 
-export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewProfile, onViewForum, onViewLineups }: Props) {
+export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewProfile, onViewForum, onViewLineups, embedded }: Props) {
   const [tactics, setTactics] = useState<TacticalShare[]>([])
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [loading, setLoading] = useState(true)
@@ -44,9 +45,9 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
   const mapName = (id: string) => maps.find(m => m.id === id)?.name || id
 
   return (
-    <div className={styles.overlay}>
+    <div className={embedded ? styles.overlayEmbedded : styles.overlay}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={onBack}>← 返回</button>
+        {!embedded && <button className={styles.backBtn} onClick={onBack}>← 返回</button>}
         <input
           className={styles.searchBox}
           placeholder="搜索战术…"

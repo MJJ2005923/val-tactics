@@ -9,9 +9,10 @@ interface Props {
   onBack: () => void
   onViewPost: (id: string) => void
   onCreatePost: () => void
+  embedded?: boolean
 }
 
-export default function ForumPage({ onBack, onViewPost, onCreatePost }: Props) {
+export default function ForumPage({ onBack, onViewPost, onCreatePost, embedded }: Props) {
   const [posts, setPosts] = useState<Post[]>([])
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [cat, setCat] = useState<PostCategory | ''>('')
@@ -36,9 +37,9 @@ export default function ForumPage({ onBack, onViewPost, onCreatePost }: Props) {
   useEffect(() => { load() }, [load])
 
   return (
-    <div className={styles.page}>
+    <div className={embedded ? styles.pageEmbedded : styles.page}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={onBack}>返回</button>
+        {!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}
         {(['', 'discussion', 'guide', 'map', 'team'] as (PostCategory | '')[]).map(c => (
           <button key={c} className={`${styles.catTab} ${cat === c ? styles.catTabActive : ''}`} onClick={() => setCat(c)}>
             {c === '' ? '全部' : POST_CATEGORIES[c]}

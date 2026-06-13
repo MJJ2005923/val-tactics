@@ -36,3 +36,5 @@
   .createBtn { margin-left: 0 }
   .grid { grid-template-columns: 1fr; padding: 10px 12px; gap: 8px }
 }
+
+.pageEmbedded { display: flex; flex-direction: column; min-height: 100%; animation: fadeIn .2s ease }

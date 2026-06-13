@@ -10,9 +10,10 @@ interface Props {
   onBack: () => void
   onViewLineup: (id: string) => void
   onCreateLineup: () => void
+  embedded?: boolean
 }
 
-export default function LineupsPage({ onBack, onViewLineup, onCreateLineup }: Props) {
+export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embedded }: Props) {
   const [lineups, setLineups] = useState<Lineup[]>([])
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [mapFilter, setMapFilter] = useState('')
@@ -44,9 +45,9 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup }: Pr
   }
 
   return (
-    <div className={styles.page}>
+    <div className={embedded ? styles.pageEmbedded : styles.page}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={onBack}>返回</button>
+        {!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}
         <select className={styles.filterSelect} value={mapFilter} onChange={e => setMapFilter(e.target.value)}>
           <option value="">全部地图</option>
           {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}

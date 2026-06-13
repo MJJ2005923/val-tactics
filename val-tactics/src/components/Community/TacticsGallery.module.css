@@ -3,6 +3,11 @@
   z-index: 9990; display: flex; flex-direction: column;
   animation: fadeIn .2s ease;
 }
+.overlayEmbedded {
+  display: flex; flex-direction: column;
+  animation: fadeIn .2s ease;
+  min-height: 100%;
+}
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 
 /* 顶栏 */
