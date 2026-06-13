@@ -41,7 +41,7 @@ export async function createComment(params: {
 
   // 更新评论计数
   if (data) {
-    void supabase.rpc('increment_comment_count', { share_id: params.targetId })
+    void supabase.rpc('increment_comment_count', { target_id: params.targetId, target_type: params.targetType })
   }
 
   return data as Comment | null

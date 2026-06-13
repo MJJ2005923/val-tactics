@@ -103,11 +103,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 增加评论数
-CREATE OR REPLACE FUNCTION public.increment_comment_count(share_id UUID)
+-- 增加评论数（兼容战术、帖子、点位）
+CREATE OR REPLACE FUNCTION public.increment_comment_count(target_id UUID, target_type TEXT DEFAULT 'tactic')
 RETURNS void AS $$
 BEGIN
-  UPDATE public.tactical_shares SET comment_count = comment_count + 1 WHERE id = share_id;
+  IF target_type = 'tactic' THEN
+    UPDATE public.tactical_shares SET comment_count = comment_count + 1 WHERE id = target_id;
+  ELSIF target_type = 'post' THEN
+    UPDATE public.posts SET comment_count = comment_count + 1 WHERE id = target_id;
+  ELSIF target_type = 'lineup' THEN
+    UPDATE public.lineups SET comment_count = comment_count + 1 WHERE id = target_id;
+  END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -334,7 +340,7 @@ CREATE POLICY "fav_delete" ON public.profile_favorites FOR DELETE USING (auth.ui
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS favorite_count INT DEFAULT 0;
 
--- 修复 toggle_like 支持 profile 类型
+-- 修复 toggle_like 支持 lineup / profile 类型
 CREATE OR REPLACE FUNCTION public.toggle_like(
   p_user_id UUID, p_target_type TEXT, p_target_id UUID
 ) RETURNS BOOLEAN AS $$
@@ -349,6 +355,8 @@ BEGIN
       UPDATE public.tactical_shares SET like_count = GREATEST(like_count - 1, 0) WHERE id = p_target_id;
     ELSIF p_target_type = 'post' THEN
       UPDATE public.posts SET like_count = GREATEST(like_count - 1, 0) WHERE id = p_target_id;
+    ELSIF p_target_type = 'lineup' THEN
+      UPDATE public.lineups SET like_count = GREATEST(like_count - 1, 0) WHERE id = p_target_id;
     END IF;
     RETURN false;
   ELSE
@@ -357,6 +365,8 @@ BEGIN
       UPDATE public.tactical_shares SET like_count = like_count + 1 WHERE id = p_target_id;
     ELSIF p_target_type = 'post' THEN
       UPDATE public.posts SET like_count = like_count + 1 WHERE id = p_target_id;
+    ELSIF p_target_type = 'lineup' THEN
+      UPDATE public.lineups SET like_count = like_count + 1 WHERE id = p_target_id;
     END IF;
     RETURN true;
   END IF;
