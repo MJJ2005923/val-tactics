@@ -403,5 +403,42 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
 
 -- ================================================================
+-- 点位收藏
+-- ================================================================
+
+ALTER TABLE public.lineups ADD COLUMN IF NOT EXISTS favorite_count INT DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS public.lineup_favorites (
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  lineup_id UUID NOT NULL REFERENCES lineups(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (user_id, lineup_id)
+);
+
+ALTER TABLE public.lineup_favorites ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "lf_read" ON public.lineup_favorites FOR SELECT USING (true);
+CREATE POLICY "lf_insert" ON public.lineup_favorites FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "lf_delete" ON public.lineup_favorites FOR DELETE USING (auth.uid() = user_id);
+
+CREATE OR REPLACE FUNCTION public.toggle_lineup_fav(p_user_id UUID, p_lineup_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  existing UUID;
+BEGIN
+  SELECT user_id INTO existing FROM public.lineup_favorites
+    WHERE user_id = p_user_id AND lineup_id = p_lineup_id;
+  IF existing IS NOT NULL THEN
+    DELETE FROM public.lineup_favorites WHERE user_id = p_user_id AND lineup_id = p_lineup_id;
+    UPDATE public.lineups SET favorite_count = GREATEST(favorite_count - 1, 0) WHERE id = p_lineup_id;
+    RETURN false;
+  ELSE
+    INSERT INTO public.lineup_favorites (user_id, lineup_id) VALUES (p_user_id, p_lineup_id);
+    UPDATE public.lineups SET favorite_count = favorite_count + 1 WHERE id = p_lineup_id;
+    RETURN true;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ================================================================
 -- 多人实时协作 (已废弃，表保留在数据库)
 -- ================================================================

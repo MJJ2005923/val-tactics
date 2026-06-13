@@ -135,6 +135,7 @@ export interface Lineup {
   effect_img: string | null
   views: number
   like_count: number
+  favorite_count: number
   comment_count: number
   difficulty: number
   tags: string[]
