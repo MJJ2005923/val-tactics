@@ -207,12 +207,20 @@ export async function onRequest(context) {
       }
       // 旧 tier 自动迁移到新套餐
       const migratedTier = TIER_MIGRATION[codeData.tier] || codeData.tier
+      // 根据前缀自动算过期：MONTH=30天 QUART=90天 YEAR=365天
+      let expiresAt = codeData.expiresAt || 0
+      if (!expiresAt) {
+        if (normalized.startsWith('VAL-MONTH')) expiresAt = Date.now() + 30 * 86400000
+        else if (normalized.startsWith('VAL-QUART')) expiresAt = Date.now() + 90 * 86400000
+        else if (normalized.startsWith('VAL-YEAR')) expiresAt = Date.now() + 365 * 86400000
+        else expiresAt = Date.now() + 30 * 86400000 // 默认30天
+      }
       // 标记使用
-      await env.AI_USAGE.put(`code:${normalized}`, JSON.stringify({ ...codeData, used: true, usedBy: userId, usedAt: Date.now(), migratedTier }))
+      await env.AI_USAGE.put(`code:${normalized}`, JSON.stringify({ ...codeData, used: true, usedBy: userId, usedAt: Date.now(), migratedTier, expiresAt }))
       // 存储用户套餐
-      const userTier = { tier: migratedTier, activatedAt: Date.now(), expiresAt: codeData.expiresAt || 0 }
+      const userTier = { tier: migratedTier, activatedAt: Date.now(), expiresAt }
       await env.AI_USAGE.put(`tier:${userId}`, JSON.stringify(userTier))
-      return new Response(JSON.stringify({ ok: true, tier: migratedTier, expiresAt: codeData.expiresAt }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ ok: true, tier: migratedTier, expiresAt }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
       // KV 不可用（本地开发），检查测试码
       if (DEV_CODES[normalized]) {
