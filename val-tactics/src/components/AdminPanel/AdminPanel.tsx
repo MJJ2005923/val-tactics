@@ -8,13 +8,16 @@ interface Insight { id: string; category: string; content: string; status: strin
 function KnowledgeInsights({ adminKey, refreshTrigger }: { adminKey: string; refreshTrigger?: number }) {
   const [insights, setInsights] = useState<Insight[]>([])
   const [distilling, setDistilling] = useState(false)
+  const [showOnly, setShowOnly] = useState<'all' | 'pending'>('pending')
 
   const loadInsights = async () => {
-    const { data } = await supabase.from('knowledge_insights').select('*').order('created_at', { ascending: false }).limit(80)
+    let q = supabase.from('knowledge_insights').select('*').order('created_at', { ascending: false }).limit(80)
+    if (showOnly === 'pending') q = q.eq('status', 'pending')
+    const { data } = await q
     setInsights((data || []) as Insight[])
   }
 
-  useEffect(() => { loadInsights() }, [refreshTrigger])
+  useEffect(() => { loadInsights() }, [refreshTrigger, showOnly])
 
   const handleDistill = async () => {
     setDistilling(true)
@@ -33,14 +36,16 @@ function KnowledgeInsights({ adminKey, refreshTrigger }: { adminKey: string; ref
   }
 
   const pending = insights.filter(i => i.status === 'pending')
-  const approved = insights.filter(i => i.status === 'approved')
 
   return (
     <div className={styles.section}>
-      <h3>🧠 知识蒸馏 ({pending.length} 待审 / {approved.length} 已通过)</h3>
+      <h3>🧠 知识蒸馏 ({pending.length} 待审)</h3>
       <div className={styles.actions} style={{ marginBottom: 10 }}>
         <button className={styles.actionBtn} onClick={handleDistill} disabled={distilling}>
           {distilling ? '蒸馏中...' : '🤖 AI蒸馏最近对话'}
+        </button>
+        <button className={styles.actionBtn} onClick={() => { setShowOnly(s => s === 'all' ? 'pending' : 'all'); loadInsights() }}>
+          {showOnly === 'all' ? '📋 只看待审' : '📋 查看全部'}
         </button>
         <button className={styles.actionBtn} onClick={loadInsights}>🔄 刷新</button>
       </div>
