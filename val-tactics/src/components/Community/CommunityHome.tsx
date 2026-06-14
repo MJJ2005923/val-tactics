@@ -32,9 +32,24 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
       if (error) console.error('[CommunityHome] lineups:', error.message)
       setHotLineups((data || []) as any)
     })
-    supabase.from('likes').select('user_id,created_at,target_type,target_id').order('created_at', { ascending: false }).limit(10).then(({ data, error }) => {
-      if (error) console.error('[CommunityHome] activities:', error.message)
-      setActivities((data || []).map((a: any) => ({ ...a, action: '赞了' })))
+    // 社区动态 — 发布行为 + 破百互动
+    Promise.all([
+      supabase.from('tactical_shares').select('id,title,user_id,created_at,like_count').order('created_at', { ascending: false }).limit(4),
+      supabase.from('posts').select('id,title,user_id,created_at,like_count').order('created_at', { ascending: false }).limit(4),
+      supabase.from('lineups').select('id,title,user_id,created_at,like_count').order('created_at', { ascending: false }).limit(4),
+      supabase.from('tactical_shares').select('id,title,user_id,created_at,like_count').gte('like_count', 100).order('created_at', { ascending: false }).limit(3),
+    ]).then(([{ data: tt }, { data: pt }, { data: lt }, { data: hotLikes }]) => {
+      const feed: any[] = []
+      const add = (items: any[] | null, type: string) => {
+        (items || []).forEach((x: any) => feed.push({ user_id: x.user_id, title: x.title, target_type: type, target_id: x.id, created_at: x.created_at, action: '发布了' }))
+      }
+      add(tt, 'tactic'); add(pt, 'post'); add(lt, 'lineup')
+      const added = new Set()
+      ;(hotLikes || []).forEach((x: any) => {
+        if (!added.has(`${x.id}`)) { added.add(`${x.id}`); feed.push({ user_id: x.user_id, title: x.title, target_type: 'tactic', target_id: x.id, created_at: x.created_at, action: '破百赞' }) }
+      })
+      feed.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      setActivities(feed.slice(0, 10))
     })
   }, [])
 
@@ -107,7 +122,10 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
           {activities.slice(0, 6).map((a, i) => (
             <div key={i} className={styles.feedItem}>
               <div className={styles.feedAvatar}>{a.user_id?.slice(0, 2) || '?'}</div>
-              <span className={styles.feedAction}>用户 {a.action}了 {a.target_type === 'tactic' ? '战术' : a.target_type === 'post' ? '帖子' : '点位'}</span>
+              <span className={styles.feedAction}>
+                {a.action === '发布了' && <>发布了{a.target_type === 'tactic' ? '战术' : a.target_type === 'post' ? '帖子' : '点位'} <b>{a.title}</b></>}
+                {a.action === '破百赞' && <>战术 <b>{a.title}</b> 点赞破百</>}
+              </span>
               <span className={styles.feedTime}>{new Date(a.created_at).toLocaleDateString('zh')}</span>
             </div>
           ))}
