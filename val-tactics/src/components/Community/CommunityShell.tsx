@@ -48,6 +48,11 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
     setDetailId('')
   }, [])
 
+  const handleNav = useCallback((n: CommunityNav) => {
+    setNav(n)
+    setDetailId('')  // 切页面时清除详情
+  }, [])
+
   const viewProfile = useCallback((uid: string) => {
     setProfileUserId(uid)
     setNav('profile')
@@ -143,7 +148,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
         showSearch={nav === 'home'}
       />
       <div className={styles.main}>
-        <CommunitySidebar active={nav} onNav={setNav} />
+        <CommunitySidebar active={nav} onNav={handleNav} />
         <div className={styles.content}>
           {renderContent()}
         </div>
@@ -162,7 +167,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
         <LineupsCreate mapId={selectedMap} onClose={() => setShowCreate(null)}
           onSuccess={(id) => { setShowCreate(null); openDetail(id, 'lineup') }} />
       )}
-      <CommunityBottomBar active={nav} onNav={setNav} />
+      <CommunityBottomBar active={nav} onNav={handleNav} />
     </div>
   )
 }
