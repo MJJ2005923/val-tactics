@@ -523,65 +523,48 @@ export async function onRequest(context) {
         })),
       }))
 
-      // AI 蒸馏特工洞察
-      const aiResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
-        body: JSON.stringify({
-          model: 'deepseek-v4-flash',
-          messages: [
-            { role: 'system', content: '你是无畏契约数据分析师。从特工技能数据中提取有价值的战术知识。输出纯JSON数组，每条约30字，格式：{"category":"特工","content":"具体洞察"}。侧重技能组合、克制关系、使用技巧。最多15条。' },
-            { role: 'user', content: JSON.stringify(agentSummary.slice(0, 15)).slice(0, 6000) },
-          ],
-          max_tokens: 600, temperature: 0.3,
-        }),
-      })
-      const aiData = await aiResp.json()
-      const raw = aiData.choices?.[0]?.message?.content?.trim() || '[]'
-      let insights = []
-      try { insights = JSON.parse(raw) } catch {
-        const match = raw.match(/\[[\s\S]*\]/)
-        if (match) try { insights = JSON.parse(match[0]) } catch {}
+      // 并行：特工蒸馏 + 地图蒸馏
+      const mapsResp = await fetch('https://valorant-api.com/v1/maps?language=zh-CN')
+      const mapsData = await mapsResp.json()
+      const mapNames = (mapsData?.data || []).map((m) => m.displayName).join('、')
+
+      const [agentResults, mapResults] = await Promise.all([
+        fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
+          body: JSON.stringify({
+            model: 'deepseek-v4-flash', max_tokens: 500, temperature: 0.3,
+            messages: [
+              { role: 'system', content: '从无畏契约特工数据中提取战术知识。输出JSON数组：{"category":"特工","content":"洞察(30字)"}。侧重技能组合、克制关系。最多10条。' },
+              { role: 'user', content: JSON.stringify(agentSummary.slice(0, 12)).slice(0, 5000) },
+            ],
+          }),
+        }).then(r => r.json()),
+        fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
+          body: JSON.stringify({
+            model: 'deepseek-v4-flash', max_tokens: 400, temperature: 0.3,
+            messages: [
+              { role: 'system', content: '为每张地图提供战术要点。输出JSON数组：{"category":"地图","content":"地图名+要点(30字)"}。地图：' + mapNames + '。每个1-2条。' },
+              { role: 'user', content: '地图战术' },
+            ],
+          }),
+        }).then(r => r.json()),
+      ])
+
+      const parseInsights = (data) => {
+        const raw = data.choices?.[0]?.message?.content?.trim() || '[]'
+        let r = []
+        try { r = JSON.parse(raw) } catch { const m = raw.match(/\[[\s\S]*\]/); if (m) try { r = JSON.parse(m[0]) } catch {} }
+        return r
       }
-      for (const ins of insights) {
-        if (!ins.content) continue
+      ;[...parseInsights(agentResults), ...parseInsights(mapResults)].forEach(async (ins) => {
+        if (!ins.content) return
         await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
           method: 'POST', headers: SB_HEADERS_POST,
           body: JSON.stringify({ source: 'wiki', category: ins.category || '特工', content: ins.content, status: 'pending' }),
         })
         totalSaved++
-      }
-
-      // 爬取地图数据
-      const mapsResp = await fetch('https://valorant-api.com/v1/maps?language=zh-CN')
-      const mapsData = await mapsResp.json()
-      const mapNames = (mapsData?.data || []).map((m) => m.displayName).join('、')
-
-      const mapResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
-        body: JSON.stringify({
-          model: 'deepseek-v4-flash',
-          messages: [
-            { role: 'system', content: '你了解无畏契约所有地图。输出纯JSON数组，每条：{"category":"地图","content":"地图名+战术要点（一句）"}。涵盖以下地图：' + mapNames + '。每个地图1-2条，侧重职业比赛常见打法。' },
-            { role: 'user', content: '请为每张地图提供战术要点' },
-          ],
-          max_tokens: 500, temperature: 0.3,
-        }),
       })
-      const mapData2 = await mapResp.json()
-      const raw2 = mapData2.choices?.[0]?.message?.content?.trim() || '[]'
-      let mapInsights = []
-      try { mapInsights = JSON.parse(raw2) } catch {
-        const match = raw2.match(/\[[\s\S]*\]/)
-        if (match) try { mapInsights = JSON.parse(match[0]) } catch {}
-      }
-      for (const ins of mapInsights) {
-        if (!ins.content) continue
-        await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
-          method: 'POST', headers: SB_HEADERS_POST,
-          body: JSON.stringify({ source: 'wiki', category: '地图', content: ins.content, status: 'pending' }),
-        })
-        totalSaved++
-      }
 
       return new Response(JSON.stringify({ ok: true, saved: totalSaved, agents: agents.length, maps: mapNames }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
@@ -601,35 +584,38 @@ export async function onRequest(context) {
 
       let totalSaved = 0
 
-      // VCT 阵容数据
-      for (const topic of [
-        { cat: '阵容', prompt: '请基于2025-2026 VCT职业比赛数据，列出无畏契约当前职业比赛主流阵容组合。每种阵容格式：{"category":"阵容","content":"阵容名+特工组合+适用地图+打法说明(30字以内)"}。输出纯JSON数组。最多6条。' },
-        { cat: '地图', prompt: '请基于VCT职业比赛数据，列出无畏契约各地图的职业队选率排名和主流打法。格式：{"category":"地图","content":"地图名+选率+职业打法(30字)"}。输出纯JSON数组。最多6条。' },
-        { cat: '技巧', prompt: '从VCT职业比赛中提取5条高端战术技巧。格式：{"category":"技巧","content":"具体技巧(30字)"}。侧重道具组合、协同配合、时间控制。输出纯JSON数组。' },
-      ]) {
-        const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      // VCT 三路并行调用
+      const topics = [
+        { cat: '阵容', prompt: '列出无畏契约VCT职业比赛主流阵容组合。JSON数组格式：{"category":"阵容","content":"阵容名+特工+适用地图+打法(30字)"}。最多6条。' },
+        { cat: '地图', prompt: '列出VCT职业比赛各地图选率和主流打法。JSON：{"category":"地图","content":"地图名+选率+打法(30字)"}。最多6条。' },
+        { cat: '技巧', prompt: '从VCT职业比赛中提取高端战术技巧。JSON：{"category":"技巧","content":"技巧(30字)"}。5条。' },
+      ]
+
+      const results = await Promise.all(topics.map(topic =>
+        fetch('https://api.deepseek.com/v1/chat/completions', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
           body: JSON.stringify({
             model: 'deepseek-v4-flash',
             messages: [
-              { role: 'system', content: '你是无畏契约VCT赛事分析师。基于你的训练数据提供准确的职业比赛洞察。' + topic.prompt },
-              { role: 'user', content: `请提供${topic.cat}相关的VCT职业比赛数据` },
+              { role: 'system', content: '你是VCT分析师。输出纯JSON数组。' + topic.prompt },
+              { role: 'user', content: topic.cat },
             ],
-            max_tokens: 500, temperature: 0.3,
+            max_tokens: 400, temperature: 0.3,
           }),
-        })
-        const data = await resp.json()
-        const raw = data.choices?.[0]?.message?.content?.trim() || '[]'
-        let insights = []
-        try { insights = JSON.parse(raw) } catch {
-          const match = raw.match(/\[[\s\S]*\]/)
-          if (match) try { insights = JSON.parse(match[0]) } catch {}
-        }
-        for (const ins of insights) {
+        }).then(r => r.json()).then(data => {
+          const raw = data.choices?.[0]?.message?.content?.trim() || '[]'
+          let i = []
+          try { i = JSON.parse(raw) } catch { const m = raw.match(/\[[\s\S]*\]/); if (m) try { i = JSON.parse(m[0]) } catch {} }
+          return i.map(ins => ({ ...ins, cat: topic.cat }))
+        }).catch(() => [])
+      ))
+
+      for (const topicInsights of results) {
+        for (const ins of topicInsights) {
           if (!ins.content) continue
           await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
             method: 'POST', headers: SB_HEADERS_POST,
-            body: JSON.stringify({ source: 'vct', category: ins.category || topic.cat, content: ins.content, status: 'pending' }),
+            body: JSON.stringify({ source: 'vct', category: ins.category || ins.cat, content: ins.content, status: 'pending' }),
           })
           totalSaved++
         }
