@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useAuth } from '../../store/AuthContext'
 import CommunityTopBar from './CommunityTopBar'
 import CommunitySidebar from './CommunitySidebar'
+import CommunityBottomBar from './CommunityBottomBar'
 import CommunityHome from './CommunityHome'
 import TacticsGallery from './TacticsGallery'
 import TacticsDetail from './TacticsDetail'
@@ -161,6 +162,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
         <LineupsCreate mapId={selectedMap} onClose={() => setShowCreate(null)}
           onSuccess={(id) => { setShowCreate(null); openDetail(id, 'lineup') }} />
       )}
+      <CommunityBottomBar active={nav} onNav={setNav} />
     </div>
   )
 }
