@@ -91,6 +91,20 @@ export default function HelpPanel({ onClose }: Props) {
           </div>
 
           <div className={styles.section}>
+            <h3>🌐 社区</h3>
+            <ul>
+              <li>点击导航栏 <strong>社区</strong> 进入，左侧导航切换板块</li>
+              <li><strong>战术广场</strong>：浏览/搜索/发布战术，点赞收藏评论</li>
+              <li><strong>论坛大厅</strong>：7种分类发帖（战术讨论/英雄攻略/地图分析/开黑组队/赛事/训练/自定义）</li>
+              <li><strong>技能点位</strong>：选地图→特工→技能→地图点选坐标+4张截图发布</li>
+              <li><strong>个人主页</strong>：5个Tab查看发布/点赞/收藏的内容，留言板互动</li>
+              <li><strong>创作者排行</strong>：创作榜/点赞榜/关注榜/收藏榜</li>
+              <li><strong>通知铃铛</strong>：实时提醒点赞/评论/关注/收藏</li>
+              <li><strong>收藏与赞过</strong>：侧边栏入口查看全部，可按类型筛选</li>
+            </ul>
+          </div>
+
+          <div className={styles.section}>
             <h3>🔐 账号系统</h3>
             <ul>
               <li><strong>注册/登录</strong>：导航栏点击登录，使用邮箱注册</li>
