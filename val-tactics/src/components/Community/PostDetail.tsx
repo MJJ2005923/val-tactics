@@ -13,10 +13,11 @@ import styles from './PostDetail.module.css'
 interface Props {
   postId: string
   onBack: () => void
+  onViewProfile?: (uid: string) => void
   embedded?: boolean
 }
 
-export default function PostDetail({ postId, onBack, embedded }: Props) {
+export default function PostDetail({ postId, onBack, onViewProfile, embedded }: Props) {
   const { user } = useAuth(); const isAdmin = !!sessionStorage.getItem("admin-key")
   const [post, setPost] = useState<Post | null>(null)
   const [author, setAuthor] = useState<Profile | null>(null)
@@ -55,7 +56,7 @@ export default function PostDetail({ postId, onBack, embedded }: Props) {
         <h1 className={styles.title}>{post.title}</h1>
         <div className={styles.body}>{post.content}</div>
         <div className={styles.actionBar}>
-          <span className={styles.author}>{author?.username?.split('@')[0] || '用户'}</span>
+          <span className={styles.author} style={{ cursor: 'pointer' }} onClick={() => onViewProfile?.(post.user_id)}>{author?.username?.split('@')[0] || '用户'}</span>
           <FollowButton targetUserId={post.user_id} />
           <span className={styles.date}>{new Date(post.created_at).toLocaleDateString('zh')} · {post.views} 浏览</span>
           <LikeButton targetType="post" targetId={post.id} targetUserId={post.user_id} initialLiked={false} likeCount={post.like_count} />

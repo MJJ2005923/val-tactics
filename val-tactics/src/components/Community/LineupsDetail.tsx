@@ -14,10 +14,11 @@ import styles from './LineupsDetail.module.css'
 interface Props {
   lineupId: string
   onBack: () => void
+  onViewProfile?: (uid: string) => void
   embedded?: boolean
 }
 
-export default function LineupsDetail({ lineupId, onBack, embedded }: Props) {
+export default function LineupsDetail({ lineupId, onBack, onViewProfile, embedded }: Props) {
   const { user } = useAuth()
   const [lineup, setLineup] = useState<Lineup | null>(null)
   const [author, setAuthor] = useState<Profile | null>(null)
@@ -139,7 +140,7 @@ export default function LineupsDetail({ lineupId, onBack, embedded }: Props) {
         )}
 
         <div className={styles.meta}>
-          <span className={styles.author}>{author?.username?.split('@')[0] || '用户'}</span>
+          <span className={styles.author} style={{ cursor: 'pointer' }} onClick={() => onViewProfile?.(lineup.user_id)}>{author?.username?.split('@')[0] || '用户'}</span>
           <FollowButton targetUserId={lineup.user_id} />
           <span className={styles.diff}>{[1,2,3,4,5].map(i => (
             <span key={i} className={i <= lineup.difficulty ? styles.diffStarActive : styles.diffStar}>{'*'}</span>

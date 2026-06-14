@@ -14,10 +14,11 @@ interface Props {
   tacticId: string
   onBack: () => void
   onLoadToBoard: (data: Record<string, unknown>, mapId: string) => void
+  onViewProfile?: (uid: string) => void
   embedded?: boolean
 }
 
-export default function TacticsDetail({ tacticId, onBack, onLoadToBoard, embedded }: Props) {
+export default function TacticsDetail({ tacticId, onBack, onLoadToBoard, onViewProfile, embedded }: Props) {
   const { user } = useAuth(); const isAdmin = !!sessionStorage.getItem("admin-key")
   const [tactic, setTactic] = useState<TacticalShare | null>(null)
   const [author, setAuthor] = useState<Profile | null>(null)
@@ -99,7 +100,7 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard, embedde
 
         <div className={styles.actionBar}>
           <div className={styles.authorInfo}>
-            <span className={styles.authorName}>{author?.username?.split('@')[0] || '用户'}</span>
+            <span className={styles.authorName} style={{ cursor: 'pointer' }} onClick={() => onViewProfile?.(tactic.user_id)}>{author?.username?.split('@')[0] || '用户'}</span>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,.2)' }}>
               {new Date(tactic.created_at).toLocaleDateString('zh')} · {tactic.views} 浏览 · {tactic.like_count} 赞 · {(tactic as any).favorite_count || 0} 收藏
             </span>

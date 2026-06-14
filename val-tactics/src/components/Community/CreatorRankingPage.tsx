@@ -8,6 +8,8 @@ interface Creator {
   follower_count: number; favorite_count: number
 }
 
+interface Props { onViewProfile?: (uid: string) => void }
+
 type RankTab = 'creation' | 'likes' | 'follows' | 'favs'
 
 const tabs: { id: RankTab; label: string; desc: string; sort: (c: Creator) => number; fmt: (n: number) => string }[] = [
@@ -17,7 +19,7 @@ const tabs: { id: RankTab; label: string; desc: string; sort: (c: Creator) => nu
   { id: 'favs', label: '收藏榜', desc: '被收藏次数', sort: c => c.favorite_count, fmt: n => `${n} 次` },
 ]
 
-export default function CreatorRankingPage() {
+export default function CreatorRankingPage({ onViewProfile }: Props) {
   const [creators, setCreators] = useState<Creator[]>([])
   const [tab, setTab] = useState<RankTab>('creation')
   const [loading, setLoading] = useState(true)
@@ -54,7 +56,7 @@ export default function CreatorRankingPage() {
         <div className={styles.list}>
           {/* Top 3 — 大卡片 */}
           {sorted.slice(0, 3).map((c, i) => (
-            <div key={c.user_id} className={`${styles.cardTop} ${styles['rank' + (i + 1)]}`}>
+            <div key={c.user_id} className={`${styles.cardTop} ${styles['rank' + (i + 1)]}`} onClick={() => onViewProfile?.(c.user_id)} style={{ cursor: 'pointer' }}>
               <div className={styles.rankBadge}>{i + 1}</div>
               <div className={styles.avatar}>
                 {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.username || '?')[0]}
@@ -73,7 +75,7 @@ export default function CreatorRankingPage() {
 
           {/* 4-30 — 列表 */}
           {sorted.slice(3).map((c, i) => (
-            <div key={c.user_id} className={styles.card} style={{ animationDelay: `${i * .03}s` }}>
+            <div key={c.user_id} className={styles.card} style={{ animationDelay: `${i * .03}s`, cursor: 'pointer' }} onClick={() => onViewProfile?.(c.user_id)}>
               <span className={styles.rankNum}>{i + 4}</span>
               <span className={styles.avatarSm}>
                 {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.username || '?')[0]}

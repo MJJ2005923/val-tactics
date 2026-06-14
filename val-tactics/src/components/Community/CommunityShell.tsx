@@ -63,13 +63,13 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
     // 详情页（嵌入显示）
     if (detailId) {
       if (detailType === 'tactic') return (
-        <TacticsDetail embedded tacticId={detailId} onBack={closeDetail} onLoadToBoard={onLoadTactic || (() => {})} />
+        <TacticsDetail embedded tacticId={detailId} onBack={closeDetail} onLoadToBoard={onLoadTactic || (() => {})} onViewProfile={viewProfile} />
       )
       if (detailType === 'post') return (
-        <PostDetail embedded postId={detailId} onBack={closeDetail} />
+        <PostDetail embedded postId={detailId} onBack={closeDetail} onViewProfile={viewProfile} />
       )
       if (detailType === 'lineup') return (
-        <LineupsDetail embedded lineupId={detailId} onBack={closeDetail} />
+        <LineupsDetail embedded lineupId={detailId} onBack={closeDetail} onViewProfile={viewProfile} />
       )
     }
 
@@ -136,7 +136,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
       <CollectionPage type="liked" onViewTactic={(id) => openDetail(id, 'tactic')} onViewPost={(id) => openDetail(id, 'post')} onViewLineup={(id) => openDetail(id, 'lineup')} />
     )
 
-    if (nav === 'ranking') return <CreatorRankingPage />
+    if (nav === 'ranking') return <CreatorRankingPage onViewProfile={viewProfile} />
 
     return null
   }
