@@ -35,13 +35,16 @@ const MAPS: { name: string; nameEn: string; desc: string }[] = [
 /** 去除 Markdown 格式符号，返回纯文本 */
 function stripMd(s: string): string {
   return s
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/\*(.+?)\*/g, '$1')
-    .replace(/`(.+?)`/g, '$1')
-    .replace(/\|/g, ' ')
-    .replace(/^[-*+]\s+/gm, '· ')
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^#{1,6}\s+/gm, '')           // 标题
+    .replace(/\*\*(.+?)\*\*/g, '$1')       // 粗体
+    .replace(/\*(.+?)\*/g, '$1')           // 斜体
+    .replace(/`(.+?)`/g, '$1')             // 行内代码
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')    // 链接 [text](url)
+    .replace(/^>\s?/gm, '')                // 引用
+    .replace(/^\|[-|:\s]+\|$/gm, '')       // 表格分隔线 |---|---|
+    .replace(/\|/g, ' ')                   // 表格竖线
+    .replace(/^[-*+]\s+/gm, '· ')          // 无序列表
+    .replace(/\n{3,}/g, '\n\n')            // 合并空行
 }
 
 /**
