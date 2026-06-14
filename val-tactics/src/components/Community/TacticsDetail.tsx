@@ -4,6 +4,8 @@ import { getProfile } from '../../lib/community/profiles'
 import { useAuth } from '../../store/AuthContext'
 import type { TacticalShare, Profile } from '../../types/community'
 import maps from '../../data/maps'
+import LikeButton from './LikeButton'
+import FollowButton from './FollowButton'
 import CommentSection from './CommentSection'
 import styles from './TacticsDetail.module.css'
 
@@ -102,6 +104,8 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard, embedde
             </span>
           </div>
           <div className={styles.actionBtns}>
+            <LikeButton targetType="tactic" targetId={tactic.id} targetUserId={tactic.user_id} initialLiked={!!(tactic as any).liked} likeCount={tactic.like_count || 0} />
+            <FollowButton targetUserId={tactic.user_id} />
             <button className={styles.loadBtn} onClick={handleLoad}>📥 加载到战术板</button>
             {user && (user.id === tactic.user_id || isAdmin) && (
               <button className={styles.actionBtn} onClick={handleDelete} style={{ color: isAdmin && user.id !== tactic.user_id ? '#f0c0ff' : '#ff5555' }}>删除</button>
