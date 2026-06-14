@@ -421,6 +421,28 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ allowed: true, level: 'pass', reason: '审核通过', flags: [] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
+  /** 从 AI 返回文本中提取 JSON 数组 */
+  function parseAIJson(text) {
+    if (!text) return []
+    // 去掉 markdown 代码块包裹
+    let t = text.trim()
+    if (t.startsWith('```')) { t = t.replace(/^```\w*\n/, '').replace(/\n```$/, '') }
+    try { const r = JSON.parse(t); return Array.isArray(r) ? r : [] } catch {}
+    // 尝试匹配 [...]
+    const m = t.match(/\[[\s\S]*\]/)
+    if (m) {
+      try { const r = JSON.parse(m[0]); return Array.isArray(r) ? r : [] } catch {}
+      // 最后手段 — 逐行解析
+      try {
+        const items = []
+        const matches = m[0].matchAll(/\{[^}]+\}/g)
+        for (const item of matches) { try { items.push(JSON.parse(item[0])) } catch {} }
+        return items
+      } catch {}
+    }
+    return []
+  }
+
   const SB_URL = 'https://zwtpeyvqbllrpregjpyd.supabase.co'
   const SB_KEY = env.SUPABASE_SERVICE_KEY || ''
   const SB_HEADERS_POST = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
@@ -463,18 +485,14 @@ export async function onRequest(context) {
           body: JSON.stringify({
             model: 'deepseek-v4-flash',
             messages: [
-              { role: 'system', content: '你是无畏契约版本分析师。请基于你的训练数据（截止2026年），总结这个版本的主要改动。输出纯JSON数组，每条格式：{"category":"版本","content":"具体改动（一句话）"}。只输出确定的信息，不确定的不要输出。最多8条。' },
+              { role: 'system', content: '你是无畏契约版本分析师。请基于你的训练数据（截止2026年），总结这个版本的主要改动。输出纯JSON数组，每条格式：{"category":"版本","content":"具体改动（一句话）"}。最多8条。' },
               { role: 'user', content: patchContent },
             ],
             max_tokens: 500, temperature: 0.3,
           }),
         })
         const aiData = await aiResp.json()
-        const raw = aiData.choices?.[0]?.message?.content?.trim() || '[]'
-        try { insights = JSON.parse(raw) } catch {
-          const match = raw.match(/\[[\s\S]*\]/)
-          if (match) try { insights = JSON.parse(match[0]) } catch {}
-        }
+        insights = parseAIJson(aiData?.choices?.[0]?.message?.content)
       }
 
       // 存入 knowledge_insights
@@ -551,13 +569,8 @@ export async function onRequest(context) {
         }).then(r => r.json()),
       ])
 
-      const parseInsights = (data) => {
-        const raw = data.choices?.[0]?.message?.content?.trim() || '[]'
-        let r = []
-        try { r = JSON.parse(raw) } catch { const m = raw.match(/\[[\s\S]*\]/); if (m) try { r = JSON.parse(m[0]) } catch {} }
-        return r
-      }
-      ;[...parseInsights(agentResults), ...parseInsights(mapResults)].forEach(async (ins) => {
+      const pi = (data) => parseAIJson(data?.choices?.[0]?.message?.content)
+      ;[...pi(agentResults), ...pi(mapResults)].forEach(async (ins) => {
         if (!ins.content) return
         await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
           method: 'POST', headers: SB_HEADERS_POST,
@@ -603,10 +616,7 @@ export async function onRequest(context) {
             max_tokens: 400, temperature: 0.3,
           }),
         }).then(r => r.json()).then(data => {
-          const raw = data.choices?.[0]?.message?.content?.trim() || '[]'
-          let i = []
-          try { i = JSON.parse(raw) } catch { const m = raw.match(/\[[\s\S]*\]/); if (m) try { i = JSON.parse(m[0]) } catch {} }
-          return i.map(ins => ({ ...ins, cat: topic.cat }))
+          return parseAIJson(data?.choices?.[0]?.message?.content).map(ins => ({ ...ins, cat: topic.cat }))
         }).catch(() => [])
       ))
 
@@ -658,12 +668,7 @@ export async function onRequest(context) {
         }),
       })
       const aiData = await aiResp.json()
-      const raw = aiData.choices?.[0]?.message?.content?.trim() || '[]'
-      let insights = []
-      try { insights = JSON.parse(raw) } catch {
-        const match = raw.match(/\[[\s\S]*\]/)
-        if (match) try { insights = JSON.parse(match[0]) } catch {}
-      }
+      const insights = parseAIJson(aiData?.choices?.[0]?.message?.content)
 
       // 存入 insights
       let saved = 0
