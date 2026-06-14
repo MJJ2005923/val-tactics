@@ -54,7 +54,7 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard, embedde
   return (
     <div className={embedded ? styles.overlayEmbedded : styles.overlay}>
       <div className={styles.topBar}>
-        {!embedded && <button className={styles.backBtn} onClick={onBack}>← 返回广场</button>}
+        {<button className={styles.backBtn} onClick={onBack}>← 返回广场</button>}
       </div>
 
       <div className={styles.content}>

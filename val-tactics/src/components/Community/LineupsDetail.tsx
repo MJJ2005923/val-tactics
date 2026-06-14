@@ -56,8 +56,8 @@ export default function LineupsDetail({ lineupId, onBack, embedded }: Props) {
     return a?.abilities.find(ab => ab.id === abilityId)?.name || abilityId
   }
 
-  if (loading) return <div className={embedded ? styles.pageEmbedded : styles.page}><div className={styles.topBar}>{!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}</div><div className={styles.loading}>加载中...</div></div>
-  if (deleted || !lineup) return <div className={embedded ? styles.pageEmbedded : styles.page}><div className={styles.topBar}>{!embedded && <button className={styles.backBtn} onClick={onBack}>返回</button>}</div><div className={styles.deleted}>点位已删除或不存在</div></div>
+  if (loading) return <div className={embedded ? styles.pageEmbedded : styles.page}><div className={styles.topBar}><button className={styles.backBtn} onClick={onBack}>← 返回列表</button></div><div className={styles.loading}>加载中...</div></div>
+  if (deleted || !lineup) return <div className={embedded ? styles.pageEmbedded : styles.page}><div className={styles.topBar}><button className={styles.backBtn} onClick={onBack}>← 返回列表</button></div><div className={styles.deleted}>点位已删除或不存在</div></div>
 
   const images = [
     { label: '站位', url: lineup.position_img },
