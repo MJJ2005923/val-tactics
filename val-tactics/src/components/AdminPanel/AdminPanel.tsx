@@ -5,7 +5,7 @@ import styles from './AdminPanel.module.css'
 
 interface Insight { id: string; category: string; content: string; status: string; created_at: string }
 
-function KnowledgeInsights({ adminKey }: { adminKey: string }) {
+function KnowledgeInsights({ adminKey, refreshTrigger }: { adminKey: string; refreshTrigger?: number }) {
   const [insights, setInsights] = useState<Insight[]>([])
   const [distilling, setDistilling] = useState(false)
 
@@ -14,7 +14,7 @@ function KnowledgeInsights({ adminKey }: { adminKey: string }) {
     setInsights((data || []) as Insight[])
   }
 
-  useEffect(() => { loadInsights() }, [])
+  useEffect(() => { loadInsights() }, [refreshTrigger])
 
   const handleDistill = async () => {
     setDistilling(true)
@@ -100,7 +100,7 @@ function VersionCheck({ adminKey }: { adminKey: string }) {
   )
 }
 
-function VCTInsights({ adminKey }: { adminKey: string }) {
+function VCTInsights({ adminKey, onDone }: { adminKey: string; onDone?: () => void }) {
   const [loading, setLoading] = useState(false)
 
   const handleVCT = async () => {
@@ -109,6 +109,7 @@ function VCTInsights({ adminKey }: { adminKey: string }) {
       const r = await fetch(`/api/admin/vct-insights?key=${encodeURIComponent(adminKey)}`, { method: 'POST' })
       const d = await r.json()
       alert(d.ok ? `VCT洞察生成完成: ${d.saved} 条` : (d.error || '失败'))
+      if (d.ok) onDone?.()
     } catch { alert('网络错误') }
     setLoading(false)
   }
@@ -120,7 +121,7 @@ function VCTInsights({ adminKey }: { adminKey: string }) {
   )
 }
 
-function WikiCrawl({ adminKey }: { adminKey: string }) {
+function WikiCrawl({ adminKey, onDone }: { adminKey: string; onDone?: () => void }) {
   const [crawling, setCrawling] = useState(false)
 
   const handleCrawl = async () => {
@@ -129,6 +130,7 @@ function WikiCrawl({ adminKey }: { adminKey: string }) {
       const r = await fetch(`/api/admin/crawl-wiki?key=${encodeURIComponent(adminKey)}`, { method: 'POST' })
       const d = await r.json()
       alert(d.ok ? `Wiki爬取完成: ${d.saved} 条洞察` : (d.error || '失败'))
+      if (d.ok) onDone?.()
     } catch { alert('网络错误') }
     setCrawling(false)
   }
@@ -140,7 +142,7 @@ function WikiCrawl({ adminKey }: { adminKey: string }) {
   )
 }
 
-function KnowledgeContributions() {
+function KnowledgeContributions({ refreshTrigger }: { refreshTrigger?: number }) {
   const [items, setItems] = useState<any[]>([])
 
   const load = async () => {
@@ -148,7 +150,7 @@ function KnowledgeContributions() {
     setItems((data || []))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [refreshTrigger])
 
   const handleReview = async (id: string, status: string) => {
     await supabase.from('knowledge_contributions').update({ status }).eq('id', id)
@@ -213,6 +215,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [refreshK, setRefreshK] = useState(0)
 
   const fetchStats = async (adminKey: string) => {
     setLoading(true); setError('')
@@ -316,16 +319,16 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* 知识蒸馏 */}
-        <KnowledgeInsights adminKey={key} />
-        <KnowledgeContributions />
+        <KnowledgeInsights key={refreshK} adminKey={key} refreshTrigger={refreshK} />
+        <KnowledgeContributions refreshTrigger={refreshK} />
 
         {/* 版本检测 + Wiki爬取 */}
         <div className={styles.section}>
           <h3>🔄 数据采集</h3>
           <div className={styles.actions}>
             <VersionCheck adminKey={key} />
-            <WikiCrawl adminKey={key} />
-            <VCTInsights adminKey={key} />
+            <WikiCrawl adminKey={key} onDone={() => setRefreshK(k => k + 1)} />
+            <VCTInsights adminKey={key} onDone={() => setRefreshK(k => k + 1)} />
           </div>
         </div>
 
