@@ -526,7 +526,7 @@ export async function onRequest(context) {
       if (!dskey) return new Response(JSON.stringify({ error: '未配置AI Key' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
       let totalSaved = 0
-      const saveErrors: string[] = []
+      const saveErrors = []
 
       // 并行蒸馏：特工 + 地图（基于AI训练数据）
       const mapsResp = await fetch('https://valorant-api.com/v1/maps?language=zh-CN')
@@ -584,7 +584,7 @@ export async function onRequest(context) {
       if (!dskey) return new Response(JSON.stringify({ error: '未配置AI Key' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
       let totalSaved = 0
-      const saveErrors: string[] = []
+      const saveErrors = []
 
       // VCT 三路并行调用
       const topics = [
