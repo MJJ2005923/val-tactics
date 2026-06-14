@@ -527,59 +527,41 @@ export async function onRequest(context) {
 
       let totalSaved = 0
 
-      // 爬取特工数据
-      const agentsResp = await fetch('https://valorant-api.com/v1/agents?language=zh-CN&isPlayableCharacter=true')
-      const agentsData = await agentsResp.json()
-      const agents = (agentsData?.data || [])
-
-      // 提取特工技能数据
-      const agentSummary = agents.map((a) => ({
-        name: a.displayName,
-        role: a.role?.displayName || '',
-        abilities: (a.abilities || []).map((ab) => ({
-          name: ab.displayName, description: ab.description, slot: ab.slot,
-        })),
-      }))
-
-      // 并行：特工蒸馏 + 地图蒸馏
+      // 并行蒸馏：特工 + 地图（基于AI训练数据）
       const mapsResp = await fetch('https://valorant-api.com/v1/maps?language=zh-CN')
       const mapsData = await mapsResp.json()
-      const mapNames = (mapsData?.data || []).map((m) => m.displayName).join('、')
+      const playableMaps = (mapsData?.data || []).filter(m => m.coordinates).map(m => m.displayName)
 
-      const [agentResults, mapResults] = await Promise.all([
+      const topics = [
+        { cat: '特工', prompt: `输出纯JSON数组：[{"category":"特工","content":"特工名+战术技巧(30字)"}]. 为无畏契约10个常见特工各提供1条实用技巧。JSON only。` },
+        { cat: '地图', prompt: `输出纯JSON数组：[{"category":"地图","content":"地图名+职业战术要点(30字)"}]. 为以下地图各1条：${playableMaps.join('、')}. JSON only。` },
+      ]
+
+      const results = await Promise.all(topics.map(t =>
         fetch('https://api.deepseek.com/v1/chat/completions', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
           body: JSON.stringify({
-            model: 'deepseek-v4-flash', max_tokens: 600, temperature: 0.3,
+            model: 'deepseek-v4-flash', max_tokens: 500, temperature: 0.3,
             messages: [
-              { role: 'system', content: '输出纯JSON数组(不要markdown,不要其他文字)。格式：[{"category":"特工","content":"洞察"}]. 从特工数据中提取战术知识,侧重技能组合和克制关系。最多10条。' },
-              { role: 'user', content: JSON.stringify(agentSummary.slice(0, 10)).slice(0, 4000) },
+              { role: 'system', content: t.prompt },
+              { role: 'user', content: t.cat },
             ],
           }),
-        }).then(r => r.json()),
-        fetch('https://api.deepseek.com/v1/chat/completions', {
-          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
-          body: JSON.stringify({
-            model: 'deepseek-v4-flash', max_tokens: 400, temperature: 0.3,
-            messages: [
-              { role: 'system', content: '输出纯JSON数组：[{"category":"地图","content":"地图名+战术要点"}]. 为以下地图各提供1条职业战术要点：' + mapNames },
-              { role: 'user', content: 'JSON only, no markdown' },
-            ],
-          }),
-        }).then(r => r.json()),
-      ])
+        }).then(r => r.json()).then(data => parseAIJson(data?.choices?.[0]?.message?.content).map(ins => ({ ...ins, cat: t.cat }))).catch(() => [])
+      ))
 
-      const pi = (data) => parseAIJson(data?.choices?.[0]?.message?.content)
-      for (const ins of [...pi(agentResults), ...pi(mapResults)]) {
-        if (!ins.content) continue
-        await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
-          method: 'POST', headers: SB_HEADERS_POST,
-          body: JSON.stringify({ source: 'wiki', category: ins.category || '特工', content: ins.content, status: 'pending' }),
-        })
-        totalSaved++
+      for (const topicInsights of results) {
+        for (const ins of topicInsights) {
+          if (!ins.content) continue
+          await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
+            method: 'POST', headers: SB_HEADERS_POST,
+            body: JSON.stringify({ source: 'wiki', category: ins.category || ins.cat, content: ins.content, status: 'pending' }),
+          })
+          totalSaved++
+        }
       }
 
-      return new Response(JSON.stringify({ ok: true, saved: totalSaved, agents: agents.length, maps: mapNames }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ ok: true, saved: totalSaved, maps: playableMaps.length }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }
