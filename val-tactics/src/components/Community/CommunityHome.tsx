@@ -20,7 +20,7 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
   const [activities, setActivities] = useState<any[]>([])
 
   useEffect(() => {
-    supabase.from('tactical_shares').select('id,title,user_id,views,like_count,comment_count,created_at,preview_image').order('like_count', { ascending: false }).limit(4).then(({ data, error }) => {
+    supabase.from('tactical_shares').select('id,title,user_id,views,like_count,comment_count,created_at,preview_image,map_id').order('like_count', { ascending: false }).limit(4).then(({ data, error }) => {
       if (error) console.error('[CommunityHome] tactics:', error.message)
       setHotTactics((data || []) as any)
     })
@@ -54,7 +54,7 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
             : filteredTactics.map(t => (
               <div key={t.id} className={styles.cardBig} onClick={() => onViewTactic(t.id)}>
                 <div className={styles.cardImgWrap}>
-                  {t.preview_image ? <img src={t.preview_image} alt="" className={styles.cardImg} /> : <div className={styles.cardImgEmpty}>📐</div>}
+                  <img src={t.preview_image || `/images/maps/${(t as any).map_id || 'ascent'}.png`} alt="" className={styles.cardImg} />
                 </div>
                 <div className={styles.cardBody}>
                   <div className={styles.cardTitle}>{t.title}</div>
