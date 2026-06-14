@@ -178,10 +178,21 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
         convId = row?.id
       } catch {}
       setMessages(prev => [...prev, { role: 'assistant', content, model: config.model, convId, rating: 0 }])
-      // 匿名上报对话日志
+      // 匿名上报对话日志（含对局上下文）
       void fetch('/api/log/conversation', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ userHash: getUserId(), model: config.model, messages: [{ role: 'user', content: text }, { role: 'assistant', content }] }),
+        body: JSON.stringify({
+          userHash: getUserId(), model: config.model,
+          messages: [{ role: 'user', content: text }, { role: 'assistant', content }],
+          context: {
+            mapId, mapName, side,
+            roster: { attack: roster.attack?.join(','), defense: roster.defense?.join(',') },
+            agents: agentPositions.map(a => a.agentId).filter((v, i, arr) => arr.indexOf(v) === i),
+            ally: localStorage.getItem('val-tactics-ally-roster') || '',
+            enemy: localStorage.getItem('val-tactics-enemy-roster') || '',
+            preMap: localStorage.getItem('val-tactics-pre-map') || '',
+          },
+        }),
       }).catch(() => {})
       if (isFree) {
         const date = new Date().toISOString().slice(0,10)

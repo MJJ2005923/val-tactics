@@ -671,12 +671,16 @@ export async function onRequest(context) {
   // === POST /api/log/conversation (匿名对话日志) ===
   if (url.pathname === '/api/log/conversation' && request.method === 'POST') {
     try {
-      const { userHash, model, messages } = await request.json()
+      const { userHash, model, messages, context } = await request.json()
       if (!userHash || !messages?.length) return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
       for (const msg of messages) {
         await fetch(`${SB_URL}/rest/v1/conversation_logs`, {
           method: 'POST', headers: SB_HEADERS_POST,
-          body: JSON.stringify({ user_hash: userHash.slice(0, 64), model: model || '', role: msg.role, content: (msg.content || '').slice(0, 2000) }),
+          body: JSON.stringify({
+            user_hash: userHash.slice(0, 64), model: model || '', role: msg.role,
+            content: (msg.content || '').slice(0, 2000),
+            context: context ? JSON.stringify(context) : null,
+          }),
         })
       }
       return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })

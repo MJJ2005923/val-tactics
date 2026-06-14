@@ -479,6 +479,7 @@ CREATE TABLE IF NOT EXISTS public.conversation_logs (
   model TEXT DEFAULT '',
   role TEXT NOT NULL,
   content TEXT NOT NULL,
+  context JSONB DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX idx_clog_hash ON public.conversation_logs(user_hash);

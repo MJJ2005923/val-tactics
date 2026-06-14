@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { setAdminKey, clearAdminKey, getAdminKey } from '../../lib/adminAuth'
 import { supabase } from '../../lib/supabase'
+import AdminReview from './AdminReview'
 import styles from './AdminPanel.module.css'
 
 interface Insight { id: string; category: string; content: string; status: string; created_at: string }
@@ -221,6 +222,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [refreshK, setRefreshK] = useState(0)
+  const [view, setView] = useState<'dashboard' | 'review'>('dashboard')
 
   const fetchStats = async (adminKey: string) => {
     setLoading(true); setError('')
@@ -258,8 +260,17 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   return (
     <div className={styles.overlay} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className={styles.panel} style={{ maxWidth: 700 }}>
-        <div className={styles.header}><h2>📊 管理面板</h2><button className={styles.closeBtn} onClick={onClose}>✕</button></div>
+        <div className={styles.header}>
+          <h2>📊 管理面板</h2>
+          <button onClick={() => setView(v => v === 'dashboard' ? 'review' : 'dashboard')} style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(5,248,248,.15)', background: 'none', color: '#05F8F8', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>
+            {view === 'dashboard' ? '📋 审核中心' : '📊 数据面板'}
+          </button>
+          <button className={styles.closeBtn} onClick={onClose}>✕</button>
+        </div>
 
+        {view === 'review' ? (
+          <AdminReview adminKey={key} onRefreshParent={() => setRefreshK(k => k + 1)} />
+        ) : (<>
         {/* 用户 + 套餐总览 */}
         <div className={styles.cards}>
           <div className={styles.card}><div className={styles.cardValue}>{stats.totalUsers}</div><div className={styles.cardLabel}>注册用户</div></div>
@@ -354,6 +365,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
         {/* 提醒 */}
         {stats.totalUsers >= 1000 && <div className={styles.warning}>⚠️ 用户数已超1000！建议尽快办理营业执照 + ICP备案。</div>}
         {stats.totalUsers >= 500 && stats.totalUsers < 1000 && <div className={styles.warning} style={{ background: 'rgba(255,215,0,.06)', borderColor: 'rgba(255,215,0,.2)' }}>📈 接近1000用户，准备营业执照材料。</div>}
+        </>)}
       </div>
     </div>
   )
