@@ -1,3 +1,4 @@
+import CreatorRanking from './CreatorRanking'
 import styles from './CommunitySidebar.module.css'
 
 export type CommunityNav = 'home' | 'tactics' | 'forum' | 'lineups' | 'profile' | 'favorites' | 'liked'
@@ -48,6 +49,7 @@ export default function CommunitySidebar({ active, onNav, favCount, likeCount }:
           {item.id === 'liked' && (likeCount || 0) > 0 && <span className={styles.badge}>{likeCount}</span>}
         </div>
       ))}
+      <CreatorRanking />
     </div>
   )
 }
