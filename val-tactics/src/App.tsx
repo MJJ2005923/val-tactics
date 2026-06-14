@@ -17,6 +17,7 @@ import AuthModal from './components/Auth/AuthModal'
 import PrivacyPanel from './components/PrivacyPanel/PrivacyPanel'
 import SponsorPanel from './components/SponsorPanel/SponsorPanel'
 import AdminPanel from './components/AdminPanel/AdminPanel'
+import AdminReview from './components/AdminPanel/AdminReview'
 import MobileLayout from './components/MobileLayout/MobileLayout'
 import CommunityShell from './components/Community/CommunityShell'
 import PWAInstallButton from './components/PWAInstallButton'
@@ -45,6 +46,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showSponsor, setShowSponsor] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [showAdminReview, setShowAdminReview] = useState(false)
   const [mobileTimelineOpen, setMobileTimelineOpen] = useState(false)
   const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
   const [showCommunity, setShowCommunity] = useState(false)
@@ -300,7 +302,8 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
         {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
         {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
         {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
-        {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+        {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onOpenReview={() => { setShowAdmin(false); setShowAdminReview(true) }} />}
+        {showAdminReview && <AdminReview onClose={() => setShowAdminReview(false)} />}
       </div>
     )
   }
@@ -446,7 +449,8 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
       {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
-      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onOpenReview={() => { setShowAdmin(false); setShowAdminReview(true) }} />}
+        {showAdminReview && <AdminReview onClose={() => setShowAdminReview(false)} />}
       {showCommunity && (
         <CommunityShell selectedMap={selectedMap.id} onClose={() => setShowCommunity(false)} onLoadTactic={handleLoadCommunityTactic} />
       )}
