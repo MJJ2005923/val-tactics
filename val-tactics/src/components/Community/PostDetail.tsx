@@ -6,6 +6,7 @@ import type { Post, Profile } from '../../types/community'
 import { POST_CATEGORIES } from '../../types/community'
 import LikeButton from './LikeButton'
 import FollowButton from './FollowButton'
+import FavoriteButton from './FavoriteButton'
 import CommentSection from './CommentSection'
 import styles from './PostDetail.module.css'
 
@@ -58,6 +59,7 @@ export default function PostDetail({ postId, onBack, embedded }: Props) {
           <FollowButton targetUserId={post.user_id} />
           <span className={styles.date}>{new Date(post.created_at).toLocaleDateString('zh')} · {post.views} 浏览</span>
           <LikeButton targetType="post" targetId={post.id} targetUserId={post.user_id} initialLiked={false} likeCount={post.like_count} />
+          <FavoriteButton targetType="post" targetId={post.id} initialCount={(post as any).favorite_count || 0} />
           {user && (user.id === post.user_id || isAdmin) && (
             <button onClick={handleDelete} className={styles.delBtn}>删除</button>
           )}

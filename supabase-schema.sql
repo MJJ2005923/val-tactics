@@ -417,7 +417,53 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT fa
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS show_follows BOOLEAN DEFAULT true;
 
 -- ================================================================
--- 点位收藏
+-- 通用内容收藏（战术/帖子/点位）
+-- ================================================================
+
+ALTER TABLE public.tactical_shares ADD COLUMN IF NOT EXISTS favorite_count INT DEFAULT 0;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS favorite_count INT DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS public.content_favorites (
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  target_type TEXT NOT NULL,
+  target_id UUID NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (user_id, target_type, target_id)
+);
+
+ALTER TABLE public.content_favorites ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "cf_read" ON public.content_favorites FOR SELECT USING (true);
+CREATE POLICY "cf_insert" ON public.content_favorites FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "cf_delete" ON public.content_favorites FOR DELETE USING (auth.uid() = user_id);
+
+CREATE OR REPLACE FUNCTION public.toggle_content_fav(p_user_id UUID, p_target_type TEXT, p_target_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  existing UUID;
+  tbl TEXT;
+BEGIN
+  SELECT user_id INTO existing FROM public.content_favorites
+    WHERE user_id = p_user_id AND target_type = p_target_type AND target_id = p_target_id;
+  IF existing IS NOT NULL THEN
+    DELETE FROM public.content_favorites WHERE user_id = p_user_id AND target_type = p_target_type AND target_id = p_target_id;
+    IF p_target_type = 'tactic' THEN UPDATE public.tactical_shares SET favorite_count = GREATEST(favorite_count - 1, 0) WHERE id = p_target_id;
+    ELSIF p_target_type = 'post' THEN UPDATE public.posts SET favorite_count = GREATEST(favorite_count - 1, 0) WHERE id = p_target_id;
+    ELSIF p_target_type = 'lineup' THEN UPDATE public.lineups SET favorite_count = GREATEST(favorite_count - 1, 0) WHERE id = p_target_id;
+    END IF;
+    RETURN false;
+  ELSE
+    INSERT INTO public.content_favorites (user_id, target_type, target_id) VALUES (p_user_id, p_target_type, p_target_id);
+    IF p_target_type = 'tactic' THEN UPDATE public.tactical_shares SET favorite_count = favorite_count + 1 WHERE id = p_target_id;
+    ELSIF p_target_type = 'post' THEN UPDATE public.posts SET favorite_count = favorite_count + 1 WHERE id = p_target_id;
+    ELSIF p_target_type = 'lineup' THEN UPDATE public.lineups SET favorite_count = favorite_count + 1 WHERE id = p_target_id;
+    END IF;
+    RETURN true;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ================================================================
+-- 点位收藏（旧，保留兼容）
 -- ================================================================
 
 ALTER TABLE public.lineups ADD COLUMN IF NOT EXISTS favorite_count INT DEFAULT 0;

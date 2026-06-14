@@ -6,6 +6,7 @@ import type { TacticalShare, Profile } from '../../types/community'
 import maps from '../../data/maps'
 import LikeButton from './LikeButton'
 import FollowButton from './FollowButton'
+import FavoriteButton from './FavoriteButton'
 import CommentSection from './CommentSection'
 import styles from './TacticsDetail.module.css'
 
@@ -105,6 +106,7 @@ export default function TacticsDetail({ tacticId, onBack, onLoadToBoard, embedde
           </div>
           <div className={styles.actionBtns}>
             <LikeButton targetType="tactic" targetId={tactic.id} targetUserId={tactic.user_id} initialLiked={!!(tactic as any).liked} likeCount={tactic.like_count || 0} />
+            <FavoriteButton targetType="tactic" targetId={tactic.id} initialCount={(tactic as any).favorite_count || 0} />
             <FollowButton targetUserId={tactic.user_id} />
             <button className={styles.loadBtn} onClick={handleLoad}>📥 加载到战术板</button>
             {user && (user.id === tactic.user_id || isAdmin) && (
