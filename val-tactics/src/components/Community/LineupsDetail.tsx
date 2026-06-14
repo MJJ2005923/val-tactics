@@ -67,9 +67,9 @@ export default function LineupsDetail({ lineupId, onBack, embedded }: Props) {
   ]
 
   return (
-    <div className={styles.page}>
+    <div className={embedded ? styles.pageEmbedded : styles.page}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={onBack}>返回</button>
+        <button className={styles.backBtn} onClick={onBack}>← 返回列表</button>
       </div>
       <div className={styles.content}>
         <div className={styles.header}>
