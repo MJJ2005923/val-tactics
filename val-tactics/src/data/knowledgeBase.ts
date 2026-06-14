@@ -32,10 +32,23 @@ const MAPS: { name: string; nameEn: string; desc: string }[] = [
   { name: '幽邃地窖', nameEn: 'ABYSS', desc: '双点地图，地底洞穴主题，多层结构，跌落区域多' },
 ]
 
+/** 去除 Markdown 格式符号，返回纯文本 */
+function stripMd(s: string): string {
+  return s
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/\|/g, ' ')
+    .replace(/^[-*+]\s+/gm, '· ')
+    .replace(/\n{3,}/g, '\n\n')
+}
+
 /**
  * 构建完整的无畏契约知识库系统提示词
+ * @param compact 快速模式：只注入核心知识，省略武器/经济/枪法/新手/版本/路线等
  */
-export function buildKnowledgeBase(mapName: string, side: string, agentNames: string[]): string {
+export function buildKnowledgeBase(mapName: string, side: string, agentNames: string[], compact = false): string {
   const sideCN = side === 'attack' ? '进攻方' : '防守方'
 
   let kb = `你是「T教练」—— 无畏契约战术教练AI。当前地图「${mapName}」（${sideCN}）。
@@ -82,24 +95,26 @@ ${MAPS.map(m => `· ${m.name}（${m.nameEn}）— ${m.desc}`).join('\n')}
     kb += `\n当前在场：${agentNames.join('、')}\n`
   }
 
-  // 核心知识数据
-  kb += `\n${agentData}\n`
-  kb += `\n${mapData}\n`
+  // 核心知识（所有模式都注入，去 Markdown 格式）
+  kb += `\n${stripMd(agentData)}\n`
+  kb += `\n${stripMd(mapData)}\n`
+  kb += `\n${stripMd(tacticsGuide)}\n`
+  kb += `\n${stripMd(mapCallouts)}\n`
+  kb += `\n${stripMd(teamComps)}\n`
+  kb += `\n${stripMd(abilityCombos)}\n`
+  kb += `\n${stripMd(agentCounters)}\n`
+  kb += `\n${stripMd(compAnalysis)}\n`
 
-  // 全部战术知识
-  kb += `\n${tacticsGuide}\n`
-  kb += `\n${mapCallouts}\n`
-  kb += `\n${teamComps}\n`
-  kb += `\n${abilityCombos}\n`
-  kb += `\n${agentCounters}\n`
-  kb += `\n${economySystem}\n`
-  kb += `\n${weaponsData}\n`
-  kb += `\n${attackRoutes}\n`
-  kb += `\n${patchHistory}\n`
-  kb += `\n${combatTips}\n`
-  kb += `\n${aimTraining}\n`
-  kb += `\n${beginnerGuide}\n`
-  kb += `\n${compAnalysis}\n`
+  // 扩展知识（仅深度模式注入）
+  if (!compact) {
+    kb += `\n${stripMd(weaponsData)}\n`
+    kb += `\n${stripMd(economySystem)}\n`
+    kb += `\n${stripMd(attackRoutes)}\n`
+    kb += `\n${stripMd(patchHistory)}\n`
+    kb += `\n${stripMd(combatTips)}\n`
+    kb += `\n${stripMd(aimTraining)}\n`
+    kb += `\n${stripMd(beginnerGuide)}\n`
+  }
 
   // 回答规范
   kb += `

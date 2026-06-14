@@ -61,18 +61,21 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
       .filter((v, i, a) => a.indexOf(v) === i)
     const agentNames = getAgentNames(agentIds)
 
-    const systemPrompt = buildKnowledgeBase(mapName, side, agentNames)
+    const isCompact = config.model === 'deepseek-v4-flash' || config.model === 'deepseek-chat'
+    const systemPrompt = buildKnowledgeBase(mapName, side, agentNames, isCompact)
 
-    // 查询社区相关参考数据
+    // ① 社区参考按问题类型筛选
     let communityRefs = ''
     try {
-      const [tacRes, lineupRes] = await Promise.all([
-        supabase.from('tactical_shares').select('title,description,map_id,like_count').eq('map_id', mapId).order('like_count', { ascending: false }).limit(3),
-        supabase.from('lineups').select('title,description,map_id,like_count,agent_id,ability_id').eq('map_id', mapId).order('like_count', { ascending: false }).limit(3),
+      const isTactics = /阵容|组合|搭配|双烟|双决斗|选什么|推荐|怎么打|进攻|防守|战术/.test(text)
+      const isLineups = /点位|技能|位置|瞄点|怎么用|连招|道具|在哪/.test(text)
+      const [tacRes, linRes] = await Promise.all([
+        (isTactics || !isLineups) ? supabase.from('tactical_shares').select('title,description,map_id,like_count').eq('map_id', mapId).order('like_count', { ascending: false }).limit(3) : Promise.resolve(null),
+        (isLineups || !isTactics) ? supabase.from('lineups').select('title,description,map_id,like_count,agent_id,ability_id').eq('map_id', mapId).order('like_count', { ascending: false }).limit(3) : Promise.resolve(null),
       ])
       const refs: string[] = []
-      ;(tacRes.data || []).forEach((t: any) => { if (t.title) refs.push(`战术「${t.title}」${t.description ? '：' + t.description.slice(0, 60) : ''} 👍${t.like_count || 0}`) })
-      ;(lineupRes.data || []).forEach((l: any) => {
+      ;(tacRes?.data || []).forEach((t: any) => { if (t.title) refs.push(`战术「${t.title}」${t.description ? '：' + t.description.slice(0, 60) : ''} 👍${t.like_count || 0}`) })
+      ;(linRes?.data || []).forEach((l: any) => {
         const a = agents.find(x => x.id === l.agent_id)
         const ab = a?.abilities.find(x => x.id === l.ability_id)
         refs.push(`点位「${l.title}」(${a?.name || l.agent_id} ${ab?.name || l.ability_id})${l.description ? '：' + l.description.slice(0, 40) : ''} 👍${l.like_count || 0}`)
@@ -80,31 +83,48 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
       if (refs.length > 0) communityRefs = `【社区相关参考·${maps.find(m => m.id === mapId)?.name || mapId}】\n${refs.map((r, i) => `${i + 1}. ${r}`).join('\n')}`
     } catch {}
 
-    // 查询已审核通过的知识洞察（VCT/Wiki/版本/蒸馏数据），按用户问题关键词筛选
+    // ②+⑥ 知识洞察交集匹配+时效排序
     let knowledgeRefs = ''
     try {
       const { data: insights } = await supabase.from('knowledge_insights')
-        .select('category,content,source')
+        .select('category,content,source,created_at')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
         .limit(30)
       if (insights && insights.length > 0) {
-        // 提取关键词：当前地图 + 用户提到的地图/特工/战术词
-        const keywords = new Set<string>()
-        keywords.add(mapName.toLowerCase())
-        for (const m of maps) { if (text.includes(m.name)) keywords.add(m.name.toLowerCase()) }
-        for (const a of agents) { if (text.includes(a.name)) keywords.add(a.name.toLowerCase()) }
-        const tacticalWords = ['进攻', '防守', 'A点', 'B点', 'C点', '中路', '阵容', '双烟', '双决斗', '速攻', '慢推', '转点', 'Rush', 'default', '狙击', '回防', '前压', 'ECO', '强起', '配合', '克制', '技能']
-        for (const w of tacticalWords) { if (text.includes(w)) keywords.add(w.toLowerCase()) }
+        const mapKW = new Set<string>()
+        mapKW.add(mapName.toLowerCase())
+        for (const m of maps) { if (text.includes(m.name)) mapKW.add(m.name.toLowerCase()) }
+        const tacKW = new Set<string>()
+        const tacWords = ['进攻', '防守', 'A点', 'B点', 'C点', '中路', '阵容', '双烟', '双决斗', '速攻', '慢推', '转点', 'Rush', 'default', '狙击', '回防', '前压', 'ECO', '强起', '配合', '克制', '技能']
+        for (const w of tacWords) { if (text.includes(w)) tacKW.add(w.toLowerCase()) }
+        // 特工名同时算战术关键词
+        for (const a of agents) { if (text.includes(a.name)) tacKW.add(a.name.toLowerCase()) }
 
-        // 按关键词匹配过滤
+        // 交集匹配
         let relevant = insights.filter((ins: any) => {
-          const haystack = ((ins.content || '') + (ins.category || '')).toLowerCase()
-          return Array.from(keywords).some(kw => haystack.includes(kw))
+          const h = ((ins.content || '') + (ins.category || '')).toLowerCase()
+          const m = mapKW.size === 0 || Array.from(mapKW).some(k => h.includes(k))
+          const t = tacKW.size === 0 || Array.from(tacKW).some(k => h.includes(k))
+          return m && t
         })
-        // 兜底：匹配太少时保留前5条
+
+        // ⑥ 时效性排序
+        const now = Date.now()
+        relevant.sort((a: any, b: any) => {
+          const score = (ins: any) => {
+            const age = now - new Date(ins.created_at).getTime()
+            let s = 0
+            if (ins.source === 'vct') s += 30
+            if (ins.source === 'wiki') s += 15
+            if (age < 30 * 86400000) s += 20
+            if (ins.source === 'version' && age > 90 * 86400000) s -= 20
+            return s
+          }
+          return score(b) - score(a)
+        })
+
         if (relevant.length < 3) relevant = insights.slice(0, 5)
-        // 最多10条，避免太长
         relevant = relevant.slice(0, 10)
 
         if (relevant.length > 0) {
@@ -113,67 +133,60 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
       }
     } catch {}
 
-    const allMessages = [
+    // 棋盘实时状态
+    let boardState = ''
+    const showBoard = (() => { try { return localStorage.getItem('val-tactics-show-board-info') !== 'false' } catch { return true } })()
+    if (showBoard) boardState = formatBoardStateForAI(mapName, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster)
+
+    // 对局前置信息
+    let matchInfo = ''
+    const preMap = localStorage.getItem('val-tactics-pre-map') || ''
+    const ally = (() => { try { return JSON.parse(localStorage.getItem('val-tactics-ally-roster') || '[]') } catch { return [] } })()
+    const enemy = (() => { try { return JSON.parse(localStorage.getItem('val-tactics-enemy-roster') || '[]') } catch { return [] } })()
+    if (preMap || ally.length > 0 || enemy.length > 0) {
+      const lines: string[] = []
+      if (preMap) { const m = maps.find(x => x.id === preMap); if (m) lines.push(`地图：${m.name}`) }
+      if (ally.length > 0) lines.push(`我方阵容：${ally.map((id: string) => agents.find(a => a.id === id)?.name || id).join('、')}`)
+      if (enemy.length > 0) lines.push(`敌方阵容：${enemy.map((id: string) => agents.find(a => a.id === id)?.name || id).join('、')}`)
+      matchInfo = '【用户补充的对局信息】\n' + lines.map(l => `- ${l}`).join('\n')
+    }
+
+    // 比赛数据
+    let matchData = ''
+    const ctx = loadMatchContext()
+    if (ctx.mode !== 'none') {
+      const matches = loadMatches()
+      if (matches.length > 0) {
+        matchData = ctx.mode === 'single' && ctx.matchId
+          ? `以下是我选定的一场比赛数据：\n\n${formatSingleMatchForAI(matches.find(m => m.id === ctx.matchId)!)}`
+          : `以下是我的全部比赛数据：\n\n${formatMatchHistoryForAI(matches)}`
+      }
+    }
+
+    // ⑦ 所有上下文合并为一条消息
+    const blocks: string[] = []
+    if (knowledgeRefs) blocks.push(knowledgeRefs)
+    if (communityRefs) blocks.push(communityRefs)
+    if (boardState) blocks.push(boardState)
+    if (matchInfo) blocks.push(matchInfo)
+    if (matchData) blocks.push(matchData)
+
+    // ④ 长对话截断：超过10轮只保留最近10轮
+    const MAX_ROUNDS = 10
+    const recentMsgs = msgs.length > MAX_ROUNDS * 2
+      ? [{ role: 'user' as const, content: '（前文已截断，以下继续）' },
+         { role: 'assistant' as const, content: '明白。' },
+         ...msgs.slice(-MAX_ROUNDS * 2)]
+      : msgs
+
+    const allMessages: { role: 'user' | 'assistant'; content: string }[] = [
       { role: 'user', content: systemPrompt },
       { role: 'assistant', content: '明白。我是T教练，已掌握全部29位特工技能数据和12张地图信息，请随时提问。' },
-      // 注入知识洞察数据（VCT/Wiki/版本等）
-      ...(knowledgeRefs ? [
-        { role: 'user' as const, content: knowledgeRefs },
-        { role: 'assistant' as const, content: '收到，我已掌握这些职业比赛的阵容数据、战术分析和地图要点。回答时我会结合这些专业数据。' },
+      ...(blocks.length ? [
+        { role: 'user' as const, content: '【综合上下文】\n\n' + blocks.join('\n\n---\n\n') },
+        { role: 'assistant' as const, content: '收到，我已了解全部上下文。' },
       ] : []),
-      // 注入社区参考数据
-      ...(communityRefs ? [
-        { role: 'user' as const, content: communityRefs },
-        { role: 'assistant' as const, content: '收到，我已了解社区中相关的战术和点位参考数据。' },
-      ] : []),
-      // 注入棋盘基础信息（每次发送时实时读取开关状态）
-      ...(() => {
-        const enabled = (() => { try { return localStorage.getItem('val-tactics-show-board-info') !== 'false' } catch { return true } })()
-        if (!enabled) return []
-        return [
-          { role: 'user' as const, content: formatBoardStateForAI(mapName, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster) },
-          { role: 'assistant' as const, content: '收到，我已了解当前战术板的详细状态。' },
-        ]
-      })(),
-      // 注入对局前置信息（阵容+地图）
-      ...(() => {
-        const preMap = localStorage.getItem('val-tactics-pre-map') || ''
-        const ally = (() => { try { return JSON.parse(localStorage.getItem('val-tactics-ally-roster') || '[]') } catch { return [] } })()
-        const enemy = (() => { try { return JSON.parse(localStorage.getItem('val-tactics-enemy-roster') || '[]') } catch { return [] } })()
-        if (!preMap && ally.length === 0 && enemy.length === 0) return []
-        const mapName2 = preMap ? maps.find(m => m.id === preMap)?.name : ''
-        const getNames = (ids: string[]) => ids.map(id => agents.find(a => a.id === id)?.name || id)
-        const lines = ['【用户补充的对局信息】']
-        if (mapName2) lines.push(`- 地图：${mapName2}`)
-        if (ally.length > 0) lines.push(`- 我方阵容：${getNames(ally).join('、')}`)
-        if (enemy.length > 0) lines.push(`- 敌方阵容：${getNames(enemy).join('、')}`)
-        return [
-          { role: 'user' as const, content: lines.join('\n') },
-          { role: 'assistant' as const, content: '收到，我已了解对局的基本信息。' },
-        ]
-      })(),
-      // 注入比赛数据（根据用户选择）
-      ...(() => {
-        const ctx = loadMatchContext()
-        if (ctx.mode === 'none') return []
-        const matches = loadMatches()
-        if (matches.length === 0) return []
-
-        if (ctx.mode === 'single' && ctx.matchId) {
-          const match = matches.find(m => m.id === ctx.matchId)
-          if (!match) return []
-          return [
-            { role: 'user' as const, content: `以下是我选定的一场比赛数据，请针对这场比赛进行分析：\n\n${formatSingleMatchForAI(match)}` },
-            { role: 'assistant' as const, content: '收到，我已看到这场比赛的详细数据，可以针对这场比赛给你分析。' },
-          ]
-        }
-
-        return [
-          { role: 'user' as const, content: `以下是我的全部比赛记录数据，在后续分析中请结合这些个人数据：\n\n${formatMatchHistoryForAI(matches)}` },
-          { role: 'assistant' as const, content: '收到，我已掌握你的比赛记录和统计数据，可以据此分析你的个人表现和给出针对性建议。' },
-        ]
-      })(),
-      ...msgs.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+      ...recentMsgs.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     ]
 
     try {
