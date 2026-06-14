@@ -32,7 +32,7 @@ export default function ContributeKnowledge() {
   return (
     <div className={styles.page}>
       <h2>📝 贡献知识</h2>
-      <p className={styles.desc}>分享你的游戏技巧、战术心得、英雄理解。审核通过后将补充到 T教练 知识库，同时你的名字将出现在「特别鸣谢」页面的知识贡献者名单中。</p>
+      <p className={styles.desc}>分享你的游戏技巧、战术心得、英雄理解。审核通过后将补充到 T教练 知识库，同时你的名字将永久出现在「特别鸣谢」页面的知识贡献者名单中，伴随网站一同成长。</p>
 
       {done ? (
         <div className={styles.done}>
