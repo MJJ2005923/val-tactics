@@ -526,6 +526,7 @@ export async function onRequest(context) {
       if (!dskey) return new Response(JSON.stringify({ error: '未配置AI Key' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
       let totalSaved = 0
+      const saveErrors: string[] = []
 
       // 并行蒸馏：特工 + 地图（基于AI训练数据）
       const mapsResp = await fetch('https://valorant-api.com/v1/maps?language=zh-CN')
@@ -553,15 +554,20 @@ export async function onRequest(context) {
       for (const topicInsights of results) {
         for (const ins of topicInsights) {
           if (!ins.content) continue
-          await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
+          const r = await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
             method: 'POST', headers: SB_HEADERS_POST,
             body: JSON.stringify({ source: 'wiki', category: ins.category || ins.cat, content: ins.content, status: 'pending' }),
           })
-          totalSaved++
+          if (r.ok) { totalSaved++ }
+          else {
+            const errText = await r.text().catch(() => '')
+            console.error('[wiki] save failed:', r.status, errText)
+            saveErrors.push(`[${r.status}] ${errText.slice(0, 80)}`)
+          }
         }
       }
 
-      return new Response(JSON.stringify({ ok: true, saved: totalSaved, maps: playableMaps.length }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ ok: true, saved: totalSaved, maps: playableMaps.length, errors: saveErrors.length > 0 ? saveErrors : undefined }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }
@@ -578,6 +584,7 @@ export async function onRequest(context) {
       if (!dskey) return new Response(JSON.stringify({ error: '未配置AI Key' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
       let totalSaved = 0
+      const saveErrors: string[] = []
 
       // VCT 三路并行调用
       const topics = [
@@ -605,15 +612,20 @@ export async function onRequest(context) {
       for (const topicInsights of results) {
         for (const ins of topicInsights) {
           if (!ins.content) continue
-          await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
+          const r = await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
             method: 'POST', headers: SB_HEADERS_POST,
             body: JSON.stringify({ source: 'vct', category: ins.category || ins.cat, content: ins.content, status: 'pending' }),
           })
-          totalSaved++
+          if (r.ok) { totalSaved++ }
+          else {
+            const errText = await r.text().catch(() => '')
+            console.error('[vct] save failed:', r.status, errText)
+            saveErrors.push(`[${r.status}] ${errText.slice(0, 80)}`)
+          }
         }
       }
 
-      return new Response(JSON.stringify({ ok: true, saved: totalSaved }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ ok: true, saved: totalSaved, errors: saveErrors.length > 0 ? saveErrors : undefined }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }

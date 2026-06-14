@@ -213,8 +213,15 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
     try {
       const r = await fetch(`/api/admin/crawl-wiki?key=${encodeURIComponent(adminKey)}`, { method: 'POST' })
       const d = await r.json()
-      alert(d.ok ? `Wiki爬取完成: ${d.saved} 条` : (d.error || '失败'))
-      if (d.ok) loadAll()
+      if (d.ok) {
+        const msg = d.errors?.length > 0
+          ? `Wiki: 成功 ${d.saved} 条, 失败 ${d.errors.length} 条\n${d.errors.join('\n')}`
+          : `Wiki爬取完成: ${d.saved} 条`
+        alert(msg)
+        if (d.saved > 0) loadAll()
+      } else {
+        alert(d.error || '失败')
+      }
     } catch { alert('网络错误') }
     setCrawlingWiki(false)
   }
@@ -225,8 +232,15 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
     try {
       const r = await fetch(`/api/admin/vct-insights?key=${encodeURIComponent(adminKey)}`, { method: 'POST' })
       const d = await r.json()
-      alert(d.ok ? `VCT洞察: ${d.saved} 条` : (d.error || '失败'))
-      if (d.ok) loadAll()
+      if (d.ok) {
+        const msg = d.errors?.length > 0
+          ? `VCT: 成功 ${d.saved} 条, 失败 ${d.errors.length} 条\n${d.errors.join('\n')}`
+          : `VCT洞察: ${d.saved} 条`
+        alert(msg)
+        if (d.saved > 0) loadAll()
+      } else {
+        alert(d.error || '失败')
+      }
     } catch { alert('网络错误') }
     setLoadingVCT(false)
   }
