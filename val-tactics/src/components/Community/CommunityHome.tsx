@@ -20,15 +20,16 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
   const [activities, setActivities] = useState<any[]>([])
 
   useEffect(() => {
-    supabase.from('tactical_shares').select('id,title,user_id,views,like_count,comment_count,created_at,preview_image,map_id').order('like_count', { ascending: false }).limit(4).then(({ data, error }) => {
+    // 排行榜 — 按点赞数排序
+    supabase.from('tactical_shares').select('id,title,user_id,views,like_count,comment_count,created_at,preview_image,map_id').order('like_count', { ascending: false }).limit(3).then(({ data, error }) => {
       if (error) console.error('[CommunityHome] tactics:', error.message)
       setHotTactics((data || []) as any)
     })
-    supabase.from('posts').select('id,title,user_id,views,like_count,comment_count,created_at').order('comment_count', { ascending: false }).limit(5).then(({ data, error }) => {
+    supabase.from('posts').select('id,title,user_id,views,like_count,comment_count,created_at').order('like_count', { ascending: false }).limit(5).then(({ data, error }) => {
       if (error) console.error('[CommunityHome] posts:', error.message)
       setHotPosts((data || []) as any)
     })
-    supabase.from('lineups').select('id,title,user_id,views,like_count,difficulty,created_at,position_img,aim_img').order('views', { ascending: false }).limit(4).then(({ data, error }) => {
+    supabase.from('lineups').select('id,title,user_id,views,like_count,difficulty,created_at,position_img,aim_img').order('like_count', { ascending: false }).limit(3).then(({ data, error }) => {
       if (error) console.error('[CommunityHome] lineups:', error.message)
       setHotLineups((data || []) as any)
     })
