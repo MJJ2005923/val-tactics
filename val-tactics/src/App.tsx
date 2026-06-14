@@ -16,8 +16,7 @@ import MatchAnalysisPage from './components/MatchAnalysis/MatchAnalysisPage'
 import AuthModal from './components/Auth/AuthModal'
 import PrivacyPanel from './components/PrivacyPanel/PrivacyPanel'
 import SponsorPanel from './components/SponsorPanel/SponsorPanel'
-import AdminPanel from './components/AdminPanel/AdminPanel'
-import AdminReview from './components/AdminPanel/AdminReview'
+import AdminPage from './components/AdminPanel/AdminPage'
 import MobileLayout from './components/MobileLayout/MobileLayout'
 import CommunityShell from './components/Community/CommunityShell'
 import PWAInstallButton from './components/PWAInstallButton'
@@ -45,8 +44,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showSponsor, setShowSponsor] = useState(false)
-  const [showAdmin, setShowAdmin] = useState(false)
-  const [showAdminReview, setShowAdminReview] = useState(false)
+  const [showAdminPage, setShowAdminPage] = useState(false)
   const [mobileTimelineOpen, setMobileTimelineOpen] = useState(false)
   const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
   const [showCommunity, setShowCommunity] = useState(false)
@@ -302,8 +300,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
         {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
         {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
         {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
-        {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onOpenReview={() => { setShowAdmin(false); setShowAdminReview(true) }} />}
-        {showAdminReview && <AdminReview onClose={() => setShowAdminReview(false)} />}
+        {showAdminPage && <AdminPage onClose={() => setShowAdminPage(false)} />}
       </div>
     )
   }
@@ -402,7 +399,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           <PWAInstallButton />
           <button className="navbar__btn" onClick={() => setShowHelp(true)}>使用手册</button>
           <button className="navbar__btn" onClick={() => setShowSponsor(true)} style={{ color: '#ffd700', borderColor: 'rgba(255,215,0,.2)' }}>特别鸣谢</button>
-          <button className="navbar__btn" onClick={() => setShowAdmin(true)} style={{ fontSize: 10, opacity: .3 }} title="管理">⚙</button>
+          <button className="navbar__btn" onClick={() => setShowAdminPage(true)} style={{ fontSize: 10, opacity: .3 }} title="管理">⚙</button>
           <a className="navbar__btn" href="https://www.ifdian.net/a/mjj666" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#f0a0f0', borderColor: 'rgba(227,73,237,.25)', background: 'rgba(227,73,237,.06)' }}>爱发电</a>
         </div>
       </nav>
@@ -449,8 +446,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
       {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
-      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onOpenReview={() => { setShowAdmin(false); setShowAdminReview(true) }} />}
-        {showAdminReview && <AdminReview onClose={() => setShowAdminReview(false)} />}
+      {showAdminPage && <AdminPage onClose={() => setShowAdminPage(false)} />}
       {showCommunity && (
         <CommunityShell selectedMap={selectedMap.id} onClose={() => setShowCommunity(false)} onLoadTactic={handleLoadCommunityTactic} />
       )}

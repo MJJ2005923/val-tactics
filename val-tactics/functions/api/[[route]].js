@@ -621,23 +621,33 @@ export async function onRequest(context) {
 
   // === POST /api/admin/distill (蒸馏对话提取洞察) ===
   if (url.pathname === '/api/admin/distill' && request.method === 'POST') {
-    const key = new URL(request.url).searchParams.get('key') || ''
+    // 支持 query ?key=xxx 和 body { key } 两种方式
+    let body = {}
+    try { body = await request.json() } catch {}
+    const key = new URL(request.url).searchParams.get('key') || body.key || ''
     if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
       return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }
     try {
-      // 取最近100条对话
-      const logsResp = await fetch(`${SB_URL}/rest/v1/conversation_logs?select=content,role&order=created_at.desc&limit=100`, { headers: SB_HEADERS_POST })
-      const logs = await logsResp.json()
-      if (!logs.length) return new Response(JSON.stringify({ ok: true, count: 0, msg: '无对话数据' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
-
-      // 拼接对话
-      const userMsgs = logs.filter((l) => l.role === 'user').map((l) => l.content).join('\n').slice(0, 8000)
-
-      // DeepSeek 蒸馏
       const dskey = env.DEEPSEEK_KEY || ''
       if (!dskey) return new Response(JSON.stringify({ ok: true, count: 0, msg: '未配置AI Key' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
+      let userMsgs = ''
+
+      // 单条蒸馏模式：前端传了 conversationContent
+      if (body.conversationContent) {
+        userMsgs = String(body.conversationContent).slice(0, 8000)
+      } else {
+        // 批量模式：取最近 100 条对话
+        const logsResp = await fetch(`${SB_URL}/rest/v1/conversation_logs?select=content,role&order=created_at.desc&limit=100`, { headers: SB_HEADERS_POST })
+        const logs = await logsResp.json()
+        if (!logs.length) return new Response(JSON.stringify({ ok: true, count: 0, msg: '无对话数据' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+        userMsgs = logs.filter((l) => l.role === 'user').map((l) => l.content).join('\n').slice(0, 8000)
+      }
+
+      if (!userMsgs.trim()) return new Response(JSON.stringify({ ok: true, count: 0, msg: '无有效内容' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      // DeepSeek 蒸馏
       const aiResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
         body: JSON.stringify({
