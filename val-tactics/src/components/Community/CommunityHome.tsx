@@ -8,12 +8,12 @@ interface Props {
   onViewTactic: (id: string) => void
   onViewPost: (id: string) => void
   onViewLineup: (id: string) => void
-  onViewProfile: (uid: string) => void
+  onViewProfile?: (uid: string) => void
   onCreateTactic: () => void
   onCreatePost: () => void
 }
 
-export default function CommunityHome({ search, onViewTactic, onViewPost, onViewLineup, onCreateTactic, onCreatePost }: Props) {
+export default function CommunityHome({ search, onViewTactic, onViewPost, onViewLineup, onViewProfile, onCreateTactic, onCreatePost }: Props) {
   const [hotTactics, setHotTactics] = useState<TacticalShare[]>([])
   const [hotPosts, setHotPosts] = useState<Post[]>([])
   const [hotLineups, setHotLineups] = useState<Lineup[]>([])
@@ -121,7 +121,15 @@ export default function CommunityHome({ search, onViewTactic, onViewPost, onView
         <div className={styles.feed}>
           <div className={styles.feedTitle}>📡 社区动态</div>
           {activities.slice(0, 6).map((a, i) => (
-            <div key={i} className={styles.feedItem}>
+            <div key={i} className={styles.feedItem} style={{ cursor: 'pointer' }} onClick={() => {
+              if (a.action === '发布了') {
+                if (a.target_type === 'tactic') onViewTactic(a.target_id)
+                else if (a.target_type === 'post') onViewPost(a.target_id)
+                else onViewLineup(a.target_id)
+              } else if (a.action === '破百赞') {
+                onViewProfile?.(a.user_id)
+              }
+            }}>
               <div className={styles.feedAvatar}>{a.user_id?.slice(0, 2) || '?'}</div>
               <span className={styles.feedAction}>
                 {a.action === '发布了' && <>发布了{a.target_type === 'tactic' ? '战术' : a.target_type === 'post' ? '帖子' : '点位'} <b>{a.title}</b></>}
