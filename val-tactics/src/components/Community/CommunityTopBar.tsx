@@ -1,3 +1,4 @@
+import NotificationBell from './NotificationBell'
 import styles from './CommunityTopBar.module.css'
 
 interface Props {
@@ -21,6 +22,8 @@ export default function CommunityTopBar({ title, onClose, search, onSearch, show
           onChange={e => onSearch(e.target.value)}
         />
       )}
+      <div style={{ flex: 1 }} />
+      <NotificationBell />
     </div>
   )
 }
