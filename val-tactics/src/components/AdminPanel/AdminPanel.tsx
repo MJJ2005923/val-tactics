@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { setAdminKey, clearAdminKey, getAdminKey } from '../../lib/adminAuth'
 import styles from './AdminPanel.module.css'
 
 interface Stats {
@@ -8,7 +9,7 @@ interface Stats {
 }
 
 export default function AdminPanel({ onClose }: { onClose: () => void }) {
-  const [key, setKey] = useState(() => sessionStorage.getItem('admin-key') || '')
+  const [key, setKey] = useState(() => getAdminKey() || '')
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -21,10 +22,10 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
       const data = await resp.json()
       if (resp.ok) {
         setStats(data)
-        sessionStorage.setItem('admin-key', adminKey)
+        setAdminKey(adminKey)
       } else {
         setError(data.error || '密钥错误')
-        sessionStorage.removeItem('admin-key')
+        clearAdminKey()
         setStats(null)
       }
     } catch {
@@ -164,7 +165,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
               } catch { alert('网络错误') }
             }}>初始化 Storage</button>
             <button className={styles.actionBtnDanger} onClick={() => {
-              sessionStorage.removeItem('admin-key')
+              clearAdminKey()
               setStats(null)
               setKey('')
             }}>

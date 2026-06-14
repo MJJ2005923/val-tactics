@@ -2,8 +2,9 @@
  * API Key 本地加密/解密工具
  * 使用 XOR + Base64，绑定用户 ID 作为密钥因子
  * 防止 localStorage 明文存储被直接窃取
+ *
+ * TODO: 升级为 Web Crypto AES-GCM（需改造调用链为 async）
  */
-
 const SALT = 'val-tactics-key-v1'
 
 function getKey(uid: string): string {
@@ -18,7 +19,6 @@ export function encryptKey(plaintext: string, uid: string): string {
   for (let i = 0; i < plaintext.length; i++) {
     result += String.fromCharCode(plaintext.charCodeAt(i) ^ key.charCodeAt(i % key.length))
   }
-  // 用 base64 安全存储，避免不可见字符问题
   try {
     return btoa(unescape(encodeURIComponent(result)))
   } catch {
@@ -38,7 +38,6 @@ export function decryptKey(encoded: string, uid: string): string {
     }
     return result
   } catch {
-    // 旧版明文兼容：返回原值
     return encoded
   }
 }

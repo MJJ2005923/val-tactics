@@ -8,6 +8,7 @@ import agents from '../../data/agents'
 import LikeButton from './LikeButton'
 import FollowButton from './FollowButton'
 import FavoriteLineupButton from './FavoriteLineupButton'
+import { isAdmin as isAdminUser } from '../../lib/adminAuth'
 import CommentSection from './CommentSection'
 import styles from './LineupsDetail.module.css'
 
@@ -41,7 +42,7 @@ export default function LineupsDetail({ lineupId, onBack, onViewProfile, embedde
     })()
   }, [lineupId])
 
-  const isAdmin = !!sessionStorage.getItem('admin-key')
+  const isAdmin = isAdminUser()
 
   const handleDelete = async () => {
     if (!lineup || !user) return

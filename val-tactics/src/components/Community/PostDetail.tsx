@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getPost, deletePost } from '../../lib/community/posts'
 import { getProfile } from '../../lib/community/profiles'
+import { isAdmin as isAdminUser } from '../../lib/adminAuth'
 import { useAuth } from '../../store/AuthContext'
 import type { Post, Profile } from '../../types/community'
 import { POST_CATEGORIES } from '../../types/community'
@@ -18,7 +19,7 @@ interface Props {
 }
 
 export default function PostDetail({ postId, onBack, onViewProfile, embedded }: Props) {
-  const { user } = useAuth(); const isAdmin = !!sessionStorage.getItem("admin-key")
+  const { user } = useAuth(); const isAdmin = isAdminUser()
   const [post, setPost] = useState<Post | null>(null)
   const [author, setAuthor] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)

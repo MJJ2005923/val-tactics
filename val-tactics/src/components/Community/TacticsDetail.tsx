@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getTactic, deleteTactic } from '../../lib/community/tactics'
 import { getProfile } from '../../lib/community/profiles'
+import { isAdmin as isAdminUser } from '../../lib/adminAuth'
 import { useAuth } from '../../store/AuthContext'
 import type { TacticalShare, Profile } from '../../types/community'
 import maps from '../../data/maps'
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export default function TacticsDetail({ tacticId, onBack, onLoadToBoard, onViewProfile, embedded }: Props) {
-  const { user } = useAuth(); const isAdmin = !!sessionStorage.getItem("admin-key")
+  const { user } = useAuth(); const isAdmin = isAdminUser()
   const [tactic, setTactic] = useState<TacticalShare | null>(null)
   const [author, setAuthor] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
