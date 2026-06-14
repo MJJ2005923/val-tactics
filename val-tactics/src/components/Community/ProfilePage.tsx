@@ -108,13 +108,27 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
         setLikedItems(items)
       }
 
-      const { data: favs } = await supabase.from('lineup_favorites').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50)
+      // 收藏 = content_favorites（通用）+ lineup_favorites（旧兼容）
+      const [cfResult, lfResult] = await Promise.all([
+        supabase.from('content_favorites').select('target_type,target_id,created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(50),
+        supabase.from('lineup_favorites').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50),
+      ])
       const favItems: any[] = []
-      if (favs) {
-        for (const f of favs) {
-          const { data: d } = await supabase.from('lineups').select('id,title,created_at').eq('id', f.lineup_id).maybeSingle()
-          if (d) favItems.push({ ...d, type: '点位' })
+      const addedIds2 = new Set<string>()
+      for (const f of (cfResult.data || [])) {
+        const table = f.target_type === 'tactic' ? 'tactical_shares' : f.target_type === 'post' ? 'posts' : 'lineups'
+        const typeLabel = f.target_type === 'tactic' ? '战术' : f.target_type === 'post' ? '帖子' : '点位'
+        const { data: d } = await supabase.from(table).select('id,title,created_at').eq('id', f.target_id).maybeSingle()
+        if (d && !addedIds2.has(`${f.target_type}:${f.target_id}`)) {
+          addedIds2.add(`${f.target_type}:${f.target_id}`)
+          favItems.push({ ...d, type: typeLabel })
         }
+      }
+      for (const f of (lfResult.data || [])) {
+        if (addedIds2.has(`lineup:${f.lineup_id}`)) continue
+        addedIds2.add(`lineup:${f.lineup_id}`)
+        const { data: d } = await supabase.from('lineups').select('id,title,created_at').eq('id', f.lineup_id).maybeSingle()
+        if (d) favItems.push({ ...d, type: '点位' })
       }
       setFavedItems(favItems)
 

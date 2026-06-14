@@ -42,7 +42,7 @@ export default function NotificationBell() {
     like: n => n.target_type === 'tactic' ? '你的战术' : n.target_type === 'lineup' ? '你的点位' : '你的帖子',
     comment: _n => '你的内容',
     follow: () => '你',
-    favorite: _n => '你的点位',
+    favorite: n => n.target_type === 'tactic' ? '你的战术' : n.target_type === 'post' ? '你的帖子' : '你的点位',
   }
 
   if (!user) return null

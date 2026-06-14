@@ -42,7 +42,7 @@ export interface TacticalShare {
 export interface Comment {
   id: string
   user_id: string
-  target_type: 'tactic' | 'post'
+  target_type: 'tactic' | 'post' | 'lineup' | 'profile'
   target_id: string
   content: string
   created_at: string
@@ -96,7 +96,7 @@ export interface Follow {
 export interface Notification {
   id: string
   user_id: string
-  type: 'like' | 'comment' | 'follow'
+  type: 'like' | 'comment' | 'follow' | 'favorite'
   from_user_id: string
   target_type?: string
   target_id?: string

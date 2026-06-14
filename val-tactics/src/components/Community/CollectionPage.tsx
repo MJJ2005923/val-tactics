@@ -30,15 +30,31 @@ export default function CollectionPage({ type, onViewTactic, onViewPost, onViewL
     if (!user) { setLoading(false); return }
     (async () => {
       if (type === 'favorites') {
-        // 收藏 = lineup_favorites
-        const { data: favs } = await supabase.from('lineup_favorites').select('lineup_id,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50)
+        // 收藏 = content_favorites（通用）+ lineup_favorites（旧兼容）
+        const [cfResult, lfResult] = await Promise.all([
+          supabase.from('content_favorites').select('target_type,target_id,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50),
+          supabase.from('lineup_favorites').select('lineup_id,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50),
+        ])
         const favItems: Item[] = []
-        if (favs) {
-          for (const f of favs) {
-            const { data: d } = await supabase.from('lineups').select('id,title,created_at,views,like_count,comment_count').eq('id', f.lineup_id).maybeSingle()
-            if (d) favItems.push({ ...d, type: '点位' })
+        const addedIds = new Set<string>()
+        // 通用收藏
+        for (const f of (cfResult.data || [])) {
+          const table = f.target_type === 'tactic' ? 'tactical_shares' : f.target_type === 'post' ? 'posts' : 'lineups'
+          const typeLabel = f.target_type === 'tactic' ? '战术' : f.target_type === 'post' ? '帖子' : '点位'
+          const { data: d } = await supabase.from(table).select('id,title,created_at,views,like_count,comment_count').eq('id', f.target_id).maybeSingle()
+          if (d && !addedIds.has(`${f.target_type}:${f.target_id}`)) {
+            addedIds.add(`${f.target_type}:${f.target_id}`)
+            favItems.push({ ...d, type: typeLabel })
           }
         }
+        // 旧点位收藏（去重）
+        for (const f of (lfResult.data || [])) {
+          if (addedIds.has(`lineup:${f.lineup_id}`)) continue
+          addedIds.add(`lineup:${f.lineup_id}`)
+          const { data: d } = await supabase.from('lineups').select('id,title,created_at,views,like_count,comment_count').eq('id', f.lineup_id).maybeSingle()
+          if (d) favItems.push({ ...d, type: '点位' })
+        }
+        favItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         setItems(favItems)
       } else {
         // 赞过 = likes
