@@ -78,11 +78,7 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
         <div className={styles.grid}>
           {tactics.map(t => (
             <div key={t.id} className={styles.card} onClick={() => onViewTactic(t.id)}>
-              {t.preview_image ? (
-                <img src={t.preview_image} alt="" className={styles.cardImg} />
-              ) : (
-                <div className={styles.cardImgPlaceholder}>📐</div>
-              )}
+              <img src={t.preview_image || `/images/maps/${t.map_id}.png`} alt="" className={styles.cardImg} />
               <div className={styles.cardBody}>
                 <div className={styles.cardTop}>
                   <span className={styles.cardMap}>{mapName(t.map_id)}</span>
