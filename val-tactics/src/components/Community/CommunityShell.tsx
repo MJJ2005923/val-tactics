@@ -57,6 +57,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
   const viewProfile = useCallback((uid: string) => {
     setProfileUserId(uid)
     setNav('profile')
+    setDetailId('')  // 清除详情页
   }, [])
 
   const renderContent = () => {
