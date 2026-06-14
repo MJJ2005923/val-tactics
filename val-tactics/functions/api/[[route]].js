@@ -118,8 +118,11 @@ async function checkRateLimit(ip, env) {
 
 export async function onRequest(context) {
   const { request, env } = context
+  const origin = request.headers.get('Origin') || ''
+  const allowedOrigins = ['https://val-tactics.pages.dev', 'https://dev.val-tactics.pages.dev', 'http://localhost:5173', 'http://localhost:8788']
+  const isAllowed = allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': isAllowed ? origin : 'https://val-tactics.pages.dev',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'content-type',
   }
@@ -146,8 +149,15 @@ export async function onRequest(context) {
     'TEST-NO-OWNKEY':  { tier: 'free',   expiresAt: 0 },
   } : {}
 
-  // 免邮件注册（绕过 SMTP）
+  // 免邮件注册（绕过 SMTP）— 加 IP 限流防批量注册
   if (url.pathname === '/api/signup') {
+    const ip = request.headers.get('cf-connecting-ip') || 'local'
+    if (env.AI_USAGE) {
+      const signupKey = `rl:signup:${ip}:${Math.floor(Date.now() / 3600000)}`
+      const signupCount = parseInt(await env.AI_USAGE.get(signupKey) || '0')
+      if (signupCount >= 3) return new Response(JSON.stringify({ error: '注册频率过高，请1小时后再试' }), { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      await env.AI_USAGE.put(signupKey, String(signupCount + 1), { expirationTtl: 3600 })
+    }
     const { email, password } = await request.json()
     if (!email || !password) {
       return new Response(JSON.stringify({ error: '缺少邮箱或密码' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
