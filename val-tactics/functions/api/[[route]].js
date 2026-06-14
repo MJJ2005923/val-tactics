@@ -344,7 +344,7 @@ export async function onRequest(context) {
           return new Response(JSON.stringify({ allowed: false, level: 'block', reason: verdict, flags: ['ai_blocked'] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
         }
         if (verdict.startsWith('REVIEW')) {
-          return new Response(JSON.stringify({ allowed: false, level: 'review', reason: verdict, flags: ['ai_review'] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+          return new Response(JSON.stringify({ allowed: true, level: 'pass', reason: '审核通过(AI标记)', flags: ['ai_review'] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
         }
       } catch {} // AI 不可用时降级为通过（已过词库）
     }
