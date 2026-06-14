@@ -443,6 +443,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- 知识蒸馏 — 从对话中提取战术洞察
+CREATE TABLE IF NOT EXISTS public.knowledge_insights (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source TEXT DEFAULT 'conversation',
+  category TEXT DEFAULT '战术',
+  content TEXT NOT NULL,
+  status TEXT DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.knowledge_insights ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ki_read" ON public.knowledge_insights FOR SELECT USING (true);
+CREATE POLICY "ki_insert" ON public.knowledge_insights FOR INSERT WITH CHECK (true);
+CREATE POLICY "ki_update" ON public.knowledge_insights FOR UPDATE USING (true);
+
 -- 匿名对话日志（用于提升服务质量）
 CREATE TABLE IF NOT EXISTS public.conversation_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

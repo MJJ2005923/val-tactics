@@ -1,6 +1,76 @@
 import { useState, useEffect } from 'react'
 import { setAdminKey, clearAdminKey, getAdminKey } from '../../lib/adminAuth'
+import { supabase } from '../../lib/supabase'
 import styles from './AdminPanel.module.css'
+
+interface Insight { id: string; category: string; content: string; status: string; created_at: string }
+
+function KnowledgeInsights({ adminKey }: { adminKey: string }) {
+  const [insights, setInsights] = useState<Insight[]>([])
+  const [distilling, setDistilling] = useState(false)
+
+  const loadInsights = async () => {
+    const { data } = await supabase.from('knowledge_insights').select('*').order('created_at', { ascending: false }).limit(30)
+    setInsights((data || []) as Insight[])
+  }
+
+  useEffect(() => { loadInsights() }, [])
+
+  const handleDistill = async () => {
+    setDistilling(true)
+    try {
+      const resp = await fetch(`/api/admin/distill?key=${encodeURIComponent(adminKey)}`, { method: 'POST' })
+      const d = await resp.json()
+      alert(d.ok ? `蒸馏完成，新增 ${d.count} 条洞察` : (d.msg || '失败'))
+    } catch { alert('网络错误') }
+    setDistilling(false)
+    loadInsights()
+  }
+
+  const handleReview = async (id: string, status: string) => {
+    await supabase.from('knowledge_insights').update({ status }).eq('id', id)
+    loadInsights()
+  }
+
+  const pending = insights.filter(i => i.status === 'pending')
+  const approved = insights.filter(i => i.status === 'approved')
+
+  return (
+    <div className={styles.section}>
+      <h3>🧠 知识蒸馏 ({pending.length} 待审 / {approved.length} 已通过)</h3>
+      <div className={styles.actions} style={{ marginBottom: 10 }}>
+        <button className={styles.actionBtn} onClick={handleDistill} disabled={distilling}>
+          {distilling ? '蒸馏中...' : '🤖 AI蒸馏最近对话'}
+        </button>
+        <button className={styles.actionBtn} onClick={loadInsights}>🔄 刷新</button>
+      </div>
+      {insights.length === 0 ? (
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.15)', padding: '8px 0' }}>暂无洞察，先点「AI蒸馏」从对话中提取</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 400, overflowY: 'auto' }}>
+          {insights.map(i => (
+            <div key={i.id} style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 6,
+              background: i.status === 'approved' ? 'rgba(5,248,248,.04)' : i.status === 'rejected' ? 'rgba(255,85,85,.04)' : 'rgba(255,255,255,.01)',
+              border: `1px solid ${i.status === 'approved' ? 'rgba(5,248,248,.1)' : i.status === 'rejected' ? 'rgba(255,85,85,.1)' : 'rgba(255,255,255,.03)'}`,
+              fontSize: 12,
+            }}>
+              <span style={{ color: 'rgba(255,255,255,.15)', fontSize: 10, flexShrink: 0 }}>[{i.category}]</span>
+              <span style={{ flex: 1, color: i.status === 'rejected' ? 'rgba(255,255,255,.2)' : 'rgba(255,255,255,.6)' }}>{i.content}</span>
+              {i.status === 'pending' && (
+                <>
+                  <button onClick={() => handleReview(i.id, 'approved')} style={{ color: '#05F8F8', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11 }}>✓</button>
+                  <button onClick={() => handleReview(i.id, 'rejected')} style={{ color: '#ff5555', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11 }}>✕</button>
+                </>
+              )}
+              <span style={{ color: 'rgba(255,255,255,.1)', fontSize: 9 }}>{i.status === 'pending' ? '待审' : i.status === 'approved' ? '已通过' : '已拒绝'}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface ContentCounts { tactics: number; posts: number; lineups: number; comments: number }
 interface Activation { usedCodes: number; totalCodes: number; remaining: number }
@@ -122,6 +192,9 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
             <div className={styles.card}><div className={styles.cardValue}>{stats.activation.remaining}</div><div className={styles.cardLabel}>剩余</div></div>
           </div>
         </div>
+
+        {/* 知识蒸馏 */}
+        <KnowledgeInsights adminKey={key} />
 
         {/* 系统 + 操作 */}
         <div className={styles.section}>

@@ -425,6 +425,60 @@ export async function onRequest(context) {
   const SB_KEY = env.SUPABASE_SERVICE_KEY || ''
   const SB_HEADERS_POST = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
 
+  // === POST /api/admin/distill (蒸馏对话提取洞察) ===
+  if (url.pathname === '/api/admin/distill' && request.method === 'POST') {
+    const key = new URL(request.url).searchParams.get('key') || ''
+    if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
+      return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    try {
+      // 取最近100条对话
+      const logsResp = await fetch(`${SB_URL}/rest/v1/conversation_logs?select=content,role&order=created_at.desc&limit=100`, { headers: SB_HEADERS_POST })
+      const logs = await logsResp.json()
+      if (!logs.length) return new Response(JSON.stringify({ ok: true, count: 0, msg: '无对话数据' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      // 拼接对话
+      const userMsgs = logs.filter((l) => l.role === 'user').map((l) => l.content).join('\n').slice(0, 8000)
+
+      // DeepSeek 蒸馏
+      const dskey = env.DEEPSEEK_KEY || ''
+      if (!dskey) return new Response(JSON.stringify({ ok: true, count: 0, msg: '未配置AI Key' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      const aiResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
+        body: JSON.stringify({
+          model: 'deepseek-v4-flash',
+          messages: [
+            { role: 'system', content: '你是无畏契约战术数据提炼员。从用户对话中提取有价值的战术知识，只输出纯JSON数组，每条格式：{"category":"地图/特工/阵容/武器/经济/技巧","content":"具体洞察（一句话）"}。只输出有价值的、可验证的战术信息。最多10条。' },
+            { role: 'user', content: userMsgs },
+          ],
+          max_tokens: 500, temperature: 0.3,
+        }),
+      })
+      const aiData = await aiResp.json()
+      const raw = aiData.choices?.[0]?.message?.content?.trim() || '[]'
+      let insights = []
+      try { insights = JSON.parse(raw) } catch {
+        const match = raw.match(/\[[\s\S]*\]/)
+        if (match) try { insights = JSON.parse(match[0]) } catch {}
+      }
+
+      // 存入 insights
+      let saved = 0
+      for (const ins of insights) {
+        if (!ins.content) continue
+        const r = await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
+          method: 'POST', headers: SB_HEADERS_POST,
+          body: JSON.stringify({ source: 'conversation', category: ins.category || '战术', content: ins.content, status: 'pending' }),
+        })
+        if (r.ok) saved++
+      }
+      return new Response(JSON.stringify({ ok: true, count: saved, insights }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   // === POST /api/log/conversation (匿名对话日志) ===
   if (url.pathname === '/api/log/conversation' && request.method === 'POST') {
     try {
