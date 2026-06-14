@@ -550,10 +550,10 @@ export async function onRequest(context) {
         fetch('https://api.deepseek.com/v1/chat/completions', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
           body: JSON.stringify({
-            model: 'deepseek-v4-flash', max_tokens: 500, temperature: 0.3,
+            model: 'deepseek-v4-flash', max_tokens: 600, temperature: 0.3,
             messages: [
-              { role: 'system', content: '从无畏契约特工数据中提取战术知识。输出JSON数组：{"category":"特工","content":"洞察(30字)"}。侧重技能组合、克制关系。最多10条。' },
-              { role: 'user', content: JSON.stringify(agentSummary.slice(0, 12)).slice(0, 5000) },
+              { role: 'system', content: '输出纯JSON数组(不要markdown,不要其他文字)。格式：[{"category":"特工","content":"洞察"}]. 从特工数据中提取战术知识,侧重技能组合和克制关系。最多10条。' },
+              { role: 'user', content: JSON.stringify(agentSummary.slice(0, 10)).slice(0, 4000) },
             ],
           }),
         }).then(r => r.json()),
@@ -562,22 +562,22 @@ export async function onRequest(context) {
           body: JSON.stringify({
             model: 'deepseek-v4-flash', max_tokens: 400, temperature: 0.3,
             messages: [
-              { role: 'system', content: '为每张地图提供战术要点。输出JSON数组：{"category":"地图","content":"地图名+要点(30字)"}。地图：' + mapNames + '。每个1-2条。' },
-              { role: 'user', content: '地图战术' },
+              { role: 'system', content: '输出纯JSON数组：[{"category":"地图","content":"地图名+战术要点"}]. 为以下地图各提供1条职业战术要点：' + mapNames },
+              { role: 'user', content: 'JSON only, no markdown' },
             ],
           }),
         }).then(r => r.json()),
       ])
 
       const pi = (data) => parseAIJson(data?.choices?.[0]?.message?.content)
-      ;[...pi(agentResults), ...pi(mapResults)].forEach(async (ins) => {
-        if (!ins.content) return
+      for (const ins of [...pi(agentResults), ...pi(mapResults)]) {
+        if (!ins.content) continue
         await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
           method: 'POST', headers: SB_HEADERS_POST,
           body: JSON.stringify({ source: 'wiki', category: ins.category || '特工', content: ins.content, status: 'pending' }),
         })
         totalSaved++
-      })
+      }
 
       return new Response(JSON.stringify({ ok: true, saved: totalSaved, agents: agents.length, maps: mapNames }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
