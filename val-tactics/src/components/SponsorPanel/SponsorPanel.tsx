@@ -11,6 +11,7 @@ const ADMIN_ID = '93ed0b1a-ae1d-4773-83fd-22cca2263b2d'
 export default function SponsorPanel({ onClose }: Props) {
   const { user } = useAuth()
   const [sponsors, setSponsors] = useState<Sponsor[]>([])
+  const [contributors, setContributors] = useState<{ username: string; count: number }[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', msg: '' })
@@ -19,8 +20,25 @@ export default function SponsorPanel({ onClose }: Props) {
   const isAdmin = user?.id === ADMIN_ID
 
   useEffect(() => {
-    supabase.from('sponsors').select('*').order('created_at', { ascending: false }).then(({ data }) => {
-      if (data) setSponsors(data)
+    Promise.all([
+      supabase.from('sponsors').select('*').order('created_at', { ascending: false }),
+      supabase.from('knowledge_contributions').select('user_id').eq('status', 'approved'),
+    ]).then(([{ data: sData }, { data: kData }]) => {
+      if (sData) setSponsors(sData)
+      if (kData) {
+        // 统计每个用户的贡献数
+        const countMap: Record<string, number> = {}
+        kData.forEach((k: any) => { countMap[k.user_id] = (countMap[k.user_id] || 0) + 1 })
+        // 批量查用户名
+        const ids = [...new Set(kData.map((k: any) => k.user_id))]
+        if (ids.length > 0) {
+          supabase.from('profiles').select('id,username').in('id', ids).then(({ data: profs }) => {
+            const nameMap: Record<string, string> = {}
+            ;(profs || []).forEach((p: any) => { nameMap[p.id] = p.username?.split('@')[0] || '用户' })
+            setContributors(ids.map(id => ({ username: nameMap[id] || '用户', count: countMap[id] || 0 })))
+          })
+        }
+      }
       setLoading(false)
     })
   }, [])
@@ -114,6 +132,21 @@ export default function SponsorPanel({ onClose }: Props) {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* 知识贡献者 */}
+        {contributors.length > 0 && (
+          <div style={{ marginTop: 24, padding: 16, borderRadius: 10, background: 'linear-gradient(135deg, rgba(5,248,248,.04), rgba(227,73,237,.02))', border: '1px solid rgba(5,248,248,.08)' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#05F8F8', marginBottom: 10 }}>🧠 知识贡献者</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {contributors.map((c, i) => (
+                <span key={i} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(5,248,248,.04)', border: '1px solid rgba(5,248,248,.08)', fontSize: 11, color: 'rgba(255,255,255,.5)' }}>
+                  {c.username} <span style={{ color: 'rgba(5,248,248,.3)', fontSize: 9 }}>×{c.count}</span>
+                </span>
+              ))}
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.15)', marginTop: 8 }}>感谢以上用户为 T教练 知识库贡献智慧</div>
           </div>
         )}
 
