@@ -447,6 +447,13 @@ export async function onRequest(context) {
   const SB_KEY = env.SUPABASE_SERVICE_KEY || ''
   const SB_HEADERS_POST = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
 
+  // === GET /api/admin/debug ===
+  if (url.pathname === '/api/admin/debug') {
+    const allKeys = Object.keys(env).filter(k => !k.startsWith('CF_'))
+    const target = allKeys.filter(k => k.includes('SUPA') || k.includes('SERVICE') || k.includes('KEY'))
+    return new Response(JSON.stringify({ allKeys, target, sbKey: !!SB_KEY, sbKeyLen: SB_KEY.length, adminKey: !!env.ADMIN_KEY, deepseekKey: !!env.DEEPSEEK_KEY }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+  }
+
   // === POST /api/admin/check-version (检测新版本拉取patch notes) ===
   if (url.pathname === '/api/admin/check-version' && request.method === 'POST') {
     const key = new URL(request.url).searchParams.get('key') || ''
