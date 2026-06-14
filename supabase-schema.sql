@@ -443,6 +443,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- 匿名对话日志（用于提升服务质量）
+CREATE TABLE IF NOT EXISTS public.conversation_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_hash TEXT NOT NULL,
+  model TEXT DEFAULT '',
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX idx_clog_hash ON public.conversation_logs(user_hash);
+ALTER TABLE public.conversation_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "clog_insert" ON public.conversation_logs FOR INSERT WITH CHECK (true);
+
 -- 开发者标识
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
 

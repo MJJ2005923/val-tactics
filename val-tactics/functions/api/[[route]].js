@@ -421,6 +421,27 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ allowed: true, level: 'pass', reason: '审核通过', flags: [] }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
+  const SB_URL = 'https://zwtpeyvqbllrpregjpyd.supabase.co'
+  const SB_KEY = env.SUPABASE_SERVICE_KEY || ''
+  const SB_HEADERS_POST = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+
+  // === POST /api/log/conversation (匿名对话日志) ===
+  if (url.pathname === '/api/log/conversation' && request.method === 'POST') {
+    try {
+      const { userHash, model, messages } = await request.json()
+      if (!userHash || !messages?.length) return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      for (const msg of messages) {
+        await fetch(`${SB_URL}/rest/v1/conversation_logs`, {
+          method: 'POST', headers: SB_HEADERS_POST,
+          body: JSON.stringify({ user_hash: userHash.slice(0, 64), model: model || '', role: msg.role, content: (msg.content || '').slice(0, 2000) }),
+        })
+      }
+      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   let { apiKey, provider, model, messages, userId } = await request.json()
 
   const p = PROVIDERS[provider]
