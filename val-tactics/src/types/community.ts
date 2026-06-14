@@ -49,13 +49,15 @@ export interface Comment {
   author?: Profile
 }
 
-export type PostCategory = 'discussion' | 'guide' | 'map' | 'team' | 'other'
+export type PostCategory = 'discussion' | 'guide' | 'map' | 'team' | 'tournament' | 'training' | 'other'
 
 export const POST_CATEGORIES: Record<PostCategory, string> = {
   discussion: '战术讨论',
   guide: '英雄攻略',
   map: '地图分析',
   team: '开黑组队',
+  tournament: '赛事',
+  training: '训练',
   other: '其他',
 }
 

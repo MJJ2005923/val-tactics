@@ -50,7 +50,7 @@ export default function ForumPage({ onBack, onViewPost, onCreatePost, embedded }
           <button className={`${styles.sortBtn} ${sort === 'latest' ? styles.sortBtnActive : ''}`} onClick={() => setSort('latest')}>最新</button>
           <button className={`${styles.sortBtn} ${sort === 'hot' ? styles.sortBtnActive : ''}`} onClick={() => setSort('hot')}>最热</button>
         </div>
-        {(['', 'discussion', 'guide', 'map', 'team', 'other'] as (PostCategory | '')[]).map(c => (
+        {(['', 'discussion', 'guide', 'map', 'team', 'tournament', 'training', 'other'] as (PostCategory | '')[]).map(c => (
           <button key={c} className={`${styles.catTab} ${cat === c ? styles.catTabActive : ''}`} onClick={() => setCat(c)}>
             {c === '' ? '全部' : POST_CATEGORIES[c]}
           </button>
