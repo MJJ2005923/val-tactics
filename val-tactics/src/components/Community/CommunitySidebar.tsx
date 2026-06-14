@@ -1,6 +1,6 @@
 import styles from './CommunitySidebar.module.css'
 
-export type CommunityNav = 'home' | 'tactics' | 'forum' | 'lineups' | 'profile' | 'favorites' | 'liked' | 'ranking'
+export type CommunityNav = 'home' | 'tactics' | 'forum' | 'lineups' | 'profile' | 'favorites' | 'liked' | 'ranking' | 'contribute'
 
 interface Props {
   active: CommunityNav
@@ -21,6 +21,7 @@ const items: { id: CommunityNav; icon: string; label: string; section?: string }
 const myItems: { id: CommunityNav; icon: string; label: string }[] = [
   { id: 'favorites', icon: '⭐', label: '我的收藏' },
   { id: 'liked', icon: '❤️', label: '我的赞过' },
+  { id: 'contribute', icon: '💡', label: '贡献知识' },
 ]
 
 export default function CommunitySidebar({ active, onNav, favCount, likeCount }: Props) {

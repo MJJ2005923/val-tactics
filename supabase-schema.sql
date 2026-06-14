@@ -457,6 +457,21 @@ CREATE POLICY "ki_read" ON public.knowledge_insights FOR SELECT USING (true);
 CREATE POLICY "ki_insert" ON public.knowledge_insights FOR INSERT WITH CHECK (true);
 CREATE POLICY "ki_update" ON public.knowledge_insights FOR UPDATE USING (true);
 
+-- 知识贡献（用户提交）
+CREATE TABLE IF NOT EXISTS public.knowledge_contributions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  category TEXT DEFAULT '战术',
+  content TEXT NOT NULL,
+  source TEXT DEFAULT '',
+  status TEXT DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.knowledge_contributions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "kc_read" ON public.knowledge_contributions FOR SELECT USING (true);
+CREATE POLICY "kc_insert" ON public.knowledge_contributions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "kc_update" ON public.knowledge_contributions FOR UPDATE USING (true);
+
 -- 匿名对话日志（用于提升服务质量）
 CREATE TABLE IF NOT EXISTS public.conversation_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -15,6 +15,7 @@ import LineupsCreate from './LineupsCreate'
 import ProfilePage from './ProfilePage'
 import CollectionPage from './CollectionPage'
 import CreatorRankingPage from './CreatorRankingPage'
+import ContributeKnowledge from './ContributeKnowledge'
 import CreateShare from './CreateShare'
 import type { CommunityNav } from './CommunitySidebar'
 import styles from './CommunityShell.module.css'
@@ -37,7 +38,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
 
   const navLabels: Record<CommunityNav, string> = {
     home: '社区首页', tactics: '战术广场', forum: '论坛大厅',
-    lineups: '技能点位', profile: '个人主页', favorites: '我的收藏', liked: '我的赞过', ranking: '创作者排行',
+    lineups: '技能点位', profile: '个人主页', favorites: '我的收藏', liked: '我的赞过', ranking: '创作者排行', contribute: '知识贡献',
   }
 
   const openDetail = useCallback((id: string, type: 'tactic' | 'post' | 'lineup') => {
@@ -138,6 +139,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
     )
 
     if (nav === 'ranking') return <CreatorRankingPage onViewProfile={viewProfile} />
+    if (nav === 'contribute') return <ContributeKnowledge />
 
     return null
   }

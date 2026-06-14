@@ -72,6 +72,60 @@ function KnowledgeInsights({ adminKey }: { adminKey: string }) {
   )
 }
 
+function KnowledgeContributions() {
+  const [items, setItems] = useState<any[]>([])
+
+  const load = async () => {
+    const { data } = await supabase.from('knowledge_contributions').select('*').order('created_at', { ascending: false }).limit(30)
+    setItems((data || []))
+  }
+
+  useEffect(() => { load() }, [])
+
+  const handleReview = async (id: string, status: string) => {
+    await supabase.from('knowledge_contributions').update({ status }).eq('id', id)
+    if (status === 'approved') {
+      const item = items.find(i => i.id === id)
+      if (item) await supabase.from('knowledge_insights').insert({ source: 'user', category: item.category, content: item.content, status: 'approved' })
+    }
+    load()
+  }
+
+  const pending = items.filter(i => i.status === 'pending')
+
+  return (
+    <div className={styles.section}>
+      <h3>📨 用户知识贡献 ({pending.length} 待审)</h3>
+      {items.length === 0 ? (
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.15)', padding: '8px 0' }}>暂无贡献</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 300, overflowY: 'auto' }}>
+          {items.map(i => (
+            <div key={i.id} style={{
+              padding: '8px 10px', borderRadius: 6, fontSize: 12,
+              background: i.status === 'approved' ? 'rgba(5,248,248,.04)' : i.status === 'rejected' ? 'rgba(255,85,85,.04)' : 'rgba(255,255,255,.01)',
+              border: `1px solid ${i.status === 'approved' ? 'rgba(5,248,248,.1)' : i.status === 'rejected' ? 'rgba(255,85,85,.1)' : 'rgba(255,255,255,.03)'}`,
+            }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+                <span style={{ color: '#05F8F8', fontSize: 10 }}>[{i.category}]</span>
+                <span style={{ color: 'rgba(255,255,255,.2)', fontSize: 10 }}>{i.user_id?.slice(0,8)}</span>
+                {i.source && <span style={{ color: 'rgba(255,255,255,.1)', fontSize: 9 }}>来源: {i.source}</span>}
+              </div>
+              <div style={{ color: i.status === 'rejected' ? 'rgba(255,255,255,.2)' : 'rgba(255,255,255,.5)', marginBottom: 4 }}>{i.content}</div>
+              {i.status === 'pending' && (
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => handleReview(i.id, 'approved')} style={{ color: '#05F8F8', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11 }}>✓ 通过并入库</button>
+                  <button onClick={() => handleReview(i.id, 'rejected')} style={{ color: '#ff5555', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11 }}>✕ 拒绝</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface ContentCounts { tactics: number; posts: number; lineups: number; comments: number }
 interface Activation { usedCodes: number; totalCodes: number; remaining: number }
 interface Stats {
@@ -195,6 +249,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
 
         {/* 知识蒸馏 */}
         <KnowledgeInsights adminKey={key} />
+        <KnowledgeContributions />
 
         {/* 系统 + 操作 */}
         <div className={styles.section}>
