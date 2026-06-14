@@ -80,16 +80,36 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
       if (refs.length > 0) communityRefs = `【社区相关参考·${maps.find(m => m.id === mapId)?.name || mapId}】\n${refs.map((r, i) => `${i + 1}. ${r}`).join('\n')}`
     } catch {}
 
-    // 查询已审核通过的知识洞察（VCT/Wiki/版本/蒸馏数据）
+    // 查询已审核通过的知识洞察（VCT/Wiki/版本/蒸馏数据），按用户问题关键词筛选
     let knowledgeRefs = ''
     try {
       const { data: insights } = await supabase.from('knowledge_insights')
         .select('category,content,source')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
-        .limit(20)
+        .limit(30)
       if (insights && insights.length > 0) {
-        knowledgeRefs = `【已入库的职业战术数据·共${insights.length}条】\n以下是从VCT比赛、Wiki、版本更新中收集的专业战术知识，请在回答时主动引用：\n\n${insights.map((ins: any, i: number) => `${i + 1}. [${ins.source || '未知来源'}] ${ins.content.slice(0, 500)}`).join('\n\n')}`
+        // 提取关键词：当前地图 + 用户提到的地图/特工/战术词
+        const keywords = new Set<string>()
+        keywords.add(mapName.toLowerCase())
+        for (const m of maps) { if (text.includes(m.name)) keywords.add(m.name.toLowerCase()) }
+        for (const a of agents) { if (text.includes(a.name)) keywords.add(a.name.toLowerCase()) }
+        const tacticalWords = ['进攻', '防守', 'A点', 'B点', 'C点', '中路', '阵容', '双烟', '双决斗', '速攻', '慢推', '转点', 'Rush', 'default', '狙击', '回防', '前压', 'ECO', '强起', '配合', '克制', '技能']
+        for (const w of tacticalWords) { if (text.includes(w)) keywords.add(w.toLowerCase()) }
+
+        // 按关键词匹配过滤
+        let relevant = insights.filter((ins: any) => {
+          const haystack = ((ins.content || '') + (ins.category || '')).toLowerCase()
+          return Array.from(keywords).some(kw => haystack.includes(kw))
+        })
+        // 兜底：匹配太少时保留前5条
+        if (relevant.length < 3) relevant = insights.slice(0, 5)
+        // 最多10条，避免太长
+        relevant = relevant.slice(0, 10)
+
+        if (relevant.length > 0) {
+          knowledgeRefs = `【已入库的职业战术数据·匹配${relevant.length}条】（以下是与当前问题最相关的战术知识，请优先引用）：\n\n${relevant.map((ins: any, i: number) => `${i + 1}. [${ins.source || '未知来源'}] ${ins.content.slice(0, 500)}`).join('\n\n')}`
+        }
       }
     } catch {}
 
