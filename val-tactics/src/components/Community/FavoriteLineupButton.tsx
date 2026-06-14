@@ -24,8 +24,21 @@ export default function FavoriteLineupButton({ lineupId, initialCount = 0 }: Pro
     if (!user || loading) return
     setLoading(true)
     const { data } = await supabase.rpc('toggle_lineup_fav', { p_user_id: user.id, p_lineup_id: lineupId })
-    if (data === true) { setFaved(true); setCount(c => c + 1) }
-    else { setFaved(false); setCount(c => Math.max(0, c - 1)) }
+    const favednow = data === true
+    if (favednow) {
+      setFaved(true); setCount(c => c + 1)
+      // 收藏时通知点位作者
+      const { data: lp } = await supabase.from('lineups').select('user_id').eq('id', lineupId).maybeSingle()
+      const ownerId = (lp as any)?.user_id
+      if (ownerId && ownerId !== user.id) {
+        void supabase.rpc('create_notification', {
+          p_user_id: ownerId, p_type: 'favorite', p_from_user_id: user.id,
+          p_target_type: 'lineup', p_target_id: lineupId,
+        })
+      }
+    } else {
+      setFaved(false); setCount(c => Math.max(0, c - 1))
+    }
     setLoading(false)
   }
 

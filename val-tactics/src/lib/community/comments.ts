@@ -39,9 +39,25 @@ export async function createComment(params: {
     .select()
     .single()
 
-  // 更新评论计数
+  // 更新评论计数 + 通知内容作者
   if (data) {
     void supabase.rpc('increment_comment_count', { target_id: params.targetId, target_type: params.targetType })
+
+    // 查内容作者并通知
+    let ownerId = ''
+    if (params.targetType === 'profile') {
+      ownerId = params.targetId // profile 的 targetId = user_id
+    } else {
+      const table = params.targetType === 'tactic' ? 'tactical_shares' : params.targetType === 'post' ? 'posts' : 'lineups'
+      const { data: content } = await supabase.from(table).select('user_id').eq('id', params.targetId).maybeSingle()
+      ownerId = (content as any)?.user_id || ''
+    }
+    if (ownerId && ownerId !== params.userId) {
+      void supabase.rpc('create_notification', {
+        p_user_id: ownerId, p_type: 'comment', p_from_user_id: params.userId,
+        p_target_type: params.targetType, p_target_id: params.targetId,
+      })
+    }
   }
 
   return data as Comment | null
