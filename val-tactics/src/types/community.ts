@@ -49,12 +49,23 @@ export interface Comment {
   author?: Profile
 }
 
+export type PostCategory = 'discussion' | 'guide' | 'map' | 'team' | 'other'
+
+export const POST_CATEGORIES: Record<PostCategory, string> = {
+  discussion: '战术讨论',
+  guide: '英雄攻略',
+  map: '地图分析',
+  team: '开黑组队',
+  other: '其他',
+}
+
 export interface Post {
   id: string
   user_id: string
   title: string
   content: string
   category: PostCategory
+  custom_category?: string
   tags: string[]
   views: number
   like_count: number
@@ -63,15 +74,6 @@ export interface Post {
   updated_at?: string
   author?: Profile
   liked?: boolean
-}
-
-export type PostCategory = 'discussion' | 'guide' | 'map' | 'team'
-
-export const POST_CATEGORIES: Record<PostCategory, string> = {
-  discussion: '战术讨论',
-  guide: '英雄攻略',
-  map: '地图分析',
-  team: '开黑组队',
 }
 
 export interface Like {

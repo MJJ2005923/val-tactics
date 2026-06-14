@@ -22,14 +22,14 @@ export async function getPost(id: string): Promise<Post | null> {
 
 export async function createPost(params: {
   userId: string; title: string; content: string
-  category: PostCategory; tags?: string[]
+  category: PostCategory; tags?: string[]; customCategory?: string
 }): Promise<Post | null> {
   const { data } = await supabase.from('posts').insert({
     user_id: params.userId,
     title: params.title,
     content: params.content,
     category: params.category,
-    tags: params.tags || [],
+    tags: params.customCategory ? [params.customCategory] : (params.tags || []),
   }).select().single()
   return data as Post | null
 }

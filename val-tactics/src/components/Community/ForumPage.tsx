@@ -67,7 +67,7 @@ export default function ForumPage({ onBack, onViewPost, onCreatePost, embedded }
           {filtered.map(p => (
             <div key={p.id} className={styles.card} onClick={() => onViewPost(p.id)}>
               <div className={styles.cardLeft}>
-                <div className={styles.cardCat}>{POST_CATEGORIES[p.category] || p.category}</div>
+                <div className={styles.cardCat}>{p.category === 'other' && p.tags?.[0] ? p.tags[0] : POST_CATEGORIES[p.category] || p.category}</div>
                 <div className={styles.cardTitle}>{p.title}</div>
                 <div className={styles.cardPreview}>{p.content.slice(0, 80)}</div>
                 <div className={styles.cardMeta}>

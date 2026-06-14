@@ -15,6 +15,7 @@ export default function CreatePost({ onClose, onSuccess }: Props) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [cat, setCat] = useState<PostCategory>('discussion')
+  const [customCat, setCustomCat] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
@@ -35,7 +36,7 @@ export default function CreatePost({ onClose, onSuccess }: Props) {
       const result = await check.json()
       if (!result.allowed) { setError(result.reason || '内容违规'); setSending(false); return }
 
-      const post = await createPost({ userId: user.id, title: title.trim(), content: content.trim(), category: cat })
+      const post = await createPost({ userId: user.id, title: title.trim(), content: content.trim(), category: cat, customCategory: cat === 'other' ? customCat.trim() : undefined })
       if (post) {
         onSuccess(post.id)
       } else {
@@ -56,6 +57,9 @@ export default function CreatePost({ onClose, onSuccess }: Props) {
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
+          {cat === 'other' && (
+            <input className={styles.input} style={{ marginTop: 6 }} placeholder="输入自定义分类名称..." value={customCat} onChange={e => setCustomCat(e.target.value)} maxLength={20} />
+          )}
         </div>
         <div className={styles.field}>
           <div className={styles.label}>标题</div>
