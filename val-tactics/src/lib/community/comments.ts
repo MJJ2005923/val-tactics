@@ -53,10 +53,10 @@ export async function createComment(params: {
       ownerId = (content as any)?.user_id || ''
     }
     if (ownerId && ownerId !== params.userId) {
-      void supabase.rpc('create_notification', {
+      supabase.rpc('create_notification', {
         p_user_id: ownerId, p_type: 'comment', p_from_user_id: params.userId,
         p_target_type: params.targetType, p_target_id: params.targetId,
-      })
+      }).then(({ error }) => { if (error) console.error('[notif] comment:', error.message) })
     }
   }
 

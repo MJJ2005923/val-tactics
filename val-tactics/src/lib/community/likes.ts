@@ -9,13 +9,13 @@ export async function toggleLike(userId: string, targetType: string, targetId: s
   const liked = (data as boolean) || false
   // 点赞时通知对方
   if (liked && targetUserId && targetUserId !== userId) {
-    void supabase.rpc('create_notification', {
+    supabase.rpc('create_notification', {
       p_user_id: targetUserId,
       p_type: 'like',
       p_from_user_id: userId,
       p_target_type: targetType,
       p_target_id: targetId,
-    })
+    }).then(({ error }) => { if (error) console.error('[notif] like:', error.message) })
   }
   return liked
 }

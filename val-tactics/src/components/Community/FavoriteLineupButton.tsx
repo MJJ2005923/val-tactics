@@ -31,10 +31,10 @@ export default function FavoriteLineupButton({ lineupId, initialCount = 0 }: Pro
       const { data: lp } = await supabase.from('lineups').select('user_id').eq('id', lineupId).maybeSingle()
       const ownerId = (lp as any)?.user_id
       if (ownerId && ownerId !== user.id) {
-        void supabase.rpc('create_notification', {
+        supabase.rpc('create_notification', {
           p_user_id: ownerId, p_type: 'favorite', p_from_user_id: user.id,
           p_target_type: 'lineup', p_target_id: lineupId,
-        })
+        }).then(({ error }) => { if (error) console.error('[notif] favorite:', error.message) })
       }
     } else {
       setFaved(false); setCount(c => Math.max(0, c - 1))
