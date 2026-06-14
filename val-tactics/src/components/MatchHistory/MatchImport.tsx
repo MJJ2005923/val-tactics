@@ -67,7 +67,7 @@ export default function MatchImport({ onImported, compact }: Props) {
         className={styles.textarea}
         value={text}
         onChange={e => { setText(e.target.value); setResult(null) }}
-        placeholder={`亚海悬城,捷风,胜,22,12,6,245,23,超凡2,攻\n源工重镇,贤者,负,8,16,4,95,12,钻石1,守\n...`}
+        placeholder={`亚海悬城,婕提,胜,22,12,6,245,23,超凡2,攻\n劫境之地,贤者,负,8,16,4,95,12,钻石1,守\n...`}
       />
 
       <div className={styles.actions}>

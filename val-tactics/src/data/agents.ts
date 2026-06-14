@@ -354,7 +354,7 @@ const agents: Agent[] = [
     ]
   },
   {
-    id: 'kayo', name: 'K/O', nameEn: 'KAY/O', role: '先锋',
+    id: 'kayo', name: 'KAY/O', nameEn: 'KAY/O', role: '先锋',
     abilities: [
       { id: 'kayo-frag', name: '碎片溢出', nameEn: 'FRAG/ment', key: 'C', type: 'damage', iconUrl: '/images/abilities/kayo-frag.png', description: '投掷一颗碎片手雷，落地后分四段爆炸，每段对范围内敌人造成伤害。', usage: '按C投掷，多段爆炸伤害。' },
       { id: 'kayo-flash', name: '闪存过载', nameEn: 'FLASH/drive', key: 'Q', type: 'flash', iconUrl: '/images/abilities/kayo-flash.png', description: '投掷一颗闪光弹，爆炸后致盲范围内敌人。可蓄力调整引爆时间。', usage: '按Q投掷闪光弹，蓄力控制引爆时间。' },

@@ -207,9 +207,9 @@ export function importCsv(text: string): MatchImportResult {
 export function generateCsvTemplate(): string {
   const header = '地图,特工,结果,K,D,A,ACS,HS%,段位,开局方'
   const examples = [
-    '亚海悬城,捷风,胜,22,12,6,245,23,超凡2,攻',
-    '源工重镇,贤者,负,8,16,4,95,12,钻石1,守',
-    '霓虹町,炼狱,胜,15,10,8,180,18,钻石3,攻',
+    '亚海悬城,婕提,胜,22,12,6,245,23,超凡2,攻',
+    '劫境之地,贤者,负,8,16,4,95,12,钻石1,守',
+    '莲华古城,炼狱,胜,15,10,8,180,18,钻石3,攻',
   ]
   return [header, ...examples].join('\n')
 }

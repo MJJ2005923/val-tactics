@@ -364,9 +364,27 @@ export default function AIPage({ mapName, onBack, initialPrompt }: { mapId: stri
       .filter((v, i, a) => a.indexOf(v) === i)
     const agentNames = getAgentNames(agentIds)
 
+    // 查询已审核通过的知识洞察
+    let knowledgeRefs = ''
+    try {
+      const { data: insights } = await supabase.from('knowledge_insights')
+        .select('category,content,source')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (insights && insights.length > 0) {
+        knowledgeRefs = `【已入库的职业战术数据·共${insights.length}条】\n以下是从VCT比赛、Wiki、版本更新中收集的专业战术知识，请在回答时主动引用：\n\n${insights.map((ins: any, i: number) => `${i + 1}. [${ins.source || '未知来源'}] ${ins.content.slice(0, 500)}`).join('\n\n')}`
+      }
+    } catch {}
+
     const allMessages = [
       { role: 'user', content: buildKnowledgeBase(mapName, side, agentNames) },
       { role: 'assistant', content: '明白。我是T教练，已掌握全部29位特工技能数据和12张地图信息，请随时提问。' },
+      // 注入知识洞察数据
+      ...(knowledgeRefs ? [
+        { role: 'user' as const, content: knowledgeRefs },
+        { role: 'assistant' as const, content: '收到，我已掌握这些职业比赛的阵容数据、战术分析和地图要点。回答时我会结合这些专业数据。' },
+      ] : []),
       // 注入棋盘基础信息
       ...(showBoardInfo ? [
         { role: 'user' as const, content: formatBoardStateForAI(mapName, side, agentPositions, abilityShapes, drawings, textAnnotations, markers, roster) },

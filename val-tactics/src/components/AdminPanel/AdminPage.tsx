@@ -122,6 +122,24 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
   const [showOnly, setShowOnly] = useState<'all' | 'pending'>('pending')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const toggleExpand = (id: string) => setExpanded(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next })
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState('')
+
+  const startEdit = (item: any) => {
+    setEditingId(item.id)
+    setEditContent(item.content)
+  }
+  const saveEdit = async () => {
+    if (!editingId) return
+    await supabase.from('knowledge_insights').update({ content: editContent }).eq('id', editingId)
+    setInsights(prev => prev.map(i => i.id === editingId ? { ...i, content: editContent } : i))
+    setEditingId(null)
+    setEditContent('')
+  }
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditContent('')
+  }
 
   // 数据采集
   const [distilling, setDistilling] = useState(false)
@@ -314,24 +332,43 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
               <span style={{ color: '#05F8F8', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>[{sourceLabels[i.source] || i.source}] {i.category && i.category !== '战术' ? i.category : ''}</span>
               <span style={{ flex: 1 }} />
               <span style={{ color: 'rgba(255,255,255,.2)', fontSize: 10, flexShrink: 0 }}>{new Date(i.created_at).toLocaleString('zh')}</span>
-              {i.status === 'pending' && (
+              {i.status === 'pending' && editingId !== i.id && (
                 <>
+                  <button className={styles.reviewItemBtn} style={{ color: 'rgba(255,255,255,.4)', border: '1px solid rgba(255,255,255,.15)' }} onClick={() => startEdit(i)}>✏️ 编辑</button>
                   <button className={styles.reviewItemBtn} style={{ color: '#05F8F8', border: '1px solid rgba(5,248,248,.2)' }} onClick={() => handleInsight(i.id, 'approved')}>✓ 通过</button>
                   <button className={styles.reviewItemBtn} style={{ color: '#ff5555', border: '1px solid rgba(255,85,85,.2)' }} onClick={() => handleInsight(i.id, 'rejected')}>✕ 拒绝</button>
                 </>
               )}
+              {i.status === 'pending' && editingId === i.id && (
+                <>
+                  <button className={styles.reviewItemBtn} style={{ color: '#05F8F8', border: '1px solid rgba(5,248,248,.3)' }} onClick={saveEdit}>💾 保存</button>
+                  <button className={styles.reviewItemBtn} style={{ color: 'rgba(255,255,255,.3)', border: '1px solid rgba(255,255,255,.15)' }} onClick={cancelEdit}>取消</button>
+                </>
+              )}
               {i.status !== 'pending' && <span style={{ color: 'rgba(255,255,255,.06)', fontSize: 9, flexShrink: 0 }}>{i.status === 'approved' ? '已通过' : '已拒绝'}</span>}
             </div>
-            <div style={{
-              color: i.status === 'rejected' ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.5)',
-              lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-            }}>{displayContent.split('\\n').join('\n')}</div>
-            {isLong && (
-              <button onClick={() => toggleExpand(i.id)} style={{
-                marginTop: 4, padding: '2px 8px', border: 'none', borderRadius: 4,
-                background: 'rgba(255,255,255,.03)', color: 'rgba(5,248,248,.5)',
-                cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
-              }}>{isExpanded ? '▲ 收起' : '▼ 展开 (' + i.content.length + '字)'}</button>
+            {editingId === i.id ? (
+              <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
+                style={{
+                  width: '100%', minHeight: 200, padding: 10, borderRadius: 6,
+                  background: 'rgba(255,255,255,.03)', border: '1px solid rgba(5,248,248,.15)',
+                  color: 'rgba(255,255,255,.7)', fontSize: 12, fontFamily: 'inherit',
+                  lineHeight: 1.7, resize: 'vertical', whiteSpace: 'pre-wrap',
+                }} />
+            ) : (
+              <>
+                <div style={{
+                  color: i.status === 'rejected' ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.5)',
+                  lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                }}>{displayContent.split('\\n').join('\n')}</div>
+                {isLong && (
+                  <button onClick={() => toggleExpand(i.id)} style={{
+                    marginTop: 4, padding: '2px 8px', border: 'none', borderRadius: 4,
+                    background: 'rgba(255,255,255,.03)', color: 'rgba(5,248,248,.5)',
+                    cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
+                  }}>{isExpanded ? '▲ 收起' : '▼ 展开 (' + i.content.length + '字)'}</button>
+                )}
+              </>
             )}
           </div>
         )})

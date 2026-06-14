@@ -447,6 +447,51 @@ export async function onRequest(context) {
   const SB_KEY = env.SUPABASE_SERVICE_KEY || ''
   const SB_HEADERS_POST = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
 
+  // 无畏契约全部29特工+技能+地图数据（注入AI提示词确保名称准确，严格对齐agents.ts）
+  const GAME_DATA = `【无畏契约全部29位特工及技能——必须使用以下中文名称，一个都不能错】
+
+== 决斗者(8位) ==
+婕提(Jett)：瞬云(C)、凌空(Q)、逐风(E)、飓刃(X)
+不死鸟(Phoenix)：火冒三丈(C)、火热手感(Q)、闪光曲球(E)、再火一回(X)
+雷兹(Raze)：花车巡游(C)、惊喜翻腾(Q)、彩雷飞溅(E)、晚安焰火(X)
+蕾娜(Reyna)：睥睨(C)、噬尽(Q)、逐散(E)、女皇旨令(X)
+夜露(Yoru)：出其不意(C)、攻其不备(Q)、不请自来(E)、神鬼不觉(X)
+霓虹(Neon)：高速通道(C)、闪电弹球(Q)、充能疾驰(E)、超限暴走(X)
+壹决(Iso)：绝对屏障(C)、稳态剥离(Q)、战斗心流(E)、决斗通牒(X)
+幻棱(Waylay)：光棱闪爆(C)、光速飞跃(Q)、溯流回光(E)、时光修罗场(X)
+
+== 先锋(7位) ==
+铁臂(Breach)：剧震余波(C)、闪点爆破(Q)、山崩地陷(E)、惊雷卷地(X)
+猎枭(Sova)：枭型无人机(C)、雷击箭(Q)、寻敌箭(E)、狂猎之怒(X)
+斯凯(Skye)：愈生之息(C)、辟林之虎(Q)、引路之隼(E)、追猎之灵(X)
+KAY/O：碎片溢出(C)、闪存过载(Q)、零点嗅探(E)、无效指令(X)
+黑梦(Fade)：黯兽(C)、幽爪(Q)、诡眼(E)、夜临(X)
+盖可(Gekko)：嗨爆全场(C)、顽皮搭档(Q)、炫晕光波(E)、无敌超鲨(X)
+钛狐(Tejo)：潜袭爬虫(C)、特快专递(Q)、精准投放(E)、末日审判(X)
+
+== 控场者(7位) ==
+蝰蛇(Viper)：蛇吻(C)、瘴云(Q)、毒幕(E)、蝰腹(X)
+炼狱(Brimstone)：振奋信标(C)、燃烧榴弹(Q)、空投烟幕(E)、天基光束(X)
+幽影(Omen)：践影(C)、暗魇(Q)、黑瘴(E)、离魂(X)
+星礈(Astra)：重力之阱(C)、新星脉冲(Q)、星云(E)、宇宙分裂(X)
+海神(Harbor)：乱涌(C)、狂潮(Q)、海盾(E)、清算(X)
+暮蝶(Clove)：虹吸(C)、整蛊(Q)、霞染(E)、化蝶(X)
+迷核(Miks)：电音脉冲(C)、共振谐律(Q)、声波帷幕(E)、音脉强袭(X)
+
+== 哨卫(7位) ==
+奇乐(Killjoy)：纳米蜂群(C)、自动哨兵(Q)、哨戒炮台(E)、全面封锁(X)
+零(Cypher)：震慑绊线(C)、赛博囚笼(Q)、战术监控(E)、神经取析(X)
+贤者(Sage)：玉城(C)、薄冰(Q)、逢春(E)、再起(X)
+尚博勒(Chamber)：贵宾限行(C)、金牌猎头(Q)、闪转自如(E)、孤高火力(X)
+钢锁(Deadlock)：阻域屏障(C)、声感陷阱(Q)、重力捕网(E)、断魂索道(X)
+维斯(Vyse)：剃刀藤蔓(C)、裁断(Q)、弧光玫瑰(E)、铁棘禁园(X)
+禁灭(Veto)：涡流折跃(C)、裂变残片(Q)、噬源体(E)、完全进化(X)
+
+【无畏契约全部地图（必须使用以下中文名称）】
+亚海悬城(Ascent)、源工重镇(Bind)、森寒冬港(Icebox)、霓虹町(Split)、微风岛屿(Breeze)、隐士修所(Haven)、裂变峡谷(Fracture)、深海明珠(Pearl)、日落之城(Sunset)、莲华古城(Lotus)、幽邃地窖(Abyss)、盐海矿镇(Salt Mine)
+
+注意：所有特工名、技能名、地图名必须严格使用上面列出的中文名称，禁止自创译名或使用英文名。禁止使用"某个特工""某个英雄""一个技能"等模糊表述。`
+
   // === GET /api/admin/debug ===
   if (url.pathname === '/api/admin/debug') {
     const allKeys = Object.keys(env).filter(k => !k.startsWith('CF_'))
@@ -566,7 +611,7 @@ export async function onRequest(context) {
           body: JSON.stringify({
             model: 'deepseek-v4-flash', max_tokens: 4000, temperature: 0.3,
             messages: [
-              { role: 'system', content: '你是无畏契约战术分析师。请提供详细、完整的战术信息，包含具体用法、原因分析和配合建议。所有内容必须用中文描述。信息越详细越好，不要摘要。输出纯JSON数组。' },
+              { role: 'system', content: '你是无畏契约战术分析师。请提供详细、完整的战术信息，包含具体用法、原因分析和配合建议。所有内容必须用中文描述。信息越详细越好，不要摘要。输出纯JSON数组。\n\n${GAME_DATA}' },
               { role: 'user', content: t.prompt },
             ],
           }),
@@ -658,7 +703,7 @@ export async function onRequest(context) {
           body: JSON.stringify({
             model: 'deepseek-v4-flash',
             messages: [
-              { role: 'system', content: '你是VCT职业比赛战术分析师。请输出详细、完整的战术信息，必须包含：地图名称、双方完整阵容（5个特工中文全名）、使用的具体战术名称和打法、特工之间的配合套路、来源比赛（谁打谁谁赢了）。所有内容必须用中文描述，禁止使用"某个""某人"等模糊表述。信息越详细越好，不要压缩。输出纯JSON数组。' },
+              { role: 'system', content: '你是VCT职业比赛战术分析师。请输出详细、完整的战术信息，必须包含：地图名称、双方完整阵容（5个特工中文全名）、使用的具体战术名称和打法、特工之间的配合套路、来源比赛（谁打谁谁赢了）。所有内容必须用中文描述，禁止使用"某个""某人"等模糊表述。信息越详细越好，不要压缩。输出纯JSON数组。\n\n${GAME_DATA}' },
               { role: 'user', content: t.prompt },
             ],
             max_tokens: 4000, temperature: 0.3,
