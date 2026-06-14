@@ -138,15 +138,18 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
+  // 旧套餐 → 新套餐映射（新定价统一为 standard）
+  const TIER_MIGRATION = { basic: 'standard', advanced: 'standard', pro: 'standard', standard: 'standard', free: 'free', ownkey: 'ownkey' }
+
   // 开发环境测试激活码（KV 不可用时的 fallback）
   const isDev = env.CF_PAGES_BRANCH === 'dev' || !env.CF_PAGES
   const DEV_CODES = isDev ? {
-    'TEST-BASIC':    { tier: 'basic',    expiresAt: 0 },
-    'TEST-ADVANCED': { tier: 'advanced', expiresAt: 0 },
-    'TEST-PRO':      { tier: 'pro',      expiresAt: 0 },
-    'TEST-OWNKEY':   { tier: 'ownkey',   expiresAt: 0 },
-    'TEST-FREE':     { tier: 'free',     expiresAt: 0 },
-    'TEST-NO-OWNKEY':  { tier: 'free',   expiresAt: 0 },
+    'TEST-BASIC':    { tier: 'standard',  expiresAt: 0 },
+    'TEST-ADVANCED': { tier: 'standard',  expiresAt: 0 },
+    'TEST-PRO':      { tier: 'standard',  expiresAt: 0 },
+    'TEST-OWNKEY':   { tier: 'ownkey',    expiresAt: 0 },
+    'TEST-FREE':     { tier: 'free',      expiresAt: 0 },
+    'TEST-NO-OWNKEY':  { tier: 'free',    expiresAt: 0 },
   } : {}
 
   // 免邮件注册（绕过 SMTP）— 加 IP 限流防批量注册
@@ -194,19 +197,22 @@ export async function onRequest(context) {
       if (!codeData) {
         // KV 中未找到，检查开发环境测试码
         if (DEV_CODES[normalized]) {
-          return new Response(JSON.stringify({ ok: true, tier: DEV_CODES[normalized].tier, expiresAt: 0, dev: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+          const mt = TIER_MIGRATION[DEV_CODES[normalized].tier] || DEV_CODES[normalized].tier
+          return new Response(JSON.stringify({ ok: true, tier: mt, expiresAt: 0, dev: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
         }
         return new Response(JSON.stringify({ error: '激活码无效' }), { status: 404, headers: { ...corsHeaders, 'content-type': 'application/json' } })
       }
       if (codeData.used && codeData.usedBy !== userId) {
         return new Response(JSON.stringify({ error: '激活码已被使用' }), { status: 409, headers: { ...corsHeaders, 'content-type': 'application/json' } })
       }
+      // 旧 tier 自动迁移到新套餐
+      const migratedTier = TIER_MIGRATION[codeData.tier] || codeData.tier
       // 标记使用
-      await env.AI_USAGE.put(`code:${normalized}`, JSON.stringify({ ...codeData, used: true, usedBy: userId, usedAt: Date.now() }))
+      await env.AI_USAGE.put(`code:${normalized}`, JSON.stringify({ ...codeData, used: true, usedBy: userId, usedAt: Date.now(), migratedTier }))
       // 存储用户套餐
-      const userTier = { tier: codeData.tier, activatedAt: Date.now(), expiresAt: codeData.expiresAt || 0 }
+      const userTier = { tier: migratedTier, activatedAt: Date.now(), expiresAt: codeData.expiresAt || 0 }
       await env.AI_USAGE.put(`tier:${userId}`, JSON.stringify(userTier))
-      return new Response(JSON.stringify({ ok: true, tier: codeData.tier, expiresAt: codeData.expiresAt }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ ok: true, tier: migratedTier, expiresAt: codeData.expiresAt }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
       // KV 不可用（本地开发），检查测试码
       if (DEV_CODES[normalized]) {
