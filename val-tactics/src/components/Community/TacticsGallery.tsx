@@ -78,24 +78,26 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
         <div className={styles.grid}>
           {tactics.map(t => (
             <div key={t.id} className={styles.card} onClick={() => onViewTactic(t.id)}>
-              {t.preview_image && (
-                <img src={t.preview_image} alt="" className={styles.cardThumb} />
+              {t.preview_image ? (
+                <img src={t.preview_image} alt="" className={styles.cardImg} />
+              ) : (
+                <div className={styles.cardImgPlaceholder}>📐</div>
               )}
-              <div className={styles.cardTop}>
-                <span className={styles.cardMap}>
-                  {maps.find(m => m.id === t.map_id)?.nameEn || t.map_id} · {mapName(t.map_id)}
-                </span>
-                <span className={styles.cardAuthor} onClick={(e) => { e.stopPropagation(); onViewProfile?.(t.user_id) }}>
-                  {profiles[t.user_id]?.username?.split('@')[0] || '用户'}
-                </span>
-              </div>
-              <div className={styles.cardDesc}>{t.title}{t.description ? ' — ' + t.description : ''}</div>
-              <div className={styles.cardStats}>
-                <span>{t.views} 浏览</span>
-                <span>{t.like_count} 赞</span>
-                <span>{t.comment_count} 评论</span>
-                {(t.tactic_data as any)?.lineupCount > 0 && <span>{(t.tactic_data as any).lineupCount} 点位</span>}
-                <span>{(t as any).favorite_count || 0} 收藏</span>
+              <div className={styles.cardBody}>
+                <div className={styles.cardTop}>
+                  <span className={styles.cardMap}>{mapName(t.map_id)}</span>
+                  <span className={styles.cardAuthor} onClick={(e) => { e.stopPropagation(); onViewProfile?.(t.user_id) }}>
+                    {profiles[t.user_id]?.username?.split('@')[0] || '用户'}
+                  </span>
+                </div>
+                <div className={styles.cardTitle}>{t.title}</div>
+                {t.description && <div className={styles.cardDesc}>{t.description.slice(0, 60)}</div>}
+                <div className={styles.cardStats}>
+                  <span>{t.views} 浏览</span>
+                  <span>{t.like_count} 赞</span>
+                  <span>{t.comment_count} 评论</span>
+                  <span>{(t as any).favorite_count || 0} 收藏</span>
+                </div>
               </div>
             </div>
           ))}
