@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { setAdminKey, clearAdminKey, getAdminKey } from '../../lib/adminAuth'
 import { supabase } from '../../lib/supabase'
 import styles from './AdminPage.module.css'
@@ -118,6 +118,7 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
   const [conversations, setConversations] = useState<any[]>([])
   const [convPage, setConvPage] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [showOnly, setShowOnly] = useState<'all' | 'pending'>('pending')
 
   // 数据采集
@@ -127,25 +128,33 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
   const [loadingVCT, setLoadingVCT] = useState(false)
   const [verResult, setVerResult] = useState<any>(null)
 
-  const loadAll = async () => {
+  const loadAll = useCallback(async () => {
     setLoading(true)
-    const irQuery = (() => {
-      let q = supabase.from('knowledge_insights').select('*').order('created_at', { ascending: false }).limit(100)
-      if (showOnly === 'pending') q = q.eq('status', 'pending')
-      return q
-    })()
-    const [ir, cr, cvr] = await Promise.all([
-      irQuery,
-      supabase.from('knowledge_contributions').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(30),
-      supabase.from('conversation_logs').select('*').eq('role', 'user').order('created_at', { ascending: false }).range(convPage * 20, (convPage + 1) * 20 - 1),
-    ])
-    setInsights((ir.data || []) as any[])
-    setContributions((cr.data || []) as any[])
-    setConversations((cvr.data || []) as any[])
+    try {
+      const irQuery = supabase.from('knowledge_insights').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(100)
+      const [ir, cr, cvr] = await Promise.all([
+        showOnly === 'pending' ? irQuery : supabase.from('knowledge_insights').select('*').order('created_at', { ascending: false }).limit(100),
+        supabase.from('knowledge_contributions').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(30),
+        supabase.from('conversation_logs').select('*').eq('role', 'user').order('created_at', { ascending: false }).range(convPage * 20, (convPage + 1) * 20 - 1),
+      ])
+      const errs = [ir.error, cr.error, cvr.error].filter(Boolean)
+      if (errs.length > 0) {
+        console.error('审核中心查询错误:', errs)
+        setError(errs.map((e: any) => e.message || e).join('; '))
+      } else {
+        setError('')
+      }
+      setInsights((ir.data || []) as any[])
+      setContributions((cr.data || []) as any[])
+      setConversations((cvr.data || []) as any[])
+    } catch (e: any) {
+      console.error('loadAll failed:', e)
+      setError(e.message || '查询失败')
+    }
     setLoading(false)
-  }
+  }, [showOnly, convPage])
 
-  useEffect(() => { loadAll() }, [convPage, showOnly])
+  useEffect(() => { loadAll() }, [loadAll])
 
   const handleInsight = async (id: string, status: string) => {
     await supabase.from('knowledge_insights').update({ status }).eq('id', id)
@@ -270,6 +279,7 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
       </div>
 
       {loading && <div style={{ fontSize: 12, color: 'rgba(255,255,255,.1)', textAlign: 'center', padding: 20 }}>加载中...</div>}
+      {error && <div style={{ fontSize: 12, color: '#ff5555', textAlign: 'center', padding: 10, marginBottom: 8, background: 'rgba(255,85,85,.06)', borderRadius: 8 }}>⚠️ {error}</div>}
 
       {/* AI 洞察 */}
       {tab === 'insights' && (insights.length === 0
