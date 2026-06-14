@@ -1,7 +1,7 @@
 import CreatorRanking from './CreatorRanking'
 import styles from './CommunitySidebar.module.css'
 
-export type CommunityNav = 'home' | 'tactics' | 'forum' | 'lineups' | 'profile' | 'favorites' | 'liked'
+export type CommunityNav = 'home' | 'tactics' | 'forum' | 'lineups' | 'profile' | 'favorites' | 'liked' | 'ranking'
 
 interface Props {
   active: CommunityNav
@@ -16,6 +16,7 @@ const items: { id: CommunityNav; icon: string; label: string; section?: string }
   { id: 'forum', icon: '💬', label: '论坛大厅' },
   { id: 'lineups', icon: '🎯', label: '技能点位' },
   { id: 'profile', icon: '👤', label: '个人主页' },
+  { id: 'ranking', icon: '🏆', label: '创作者排行' },
 ]
 
 const myItems: { id: CommunityNav; icon: string; label: string }[] = [

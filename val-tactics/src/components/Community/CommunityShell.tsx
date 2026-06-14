@@ -14,6 +14,7 @@ import LineupsDetail from './LineupsDetail'
 import LineupsCreate from './LineupsCreate'
 import ProfilePage from './ProfilePage'
 import CollectionPage from './CollectionPage'
+import CreatorRankingPage from './CreatorRankingPage'
 import CreateShare from './CreateShare'
 import type { CommunityNav } from './CommunitySidebar'
 import styles from './CommunityShell.module.css'
@@ -36,7 +37,7 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
 
   const navLabels: Record<CommunityNav, string> = {
     home: '社区首页', tactics: '战术广场', forum: '论坛大厅',
-    lineups: '技能点位', profile: '个人主页', favorites: '我的收藏', liked: '我的赞过',
+    lineups: '技能点位', profile: '个人主页', favorites: '我的收藏', liked: '我的赞过', ranking: '创作者排行',
   }
 
   const openDetail = useCallback((id: string, type: 'tactic' | 'post' | 'lineup') => {
@@ -134,6 +135,8 @@ export default function CommunityShell({ selectedMap, onClose, onLoadTactic }: P
     if (nav === 'liked') return (
       <CollectionPage type="liked" onViewTactic={(id) => openDetail(id, 'tactic')} onViewPost={(id) => openDetail(id, 'post')} onViewLineup={(id) => openDetail(id, 'lineup')} />
     )
+
+    if (nav === 'ranking') return <CreatorRankingPage />
 
     return null
   }
