@@ -251,7 +251,7 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ ok: true, count }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
-  // 管理后台：用户统计（需 ADMIN_KEY）
+  // 管理后台：全量统计（需 ADMIN_KEY）
   if (url.pathname === '/api/admin/stats') {
     const key = new URL(request.url).searchParams.get('key') || ''
     if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
@@ -259,13 +259,29 @@ export async function onRequest(context) {
     }
     try {
       const svcKey = env.SUPABASE_SERVICE_KEY || ''
-      // 查 Supabase 用户总数
-      const userResp = await fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/auth/v1/admin/users?per_page=1', {
-        headers: { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` }
-      })
-      const totalUsers = userResp.headers.get('x-total-count') || userResp.headers.get('content-range')?.split('/')[1] || '?'
-      // 查 KV 中的激活统计
+      const baseHeaders = { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}`, 'Accept': 'application/json' }
+      const countHeader = { ...baseHeaders, 'Prefer': 'count=exact' }
+
+      // Supabase 内容统计
+      const [userResp, tacResp, postResp, lineupResp, commentResp] = await Promise.all([
+        fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/auth/v1/admin/users?per_page=1', { headers: countHeader }),
+        fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/rest/v1/tactical_shares?select=id', countHeader),
+        fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/rest/v1/posts?select=id', countHeader),
+        fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/rest/v1/lineups?select=id', countHeader),
+        fetch('https://zwtpeyvqbllrpregjpyd.supabase.co/rest/v1/comments?select=id', countHeader),
+      ])
+      const getCount = (r) => parseInt(r.headers.get('content-range')?.split('/')[1] || '0')
+      const totalUsers = parseInt(userResp.headers.get('x-total-count') || userResp.headers.get('content-range')?.split('/')[1] || '0')
+      const contentCounts = {
+        tactics: getCount(tacResp),
+        posts: getCount(postResp),
+        lineups: getCount(lineupResp),
+        comments: getCount(commentResp),
+      }
+
+      // KV 统计
       let tierCounts = { free: 0, basic: 0, advanced: 0, pro: 0, ownkey: 0 }
+      let usedCodes = 0, totalCodes = 0, revenue = 0
       if (env.AI_USAGE) {
         const tierList = await env.AI_USAGE.list({ prefix: 'tier:' })
         for (const k of tierList.keys) {
@@ -273,13 +289,42 @@ export async function onRequest(context) {
             const t = await env.AI_USAGE.get(k.name, { type: 'json' })
             const tier = t?.tier || 'free'
             tierCounts[tier] = (tierCounts[tier] || 0) + 1
+            // 收入估算
+            if (tier === 'basic') revenue += 24.9
+            else if (tier === 'advanced') revenue += 59.9
+            else if (tier === 'pro') revenue += 99.9
+            else if (tier === 'ownkey') revenue += 19.9
+            else if (tier === 'standard') revenue += 30
           } catch {}
         }
-        tierCounts.ownkey = tierList.keys.filter(k => k.name.includes(':ownkey')).length // 估算
+        // 激活码统计
+        const codeList = await env.AI_USAGE.list({ prefix: 'code:' })
+        totalCodes = codeList.keys.length
+        for (const k of codeList.keys) {
+          try {
+            const c = await env.AI_USAGE.get(k.name, { type: 'json' })
+            if (c?.used) usedCodes++
+          } catch {}
+        }
+        // AI 每日用量
+        const today = new Date().toISOString().slice(0, 10)
+        const dailyUsage = { 'deepseek-v4-flash': 0, 'deepseek-chat': 0, 'deepseek-reasoner': 0, 'deepseek-v4-pro': 0 }
+        for (const model of Object.keys(dailyUsage)) {
+          const count = parseInt(await env.AI_USAGE.get(`usage:${today}:${model}`) || '0')
+          dailyUsage[model] = count
+        }
+        return new Response(JSON.stringify({
+          totalUsers, tierCounts, contentCounts,
+          activation: { usedCodes, totalCodes, remaining: totalCodes - usedCodes },
+          revenue: Math.round(revenue), dailyUsage,
+          online: 'https://val-tactics.pages.dev',
+        }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
       }
+      // 无 KV 环境（本地开发）
       return new Response(JSON.stringify({
-        totalUsers: parseInt(totalUsers) || 0,
-        tierCounts,
+        totalUsers, tierCounts, contentCounts,
+        activation: { usedCodes: 0, totalCodes: 0, remaining: 0 },
+        revenue: 0, dailyUsage: {},
         online: 'https://val-tactics.pages.dev',
       }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
