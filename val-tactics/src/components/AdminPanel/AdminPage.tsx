@@ -120,6 +120,8 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showOnly, setShowOnly] = useState<'all' | 'pending'>('pending')
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const toggleExpand = (id: string) => setExpanded(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next })
 
   // 数据采集
   const [distilling, setDistilling] = useState(false)
@@ -298,23 +300,41 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
       {/* AI 洞察 */}
       {tab === 'insights' && (insights.length === 0
         ? <div style={{ fontSize: 12, color: 'rgba(255,255,255,.08)', textAlign: 'center', padding: 30 }}>暂无洞察</div>
-        : insights.map(i => (
+        : insights.map(i => {
+          const isExpanded = expanded.has(i.id)
+          const isLong = i.content?.length > 150
+          const displayContent = isExpanded || !isLong ? i.content : i.content?.slice(0, 150) + '...'
+          return (
           <div key={i.id} style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 6, fontSize: 12, marginBottom: 4,
+            padding: '10px 14px', borderRadius: 8, fontSize: 12, marginBottom: 6,
             background: i.status === 'approved' ? 'rgba(5,248,248,.03)' : i.status === 'rejected' ? 'rgba(255,85,85,.03)' : 'rgba(255,255,255,.01)',
             border: `1px solid ${i.status === 'approved' ? 'rgba(5,248,248,.08)' : i.status === 'rejected' ? 'rgba(255,85,85,.08)' : 'rgba(255,255,255,.03)'}`,
           }}>
-            <span style={{ color: 'rgba(255,255,255,.1)', fontSize: 10, flexShrink: 0 }}>[{sourceLabels[i.source] || i.source}]</span>
-            <span style={{ flex: 1, color: i.status === 'rejected' ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.5)' }}>{i.content}</span>
-            {i.status === 'pending' && (
-              <>
-                <button className={styles.reviewItemBtn} style={{ color: '#05F8F8', border: '1px solid rgba(5,248,248,.2)' }} onClick={() => handleInsight(i.id, 'approved')}>✓</button>
-                <button className={styles.reviewItemBtn} style={{ color: '#ff5555', border: '1px solid rgba(255,85,85,.2)' }} onClick={() => handleInsight(i.id, 'rejected')}>✕</button>
-              </>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ color: '#05F8F8', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>[{sourceLabels[i.source] || i.source}] {i.category && i.category !== '战术' ? i.category : ''}</span>
+              <span style={{ flex: 1 }} />
+              <span style={{ color: 'rgba(255,255,255,.2)', fontSize: 10, flexShrink: 0 }}>{new Date(i.created_at).toLocaleString('zh')}</span>
+              {i.status === 'pending' && (
+                <>
+                  <button className={styles.reviewItemBtn} style={{ color: '#05F8F8', border: '1px solid rgba(5,248,248,.2)' }} onClick={() => handleInsight(i.id, 'approved')}>✓ 通过</button>
+                  <button className={styles.reviewItemBtn} style={{ color: '#ff5555', border: '1px solid rgba(255,85,85,.2)' }} onClick={() => handleInsight(i.id, 'rejected')}>✕ 拒绝</button>
+                </>
+              )}
+              {i.status !== 'pending' && <span style={{ color: 'rgba(255,255,255,.06)', fontSize: 9, flexShrink: 0 }}>{i.status === 'approved' ? '已通过' : '已拒绝'}</span>}
+            </div>
+            <div style={{
+              color: i.status === 'rejected' ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.5)',
+              lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+            }}>{displayContent.split('\\n').join('\n')}</div>
+            {isLong && (
+              <button onClick={() => toggleExpand(i.id)} style={{
+                marginTop: 4, padding: '2px 8px', border: 'none', borderRadius: 4,
+                background: 'rgba(255,255,255,.03)', color: 'rgba(5,248,248,.5)',
+                cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
+              }}>{isExpanded ? '▲ 收起' : '▼ 展开 (' + i.content.length + '字)'}</button>
             )}
-            <span style={{ color: 'rgba(255,255,255,.06)', fontSize: 9, flexShrink: 0 }}>{i.status === 'pending' ? '待审' : i.status === 'approved' ? '已通过' : '已拒绝'}</span>
           </div>
-        ))
+        )})
       )}
 
       {/* 用户贡献 */}

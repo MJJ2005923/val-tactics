@@ -483,7 +483,7 @@ export async function onRequest(context) {
         patchContent = `无畏契约新版本 ${currentVersion} 已发布。请基于你对游戏的理解，总结此版本可能的改动要点。`
       } catch {}
 
-      // AI 蒸馏 patch notes
+      // AI 收集详细版本改动（不蒸馏、保留细节）
       const dskey = env.DEEPSEEK_KEY || ''
       let insights = []
       if (dskey) {
@@ -492,10 +492,15 @@ export async function onRequest(context) {
           body: JSON.stringify({
             model: 'deepseek-v4-flash',
             messages: [
-              { role: 'system', content: '你是无畏契约版本分析师。请基于你的训练数据（截止2026年），总结这个版本的主要改动。输出纯JSON数组，每条格式：{"category":"版本","content":"具体改动（一句话）"}。最多8条。' },
+              { role: 'system', content: `你是无畏契约版本分析师。请基于你的训练数据，详细列出这个版本的所有改动。输出纯JSON数组，每条格式：
+{
+  "category": "版本",
+  "content": "【改动类型】特工调整/武器调整/地图调整/系统改动\\n【具体内容】详细描述改了什么（至少60字）\\n【影响分析】这个改动对职业比赛和排位有什么影响？（至少60字）\\n【推荐应对】玩家应该怎么适应这个改动？"
+}
+信息要详细完整，不要一句话摘要。最多10条。` },
               { role: 'user', content: patchContent },
             ],
-            max_tokens: 500, temperature: 0.3,
+            max_tokens: 4000, temperature: 0.3,
           }),
         })
         const aiData = await aiResp.json()
@@ -535,24 +540,34 @@ export async function onRequest(context) {
       let totalSaved = 0
       const saveErrors = []
 
-      // 并行蒸馏：特工 + 地图（基于AI训练数据）
+      // Wiki: 收集详细的特工+地图战术信息（不蒸馏）
       const mapsResp = await fetch('https://valorant-api.com/v1/maps?language=zh-CN')
       const mapsData = await mapsResp.json()
       const playableMaps = (mapsData?.data || []).filter(m => m.coordinates).map(m => m.displayName)
 
       const topics = [
-        { cat: '特工', prompt: `输出纯JSON数组：[{"category":"特工","content":"特工名+战术技巧(30字)"}]. 为无畏契约10个常见特工各提供1条实用技巧。JSON only。` },
-        { cat: '地图', prompt: `输出纯JSON数组：[{"category":"地图","content":"地图名+职业战术要点(30字)"}]. 为以下地图各1条：${playableMaps.join('、')}. JSON only。` },
+        { cat: '特工', prompt: `为无畏契约10个核心特工提供详细战术指南。JSON数组格式：
+{
+  "category": "特工",
+  "content": "【特工名】XXX\\n【定位】决斗者/控场者/先锋/哨兵\\n【核心技能】XXX\\n【进攻方怎么用】详细说明（至少60字）\\n【防守方怎么用】详细说明（至少60字）\\n【常见配合】和哪些特工配合好？为什么？"
+}
+只输出纯JSON数组，每个特工1条，最多10条。信息要详细，不要压缩。` },
+        { cat: '地图', prompt: `为以下无畏契约地图提供详细战术分析：${playableMaps.join('、')}。JSON数组格式：
+{
+  "category": "地图",
+  "content": "【地图名】XXX\\n【地图特点】这张图的独特之处（至少40字）\\n【进攻方策略】A点和B点分别怎么打？（至少80字）\\n【防守方策略】怎么布防？关键守点在哪？（至少80字）\\n【职业赛常见打法】职业队在这张图上怎么打？为什么？"
+}
+只输出纯JSON数组，每张地图1条，信息要详细，不要压缩。` },
       ]
 
       const results = await Promise.all(topics.map(t =>
         fetch('https://api.deepseek.com/v1/chat/completions', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
           body: JSON.stringify({
-            model: 'deepseek-v4-flash', max_tokens: 500, temperature: 0.3,
+            model: 'deepseek-v4-flash', max_tokens: 4000, temperature: 0.3,
             messages: [
-              { role: 'system', content: t.prompt },
-              { role: 'user', content: t.cat },
+              { role: 'system', content: '你是无畏契约战术分析师。请提供详细、完整的战术信息，包含具体用法、原因分析和配合建议。信息越详细越好，不要摘要。输出纯JSON数组。' },
+              { role: 'user', content: t.prompt },
             ],
           }),
         }).then(r => r.json()).then(data => parseAIJson(data?.choices?.[0]?.message?.content).map(ins => ({ ...ins, cat: t.cat }))).catch(() => [])
@@ -593,26 +608,44 @@ export async function onRequest(context) {
       let totalSaved = 0
       const saveErrors = []
 
-      // VCT 三路并行调用
-      const topics = [
-        { cat: '阵容', prompt: '列出无畏契约VCT职业比赛主流阵容组合。JSON数组格式：{"category":"阵容","content":"阵容名+特工+适用地图+打法(30字)"}。最多6条。' },
-        { cat: '地图', prompt: '列出VCT职业比赛各地图选率和主流打法。JSON：{"category":"地图","content":"地图名+选率+打法(30字)"}。最多6条。' },
-        { cat: '技巧', prompt: '从VCT职业比赛中提取高端战术技巧。JSON：{"category":"技巧","content":"技巧(30字)"}。5条。' },
+      // VCT: 收集完整的职业比赛战术信息（不蒸馏，保留细节）
+      const vctPrompts = [
+        { cat: 'VCT阵容', prompt: `请回忆最近一届VCT国际赛事（大师赛或冠军赛），列出3-5场你印象深刻的比赛。
+对每场比赛，用以下格式输出JSON数组：
+{
+  "category": "VCT阵容",
+  "content": "【比赛】XXX vs XXX, XX赛事\n【地图】XXX\n【我方阵容】特工1、特工2、特工3、特工4、特工5\n【敌方阵容】特工1、特工2、特工3、特工4、特工5\n【战术分析】为什么选这个阵容？这套阵容在这张地图上的优势是什么？关键配合点在哪里？（至少100字）"
+}
+只输出纯JSON数组，最多5条，不要markdown包裹。` },
+        { cat: 'VCT战术', prompt: `请回忆最近一届VCT国际赛事中的经典战术回合。
+对每个战术，用以下格式输出JSON数组：
+{
+  "category": "VCT战术",
+  "content": "【比赛】XXX vs XXX\n【地图】XXX\n【回合场景】进攻方/防守方，比分情况，经济情况\n【执行过程】具体怎么打的？用了什么技能配合？（至少80字）\n【为什么成功/失败】分析原因（至少50字）"
+}
+只输出纯JSON数组，最多5条，不要markdown包裹。` },
+        { cat: 'VCT地图', prompt: `分析VCT职业比赛中3-5张地图的战术趋势。
+对每张地图，用以下格式输出JSON数组：
+{
+  "category": "VCT地图",
+  "content": "【地图】XXX\n【职业选率】大致选率\n【进攻方主流打法】具体怎么打？（至少60字）\n【防守方主流打法】具体怎么守？（至少60字）\n【为什么】职业队为什么这样打这张图？（至少50字）"
+}
+只输出纯JSON数组，最多5条，不要markdown包裹。` },
       ]
 
-      const results = await Promise.all(topics.map(topic =>
+      const results = await Promise.all(vctPrompts.map(t =>
         fetch('https://api.deepseek.com/v1/chat/completions', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
           body: JSON.stringify({
             model: 'deepseek-v4-flash',
             messages: [
-              { role: 'system', content: '你是VCT分析师。输出纯JSON数组。' + topic.prompt },
-              { role: 'user', content: topic.cat },
+              { role: 'system', content: '你是VCT职业比赛战术分析师。请输出详细、完整的战术信息，包含地图、阵容、执行过程和原因分析。信息越详细越好，不要压缩。输出纯JSON数组。' },
+              { role: 'user', content: t.prompt },
             ],
-            max_tokens: 400, temperature: 0.3,
+            max_tokens: 4000, temperature: 0.3,
           }),
         }).then(r => r.json()).then(data => {
-          return parseAIJson(data?.choices?.[0]?.message?.content).map(ins => ({ ...ins, cat: topic.cat }))
+          return parseAIJson(data?.choices?.[0]?.message?.content).map(ins => ({ ...ins, cat: t.cat }))
         }).catch(() => [])
       ))
 
@@ -666,16 +699,22 @@ export async function onRequest(context) {
 
       if (!userMsgs.trim()) return new Response(JSON.stringify({ ok: true, count: 0, msg: '无有效内容' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
 
-      // DeepSeek 蒸馏
+      // 从对话中提取完整战术信息（不蒸馏）
       const aiResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
         body: JSON.stringify({
           model: 'deepseek-v4-flash',
           messages: [
-            { role: 'system', content: '你是无畏契约战术数据提炼员。从用户对话中提取有价值的战术知识，只输出纯JSON数组，每条格式：{"category":"地图/特工/阵容/武器/经济/技巧","content":"具体洞察（一句话）"}。只输出有价值的、可验证的战术信息。最多10条。' },
+            { role: 'system', content: `你是一个战术知识提取器。从以下用户与AI教练的对话中，提取所有有价值的战术信息。
+输出纯JSON数组，每条格式：
+{
+  "category": "地图/特工/阵容/武器/经济/技巧",
+  "content": "【主题】XXX\\n【详细内容】从对话中提取的完整战术信息（至少80字，不要压缩）\\n【适用场景】什么情况下可以用？\\n【来源】基于对话中提到的地图/特工/阵容"
+}
+只提取有实质内容的信息，保留原文细节，不要做摘要压缩。最多10条。` },
             { role: 'user', content: userMsgs },
           ],
-          max_tokens: 500, temperature: 0.3,
+          max_tokens: 4000, temperature: 0.3,
         }),
       })
       const aiData = await aiResp.json()
