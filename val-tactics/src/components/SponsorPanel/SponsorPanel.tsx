@@ -136,19 +136,23 @@ export default function SponsorPanel({ onClose }: Props) {
         )}
 
         {/* 知识贡献者 */}
-        {contributors.length > 0 && (
-          <div style={{ marginTop: 24, padding: 16, borderRadius: 10, background: 'linear-gradient(135deg, rgba(5,248,248,.04), rgba(227,73,237,.02))', border: '1px solid rgba(5,248,248,.08)' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#05F8F8', marginBottom: 10 }}>🧠 知识贡献者</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {contributors.map((c, i) => (
-                <span key={i} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(5,248,248,.04)', border: '1px solid rgba(5,248,248,.08)', fontSize: 11, color: 'rgba(255,255,255,.5)' }}>
-                  {c.username} <span style={{ color: 'rgba(5,248,248,.3)', fontSize: 9 }}>×{c.count}</span>
-                </span>
-              ))}
-            </div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.15)', marginTop: 8 }}>感谢以上用户为 T教练 知识库贡献智慧</div>
-          </div>
-        )}
+        <div style={{ marginTop: 24, padding: 16, borderRadius: 10, background: 'linear-gradient(135deg, rgba(5,248,248,.04), rgba(227,73,237,.02))', border: '1px solid rgba(5,248,248,.08)' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#05F8F8', marginBottom: 10 }}>🧠 知识贡献者</div>
+          {contributors.length > 0 ? (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {contributors.map((c, i) => (
+                  <span key={i} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(5,248,248,.04)', border: '1px solid rgba(5,248,248,.08)', fontSize: 11, color: 'rgba(255,255,255,.5)' }}>
+                    {c.username} <span style={{ color: 'rgba(5,248,248,.3)', fontSize: 9 }}>×{c.count}</span>
+                  </span>
+                ))}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.15)', marginTop: 8 }}>感谢以上用户为 T教练 知识库贡献智慧</div>
+            </>
+          ) : (
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.08)' }}>虚位以待，等你来填。去社区「贡献知识」分享你的游戏心得。</div>
+          )}
+        </div>
 
         <div className={styles.footer}>
           💡 赞助后请在爱发电留言，名字将在 24 小时内上墙。
