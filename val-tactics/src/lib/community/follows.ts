@@ -15,11 +15,11 @@ export async function toggleFollow(followerId: string, followingId: string): Pro
   } else {
     await supabase.from('follows').insert({ follower_id: followerId, following_id: followingId })
     // 通知对方
-    void supabase.rpc('create_notification', {
+    supabase.rpc('create_notification', {
       p_user_id: followingId,
       p_type: 'follow',
       p_from_user_id: followerId,
-    })
+    }).then(({ error }) => { if (error) console.error('[notif] follow:', error.message) })
     return true
   }
 }

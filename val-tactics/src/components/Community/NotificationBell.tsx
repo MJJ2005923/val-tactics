@@ -37,11 +37,12 @@ export default function NotificationBell() {
     }
   }
 
-  const typeLabel: Record<string, string> = { like: '赞了', comment: '评论了', follow: '关注了' }
+  const typeLabel: Record<string, string> = { like: '赞了', comment: '评论了', follow: '关注了', favorite: '收藏了' }
   const typeTarget: Record<string, (n: Notification) => string> = {
-    like: n => n.target_type === 'tactic' ? '你的战术' : '你的帖子',
+    like: n => n.target_type === 'tactic' ? '你的战术' : n.target_type === 'lineup' ? '你的点位' : '你的帖子',
     comment: _n => '你的内容',
     follow: () => '你',
+    favorite: _n => '你的点位',
   }
 
   if (!user) return null

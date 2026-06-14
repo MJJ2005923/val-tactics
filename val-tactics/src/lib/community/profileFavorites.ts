@@ -15,7 +15,7 @@ export async function toggleProfileFavorite(userId: string, targetUserId: string
   } else {
     await supabase.from('profile_favorites').insert({ user_id: userId, target_user_id: targetUserId })
     void supabase.rpc('increment_favorite_count', { p_user_id: targetUserId })
-    void supabase.rpc('create_notification', { p_user_id: targetUserId, p_type: 'favorite', p_from_user_id: userId })
+    supabase.rpc('create_notification', { p_user_id: targetUserId, p_type: 'favorite', p_from_user_id: userId }).then(({ error }) => { if (error) console.error('[notif] profileFav:', error.message) })
     return true
   }
 }

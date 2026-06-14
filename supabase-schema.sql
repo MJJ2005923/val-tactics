@@ -196,6 +196,7 @@ CREATE POLICY "follows_delete" ON public.follows FOR DELETE USING (auth.uid() = 
 -- notifications: 仅本人可读, 仅本人可标记已读
 CREATE POLICY "notif_read" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "notif_update" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "notif_insert" ON public.notifications FOR INSERT WITH CHECK (true);
 
 -- posts: 所有人可读, 仅作者可增/改/删
 CREATE POLICY "posts_read" ON public.posts FOR SELECT USING (true);
