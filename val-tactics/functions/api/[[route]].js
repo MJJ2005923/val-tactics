@@ -613,7 +613,8 @@ export async function onRequest(context) {
       for (const topicInsights of results) {
         for (const ins of topicInsights) {
           if (!ins.content) continue
-          await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
+          try {
+            await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
             method: 'POST', headers: SB_HEADERS_POST,
             body: JSON.stringify({ source: 'vct', category: ins.category || ins.cat, content: ins.content, status: 'pending' }),
           })

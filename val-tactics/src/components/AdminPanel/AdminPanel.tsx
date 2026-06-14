@@ -10,7 +10,7 @@ function KnowledgeInsights({ adminKey, refreshTrigger }: { adminKey: string; ref
   const [distilling, setDistilling] = useState(false)
 
   const loadInsights = async () => {
-    const { data } = await supabase.from('knowledge_insights').select('*').order('created_at', { ascending: false }).limit(30)
+    const { data } = await supabase.from('knowledge_insights').select('*').order('created_at', { ascending: false }).limit(80)
     setInsights((data || []) as Insight[])
   }
 
