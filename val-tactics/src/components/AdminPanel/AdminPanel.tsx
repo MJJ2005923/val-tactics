@@ -87,23 +87,36 @@ function VersionCheck({ adminKey }: { adminKey: string }) {
   }
 
   return (
-    <div className={styles.section}>
-      <h3>🔄 版本监控</h3>
-      <div className={styles.actions}>
-        <button className={styles.actionBtn} onClick={handleCheck} disabled={checking}>
-          {checking ? '检测中...' : '🔍 检测新版本'}
-        </button>
-      </div>
+    <>
+      <button className={styles.actionBtn} onClick={handleCheck} disabled={checking}>
+        {checking ? '检测中...' : '🔍 检测版本'}
+      </button>
       {verResult && (
-        <div style={{ marginTop: 8, fontSize: 12, color: verResult.updated ? '#05F8F8' : 'rgba(255,255,255,.3)' }}>
-          {verResult.updated
-            ? `✅ 检测到新版本 ${verResult.version}，已蒸馏 ${verResult.saved} 条洞察`
-            : verResult.version
-              ? `版本 ${verResult.version} — ${verResult.msg || '已是最新'}`
-              : (verResult.msg || verResult.error || '检测完成')}
-        </div>
+        <span style={{ fontSize: 11, color: verResult.updated ? '#05F8F8' : 'rgba(255,255,255,.3)' }}>
+          {verResult.updated ? `新版本${verResult.version}·${verResult.saved}条` : (verResult.msg || verResult.error || '已最新')}
+        </span>
       )}
-    </div>
+    </>
+  )
+}
+
+function WikiCrawl({ adminKey }: { adminKey: string }) {
+  const [crawling, setCrawling] = useState(false)
+
+  const handleCrawl = async () => {
+    setCrawling(true)
+    try {
+      const r = await fetch(`/api/admin/crawl-wiki?key=${encodeURIComponent(adminKey)}`, { method: 'POST' })
+      const d = await r.json()
+      alert(d.ok ? `Wiki爬取完成: ${d.saved} 条洞察` : (d.error || '失败'))
+    } catch { alert('网络错误') }
+    setCrawling(false)
+  }
+
+  return (
+    <button className={styles.actionBtn} onClick={handleCrawl} disabled={crawling}>
+      {crawling ? '爬取中...' : '🌐 爬取Wiki'}
+    </button>
   )
 }
 
@@ -286,8 +299,14 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
         <KnowledgeInsights adminKey={key} />
         <KnowledgeContributions />
 
-        {/* 版本检测 */}
-        <VersionCheck adminKey={key} />
+        {/* 版本检测 + Wiki爬取 */}
+        <div className={styles.section}>
+          <h3>🔄 数据采集</h3>
+          <div className={styles.actions}>
+            <VersionCheck adminKey={key} />
+            <WikiCrawl adminKey={key} />
+          </div>
+        </div>
 
         {/* 系统 + 操作 */}
         <div className={styles.section}>

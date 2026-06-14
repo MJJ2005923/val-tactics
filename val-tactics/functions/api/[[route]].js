@@ -497,6 +497,98 @@ export async function onRequest(context) {
     }
   }
 
+  // === POST /api/admin/crawl-wiki (爬取 valorant-api.com 数据蒸馏) ===
+  if (url.pathname === '/api/admin/crawl-wiki' && request.method === 'POST') {
+    const key = new URL(request.url).searchParams.get('key') || ''
+    if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
+      return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    try {
+      const dskey = env.DEEPSEEK_KEY || ''
+      if (!dskey) return new Response(JSON.stringify({ error: '未配置AI Key' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      let totalSaved = 0
+
+      // 爬取特工数据
+      const agentsResp = await fetch('https://valorant-api.com/v1/agents?language=zh-CN&isPlayableCharacter=true')
+      const agentsData = await agentsResp.json()
+      const agents = (agentsData?.data || [])
+
+      // 提取特工技能数据
+      const agentSummary = agents.map((a) => ({
+        name: a.displayName,
+        role: a.role?.displayName || '',
+        abilities: (a.abilities || []).map((ab) => ({
+          name: ab.displayName, description: ab.description, slot: ab.slot,
+        })),
+      }))
+
+      // AI 蒸馏特工洞察
+      const aiResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
+        body: JSON.stringify({
+          model: 'deepseek-v4-flash',
+          messages: [
+            { role: 'system', content: '你是无畏契约数据分析师。从特工技能数据中提取有价值的战术知识。输出纯JSON数组，每条约30字，格式：{"category":"特工","content":"具体洞察"}。侧重技能组合、克制关系、使用技巧。最多15条。' },
+            { role: 'user', content: JSON.stringify(agentSummary.slice(0, 15)).slice(0, 6000) },
+          ],
+          max_tokens: 600, temperature: 0.3,
+        }),
+      })
+      const aiData = await aiResp.json()
+      const raw = aiData.choices?.[0]?.message?.content?.trim() || '[]'
+      let insights = []
+      try { insights = JSON.parse(raw) } catch {
+        const match = raw.match(/\[[\s\S]*\]/)
+        if (match) try { insights = JSON.parse(match[0]) } catch {}
+      }
+      for (const ins of insights) {
+        if (!ins.content) continue
+        await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
+          method: 'POST', headers: SB_HEADERS_POST,
+          body: JSON.stringify({ source: 'wiki', category: ins.category || '特工', content: ins.content, status: 'pending' }),
+        })
+        totalSaved++
+      }
+
+      // 爬取地图数据
+      const mapsResp = await fetch('https://valorant-api.com/v1/maps?language=zh-CN')
+      const mapsData = await mapsResp.json()
+      const mapNames = (mapsData?.data || []).map((m) => m.displayName).join('、')
+
+      const mapResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
+        body: JSON.stringify({
+          model: 'deepseek-v4-flash',
+          messages: [
+            { role: 'system', content: '你了解无畏契约所有地图。输出纯JSON数组，每条：{"category":"地图","content":"地图名+战术要点（一句）"}。涵盖以下地图：' + mapNames + '。每个地图1-2条，侧重职业比赛常见打法。' },
+            { role: 'user', content: '请为每张地图提供战术要点' },
+          ],
+          max_tokens: 500, temperature: 0.3,
+        }),
+      })
+      const mapData2 = await mapResp.json()
+      const raw2 = mapData2.choices?.[0]?.message?.content?.trim() || '[]'
+      let mapInsights = []
+      try { mapInsights = JSON.parse(raw2) } catch {
+        const match = raw2.match(/\[[\s\S]*\]/)
+        if (match) try { mapInsights = JSON.parse(match[0]) } catch {}
+      }
+      for (const ins of mapInsights) {
+        if (!ins.content) continue
+        await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
+          method: 'POST', headers: SB_HEADERS_POST,
+          body: JSON.stringify({ source: 'wiki', category: '地图', content: ins.content, status: 'pending' }),
+        })
+        totalSaved++
+      }
+
+      return new Response(JSON.stringify({ ok: true, saved: totalSaved, agents: agents.length, maps: mapNames }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   // === POST /api/admin/distill (蒸馏对话提取洞察) ===
   if (url.pathname === '/api/admin/distill' && request.method === 'POST') {
     const key = new URL(request.url).searchParams.get('key') || ''
