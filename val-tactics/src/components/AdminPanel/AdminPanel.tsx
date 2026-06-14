@@ -72,6 +72,41 @@ function KnowledgeInsights({ adminKey }: { adminKey: string }) {
   )
 }
 
+function VersionCheck({ adminKey }: { adminKey: string }) {
+  const [checking, setChecking] = useState(false)
+  const [verResult, setVerResult] = useState<any>(null)
+
+  const handleCheck = async () => {
+    setChecking(true)
+    try {
+      const resp = await fetch(`/api/admin/check-version?key=${encodeURIComponent(adminKey)}`, { method: 'POST' })
+      const d = await resp.json()
+      setVerResult(d)
+    } catch { alert('网络错误') }
+    setChecking(false)
+  }
+
+  return (
+    <div className={styles.section}>
+      <h3>🔄 版本监控</h3>
+      <div className={styles.actions}>
+        <button className={styles.actionBtn} onClick={handleCheck} disabled={checking}>
+          {checking ? '检测中...' : '🔍 检测新版本'}
+        </button>
+      </div>
+      {verResult && (
+        <div style={{ marginTop: 8, fontSize: 12, color: verResult.updated ? '#05F8F8' : 'rgba(255,255,255,.3)' }}>
+          {verResult.updated
+            ? `✅ 检测到新版本 ${verResult.version}，已蒸馏 ${verResult.saved} 条洞察`
+            : verResult.version
+              ? `版本 ${verResult.version} — ${verResult.msg || '已是最新'}`
+              : (verResult.msg || verResult.error || '检测完成')}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function KnowledgeContributions() {
   const [items, setItems] = useState<any[]>([])
 
@@ -250,6 +285,9 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
         {/* 知识蒸馏 */}
         <KnowledgeInsights adminKey={key} />
         <KnowledgeContributions />
+
+        {/* 版本检测 */}
+        <VersionCheck adminKey={key} />
 
         {/* 系统 + 操作 */}
         <div className={styles.section}>

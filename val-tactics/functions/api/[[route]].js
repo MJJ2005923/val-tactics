@@ -425,6 +425,78 @@ export async function onRequest(context) {
   const SB_KEY = env.SUPABASE_SERVICE_KEY || ''
   const SB_HEADERS_POST = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
 
+  // === POST /api/admin/check-version (检测新版本拉取patch notes) ===
+  if (url.pathname === '/api/admin/check-version' && request.method === 'POST') {
+    const key = new URL(request.url).searchParams.get('key') || ''
+    if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
+      return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    try {
+      // 获取当前版本
+      const verResp = await fetch('https://valorant-api.com/v1/version')
+      const verData = await verResp.json()
+      const currentVersion = verData?.data?.version || verData?.data?.manifestId || ''
+      if (!currentVersion) return new Response(JSON.stringify({ error: '无法获取版本信息' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      // 检查 KV 中的上次版本
+      const lastVersion = await env.AI_USAGE?.get('latest_version') || ''
+      if (currentVersion === lastVersion) {
+        return new Response(JSON.stringify({ ok: true, version: currentVersion, updated: false, msg: '版本未变化' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+
+      // 新版本 — 尝试拉取 patch notes 摘要
+      let patchContent = ''
+      try {
+        // valorant-api.com 提供最新 patch/bundle 信息
+        const newsResp = await fetch('https://valorant-api.com/v1/version')
+        const nd = await newsResp.json()
+        // 尝试用 DeepSeek 直接基于版本号生成洞察（无法直接爬官网新闻，用 AI 知识）
+        patchContent = `无畏契约新版本 ${currentVersion} 已发布。请基于你对游戏的理解，总结此版本可能的改动要点。`
+      } catch {}
+
+      // AI 蒸馏 patch notes
+      const dskey = env.DEEPSEEK_KEY || ''
+      let insights = []
+      if (dskey) {
+        const aiResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
+          body: JSON.stringify({
+            model: 'deepseek-v4-flash',
+            messages: [
+              { role: 'system', content: '你是无畏契约版本分析师。请基于你的训练数据（截止2026年），总结这个版本的主要改动。输出纯JSON数组，每条格式：{"category":"版本","content":"具体改动（一句话）"}。只输出确定的信息，不确定的不要输出。最多8条。' },
+              { role: 'user', content: patchContent },
+            ],
+            max_tokens: 500, temperature: 0.3,
+          }),
+        })
+        const aiData = await aiResp.json()
+        const raw = aiData.choices?.[0]?.message?.content?.trim() || '[]'
+        try { insights = JSON.parse(raw) } catch {
+          const match = raw.match(/\[[\s\S]*\]/)
+          if (match) try { insights = JSON.parse(match[0]) } catch {}
+        }
+      }
+
+      // 存入 knowledge_insights
+      let saved = 0
+      for (const ins of insights) {
+        if (!ins.content) continue
+        const r = await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
+          method: 'POST', headers: SB_HEADERS_POST,
+          body: JSON.stringify({ source: 'version', category: ins.category || '版本', content: `${currentVersion}: ${ins.content}`, status: 'pending' }),
+        })
+        if (r.ok) saved++
+      }
+
+      // 更新版本号到 KV
+      if (env.AI_USAGE) await env.AI_USAGE.put('latest_version', currentVersion)
+
+      return new Response(JSON.stringify({ ok: true, version: currentVersion, updated: true, saved, insights }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   // === POST /api/admin/distill (蒸馏对话提取洞察) ===
   if (url.pathname === '/api/admin/distill' && request.method === 'POST') {
     const key = new URL(request.url).searchParams.get('key') || ''
