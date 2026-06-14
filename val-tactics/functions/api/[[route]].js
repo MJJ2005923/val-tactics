@@ -589,6 +589,58 @@ export async function onRequest(context) {
     }
   }
 
+  // === POST /api/admin/vct-insights (基于AI训练数据生成VCT赛事洞察) ===
+  if (url.pathname === '/api/admin/vct-insights' && request.method === 'POST') {
+    const key = new URL(request.url).searchParams.get('key') || ''
+    if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
+      return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+    try {
+      const dskey = env.DEEPSEEK_KEY || ''
+      if (!dskey) return new Response(JSON.stringify({ error: '未配置AI Key' }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+
+      let totalSaved = 0
+
+      // VCT 阵容数据
+      for (const topic of [
+        { cat: '阵容', prompt: '请基于2025-2026 VCT职业比赛数据，列出无畏契约当前职业比赛主流阵容组合。每种阵容格式：{"category":"阵容","content":"阵容名+特工组合+适用地图+打法说明(30字以内)"}。输出纯JSON数组。最多6条。' },
+        { cat: '地图', prompt: '请基于VCT职业比赛数据，列出无畏契约各地图的职业队选率排名和主流打法。格式：{"category":"地图","content":"地图名+选率+职业打法(30字)"}。输出纯JSON数组。最多6条。' },
+        { cat: '技巧', prompt: '从VCT职业比赛中提取5条高端战术技巧。格式：{"category":"技巧","content":"具体技巧(30字)"}。侧重道具组合、协同配合、时间控制。输出纯JSON数组。' },
+      ]) {
+        const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${dskey}` },
+          body: JSON.stringify({
+            model: 'deepseek-v4-flash',
+            messages: [
+              { role: 'system', content: '你是无畏契约VCT赛事分析师。基于你的训练数据提供准确的职业比赛洞察。' + topic.prompt },
+              { role: 'user', content: `请提供${topic.cat}相关的VCT职业比赛数据` },
+            ],
+            max_tokens: 500, temperature: 0.3,
+          }),
+        })
+        const data = await resp.json()
+        const raw = data.choices?.[0]?.message?.content?.trim() || '[]'
+        let insights = []
+        try { insights = JSON.parse(raw) } catch {
+          const match = raw.match(/\[[\s\S]*\]/)
+          if (match) try { insights = JSON.parse(match[0]) } catch {}
+        }
+        for (const ins of insights) {
+          if (!ins.content) continue
+          await fetch(`${SB_URL}/rest/v1/knowledge_insights`, {
+            method: 'POST', headers: SB_HEADERS_POST,
+            body: JSON.stringify({ source: 'vct', category: ins.category || topic.cat, content: ins.content, status: 'pending' }),
+          })
+          totalSaved++
+        }
+      }
+
+      return new Response(JSON.stringify({ ok: true, saved: totalSaved }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   // === POST /api/admin/distill (蒸馏对话提取洞察) ===
   if (url.pathname === '/api/admin/distill' && request.method === 'POST') {
     const key = new URL(request.url).searchParams.get('key') || ''

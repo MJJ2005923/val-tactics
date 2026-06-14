@@ -100,6 +100,26 @@ function VersionCheck({ adminKey }: { adminKey: string }) {
   )
 }
 
+function VCTInsights({ adminKey }: { adminKey: string }) {
+  const [loading, setLoading] = useState(false)
+
+  const handleVCT = async () => {
+    setLoading(true)
+    try {
+      const r = await fetch(`/api/admin/vct-insights?key=${encodeURIComponent(adminKey)}`, { method: 'POST' })
+      const d = await r.json()
+      alert(d.ok ? `VCT洞察生成完成: ${d.saved} 条` : (d.error || '失败'))
+    } catch { alert('网络错误') }
+    setLoading(false)
+  }
+
+  return (
+    <button className={styles.actionBtn} onClick={handleVCT} disabled={loading}>
+      {loading ? '生成中...' : '🏆 VCT赛事'}
+    </button>
+  )
+}
+
 function WikiCrawl({ adminKey }: { adminKey: string }) {
   const [crawling, setCrawling] = useState(false)
 
@@ -305,6 +325,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
           <div className={styles.actions}>
             <VersionCheck adminKey={key} />
             <WikiCrawl adminKey={key} />
+            <VCTInsights adminKey={key} />
           </div>
         </div>
 
