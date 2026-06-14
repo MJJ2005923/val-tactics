@@ -46,9 +46,9 @@ export default function PostDetail({ postId, onBack, embedded }: Props) {
   if (deleted || !post) return <div className={embedded ? styles.pageEmbedded : styles.page}><div className={styles.topBar}><button className={styles.backBtn} onClick={onBack}>← 返回列表</button></div><div className={styles.deleted}>帖子已删除或不存在</div></div>
 
   return (
-    <div className={styles.page}>
+    <div className={embedded ? styles.pageEmbedded : styles.page}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={onBack}>返回论坛</button>
+        <button className={styles.backBtn} onClick={onBack}>← 返回列表</button>
       </div>
       <div className={styles.content}>
         <div className={styles.cat}>{POST_CATEGORIES[post.category] || post.category}</div>
