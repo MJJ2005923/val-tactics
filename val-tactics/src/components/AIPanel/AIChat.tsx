@@ -17,7 +17,7 @@ interface Message {
   rating?: number
 }
 
-export default function AIChat({ mapName }: { mapId: string; mapName: string }) {
+export default function AIChat({ mapId, mapName }: { mapId: string; mapName: string }) {
   const { abilityShapes, side, agentPositions, drawings, textAnnotations, markers, roster } = useTactics()
   const [messages, setMessages] = useState<Message[]>(() => {
     try { return JSON.parse(localStorage.getItem('val-tactics-chat') || '[]') } catch { return [] }
@@ -63,9 +63,31 @@ export default function AIChat({ mapName }: { mapId: string; mapName: string }) 
 
     const systemPrompt = buildKnowledgeBase(mapName, side, agentNames)
 
+    // 查询社区相关参考数据
+    let communityRefs = ''
+    try {
+      const [tacRes, lineupRes] = await Promise.all([
+        supabase.from('tactical_shares').select('title,description,map_id,like_count').eq('map_id', mapId).order('like_count', { ascending: false }).limit(3),
+        supabase.from('lineups').select('title,description,map_id,like_count,agent_id,ability_id').eq('map_id', mapId).order('like_count', { ascending: false }).limit(3),
+      ])
+      const refs: string[] = []
+      ;(tacRes.data || []).forEach((t: any) => { if (t.title) refs.push(`战术「${t.title}」${t.description ? '：' + t.description.slice(0, 60) : ''} 👍${t.like_count || 0}`) })
+      ;(lineupRes.data || []).forEach((l: any) => {
+        const a = agents.find(x => x.id === l.agent_id)
+        const ab = a?.abilities.find(x => x.id === l.ability_id)
+        refs.push(`点位「${l.title}」(${a?.name || l.agent_id} ${ab?.name || l.ability_id})${l.description ? '：' + l.description.slice(0, 40) : ''} 👍${l.like_count || 0}`)
+      })
+      if (refs.length > 0) communityRefs = `【社区相关参考·${maps.find(m => m.id === mapId)?.name || mapId}】\n${refs.map((r, i) => `${i + 1}. ${r}`).join('\n')}`
+    } catch {}
+
     const allMessages = [
       { role: 'user', content: systemPrompt },
       { role: 'assistant', content: '明白。我是T教练，已掌握全部29位特工技能数据和12张地图信息，请随时提问。' },
+      // 注入社区参考数据
+      ...(communityRefs ? [
+        { role: 'user' as const, content: communityRefs },
+        { role: 'assistant' as const, content: '收到，我已了解社区中相关的战术和点位参考数据。' },
+      ] : []),
       // 注入棋盘基础信息（每次发送时实时读取开关状态）
       ...(() => {
         const enabled = (() => { try { return localStorage.getItem('val-tactics-show-board-info') !== 'false' } catch { return true } })()
