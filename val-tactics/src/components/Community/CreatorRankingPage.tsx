@@ -81,7 +81,7 @@ export default function CreatorRankingPage({ onViewProfile }: Props) {
         <div className={styles.loading}>加载中...</div>
       ) : (
         <>
-        {/* 前三名领奖台 — 始终显示 */}
+        {/* 前三名领奖台 — 第一名独占C位 */}
         <div className={styles.podium}>
           {[0, 1, 2].map(i => {
             const c = top3[i]
