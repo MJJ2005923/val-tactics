@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { getAIConfig, getUserId } from './AISettings'
 import { useTactics } from '../../store/TacticsContext'
-import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, extractNegatedKeywords, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import maps from '../../data/maps'
@@ -64,24 +64,38 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
     const isCompact = config.model === 'deepseek-v4-flash' || config.model === 'deepseek-chat'
     const systemPrompt = buildKnowledgeBase(mapName, side, agentNames, isCompact)
 
+    // ③ 提取否定关键词（如"不要双烟"→不推荐含双烟的条目）
+    const negatedKW = extractNegatedKeywords(text)
+
     // ① 社区参考按问题类型筛选
     let communityRefs = ''
     try {
       const isTactics = /阵容|组合|搭配|双烟|双决斗|选什么|推荐|怎么打|进攻|防守|战术/.test(text)
       const isLineups = /点位|技能|位置|瞄点|怎么用|连招|道具|在哪/.test(text)
       const [tacRes, linRes] = await Promise.all([
-        (isTactics || !isLineups) ? supabase.from('tactical_shares').select('title,description,map_id,like_count').eq('map_id', mapId).order('like_count', { ascending: false }).limit(3) : Promise.resolve(null),
-        (isLineups || !isTactics) ? supabase.from('lineups').select('title,description,map_id,like_count,agent_id,ability_id').eq('map_id', mapId).order('like_count', { ascending: false }).limit(3) : Promise.resolve(null),
+        (isTactics || !isLineups) ? supabase.from('tactical_shares').select('title,description,map_id,like_count').eq('map_id', mapId).order('like_count', { ascending: false }).limit(10) : Promise.resolve(null),
+        (isLineups || !isTactics) ? supabase.from('lineups').select('title,description,map_id,like_count,agent_id,ability_id').eq('map_id', mapId).order('like_count', { ascending: false }).limit(10) : Promise.resolve(null),
       ])
       const refs: string[] = []
-      ;(tacRes?.data || []).forEach((t: any) => { if (t.title) refs.push(`战术「${t.title}」${t.description ? '：' + t.description.slice(0, 60) : ''} 👍${t.like_count || 0}`) })
+      ;(tacRes?.data || []).forEach((t: any) => {
+        if (!t.title) return
+        // ③ 过滤含否定关键词的条目
+        const h = (t.title + (t.description || '')).toLowerCase()
+        if (negatedKW.some(kw => h.includes(kw.toLowerCase()))) return
+        refs.push(`战术「${t.title}」${t.description ? '：' + t.description.slice(0, 60) : ''} 👍${t.like_count || 0}`)
+      })
       ;(linRes?.data || []).forEach((l: any) => {
+        if (!l.title) return
+        const h = (l.title + (l.description || '')).toLowerCase()
+        if (negatedKW.some(kw => h.includes(kw.toLowerCase()))) return
         const a = agents.find(x => x.id === l.agent_id)
         const ab = a?.abilities.find(x => x.id === l.ability_id)
         refs.push(`点位「${l.title}」(${a?.name || l.agent_id} ${ab?.name || l.ability_id})${l.description ? '：' + l.description.slice(0, 40) : ''} 👍${l.like_count || 0}`)
       })
-      console.debug(`[T教练·调试] 社区参考：查战术=${isTactics} 查点位=${isLineups} → tactics ${tacRes?.data?.length || 0}条 lineups ${linRes?.data?.length || 0}条`)
-      if (refs.length > 0) communityRefs = `【社区相关参考·${maps.find(m => m.id === mapId)?.name || mapId}】\n${refs.map((r, i) => `${i + 1}. ${r}`).join('\n')}`
+      // 取过滤后的 top 3
+      const filtered = refs.slice(0, 3)
+      console.debug(`[T教练·调试] 社区参考：查战术=${isTactics} 查点位=${isLineups} → 否定词[${negatedKW.join(',')}] 过滤前${refs.length}→过滤后${filtered.length}`)
+      if (filtered.length > 0) communityRefs = `【社区相关参考·${maps.find(m => m.id === mapId)?.name || mapId}】\n${filtered.map((r, i) => `${i + 1}. ${r}`).join('\n')}`
     } catch {}
 
     // ②+⑥ 知识洞察交集匹配+时效排序
@@ -104,6 +118,13 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
         for (const w of tacWords) { if (text.includes(w)) tacKW.add(w.toLowerCase()) }
         // 特工名同时算战术关键词
         for (const a of agents) { if (text.includes(a.name)) tacKW.add(a.name.toLowerCase()) }
+
+        // ③ 排除否定关键词（"不要双烟"不匹配"双烟"相关洞察）
+        for (const nk of negatedKW) { tacKW.delete(nk.toLowerCase()) }
+        // 同时排除否定关键词的特工名
+        for (const nk of negatedKW) {
+          for (const a of agents) { if (a.name.includes(nk) || nk.includes(a.name)) tacKW.delete(a.name.toLowerCase()) }
+        }
 
         // 交集匹配
         let relevant = freshInsights.filter((ins: any) => {
@@ -131,7 +152,7 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
         if (relevant.length < 3) relevant = freshInsights.slice(0, 5)
         relevant = relevant.slice(0, 10)
 
-        console.debug(`[T教练·调试] 知识洞察：地图KW[${Array.from(mapKW).join(',')}] 战术KW[${Array.from(tacKW).join(',')}] 拉取${insights.length}→去重后${freshInsights.length}→交集匹配${relevant.length}→TOP10排序`)
+        console.debug(`[T教练·调试] 知识洞察：地图KW[${Array.from(mapKW).join(',')}] 战术KW[${Array.from(tacKW).join(',')}] 否定词[${negatedKW.join(',')}] 拉取${insights.length}→去重后${freshInsights.length}→交集匹配${relevant.length}→TOP10排序`)
 
         if (relevant.length > 0) {
           knowledgeRefs = `【已入库的职业战术数据·匹配${relevant.length}条】（以下是与当前问题最相关的战术知识，请优先引用）：\n\n${relevant.map((ins: any, i: number) => `${i + 1}. [${ins.source || '未知来源'}] ${ins.content.slice(0, 500)}`).join('\n\n')}`

@@ -140,6 +140,21 @@ ${MAPS.map(m => `· ${m.name}（${m.nameEn}）— ${m.desc}`).join('\n')}
   return kb
 }
 
+/** 从用户消息中提取否定关键词（如"不要双烟"→["双烟"]） */
+export function extractNegatedKeywords(text: string): string[] {
+  const negated: string[] = []
+  // 否定前缀模式
+  const negPattern = /(?:不要|别|不想|不推荐|不想要|排除|避免|别用|不用|别选|别打|别玩|不要用|不需要)([一-龥\w]{1,6})/g
+  let m
+  while ((m = negPattern.exec(text)) !== null) {
+    const kw = m[1].trim()
+    if (kw && kw.length >= 1 && !['了', '的', '吧', '吗', '呢', '啊', '哦'].includes(kw)) {
+      negated.push(kw)
+    }
+  }
+  return negated
+}
+
 /** 知识洞察去重缓存 key */
 const INSIGHT_DEDUP_KEY = 'val-tactics-insight-dedup'
 
