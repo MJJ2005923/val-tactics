@@ -804,7 +804,7 @@ export default function MapCanvas({ mapId, mapName: _mapName, transformRef }: Ma
       let ey = (e.clientY - rect.top - offsetY) / (displayScale * mapH)
       setLineDrawing(prev => {
         if (!prev) return null
-        // 欧门C/猎枭X/铁臂C/铁臂E：限制终点在固定范围内
+        // 幽影C/猎枭X/铁臂C/铁臂E：限制终点在固定范围内
         if ((prev.abilityId === 'omen-shrouded-step' || prev.abilityId === 'sova-hunters-fury' || prev.abilityId === 'breach-aftershock' || prev.abilityId === 'breach-fault-line' || prev.abilityId === 'breach-rolling-thunder' || prev.abilityId === 'fade-nightfall' || prev.abilityId === 'deadlock-sonic-sensor' || prev.abilityId === 'vyse-shear' || prev.abilityId === 'tejo-x' || prev.abilityId === 'miks-x') && prev.startX >= 0) {
           const maxLen = prev.config.length ?? (20 * 7 / 1800)
           const dx = (ex - prev.startX)
