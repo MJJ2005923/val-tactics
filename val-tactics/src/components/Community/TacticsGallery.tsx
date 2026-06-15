@@ -5,6 +5,8 @@ import type { TacticalShare, Profile } from '../../types/community'
 import maps from '../../data/maps'
 import styles from './TacticsGallery.module.css'
 
+const PAGE_SIZE = 100
+
 interface Props {
   onBack: () => void
   onViewTactic: (id: string) => void
@@ -20,13 +22,15 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
   const [sort, setSort] = useState<'latest' | 'hot'>('latest')
   const [mapFilter, setMapFilter] = useState('')
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await getTactics({ sort, mapId: mapFilter || undefined, search: search || undefined, pageSize: 36 })
+      const result = await getTactics({ page, pageSize: PAGE_SIZE, sort, mapId: mapFilter || undefined, search: search || undefined })
       setTactics(result.data)
-      // 批量查作者
+      setTotal(result.total)
       const ids = [...new Set(result.data.map(t => t.user_id))]
       if (ids.length > 0) {
         const profs = await getProfiles(ids)
@@ -36,10 +40,11 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
       }
     } catch (e) { console.error(e) }
     setLoading(false)
-  }, [sort, mapFilter, search])
+  }, [page, sort, mapFilter, search])
 
   useEffect(() => { load() }, [load])
 
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const mapName = (id: string) => maps.find(m => m.id === id)?.name || id
 
   return (
@@ -50,7 +55,7 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
           className={styles.searchBox}
           placeholder="搜索战术…"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={e => { setSearch(e.target.value); setPage(1) }}
         />
         <div className={styles.sortBtns}>
           <button className={`${styles.sortBtn} ${sort === 'latest' ? styles.sortBtnActive : ''}`} onClick={() => setSort('latest')}>最新</button>
@@ -60,9 +65,9 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
       </div>
 
       <div className={styles.mapFilter}>
-        <button className={`${styles.mapChip} ${!mapFilter ? styles.mapChipActive : ''}`} onClick={() => setMapFilter('')}>全部</button>
+        <button className={`${styles.mapChip} ${!mapFilter ? styles.mapChipActive : ''}`} onClick={() => { setMapFilter(''); setPage(1) }}>全部</button>
         {maps.map(m => (
-          <button key={m.id} className={`${styles.mapChip} ${mapFilter === m.id ? styles.mapChipActive : ''}`} onClick={() => setMapFilter(m.id)}>
+          <button key={m.id} className={`${styles.mapChip} ${mapFilter === m.id ? styles.mapChipActive : ''}`} onClick={() => { setMapFilter(m.id); setPage(1) }}>
             {m.name}
           </button>
         ))}
@@ -75,6 +80,7 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
           <div className={styles.emptyText}>还没有战术分享，快来发布第一个</div>
         </div>
       ) : (
+        <>
         <div className={styles.grid}>
           {tactics.map(t => (
             <div key={t.id} className={styles.card} onClick={() => onViewTactic(t.id)}>
@@ -98,6 +104,16 @@ export default function TacticsGallery({ onBack, onViewTactic, onCreate, onViewP
             </div>
           ))}
         </div>
+        {totalPages > 1 && (
+          <div className={styles.pagination}>
+            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button key={i} className={page === i + 1 ? styles.pageActive : ''} onClick={() => setPage(i + 1)}>{i + 1}</button>
+            ))}
+            <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>下一页</button>
+          </div>
+        )}
+        </>
       )}
     </div>
   )
