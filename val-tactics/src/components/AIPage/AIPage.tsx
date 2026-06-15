@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useTactics } from '../../store/TacticsContext'
-import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI } from '../../data/knowledgeBase'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import MatchContextSelector, { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import RosterPicker from '../AIPanel/RosterPicker'
@@ -389,11 +389,14 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
     let knowledgeRefs = ''
     try {
       const { data: insights } = await supabase.from('knowledge_insights')
-        .select('category,content,source,created_at')
+        .select('id,category,content,source,created_at')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
         .limit(30)
       if (insights && insights.length > 0) {
+        // ① 去重：排除本轮对话已注入的洞察
+        const injectedIds = getInjectedInsightIds()
+        const freshInsights = insights.filter((ins: any) => !injectedIds.has(ins.id))
         const mapKW = new Set<string>()
         mapKW.add(mapName.toLowerCase())
         for (const m of maps) { if (text.includes(m.name)) mapKW.add(m.name.toLowerCase()) }
@@ -402,7 +405,7 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
         for (const w of tacWords) { if (text.includes(w)) tacKW.add(w.toLowerCase()) }
         for (const a of agents) { if (text.includes(a.name)) tacKW.add(a.name.toLowerCase()) }
 
-        let relevant = insights.filter((ins: any) => {
+        let relevant = freshInsights.filter((ins: any) => {
           const h = ((ins.content || '') + (ins.category || '')).toLowerCase()
           const m = mapKW.size === 0 || Array.from(mapKW).some(k => h.includes(k))
           const t = tacKW.size === 0 || Array.from(tacKW).some(k => h.includes(k))
@@ -423,18 +426,15 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
           return score(b) - score(a)
         })
 
-        if (relevant.length < 3) relevant = insights.slice(0, 5)
+        if (relevant.length < 3) relevant = freshInsights.slice(0, 5)
         relevant = relevant.slice(0, 10)
 
-        // 调试：输出匹配过程
-        const matchedBefore = insights.filter((ins: any) => {
-          const h = ((ins.content || '') + (ins.category || '')).toLowerCase()
-          return (mapKW.size === 0 || Array.from(mapKW).some((k: string) => h.includes(k))) && (tacKW.size === 0 || Array.from(tacKW).some((k: string) => h.includes(k)))
-        }).length
-        console.debug(`[T教练·调试] 知识洞察：地图KW[${Array.from(mapKW).join(',')}] 战术KW[${Array.from(tacKW).join(',')}] 过滤前${insights.length}→交集匹配${matchedBefore}→兜底后${relevant.length}→TOP10排序`)
+        console.debug(`[T教练·调试] 知识洞察：地图KW[${Array.from(mapKW).join(',')}] 战术KW[${Array.from(tacKW).join(',')}] 拉取${insights.length}→去重后${freshInsights.length}→交集匹配${relevant.length}→TOP10排序`)
 
         if (relevant.length > 0) {
           knowledgeRefs = `【已入库的职业战术数据·匹配${relevant.length}条】（以下是与当前问题最相关的战术知识，请优先引用）：\n\n${relevant.map((ins: any, i: number) => `${i + 1}. [${ins.source || '未知来源'}] ${ins.content.slice(0, 500)}`).join('\n\n')}`
+          // ① 标记已注入，后续消息不再重复
+          markInsightsInjected(relevant.map((ins: any) => ins.id))
         }
       }
     } catch {}
@@ -935,7 +935,7 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
           <button
-            onClick={() => { setMessages([]); localStorage.removeItem('val-tactics-chat') }}
+            onClick={() => { setMessages([]); localStorage.removeItem('val-tactics-chat'); clearInjectedInsights() }}
             style={{
               padding: '8px 14px', background: 'transparent',
               border: '1px solid rgba(255,255,255,.08)', borderRadius: 14,

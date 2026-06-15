@@ -140,6 +140,29 @@ ${MAPS.map(m => `· ${m.name}（${m.nameEn}）— ${m.desc}`).join('\n')}
   return kb
 }
 
+/** 知识洞察去重缓存 key */
+const INSIGHT_DEDUP_KEY = 'val-tactics-insight-dedup'
+
+/** 获取已注入的知识洞察 ID 集合 */
+export function getInjectedInsightIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(INSIGHT_DEDUP_KEY)
+    return raw ? new Set(JSON.parse(raw)) : new Set()
+  } catch { return new Set() }
+}
+
+/** 标记洞察已注入（去重缓存） */
+export function markInsightsInjected(ids: string[]): void {
+  const existing = getInjectedInsightIds()
+  ids.forEach(id => existing.add(id))
+  localStorage.setItem(INSIGHT_DEDUP_KEY, JSON.stringify([...existing]))
+}
+
+/** 清除去重缓存（重置对话时调用） */
+export function clearInjectedInsights(): void {
+  localStorage.removeItem(INSIGHT_DEDUP_KEY)
+}
+
 /**
  * 返回当前场上特工名列表（去重）
  */

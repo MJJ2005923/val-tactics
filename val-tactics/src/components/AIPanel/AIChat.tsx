@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { getAIConfig, getUserId } from './AISettings'
 import { useTactics } from '../../store/TacticsContext'
-import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI } from '../../data/knowledgeBase'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import maps from '../../data/maps'
@@ -88,11 +88,14 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
     let knowledgeRefs = ''
     try {
       const { data: insights } = await supabase.from('knowledge_insights')
-        .select('category,content,source,created_at')
+        .select('id,category,content,source,created_at')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
         .limit(30)
       if (insights && insights.length > 0) {
+        // ① 去重：排除本轮对话已注入的洞察
+        const injectedIds = getInjectedInsightIds()
+        const freshInsights = insights.filter((ins: any) => !injectedIds.has(ins.id))
         const mapKW = new Set<string>()
         mapKW.add(mapName.toLowerCase())
         for (const m of maps) { if (text.includes(m.name)) mapKW.add(m.name.toLowerCase()) }
@@ -103,7 +106,7 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
         for (const a of agents) { if (text.includes(a.name)) tacKW.add(a.name.toLowerCase()) }
 
         // 交集匹配
-        let relevant = insights.filter((ins: any) => {
+        let relevant = freshInsights.filter((ins: any) => {
           const h = ((ins.content || '') + (ins.category || '')).toLowerCase()
           const m = mapKW.size === 0 || Array.from(mapKW).some(k => h.includes(k))
           const t = tacKW.size === 0 || Array.from(tacKW).some(k => h.includes(k))
@@ -125,16 +128,15 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
           return score(b) - score(a)
         })
 
-        if (relevant.length < 3) relevant = insights.slice(0, 5)
+        if (relevant.length < 3) relevant = freshInsights.slice(0, 5)
         relevant = relevant.slice(0, 10)
 
-        console.debug(`[T教练·调试] 知识洞察：地图KW[${Array.from(mapKW).join(',')}] 战术KW[${Array.from(tacKW).join(',')}] 过滤前${insights.length}→交集匹配${insights.filter((ins: any) => {
-          const h = ((ins.content || '') + (ins.category || '')).toLowerCase()
-          return (mapKW.size === 0 || Array.from(mapKW).some(k => h.includes(k))) && (tacKW.size === 0 || Array.from(tacKW).some(k => h.includes(k)))
-        }).length}→兜底后${relevant.length}→TOP10排序`)
+        console.debug(`[T教练·调试] 知识洞察：地图KW[${Array.from(mapKW).join(',')}] 战术KW[${Array.from(tacKW).join(',')}] 拉取${insights.length}→去重后${freshInsights.length}→交集匹配${relevant.length}→TOP10排序`)
 
         if (relevant.length > 0) {
           knowledgeRefs = `【已入库的职业战术数据·匹配${relevant.length}条】（以下是与当前问题最相关的战术知识，请优先引用）：\n\n${relevant.map((ins: any, i: number) => `${i + 1}. [${ins.source || '未知来源'}] ${ins.content.slice(0, 500)}`).join('\n\n')}`
+          // ① 标记已注入，后续消息不再重复
+          markInsightsInjected(relevant.map((ins: any) => ins.id))
         }
       }
     } catch {}
@@ -327,7 +329,7 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
         <button
-          onClick={() => { setMessages([]); localStorage.removeItem('val-tactics-chat') }}
+          onClick={() => { setMessages([]); localStorage.removeItem('val-tactics-chat'); clearInjectedInsights() }}
           style={{
             padding: '6px 8px', background: 'transparent',
             border: '1px solid rgba(255,255,255,.08)', borderRadius: 8,
