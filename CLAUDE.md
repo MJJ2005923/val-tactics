@@ -8,7 +8,7 @@ tags: [项目, AI指引]
 
 ## 项目基本信息
 - 项目名称：无畏契约战术板 (VALORANT Tactics Board)
-- 项目文件夹：d:\无畏契约战术布置
+- 项目文件夹：d:\val-tactics
 - 源代码文件夹：val-tactics/
 - 技术栈：React + TypeScript + Vite
 - 运行端口：Vite 默认 5173
@@ -25,7 +25,7 @@ tags: [项目, AI指引]
 
 ## 日常 Git 流程
 ```bash
-cd d:\无畏契约战术布置
+cd d:\val-tactics
 git checkout dev
 git add .
 git commit -m "描述本次改动的提交信息"
