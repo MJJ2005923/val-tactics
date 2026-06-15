@@ -69,9 +69,21 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
       setStats(st)
       if (prof?.show_follows !== undefined) setShowFollows(prof.show_follows)
 
-      // 套餐信息（本地计算）
-      const tier = localStorage.getItem('val-tactics-tier') || 'free'
-      const expires = parseInt(localStorage.getItem('val-tactics-expires') || '0')
+      // 套餐信息 — 优先从后端拉取真实到期时间
+      let tier = localStorage.getItem('val-tactics-tier') || 'free'
+      let expires = parseInt(localStorage.getItem('val-tactics-expires') || '0')
+      try {
+        const uid = localStorage.getItem('val-tactics-uid')
+        if (uid) {
+          const resp = await fetch('/api/tier', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ userId: uid }) })
+          const { tier: t, expiresAt } = await resp.json()
+          if (t && t !== 'free') {
+            tier = t; expires = expiresAt || 0
+            localStorage.setItem('val-tactics-tier', tier)
+            localStorage.setItem('val-tactics-expires', String(expires))
+          }
+        }
+      } catch {}
       const leftDays = expires ? Math.max(0, Math.ceil((expires - Date.now()) / 86400000)) : 0
       setSubInfo({ tier, leftDays })
 
