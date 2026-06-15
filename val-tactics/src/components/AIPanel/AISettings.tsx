@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ModelIcon } from '../AIPage/AIPage'
+import { ModelIcon } from '../ModelIcon'
 import { encryptKey, decryptKey } from '../../utils/crypto'
 import styles from './AIPanel.module.css'
 

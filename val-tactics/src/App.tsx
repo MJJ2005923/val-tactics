@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, lazy, Suspense } from 'react'
 import './App.css'
 import maps, { type MapData } from './data/maps'
 import agents, { agentImages } from './data/agents'
@@ -11,19 +11,23 @@ import ToolPalette from './components/ToolPalette/ToolPalette'
 import SplashScreen from './components/SplashScreen/SplashScreen'
 import HelpPanel from './components/HelpPanel/HelpPanel'
 import AIPanel from './components/AIPanel/AIPanel'
-import AIPage from './components/AIPage/AIPage'
-import MatchAnalysisPage from './components/MatchAnalysis/MatchAnalysisPage'
-import AuthModal from './components/Auth/AuthModal'
 import PrivacyPanel from './components/PrivacyPanel/PrivacyPanel'
 import SponsorPanel from './components/SponsorPanel/SponsorPanel'
-import AdminPage from './components/AdminPanel/AdminPage'
 import MobileLayout from './components/MobileLayout/MobileLayout'
-import CommunityShell from './components/Community/CommunityShell'
 import PWAInstallButton from './components/PWAInstallButton'
 import NotificationBell from './components/Community/NotificationBell'
 import { ToastProvider, useToast } from './components/Toast/Toast'
 import { TacticsProvider, useTactics } from './store/TacticsContext'
 import { AuthProvider, useAuth } from './store/AuthContext'
+
+// 按需加载 — 非首屏显示时再下载，减小初始 Bundle
+const AIPage = lazy(() => import('./components/AIPage/AIPage'))
+const MatchAnalysisPage = lazy(() => import('./components/MatchAnalysis/MatchAnalysisPage'))
+const AuthModal = lazy(() => import('./components/Auth/AuthModal'))
+const AdminPage = lazy(() => import('./components/AdminPanel/AdminPage'))
+const CommunityShell = lazy(() => import('./components/Community/CommunityShell'))
+
+const LazyFallback = () => <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#07040c', zIndex: 9999, color: 'rgba(255,255,255,.2)' }}>加载中…</div>
 
 function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate }: { navbarAnimate: boolean; panelAnimate: boolean; canvasAnimate: boolean; timelineAnimate: boolean }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
@@ -289,18 +293,18 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
           onSave={handleSaveProgress}
           onTemplates={() => setShowTemplates(true)}
           communityPanel={
-            showCommunity ? <CommunityShell selectedMap={selectedMap.id} onClose={() => setShowCommunity(false)} onLoadTactic={handleLoadCommunityTactic} /> : null
+            showCommunity ? <Suspense fallback={<LazyFallback />}><CommunityShell selectedMap={selectedMap.id} onClose={() => setShowCommunity(false)} onLoadTactic={handleLoadCommunityTactic} /></Suspense> : null
           }
         />
         {/* 全局弹窗 */}
         {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} onExportImage={handleExportImage} onShareLink={handleShareLink} />}
         {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
-        {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => { setShowAIPage(false); setTacticPrompt(undefined) }} initialPrompt={tacticPrompt} />}
-        {showMatchAnalysis && <MatchAnalysisPage onBack={() => setShowMatchAnalysis(false)} />}
-        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+        {showAIPage && <Suspense fallback={<LazyFallback />}><AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => { setShowAIPage(false); setTacticPrompt(undefined) }} initialPrompt={tacticPrompt} /></Suspense>}
+        {showMatchAnalysis && <Suspense fallback={<LazyFallback />}><MatchAnalysisPage onBack={() => setShowMatchAnalysis(false)} /></Suspense>}
+        {showAuthModal && <Suspense fallback={<LazyFallback />}><AuthModal onClose={() => setShowAuthModal(false)} /></Suspense>}
         {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
         {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
-        {showAdminPage && <AdminPage onClose={() => setShowAdminPage(false)} />}
+        {showAdminPage && <Suspense fallback={<LazyFallback />}><AdminPage onClose={() => setShowAdminPage(false)} /></Suspense>}
       </div>
     )
   }
@@ -441,14 +445,14 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showTemplates && <TemplateManager onClose={() => setShowTemplates(false)} mapId={selectedMap.id} onLoadMap={(id) => { const m = maps.find(x => x.id === id); if (m) setSelectedMap(m) }} onExportImage={handleExportImage} onShareLink={handleShareLink} />}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showAIPanel && <AIPanel mapId={selectedMap.id} mapName={selectedMap.name} onClose={() => setShowAIPanel(false)} />}
-      {showAIPage && <AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => { setShowAIPage(false); setTacticPrompt(undefined) }} initialPrompt={tacticPrompt} />}
-      {showMatchAnalysis && <MatchAnalysisPage onBack={() => setShowMatchAnalysis(false)} />}
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {showAIPage && <Suspense fallback={<LazyFallback />}><AIPage mapId={selectedMap.id} mapName={selectedMap.name} onBack={() => { setShowAIPage(false); setTacticPrompt(undefined) }} initialPrompt={tacticPrompt} /></Suspense>}
+      {showMatchAnalysis && <Suspense fallback={<LazyFallback />}><MatchAnalysisPage onBack={() => setShowMatchAnalysis(false)} /></Suspense>}
+      {showAuthModal && <Suspense fallback={<LazyFallback />}><AuthModal onClose={() => setShowAuthModal(false)} /></Suspense>}
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
       {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
-      {showAdminPage && <AdminPage onClose={() => setShowAdminPage(false)} />}
+      {showAdminPage && <Suspense fallback={<LazyFallback />}><AdminPage onClose={() => setShowAdminPage(false)} /></Suspense>}
       {showCommunity && (
-        <CommunityShell selectedMap={selectedMap.id} onClose={() => setShowCommunity(false)} onLoadTactic={handleLoadCommunityTactic} />
+        <Suspense fallback={<LazyFallback />}><CommunityShell selectedMap={selectedMap.id} onClose={() => setShowCommunity(false)} onLoadTactic={handleLoadCommunityTactic} /></Suspense>
       )}
     </div>
   )
