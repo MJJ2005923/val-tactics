@@ -75,6 +75,36 @@ export async function deleteLineup(id: string, userId?: string) {
   return supabase.from('lineups').delete().eq('id', id)
 }
 
+/** 更新点位（用于发布后修正图片URL等） */
+export async function updateLineup(id: string, updates: Record<string, any>) {
+  const { data } = await supabase.from('lineups').update(updates).eq('id', id).select().single()
+  return data as Lineup | null
+}
+
+/** 将临时路径的图片迁移到真实点位路径，并清理临时文件 */
+export async function moveLineupImages(
+  userId: string,
+  tempId: string,
+  realId: string,
+  images: { url: string; slot: string }[],
+): Promise<Record<string, string>> {
+  const result: Record<string, string> = {}
+  for (const img of images) {
+    if (!img.url) continue
+    try {
+      const resp = await fetch(img.url)
+      if (!resp.ok) continue
+      const blob = await resp.blob()
+      const file = new File([blob], `${img.slot}.webp`, { type: blob.type || 'image/webp' })
+      const newUrl = await uploadLineupImage(file, userId, realId, img.slot)
+      if (newUrl) result[img.slot] = newUrl
+    } catch {}
+  }
+  // 清理临时文件
+  await deleteStorageImages(userId, tempId).catch(() => {})
+  return result
+}
+
 /** 压缩图片为 WebP，限制最大尺寸和文件大小 */
 export async function compressImage(file: File, maxKB = 600): Promise<Blob> {
   return new Promise((resolve, reject) => {

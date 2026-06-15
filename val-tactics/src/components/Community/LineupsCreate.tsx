@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { createLineup } from '../../lib/community/lineups'
+import { createLineup, updateLineup, moveLineupImages } from '../../lib/community/lineups'
 import { useAuth } from '../../store/AuthContext'
 import maps from '../../data/maps'
 import agents from '../../data/agents'
@@ -55,8 +55,27 @@ export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
         targetX: targetPt?.x, targetY: targetPt?.y,
         difficulty,
       })
-      if (l) onSuccess(l.id)
-      else setError('发布失败')
+      if (l) {
+        // 迁移临时路径图片到真实点位ID
+        const images = [
+          { url: posImg, slot: 'position' },
+          { url: aimImg, slot: 'aim' },
+          { url: releaseImg, slot: 'release' },
+          { url: effectImg, slot: 'effect' },
+        ].filter(i => i.url)
+        if (images.length > 0) {
+          const newUrls = await moveLineupImages(user.id, lineupIdRef.current, l.id, images)
+          if (Object.keys(newUrls).length > 0) {
+            await updateLineup(l.id, {
+              position_img: newUrls.position || posImg || null,
+              aim_img: newUrls.aim || aimImg || null,
+              release_img: newUrls.release || releaseImg || null,
+              effect_img: newUrls.effect || effectImg || null,
+            })
+          }
+        }
+        onSuccess(l.id)
+      } else setError('发布失败')
     } catch (e: any) { setError(e.message || '发布失败') }
     setSending(false)
   }
