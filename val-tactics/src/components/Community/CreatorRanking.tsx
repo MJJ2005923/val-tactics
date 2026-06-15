@@ -53,6 +53,8 @@ export default function CreatorRanking() {
           </div>
           {loading ? (
             <div className={styles.loading}>加载中...</div>
+          ) : creators.length === 0 ? (
+            <div className={styles.empty}>虚位以待</div>
           ) : (
             <div className={styles.list}>
               {creators.map((c, i) => (

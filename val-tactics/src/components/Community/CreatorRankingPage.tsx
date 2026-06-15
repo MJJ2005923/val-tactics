@@ -51,6 +51,8 @@ export default function CreatorRankingPage({ onViewProfile }: Props) {
 
       {loading ? (
         <div className={styles.loading}>加载中...</div>
+      ) : creators.length === 0 ? (
+        <div className={styles.empty}>虚位以待</div>
       ) : (
         <div className={styles.list}>
           {/* Top 3 — 大卡片 */}

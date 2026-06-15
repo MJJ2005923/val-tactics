@@ -18,3 +18,4 @@
 .name { flex: 1; font-size: 10px; color: rgba(255,255,255,.35); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .score { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.2); flex-shrink: 0 }
 .loading { padding: 10px; text-align: center; color: rgba(255,255,255,.1); font-size: 10px }
+.empty { padding: 16px; text-align: center; color: rgba(255,255,255,.1); font-size: 11px }
