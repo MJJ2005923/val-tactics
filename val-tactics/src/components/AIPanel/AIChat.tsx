@@ -94,7 +94,6 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
       })
       // 取过滤后的 top 3
       const filtered = refs.slice(0, 3)
-      console.debug(`[T教练·调试] 社区参考：查战术=${isTactics} 查点位=${isLineups} → 否定词[${negatedKW.join(',')}] 过滤前${refs.length}→过滤后${filtered.length}`)
       if (filtered.length > 0) communityRefs = `【社区相关参考·${maps.find(m => m.id === mapId)?.name || mapId}】\n${filtered.map((r, i) => `${i + 1}. ${r}`).join('\n')}`
     } catch {}
 
@@ -152,7 +151,6 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
         if (relevant.length < 3) relevant = freshInsights.slice(0, 5)
         relevant = relevant.slice(0, 10)
 
-        console.debug(`[T教练·调试] 知识洞察：地图KW[${Array.from(mapKW).join(',')}] 战术KW[${Array.from(tacKW).join(',')}] 否定词[${negatedKW.join(',')}] 拉取${insights.length}→去重后${freshInsights.length}→交集匹配${relevant.length}→TOP10排序`)
 
         if (relevant.length > 0) {
           knowledgeRefs = `【已入库的职业战术数据·匹配${relevant.length}条】（以下是与当前问题最相关的战术知识，请优先引用）：\n\n${relevant.map((ins: any, i: number) => `${i + 1}. [${ins.source || '未知来源'}] ${ins.content.slice(0, 500)}`).join('\n\n')}`
