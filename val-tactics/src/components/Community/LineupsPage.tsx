@@ -6,6 +6,8 @@ import maps from '../../data/maps'
 import agents from '../../data/agents'
 import styles from './LineupsPage.module.css'
 
+const PAGE_SIZE = 100
+
 interface Props {
   onBack: () => void
   onViewLineup: (id: string) => void
@@ -18,15 +20,26 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
   const [profiles, setProfiles] = useState<Record<string, Profile>>({})
   const [mapFilter, setMapFilter] = useState('')
   const [agentFilter, setAgentFilter] = useState('')
+  const [abilityFilter, setAbilityFilter] = useState('')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<'latest' | 'hot'>('latest')
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+
+  const selectedAgent = agents.find(a => a.id === agentFilter)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const r = await getLineups({ pageSize: 1000, mapId: mapFilter || undefined, agentId: agentFilter || undefined })
+      const r = await getLineups({
+        page, pageSize: PAGE_SIZE,
+        mapId: mapFilter || undefined,
+        agentId: agentFilter || undefined,
+        abilityId: abilityFilter || undefined,
+      })
       setLineups(r.data)
+      setTotal(r.total)
       const ids = [...new Set(r.data.map(l => l.user_id))]
       if (ids.length > 0) {
         const profs = await getProfiles(ids)
@@ -36,9 +49,11 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
       }
     } catch {}
     setLoading(false)
-  }, [mapFilter, agentFilter])
+  }, [page, mapFilter, agentFilter, abilityFilter])
 
   useEffect(() => { load() }, [load])
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const agentName = (id: string) => agents.find(a => a.id === id)?.name || id
   const abilityName = (agentId: string, abilityId: string) => {
@@ -55,14 +70,22 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
           <button className={`${styles.sortBtn} ${sort === 'latest' ? styles.sortBtnActive : ''}`} onClick={() => setSort('latest')}>最新</button>
           <button className={`${styles.sortBtn} ${sort === 'hot' ? styles.sortBtnActive : ''}`} onClick={() => setSort('hot')}>最热</button>
         </div>
-        <select className={styles.filterSelect} value={mapFilter} onChange={e => setMapFilter(e.target.value)}>
+        <select className={styles.filterSelect} value={mapFilter} onChange={e => { setMapFilter(e.target.value); setPage(1) }}>
           <option value="">全部地图</option>
           {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
-        <select className={styles.filterSelect} value={agentFilter} onChange={e => setAgentFilter(e.target.value)}>
+        <select className={styles.filterSelect} value={agentFilter} onChange={e => { setAgentFilter(e.target.value); setAbilityFilter(''); setPage(1) }}>
           <option value="">全部特工</option>
           {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
         </select>
+        {selectedAgent && (
+          <select className={styles.filterSelect} value={abilityFilter} onChange={e => { setAbilityFilter(e.target.value); setPage(1) }}>
+            <option value="">全部技能</option>
+            {selectedAgent.abilities.map(ab => (
+              <option key={ab.id} value={ab.id}>{ab.name} [{ab.key}]</option>
+            ))}
+          </select>
+        )}
         <button className={styles.createBtn} onClick={onCreateLineup}>发布点位</button>
       </div>
 
@@ -74,6 +97,7 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
           : filtered
         if (sorted.length === 0) return <div className={styles.empty}>{search ? '没有匹配的点位' : '还没有点位，快来发布第一个'}</div>
         return (
+        <>
         <div className={styles.grid}>
           {sorted.map(l => (
             <div key={l.id} className={styles.card} onClick={() => onViewLineup(l.id)}>
@@ -99,6 +123,16 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
             </div>
           ))}
         </div>
+        {totalPages > 1 && (
+          <div className={styles.pagination}>
+            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button key={i} className={page === i + 1 ? styles.pageActive : ''} onClick={() => setPage(i + 1)}>{i + 1}</button>
+            ))}
+            <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>下一页</button>
+          </div>
+        )}
+        </>
       )
       })()}
     </div>

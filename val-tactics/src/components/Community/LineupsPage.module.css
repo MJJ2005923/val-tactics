@@ -48,3 +48,9 @@
 }
 
 .pageEmbedded { display: flex; flex-direction: column; min-height: 100%; animation: fadeIn .2s ease }
+
+.pagination { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px 20px; border-top: 1px solid rgba(255,255,255,.04) }
+.pagination button { padding: 6px 12px; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06); border-radius: 8px; color: rgba(255,255,255,.3); font-size: 12px; cursor: pointer; font-family: inherit; transition: all .15s }
+.pagination button:hover:not(:disabled) { color: #fff; border-color: rgba(255,255,255,.15) }
+.pagination button:disabled { opacity: .2; cursor: default }
+.pageActive { color: #05F8F8 !important; border-color: rgba(5,248,248,.25) !important; background: rgba(5,248,248,.06) !important }
