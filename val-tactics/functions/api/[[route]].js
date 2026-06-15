@@ -177,7 +177,7 @@ export async function onRequest(context) {
       })
       const data = await resp.json()
       if (resp.ok) {
-        return new Response(JSON.stringify({ ok: true, user: data }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+        return new Response(JSON.stringify({ ok: true, id: data.id || data.user?.id }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
       }
       return new Response(JSON.stringify({ error: data.msg || '注册失败' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     } catch (e) {
@@ -494,6 +494,10 @@ KAY/O：碎片溢出(C)、闪存过载(Q)、零点嗅探(E)、无效指令(X)
 
   // === GET /api/admin/debug ===
   if (url.pathname === '/api/admin/debug') {
+    const key = new URL(request.url).searchParams.get('key') || ''
+    if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
+      return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
     const allKeys = Object.keys(env).filter(k => !k.startsWith('CF_'))
     const target = allKeys.filter(k => k.includes('SUPA') || k.includes('SERVICE') || k.includes('KEY'))
     return new Response(JSON.stringify({ allKeys, target, sbKey: !!SB_KEY, sbKeyLen: SB_KEY.length, adminKey: !!env.ADMIN_KEY, deepseekKey: !!env.DEEPSEEK_KEY }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
