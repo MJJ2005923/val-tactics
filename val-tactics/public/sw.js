@@ -2,7 +2,7 @@
  * T教练 Service Worker
  * 策略：静态资源 Cache First，API Network First，离线有兜底
  */
-const CACHE = 'val-tactics-v1'
+const CACHE = 'val-tactics-v2'
 const STATIC_ASSETS = [
   '/',
   '/index.html',
