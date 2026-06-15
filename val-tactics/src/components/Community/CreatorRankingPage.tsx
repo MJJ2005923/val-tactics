@@ -13,7 +13,7 @@ interface Props { onViewProfile?: (uid: string) => void }
 type RankTab = 'creation' | 'likes' | 'follows' | 'favs'
 
 const tabs: { id: RankTab; label: string; desc: string; sort: (c: Creator) => number; fmt: (n: number) => string }[] = [
-  { id: 'creation', label: '创作榜', desc: '战术 + 点位创作数', sort: c => c.creation_count, fmt: n => `${n} 个` },
+  { id: 'creation', label: '创作榜', desc: '战术 + 点位 + 帖子', sort: c => c.creation_count, fmt: n => `${n} 个` },
   { id: 'likes', label: '点赞榜', desc: '获得的总点赞数', sort: c => c.total_likes, fmt: n => `${n} 赞` },
   { id: 'follows', label: '关注榜', desc: '粉丝数量', sort: c => c.follower_count, fmt: n => `${n} 粉丝` },
   { id: 'favs', label: '收藏榜', desc: '被收藏次数', sort: c => c.favorite_count, fmt: n => `${n} 次` },
@@ -26,13 +26,12 @@ export default function CreatorRankingPage({ onViewProfile }: Props) {
 
   useEffect(() => {
     setLoading(true)
-    supabase.rpc('creator_ranking', { p_limit: 30 }).then(({ data }) => {
+    supabase.rpc('creator_ranking', { p_limit: 30, p_sort_by: tab }).then(({ data }) => {
       setCreators((data || []) as Creator[])
       setLoading(false)
     })
-  }, [])
+  }, [tab])
 
-  const sorted = [...creators].sort((a, b) => tabs.find(t => t.id === tab)!.sort(b) - tabs.find(t => t.id === tab)!.sort(a))
   const activeTab = tabs.find(t => t.id === tab)!
 
   return (
@@ -55,7 +54,7 @@ export default function CreatorRankingPage({ onViewProfile }: Props) {
       ) : (
         <div className={styles.list}>
           {/* Top 3 — 大卡片 */}
-          {sorted.slice(0, 3).map((c, i) => (
+          {creators.slice(0, 3).map((c, i) => (
             <div key={c.user_id} className={`${styles.cardTop} ${styles['rank' + (i + 1)]}`} onClick={() => onViewProfile?.(c.user_id)} style={{ cursor: 'pointer' }}>
               <div className={styles.rankBadge}>{i + 1}</div>
               <div className={styles.avatar}>
@@ -74,7 +73,7 @@ export default function CreatorRankingPage({ onViewProfile }: Props) {
           ))}
 
           {/* 4-30 — 列表 */}
-          {sorted.slice(3).map((c, i) => (
+          {creators.slice(3).map((c, i) => (
             <div key={c.user_id} className={styles.card} style={{ animationDelay: `${i * .03}s`, cursor: 'pointer' }} onClick={() => onViewProfile?.(c.user_id)}>
               <span className={styles.rankNum}>{i + 4}</span>
               <span className={styles.avatarSm}>

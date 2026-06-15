@@ -411,7 +411,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 创作者排行榜 RPC
-CREATE OR REPLACE FUNCTION public.creator_ranking(p_limit INT DEFAULT 5)
+CREATE OR REPLACE FUNCTION public.creator_ranking(p_limit INT DEFAULT 30, p_sort_by TEXT DEFAULT 'creation')
 RETURNS TABLE(
   user_id UUID, username TEXT, avatar_url TEXT,
   creation_count BIGINT, total_likes BIGINT,
@@ -419,26 +419,33 @@ RETURNS TABLE(
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT
-    p.id AS user_id,
-    p.username,
-    p.avatar_url,
-    (COALESCE(tc.cnt, 0) + COALESCE(lc.cnt, 0)) AS creation_count,
-    COALESCE(tl.likes, 0) AS total_likes,
-    COALESCE(fc.followers, 0) AS follower_count,
-    COALESCE(p.favorite_count, 0) AS favorite_count
-  FROM profiles p
-  LEFT JOIN (SELECT user_id, COUNT(*) AS cnt FROM tactical_shares GROUP BY user_id) tc ON tc.user_id = p.id
-  LEFT JOIN (SELECT user_id, COUNT(*) AS cnt FROM lineups GROUP BY user_id) lc ON lc.user_id = p.id
-  LEFT JOIN (
-    SELECT user_id, SUM(tc) AS likes FROM (
-      SELECT user_id, SUM(like_count) AS tc FROM tactical_shares GROUP BY user_id
-      UNION ALL SELECT user_id, SUM(like_count) FROM posts GROUP BY user_id
-      UNION ALL SELECT user_id, SUM(like_count) FROM lineups GROUP BY user_id
-    ) t GROUP BY user_id
-  ) tl ON tl.user_id = p.id
-  LEFT JOIN (SELECT following_id, COUNT(*) AS followers FROM follows GROUP BY following_id) fc ON fc.following_id = p.id
-  ORDER BY creation_count DESC
+  SELECT * FROM (
+    SELECT
+      p.id AS user_id,
+      p.username,
+      p.avatar_url,
+      (COALESCE(tc.cnt, 0) + COALESCE(lc.cnt, 0) + COALESCE(pc.cnt, 0)) AS creation_count,
+      COALESCE(tl.likes, 0) AS total_likes,
+      COALESCE(fc.followers, 0) AS follower_count,
+      COALESCE(p.favorite_count, 0) AS favorite_count
+    FROM profiles p
+    LEFT JOIN (SELECT user_id, COUNT(*) AS cnt FROM tactical_shares GROUP BY user_id) tc ON tc.user_id = p.id
+    LEFT JOIN (SELECT user_id, COUNT(*) AS cnt FROM lineups GROUP BY user_id) lc ON lc.user_id = p.id
+    LEFT JOIN (SELECT user_id, COUNT(*) AS cnt FROM posts GROUP BY user_id) pc ON pc.user_id = p.id
+    LEFT JOIN (
+      SELECT user_id, SUM(tc) AS likes FROM (
+        SELECT user_id, SUM(like_count) AS tc FROM tactical_shares GROUP BY user_id
+        UNION ALL SELECT user_id, SUM(like_count) FROM posts GROUP BY user_id
+        UNION ALL SELECT user_id, SUM(like_count) FROM lineups GROUP BY user_id
+      ) t GROUP BY user_id
+    ) tl ON tl.user_id = p.id
+    LEFT JOIN (SELECT following_id, COUNT(*) AS followers FROM follows GROUP BY following_id) fc ON fc.following_id = p.id
+  ) r
+  ORDER BY
+    CASE WHEN p_sort_by = 'likes' THEN r.total_likes END DESC,
+    CASE WHEN p_sort_by = 'follows' THEN r.follower_count END DESC,
+    CASE WHEN p_sort_by = 'favs' THEN r.favorite_count END DESC,
+    r.creation_count DESC
   LIMIT p_limit;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

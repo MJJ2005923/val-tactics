@@ -30,13 +30,11 @@ export default function CreatorRanking() {
   useEffect(() => {
     if (!expanded) return
     setLoading(true)
-    supabase.rpc('creator_ranking', { p_limit: 10 }).then(({ data }) => {
+    supabase.rpc('creator_ranking', { p_limit: 10, p_sort_by: tab }).then(({ data }) => {
       setCreators((data || []) as Creator[])
       setLoading(false)
     })
-  }, [expanded])
-
-  const sorted = [...creators].sort((a, b) => tabConfig.find(t => t.id === tab)!.sort(b) - tabConfig.find(t => t.id === tab)!.sort(a))
+  }, [expanded, tab])
 
   return (
     <div className={styles.rank}>
@@ -57,7 +55,7 @@ export default function CreatorRanking() {
             <div className={styles.loading}>加载中...</div>
           ) : (
             <div className={styles.list}>
-              {sorted.map((c, i) => (
+              {creators.map((c, i) => (
                 <div key={c.user_id} className={styles.item}>
                   <span className={styles.rankNum}>{i + 1}</span>
                   <span className={styles.avatar}>{c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.username || '?')[0]}</span>
