@@ -32,7 +32,7 @@ export default function CreatorRankingPage({ onViewProfile }: Props) {
 
   useEffect(() => {
     setLoading(true)
-    supabase.rpc('creator_ranking', { p_limit: 30, p_sort_by: tab }).then(({ data }) => {
+    supabase.rpc('creator_ranking', { p_limit: 50, p_sort_by: tab }).then(({ data }) => {
       setCreators((data || []) as Creator[])
       setLoading(false)
     })

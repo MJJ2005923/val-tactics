@@ -126,14 +126,19 @@
   letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;
 }
 
-/* 4+ 列表 */
-.card { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; transition: background .1s; animation: slideUp .2s ease both }
-.card:hover { background: rgba(255,255,255,.01) }
-.rankNum { width: 24px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.12); text-align: center; flex-shrink: 0 }
-.avatarSm { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.03); display: flex; align-items: center; justify-content: center; font-size: 10px; color: rgba(255,255,255,.3); overflow: hidden; flex-shrink: 0 }
+/* 4+ 列表 — 统一单行卡片 */
+.card {
+  display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.02); cursor: pointer;
+  transition: all .15s; animation: slideUp .2s ease both;
+}
+.card:hover { background: rgba(255,255,255,.015); border-color: rgba(255,255,255,.04) }
+.rankNum { width: 22px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.1); text-align: center; flex-shrink: 0; font-variant-numeric: tabular-nums }
+.card:nth-child(4) .rankNum, .card:nth-child(5) .rankNum, .card:nth-child(6) .rankNum { color: rgba(255,255,255,.15) }
+.avatarSm { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.03); display: flex; align-items: center; justify-content: center; font-size: 11px; color: rgba(255,255,255,.25); overflow: hidden; flex-shrink: 0; font-weight: 600 }
 .avatarSm img { width: 100%; height: 100%; object-fit: cover }
-.name { flex: 1; font-size: 13px; color: rgba(255,255,255,.4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.score { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.3); flex-shrink: 0 }
+.name { flex: 1; font-size: 12px; color: rgba(255,255,255,.35); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.score { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.25); flex-shrink: 0; text-align: right; min-width: 50px }
 
 .loading { padding: 60px; text-align: center; color: rgba(255,255,255,.1); font-size: 13px }
 .empty { padding: 60px; text-align: center; color: rgba(255,255,255,.08); font-size: 16px }
