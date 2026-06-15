@@ -25,7 +25,7 @@ export default function LineupsPage({ onBack, onViewLineup, onCreateLineup, embe
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const r = await getLineups({ mapId: mapFilter || undefined, agentId: agentFilter || undefined })
+      const r = await getLineups({ pageSize: 1000, mapId: mapFilter || undefined, agentId: agentFilter || undefined })
       setLineups(r.data)
       const ids = [...new Set(r.data.map(l => l.user_id))]
       if (ids.length > 0) {

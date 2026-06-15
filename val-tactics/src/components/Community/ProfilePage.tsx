@@ -79,7 +79,7 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
       const [tr, pr, lr] = await Promise.all([
         getTactics({ pageSize: 100 }),
         getPosts({ pageSize: 100 }),
-        getLineups({ pageSize: 100 }),
+        getLineups({ pageSize: 1000 }),
       ])
       setTactics(tr.data.filter(t => t.user_id === userId))
       setPosts(pr.data.filter(p => p.user_id === userId))
