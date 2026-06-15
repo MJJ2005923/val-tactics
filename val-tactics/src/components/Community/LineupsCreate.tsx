@@ -52,7 +52,7 @@ export default function LineupsCreate({ mapId, onClose, onSuccess }: Props) {
         body: JSON.stringify({ text: title.trim() + '\n' + desc.trim() }),
       })
       const checkResult = await check.json()
-      if (!checkResult.pass) { setError(checkResult.reason || '内容不符合社区规范'); setSending(false); return }
+      if (!checkResult.allowed) { setError(checkResult.reason || '内容不符合社区规范'); setSending(false); return }
 
       const l = await createLineup({
         userId: user.id, mapId: selectedMap, agentId, abilityId,

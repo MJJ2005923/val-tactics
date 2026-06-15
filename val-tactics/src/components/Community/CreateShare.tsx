@@ -36,7 +36,7 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
         body: JSON.stringify({ text: title.trim() + '\n' + desc.trim() }),
       })
       const checkResult = await check.json()
-      if (!checkResult.pass) { setError(checkResult.reason || '内容不符合社区规范'); setSending(false); return }
+      if (!checkResult.allowed) { setError(checkResult.reason || '内容不符合社区规范'); setSending(false); return }
 
       const tactic = await createTactic({
         userId: user.id,
