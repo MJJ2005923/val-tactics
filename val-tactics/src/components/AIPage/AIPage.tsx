@@ -38,8 +38,8 @@ function getSharedUsage(): number {
 const PLANS = [
   { name: '免费', tier: 'free', detail: '快速模式 · 5 次 / 天', price: '¥0', color: '#05F8F8' },
   { name: '月付', tier: 'standard', detail: '全部 4 种模式 · 独立配额', price: '¥30/月', color: '#E349ED', period: 'month' as const, amount: 30 },
-  { name: '季付', tier: 'standard', detail: '省 ¥15 · ¥25/月', price: '¥75/季', color: '#f0c0ff', period: 'quarter' as const, amount: 75 },
-  { name: '年付', tier: 'standard', detail: '省 ¥72 · ¥24/月', price: '¥288/年', color: '#05F8F8', period: 'year' as const, amount: 288 },
+  { name: '季付', tier: 'standard', detail: '省 ¥2 · ¥29.33/月', price: '¥88/季', color: '#f0c0ff', period: 'quarter' as const, amount: 88 },
+  { name: '年付', tier: 'standard', detail: '省 ¥62 · ¥24.83/月', price: '¥298/年', color: '#05F8F8', period: 'year' as const, amount: 298 },
 ]
 import { ModelIcon } from '../ModelIcon'
 
