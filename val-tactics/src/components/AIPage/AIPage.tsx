@@ -149,15 +149,15 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
     return false
   }
 
-  // 同步套餐到 Supabase
-  const syncTierToSupabase = async (t: string) => {
+  // 同步套餐到 Supabase（expiresAt 由后端返回，默认30天）
+  const syncTierToSupabase = async (t: string, expiresAt?: number) => {
     if (!user) return
     const now = Date.now()
     await supabase.from('user_tiers').upsert({
       user_id: user.id,
       tier: t,
       activated_at: now,
-      expires_at: t === 'free' ? 0 : now + 30 * 86400000,
+      expires_at: t === 'free' ? 0 : expiresAt || now + 30 * 86400000,
       updated_at: new Date().toISOString(),
     })
   }
@@ -626,12 +626,12 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
               <input className={styles.keyInput} value={actCode} placeholder="输入激活码升级套餐..."
                 onChange={e => { setActCode(e.target.value); setActStatus('') }}
-                onKeyDown={e => { if (e.key === 'Enter') { if (!requireUser()) return; const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
+                onKeyDown={e => { if (e.key === 'Enter') { if (!requireUser()) return; const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free', r.expiresAt); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
                 style={{ flex: 1, fontSize: 11 }} />
               <button className={styles.keySaveBtn} onClick={async () => {
                 if (!requireUser()) return
                 const r = await activateCode(actCode)
-                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free'); setActCode(''); setActStatus('✅ 激活成功！') }
+                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free', r.expiresAt); setActCode(''); setActStatus('✅ 激活成功！') }
                 else setActStatus('❌ ' + (r.error || '激活失败'))
               }}>激活</button>
             </div>
