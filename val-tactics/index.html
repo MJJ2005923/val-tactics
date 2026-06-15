@@ -27,12 +27,9 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        // 开发环境：注销所有旧 SW，避免缓存导致白屏
-        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-          navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()))
-        } else {
-          navigator.serviceWorker.register('/sw.js').catch(() => {})
-        }
+        // 先清理旧 SW，再注册新 SW（自毁模式）
+        navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()))
+        navigator.serviceWorker.register('/sw.js').catch(() => {})
       }
     </script>
   </body>
