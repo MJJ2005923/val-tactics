@@ -83,6 +83,7 @@
 .second .podiumAvatar { border: 2px solid rgba(192,192,192,.2); background: rgba(192,192,192,.04) }
 .third .podiumAvatar { border: 2px solid rgba(205,127,50,.2); background: rgba(205,127,50,.04) }
 .podiumAvatar img { width: 100%; height: 100%; object-fit: cover }
+.avatarEmpty { opacity: .2; font-size: 28px }
 
 /* 名字 */
 .podiumName {
