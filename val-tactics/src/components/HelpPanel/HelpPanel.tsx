@@ -135,8 +135,8 @@ export default function HelpPanel({ onClose }: Props) {
           <div className={styles.section}>
             <h3>💳 套餐与收费</h3>
             <ul>
-              <li><strong>免费套餐</strong>：快速模式 5次/天 · 核心知识库（8篇）</li>
-              <li><strong>标准 ¥30/月</strong>：全部 4 种模式 · 完整知识库（15篇）含武器/经济/路线/版本/枪法</li>
+              <li><strong>免费套餐</strong>：快速模式，每日 5 次</li>
+              <li><strong>标准 ¥30/月</strong>：全部 4 种模式，各有独立次数额度</li>
               <li><strong>季付 ¥75（¥25/月）</strong> · <strong>年付 ¥288（¥24/月）</strong></li>
               <li><strong>自备 API Key ¥19.9</strong>：用自己的 Key，不限次数</li>
               <li>激活码通过社群购买，在 T教练 侧边栏输入即可升级</li>

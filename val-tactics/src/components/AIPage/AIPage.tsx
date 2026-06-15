@@ -36,8 +36,8 @@ function getSharedUsage(): number {
 }
 
 const PLANS = [
-  { name: '免费', tier: 'free', detail: '快速模式 · 5次/天 · 核心知识库', price: '¥0', color: '#05F8F8' },
-  { name: '月付', tier: 'standard', detail: '4种模式 · 独立配额 · 完整知识库', price: '¥30/月', color: '#E349ED', period: 'month' as const, amount: 30 },
+  { name: '免费', tier: 'free', detail: '快速模式 · 5 次 / 天', price: '¥0', color: '#05F8F8' },
+  { name: '月付', tier: 'standard', detail: '全部 4 种模式 · 独立配额', price: '¥30/月', color: '#E349ED', period: 'month' as const, amount: 30 },
   { name: '季付', tier: 'standard', detail: '省 ¥15 · ¥25/月', price: '¥75/季', color: '#f0c0ff', period: 'quarter' as const, amount: 75 },
   { name: '年付', tier: 'standard', detail: '省 ¥72 · ¥24/月', price: '¥288/年', color: '#05F8F8', period: 'year' as const, amount: 288 },
 ]
@@ -555,17 +555,8 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
                     </div>
                     {isExpanded && (
                       <div className={styles.planExpand} style={{ animationDelay: `${i * 0.12 + 0.05}s` }}>
-                        <div style={{ marginBottom: 6, color: p.color, fontWeight: 600, fontSize: 11 }}>
-                          🧠 完整知识库（15篇）
-                        </div>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', lineHeight: 1.8, marginBottom: 8 }}>
-                          特工数据 · 地图数据 · 战术术语 · 地图点位<br/>
-                          阵容思路 · 技能连招 · 特工克制 · 阵容深度分析<br/>
-                          <span style={{ color: 'rgba(5,248,248,.25)' }}>武器数据 · 经济系统 · 进攻路线</span><br/>
-                          <span style={{ color: 'rgba(5,248,248,.25)' }}>版本记录 · 实战技巧 · 枪法训练 · 新手必读</span>
-                        </div>
-                        <div style={{ marginBottom: 6, color: p.color, fontWeight: 600, fontSize: 11 }}>
-                          ⚡ 全部 4 种 AI 模式
+                        <div style={{ marginBottom: 4, color: p.color, fontWeight: 600, fontSize: 11 }}>
+                          全部 4 种 AI 模式
                         </div>
                         {[
                           { name: '快速模式', limit: '20次/天' },
@@ -615,6 +606,11 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
                         {isFreeModel && <span className={styles.unlockFree} style={{ fontSize: 9, marginLeft: 6, padding: '1px 6px', verticalAlign: 'middle' }}>免费</span>}
                       </div>
                       <div className={styles.modelDesc}>{m.perf}</div>
+                      <div className={styles.modelLimit} style={{ fontSize: 9, color: 'rgba(255,255,255,.15)', marginTop: 2 }}>
+                        {m.id === 'deepseek-reasoner' || m.id === 'deepseek-v4-pro'
+                          ? '完整知识库 15篇'
+                          : '核心知识库 8篇'}
+                      </div>
                       <div className={styles.modelLimit}>
                         {locked ? '🔒 需升级套餐' : limitText || '可用'}
                       </div>
