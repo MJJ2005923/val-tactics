@@ -608,8 +608,8 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
                       <div className={styles.modelDesc}>{m.perf}</div>
                       <div className={styles.modelLimit} style={{ fontSize: 9, color: 'rgba(255,255,255,.15)', marginTop: 2 }}>
                         {m.id === 'deepseek-reasoner' || m.id === 'deepseek-v4-pro'
-                          ? '完整知识库 15篇'
-                          : '核心知识库 8篇'}
+                          ? '基础知识库＋核心知识库 15篇'
+                          : '基础知识库 8篇'}
                       </div>
                       <div className={styles.modelLimit}>
                         {locked ? '🔒 需升级套餐' : limitText || '可用'}
