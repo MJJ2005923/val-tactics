@@ -19,6 +19,14 @@ export default function RosterPicker() {
     set(next); localStorage.setItem(key, JSON.stringify(next))
   }
 
+  const [round, setRound] = useState(() => localStorage.getItem('val-tactics-round') || '')
+  const [score, setScore] = useState(() => localStorage.getItem('val-tactics-score') || '')
+  const [economy, setEconomy] = useState(() => localStorage.getItem('val-tactics-economy') || '')
+
+  const saveRound = (v: string) => { setRound(v); localStorage.setItem('val-tactics-round', v) }
+  const saveScore = (v: string) => { setScore(v); localStorage.setItem('val-tactics-score', v) }
+  const saveEconomy = (v: string) => { setEconomy(v); localStorage.setItem('val-tactics-economy', v) }
+
   const chip = (id: string, selected: boolean, onClick: () => void) => {
     const a = agents.find(x => x.id === id)
     return (
@@ -57,6 +65,38 @@ export default function RosterPicker() {
               <option value="">（未选择）</option>
               {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+            <div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginBottom: 2 }}>回合</div>
+              <input value={round} placeholder="第几回合" onChange={e => saveRound(e.target.value)} style={{
+                width: '100%', padding: '3px 6px', borderRadius: 5,
+                background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)',
+                color: 'rgba(255,255,255,.5)', fontSize: 10,
+              }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginBottom: 2 }}>比分</div>
+              <input value={score} placeholder="如 8-4" onChange={e => saveScore(e.target.value)} style={{
+                width: '100%', padding: '3px 6px', borderRadius: 5,
+                background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)',
+                color: 'rgba(255,255,255,.5)', fontSize: 10,
+              }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', marginBottom: 2 }}>经济</div>
+              <select value={economy} onChange={e => saveEconomy(e.target.value)} style={{
+                width: '100%', padding: '3px 4px', borderRadius: 5,
+                background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)',
+                color: 'rgba(255,255,255,.5)', fontSize: 10,
+              }}>
+                <option value="">—</option>
+                <option value="full">全起</option>
+                <option value="half">半起</option>
+                <option value="eco">ECO</option>
+                <option value="force">强起</option>
+              </select>
+            </div>
           </div>
           <div>
             <div style={{ fontSize: 10, color: '#05F8F8', marginBottom: 4 }}>我方阵容 ({ally.length}/5)</div>

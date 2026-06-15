@@ -174,6 +174,24 @@ export function getAgentNames(agentIds: string[]): string[] {
 }
 
 /**
+ * 读取对局状态（回合/比分/经济），格式化为AI可读文本
+ */
+export function formatMatchStateForAI(): string {
+  const round = localStorage.getItem('val-tactics-round') || ''
+  const score = localStorage.getItem('val-tactics-score') || ''
+  const economy = localStorage.getItem('val-tactics-economy') || ''
+  if (!round && !score && !economy) return ''
+  const parts: string[] = []
+  if (round) parts.push(`当前回合：第${round}回合`)
+  if (score) parts.push(`比分：${score}`)
+  if (economy) {
+    const ecoMap: Record<string, string> = { full: '全起（全员满甲+长枪+全技能）', half: '半起（部分长枪/轻甲）', eco: 'ECO（存钱局，尽量不消费）', force: '强起（半甲+冲锋枪/手枪+部分技能）' }
+    parts.push(`经济状态：${ecoMap[economy] || economy}`)
+  }
+  return parts.length > 0 ? `【对局实时状态】\n${parts.map(p => `- ${p}`).join('\n')}` : ''
+}
+
+/**
  * 将当前战术板状态格式化为AI可读文本（基础信息）
  */
 export function formatBoardStateForAI(

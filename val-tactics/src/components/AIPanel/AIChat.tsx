@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { getAIConfig, getUserId } from './AISettings'
 import { useTactics } from '../../store/TacticsContext'
-import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import maps from '../../data/maps'
@@ -171,10 +171,14 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
       }
     }
 
+    // 对局状态
+    let matchState = formatMatchStateForAI()
+
     // ⑦ 所有上下文合并为一条消息
     const blocks: string[] = []
     if (knowledgeRefs) blocks.push(knowledgeRefs)
     if (communityRefs) blocks.push(communityRefs)
+    if (matchState) blocks.push(matchState)
     if (boardState) blocks.push(boardState)
     if (matchInfo) blocks.push(matchInfo)
     if (matchData) blocks.push(matchData)

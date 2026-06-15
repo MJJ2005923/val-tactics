@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useTactics } from '../../store/TacticsContext'
-import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import MatchContextSelector, { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import RosterPicker from '../AIPanel/RosterPicker'
@@ -469,10 +469,14 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
       }
     }
 
+    // 对局状态
+    let matchState = formatMatchStateForAI()
+
     // ⑦ 所有上下文合并为一条消息
     const blocks: string[] = []
     if (knowledgeRefs) blocks.push(knowledgeRefs)
     if (communityRefs) blocks.push(communityRefs)
+    if (matchState) blocks.push(matchState)
     if (boardState) blocks.push(boardState)
     if (matchInfo) blocks.push(matchInfo)
     if (matchData) blocks.push(matchData)
