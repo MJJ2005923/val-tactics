@@ -111,17 +111,28 @@ export default function CreatorRankingPage({ onViewProfile }: Props) {
           })}
         </div>
 
-        {creators.length > 3 && <div className={styles.rankDivider}>其他创作者</div>}
-        {creators.slice(3).map((c, i) => (
-          <div key={c.user_id} className={styles.card} style={{ animationDelay: `${i * .03}s`, cursor: 'pointer' }} onClick={() => onViewProfile?.(c.user_id)}>
-            <span className={styles.rankNum}>{i + 4}</span>
-            <span className={styles.avatarSm}>
-              {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.username || '?')[0]}
-            </span>
-            <span className={styles.name}>{c.username?.split('@')[0] || '用户'}</span>
-            <span className={styles.score}>{activeTab.fmt(Number(activeTab.id === 'creation' ? c.creation_count : activeTab.id === 'likes' ? c.total_likes : activeTab.id === 'follows' ? c.follower_count : c.favorite_count))}</span>
-          </div>
-        ))}
+        <div className={styles.rankDivider}>其他创作者</div>
+        {Array.from({ length: 47 }, (_, i) => {
+          const c = creators[i + 3]
+          if (!c) return (
+            <div key={`empty-${i + 4}`} className={styles.card} style={{ animationDelay: `${i * .02}s` }}>
+              <span className={styles.rankNum}>{i + 4}</span>
+              <span className={styles.avatarSm} style={{ opacity: .12 }}>?</span>
+              <span className={styles.name} style={{ color: 'rgba(255,255,255,.06)' }}>虚位以待</span>
+              <span className={styles.score} style={{ color: 'rgba(255,255,255,.06)' }}>—</span>
+            </div>
+          )
+          return (
+            <div key={c.user_id} className={styles.card} style={{ animationDelay: `${i * .02}s`, cursor: 'pointer' }} onClick={() => onViewProfile?.(c.user_id)}>
+              <span className={styles.rankNum}>{i + 4}</span>
+              <span className={styles.avatarSm}>
+                {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.username || '?')[0]}
+              </span>
+              <span className={styles.name}>{c.username?.split('@')[0] || '用户'}</span>
+              <span className={styles.score}>{activeTab.fmt(getScore(c))}</span>
+            </div>
+          )
+        })}
         </>
       )}
     </div>
