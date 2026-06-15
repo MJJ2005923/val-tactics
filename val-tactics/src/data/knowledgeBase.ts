@@ -189,6 +189,38 @@ export function getAgentNames(agentIds: string[]): string[] {
 }
 
 /**
+ * 截断时从被丢弃的消息中提取摘要
+ * 提取用户提问中提到的地图/特工/战术关键词，生成简短摘要
+ */
+export function buildTruncationSummary(truncatedMessages: { role: string; content: string }[]): string {
+  const userQuestions = truncatedMessages
+    .filter(m => m.role === 'user')
+    .map(m => m.content)
+    .filter(c => c.length > 0 && !c.startsWith('（'))
+
+  if (userQuestions.length === 0) return '（前文已截断，以下继续）'
+
+  // 提取提到的话题标签
+  const tags: Set<string> = new Set()
+  for (const q of userQuestions) {
+    // 地图名（使用文件内常量 MAPS）
+    for (const m of MAPS) { if (q.includes(m.name)) tags.add(m.name) }
+    // 特工名（使用文件顶部 import agents）
+    for (const a of agents) { if (q.includes(a.name)) tags.add(a.name) }
+    // 战术关键词
+    const tacTags = ['进攻', '防守', '阵容', '双烟', '双决斗', 'ECO', '速攻', '慢推', '转点', '回防', '前压']
+    for (const t of tacTags) { if (q.includes(t)) tags.add(t) }
+  }
+
+  let summary = '（前文摘要：'
+  if (tags.size > 0) {
+    summary += `涉及${Array.from(tags).slice(0, 6).join('、')}；`
+  }
+  summary += `共${userQuestions.length}轮对话。以下继续当前问题）`
+  return summary
+}
+
+/**
  * 读取对局状态（回合/比分/经济），格式化为AI可读文本
  */
 export function formatMatchStateForAI(): string {

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { getAIConfig, getUserId } from './AISettings'
 import { useTactics } from '../../store/TacticsContext'
-import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, extractNegatedKeywords, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, extractNegatedKeywords, buildTruncationSummary, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import maps from '../../data/maps'
@@ -204,11 +204,11 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
     if (matchInfo) blocks.push(matchInfo)
     if (matchData) blocks.push(matchData)
 
-    // ④ 长对话截断：超过10轮只保留最近10轮
+    // ④ 长对话截断：超过10轮只保留最近10轮，并附前文摘要
     const MAX_ROUNDS = 10
     const recentMsgs = msgs.length > MAX_ROUNDS * 2
-      ? [{ role: 'user' as const, content: '（前文已截断，以下继续）' },
-         { role: 'assistant' as const, content: '明白。' },
+      ? [{ role: 'user' as const, content: buildTruncationSummary(msgs.slice(0, -MAX_ROUNDS * 2)) },
+         { role: 'assistant' as const, content: '明白，我已了解前文背景。' },
          ...msgs.slice(-MAX_ROUNDS * 2)]
       : msgs
 
