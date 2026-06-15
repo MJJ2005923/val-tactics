@@ -207,14 +207,18 @@ export async function onRequest(context) {
       }
       // 旧 tier 自动迁移到新套餐
       const migratedTier = TIER_MIGRATION[codeData.tier] || codeData.tier
-      // 根据前缀自动算过期：MONTH=30天 QUART=90天 YEAR=365天
-      let expiresAt = codeData.expiresAt || 0
-      if (!expiresAt) {
-        if (normalized.startsWith('VAL-MONTH')) expiresAt = Date.now() + 30 * 86400000
-        else if (normalized.startsWith('VAL-QUART')) expiresAt = Date.now() + 90 * 86400000
-        else if (normalized.startsWith('VAL-YEAR')) expiresAt = Date.now() + 365 * 86400000
-        else expiresAt = Date.now() + 30 * 86400000 // 默认30天
-      }
+      // 根据前缀算新增天数：MONTH=30天 QUART=90天 YEAR=365天
+      let addDays = 30
+      if (normalized.startsWith('VAL-MONTH')) addDays = 30
+      else if (normalized.startsWith('VAL-QUART')) addDays = 90
+      else if (normalized.startsWith('VAL-YEAR')) addDays = 365
+      // 查询现有套餐——叠加剩余天数
+      let existingExpires = Date.now()
+      try {
+        const prev = await env.AI_USAGE.get(`tier:${userId}`, { type: 'json' })
+        if (prev?.expiresAt && prev.expiresAt > Date.now()) existingExpires = prev.expiresAt
+      } catch {}
+      const expiresAt = existingExpires + addDays * 86400000
       // 标记使用
       await env.AI_USAGE.put(`code:${normalized}`, JSON.stringify({ ...codeData, used: true, usedBy: userId, usedAt: Date.now(), migratedTier, expiresAt }))
       // 存储用户套餐
