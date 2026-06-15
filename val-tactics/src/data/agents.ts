@@ -273,7 +273,7 @@ const agents: Agent[] = [
     ]
   },
   {
-    id: 'omen', name: '欧门', nameEn: 'Omen', role: '控场者',
+    id: 'omen', name: '幽影', nameEn: 'Omen', role: '控场者',
     abilities: [
       { id: 'omen-shrouded-step', name: '践影', nameEn: 'Shrouded Step', key: 'C', type: 'mobility', iconUrl: '/images/abilities/omen-shrouded-step.png', description: '装备践影技能，查看其范围指示器。按射击开始引导，然后传送至标记位置。', usage: '按C查看范围指示器，左键引导传送至标记位置。' },
       { id: 'omen-paranoia', name: '暗魇', nameEn: 'Paranoia', key: 'Q', type: 'flash', iconUrl: '/images/abilities/omen-paranoia.png', description: '装备致盲法球。按射击将其向前掷出，可使接触到的玩家短暂致聋和视野收缩。此投掷物可穿透墙体。', usage: '按Q装备致盲法球，左键掷出穿透墙体，致聋并收缩视野。' },
@@ -381,7 +381,7 @@ const agents: Agent[] = [
     ]
   },
   {
-    id: 'chamber', name: '钱包', nameEn: 'Chamber', role: '哨卫',
+    id: 'chamber', name: '尚博勒', nameEn: 'Chamber', role: '哨卫',
     abilities: [
       { id: 'chamber-trademark', name: '贵宾限行', nameEn: 'Trademark', key: 'C', type: 'control', iconUrl: '/images/abilities/chamber-trademark.png', description: '放置一个扫描装置，有敌人进入范围后触发，减速区域内所有敌人。', usage: '按C部署扫描器，触发后减速敌人。' },
       { id: 'chamber-headhunter', name: '金牌猎头', nameEn: 'Headhunter', key: 'Q', type: 'damage', iconUrl: '/images/abilities/chamber-headhunter.png', description: '装备一把高精度手枪。按右键开镜，精准射击。共8发子弹，每击杀一人补一发。', usage: '按Q装备精准手枪，右键开镜射击。' },
