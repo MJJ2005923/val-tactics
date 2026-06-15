@@ -20,96 +20,115 @@ export default function HelpPanel({ onClose }: Props) {
         <div className={styles.body}>
 
           <div className={styles.section}>
-            <h3>🎯 这是什么？</h3>
-            <p>无畏契约战术板 —— 网页端战术布置工具。你可以在游戏地图上放置特工技能、绘制进攻路线、录制战术演示，还可以使用 <strong>T教练 AI</strong> 分析战术、推荐阵容、解答任何游戏问题。</p>
-          </div>
-
-          <div className={styles.section}>
-            <h3>🤖 T教练 AI</h3>
-            <ul>
-              <li>点击导航栏 <strong>T教练</strong> → 选择「主页面」打开全屏 AI 对话</li>
-              <li>也可以选择「侧边栏」在右侧边栏快速提问</li>
-              <li>AI 掌握全部 29 位特工技能、12 张地图、战术术语、武器数据等完整知识库</li>
-              <li>开启「基础信息」后，AI 能读取你战术板上的特工站位、技能布置</li>
-              <li>导入比赛数据后，AI 可以分析你的个人表现和改进方向</li>
-              <li>对话记录自动保存，👍👎 评分帮我们优化 AI</li>
-            </ul>
+            <h3>🚀 快速上手</h3>
+            <ol>
+              <li>打开网站 → 看到启动画面 → 点击 <strong>「进入战术板」</strong> 或按 <kbd>Enter</kbd></li>
+              <li>左边找到特工，点开，把技能图标拖到地图上</li>
+              <li>搞定！你已经放好了第一个战术标记</li>
+            </ol>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,.25)', marginTop: 6 }}>💡 如果只想问 AI 问题，不需要画图。顶部点「T教练」就能和 AI 对话。</p>
           </div>
 
           <div className={styles.section}>
             <h3>🗺️ 地图操作</h3>
             <ul>
-              <li><strong>滚轮缩放</strong>：放大地图细节</li>
-              <li><strong>拖拽平移</strong>：用选择工具或右键拖拽移动地图</li>
-              <li><strong>旋转</strong>：右下角旋转按钮，配合攻防切换自动翻转视角</li>
-              <li>12 张地图全覆盖：亚海悬城、源工重镇、森寒冬港、霓虹町、深海明珠、裂变峡谷、隐世修所、日落之城、莲华古城、微风岛屿、幽邃地窖、盐海矿镇</li>
+              <li><strong>换地图</strong>：顶部工具栏选择器切换，12 张地图全覆盖</li>
+              <li><strong>滚轮缩放</strong>：放大地图细节，右下角 +/− 按钮也行</li>
+              <li><strong>拖拽平移</strong>：按住鼠标拖拽，或右下角方向键</li>
+              <li><strong>切换攻防视角</strong>：顶部选择进攻方/防守方，地图自动旋转</li>
             </ul>
           </div>
 
           <div className={styles.section}>
-            <h3>🧑‍🎤 技能放置</h3>
+            <h3>🧑‍🎤 放置技能</h3>
             <ul>
-              <li>左侧面板找到特工 → 点击展开 → 拖动技能到地图上</li>
-              <li><strong>圆形技能</strong>（烟雾、燃烧弹）：拖动即放置</li>
-              <li><strong>线型/锥形技能</strong>：放置后点击地图确定方向和长度</li>
+              <li>左侧面板 → 找到特工（支持搜索中文/英文名）→ 点击展开</li>
+              <li>把技能图标（C/Q/E/X）拖到地图上就放好了</li>
+              <li>放好后可拖拽移动，圆形技能顶部小圆点可旋转</li>
+              <li>技能颜色：绿=烟 · 黄=闪 · 红=伤害 · 蓝=侦查 · 紫=控制 · 橙=位移 · 亮绿=治疗</li>
               <li>右下角 <strong>👁️ 按钮</strong> 一键显示/隐藏所有技能范围</li>
             </ul>
           </div>
 
           <div className={styles.section}>
-            <h3>✏️ 绘图工具</h3>
+            <h3>👥 组阵容</h3>
+            <ul>
+              <li>特工面板顶部有阵容区，拖拽头像到进攻方/防守方格子里</li>
+              <li>每方最多 5 人，左键点已放头像可跳转到该特工，右键移除</li>
+              <li>T教练提问时 AI 会读取你的阵容，建议更精准</li>
+            </ul>
+          </div>
+
+          <div className={styles.section}>
+            <h3>✏️ 画图标注</h3>
             <table className={styles.table}>
-              <thead><tr><th>工具</th><th>用法</th></tr></thead>
+              <thead><tr><th>想做什么</th><th>怎么操作</th></tr></thead>
               <tbody>
-                <tr><td>✋ 选择/平移</td><td>选中元素、拖拽移动、右键平移地图</td></tr>
-                <tr><td>✏️ 画笔</td><td>自由画线标注</td></tr>
-                <tr><td>📏 直线 / ➡️ 箭头</td><td>画直线或带箭头的方向线</td></tr>
-                <tr><td>⬜ 矩形 / ⭕ 圆形</td><td>拖拽画形状标注</td></tr>
-                <tr><td>T 文字</td><td>点击地图添加文字</td></tr>
-                <tr><td>🧹 橡皮</td><td>点击删除任意元素</td></tr>
+                <tr><td>画箭头</td><td>选「箭头」，按住拖拽</td></tr>
+                <tr><td>画方块</td><td>选「矩形」，按住拖拽</td></tr>
+                <tr><td>画圈</td><td>选「圆形」，按住拖拽</td></tr>
+                <tr><td>写文字</td><td>选「文字」，点地图输入。双击可改</td></tr>
+                <tr><td>随便画</td><td>选「画笔」，自由画线</td></tr>
+                <tr><td>擦掉</td><td>选「橡皮」，点一下要删的</td></tr>
+                <tr><td>移动</td><td>选「选择」（手形），拖拽任意元素</td></tr>
               </tbody>
             </table>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,.2)', marginTop: 4 }}>画之前可调颜色、线条粗细、文字大小。</p>
+          </div>
+
+          <div className={styles.section}>
+            <h3>💾 保存与分享</h3>
+            <ul>
+              <li><strong>自动保存</strong>：操作自动存浏览器，关闭重开还在</li>
+              <li><strong>导出图片</strong>：顶部「导出」→ 下载 PNG 截图发给队友</li>
+              <li><strong>分享链接</strong>：复制链接发给队友，点开就能看你的战术</li>
+              <li><strong>模板管理</strong>：保存多个战术来回切换，也可导出 JSON 永久保存</li>
+            </ul>
           </div>
 
           <div className={styles.section}>
             <h3>🎬 录制与回放</h3>
             <ul>
-              <li>时间轴面板 → 点击录制 → 每放一个技能自动记录</li>
+              <li>时间轴面板 → 点录制 → 每放一个技能自动记录</li>
               <li>支持多轨道、重命名、播放控制</li>
               <li>回放时技能按时间顺序依次出现</li>
             </ul>
           </div>
 
           <div className={styles.section}>
-            <h3>💾 保存与分享</h3>
+            <h3>🤖 T教练 AI</h3>
             <ul>
-              <li><strong>保存进度</strong>：存到浏览器本地</li>
-              <li><strong>模板管理</strong>：保存/加载多个战术方案</li>
-              <li><strong>导出图片</strong>：下载战术板 PNG 截图</li>
-              <li><strong>分享链接</strong>：复制链接发给队友（只读查看）</li>
+              <li>顶部点 <strong>「T教练」</strong> 进入，可选择全屏对话或侧边栏快速提问</li>
+              <li>直接打字问，就像跟教练聊天。例如：
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,.25)', display: 'block', marginTop: 4 }}>
+                  「亚海悬城推荐什么阵容？」「婕提在裂变峡谷怎么玩？」「分析我现在的战术布局」
+                </span>
+              </li>
+              <li>AI 会把棋盘上的特工站位和技能也考虑进去，<strong>先摆阵容再提问更准</strong></li>
+              <li>左侧可设置：基础信息（读棋盘）、数据分析（引用对局）、对局信息（地图+敌我阵容）</li>
             </ul>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,.3)', marginTop: 8 }}>⚡ 四种模式：快速（日常问答）· 均衡（战术分析）· 推理（深度研究）· 深度（复杂推演）</p>
           </div>
 
           <div className={styles.section}>
-            <h3>🌐 社区</h3>
+            <h3>🌐 社区广场</h3>
             <ul>
-              <li>点击导航栏 <strong>社区</strong> 进入，左侧导航切换板块</li>
-              <li><strong>战术广场</strong>：浏览/搜索/发布战术，点赞收藏评论</li>
-              <li><strong>论坛大厅</strong>：7种分类发帖（战术讨论/英雄攻略/地图分析/开黑组队/赛事/训练/自定义）</li>
-              <li><strong>技能点位</strong>：选地图→特工→技能→地图点选坐标+4张截图发布</li>
-              <li><strong>个人主页</strong>：5个Tab查看发布/点赞/收藏的内容，留言板互动</li>
+              <li>导航栏「社区」进入，左侧导航切换板块</li>
+              <li><strong>战术广场</strong>：浏览/搜索/发布战术，点赞收藏评论，可加载到自己的战术板修改</li>
+              <li><strong>技能点位</strong>：按地图→特工→技能筛选，每条含坐标+截图+难度评级</li>
+              <li><strong>论坛大厅</strong>：7 种分类发帖（战术讨论/英雄攻略/地图分析/开黑组队/赛事/训练/其他）</li>
+              <li><strong>个人主页</strong>：展示发布/赞过/收藏，关注数和粉丝数，留言板互动</li>
               <li><strong>创作者排行</strong>：创作榜/点赞榜/关注榜/收藏榜</li>
               <li><strong>通知铃铛</strong>：实时提醒点赞/评论/关注/收藏</li>
-              <li><strong>收藏与赞过</strong>：侧边栏入口查看全部，可按类型筛选</li>
             </ul>
           </div>
 
           <div className={styles.section}>
             <h3>🔐 账号系统</h3>
             <ul>
-              <li><strong>注册/登录</strong>：导航栏点击登录，使用邮箱注册</li>
-              <li><strong>跨设备同步</strong>：套餐和自备 Key 状态与账号绑定，换设备登录自动恢复</li>
-              <li><strong>忘记密码</strong>：登录弹窗中点「忘记密码」，输入邮箱即可重置</li>
+              <li><strong>注册/登录</strong>：导航栏点击登录，邮箱注册</li>
+              <li><strong>跨设备同步</strong>：套餐和自备 Key 与账号绑定，换设备自动恢复</li>
+              <li><strong>忘记密码</strong>：登录弹窗点「忘记密码」，输入邮箱重置</li>
             </ul>
           </div>
 
@@ -117,10 +136,10 @@ export default function HelpPanel({ onClose }: Props) {
             <h3>💳 套餐与收费</h3>
             <ul>
               <li><strong>免费套餐</strong>：快速模式，每日 5 次</li>
-              <li><strong>标准 ¥30/月</strong>：全部 4 种模式 — 快速 / 均衡 / 推理 / 深度</li>
-              <li><strong>季付 ¥75/季（¥25/月）</strong>：省 ¥15，同标准配额</li>
-              <li><strong>年付 ¥288/年（¥24/月）</strong>：省 ¥72，同标准配额</li>
-              <li>激活码通过社群渠道购买，在侧边栏输入激活即可升级套餐</li>
+              <li><strong>标准 ¥30/月</strong>：全部 4 种模式，各有独立次数额度</li>
+              <li><strong>季付 ¥75（¥25/月）</strong> · <strong>年付 ¥288（¥24/月）</strong></li>
+              <li><strong>自备 API Key ¥19.9</strong>：用自己的 Key，不限次数</li>
+              <li>激活码通过社群购买，在 T教练 侧边栏输入即可升级</li>
             </ul>
           </div>
 
@@ -130,7 +149,6 @@ export default function HelpPanel({ onClose }: Props) {
               <li>导航栏 T教练 → <strong>数据分析</strong> 打开独立页面</li>
               <li>手动录入或 CSV 批量导入比赛记录</li>
               <li>自动统计胜率、K/D、地图表现、特工表现</li>
-              <li>支持记录双方阵容、首杀、残局、伤害、MVP 等详细数据</li>
               <li>AI 对话中可选择引用比赛数据，获得个性化分析</li>
             </ul>
           </div>
@@ -140,7 +158,7 @@ export default function HelpPanel({ onClose }: Props) {
             <table className={styles.table}>
               <thead><tr><th>按键</th><th>功能</th></tr></thead>
               <tbody>
-                <tr><td><kbd>Delete</kbd></td><td>删除选中元素</td></tr>
+                <tr><td><kbd>Delete / Backspace</kbd></td><td>删除选中元素</td></tr>
                 <tr><td><kbd>Ctrl + Z</kbd></td><td>撤销</td></tr>
                 <tr><td><kbd>Ctrl + Shift + Z</kbd></td><td>重做</td></tr>
                 <tr><td><kbd>Ctrl + D</kbd></td><td>复制选中元素</td></tr>
@@ -151,33 +169,22 @@ export default function HelpPanel({ onClose }: Props) {
           </div>
 
           <div className={styles.section}>
-            <h3>❤️ 支持我们</h3>
-            <p>战术板面板功能完全免费。AI 服务的运营成本由套餐订阅和你的打赏支持。感谢每一位支持者！</p>
+            <h3>❓ 常见问题</h3>
+            <p style={{ fontWeight: 600, fontSize: 12, marginTop: 6 }}>换了电脑，战术还在吗？</p>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,.3)', marginBottom: 8 }}>数据存在当前浏览器。需要跨设备请用「导出 JSON」保存，新设备「导入 JSON」恢复。</p>
+            <p style={{ fontWeight: 600, fontSize: 12 }}>免费版能用多久？</p>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,.3)', marginBottom: 8 }}>永久免费！每天 5 次快速模式。想用更多模式升级套餐即可。</p>
+            <p style={{ fontWeight: 600, fontSize: 12 }}>怎么删除自己发布的内容？</p>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,.3)', marginBottom: 8 }}>进入详情页，点删除按钮（确认后不可恢复）。</p>
+            <p style={{ fontWeight: 600, fontSize: 12 }}>可以用自己的 API Key 吗？</p>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,.3)' }}>可以。T教练页面左侧「自备 API Key」，¥19.9/月解锁，填入你的 Key 不限次数。</p>
           </div>
 
           <div className={styles.section}>
-            <h3>🏆 特别鸣谢</h3>
-            <div style={{
-              display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8,
-              padding: 16, borderRadius: 10,
-              background: 'linear-gradient(135deg, rgba(227,73,237,.04), rgba(5,248,248,.03))',
-              border: '1px solid rgba(227,73,237,.08)',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                <span style={{ color: 'rgba(255,255,255,.3)', fontSize: 12 }}>🥇 至尊赞助</span>
-                <span style={{ color: 'rgba(255,255,255,.15)', fontSize: 11 }}>期待第一位</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                <span style={{ color: 'rgba(255,255,255,.25)', fontSize: 12 }}>🥈 金牌赞助</span>
-                <span style={{ color: 'rgba(255,255,255,.15)', fontSize: 11 }}>期待第一位</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-                <span style={{ color: 'rgba(255,255,255,.2)', fontSize: 12 }}>🥉 银牌赞助</span>
-                <span style={{ color: 'rgba(255,255,255,.15)', fontSize: 11 }}>期待第一位</span>
-              </div>
-            </div>
+            <h3>❤️ 支持我们</h3>
+            <p>战术板功能完全免费。AI 服务运营成本由套餐订阅和打赏支持。感谢每一位支持者！</p>
             <p style={{ marginTop: 10, fontSize: 11, color: 'rgba(255,255,255,.2)' }}>
-              赞助名单将显示在公网版本中。赞助后请联系开发者添加你的名字。
+              赞助名单显示在公网版本中。赞助后联系开发者添加你的名字。
             </p>
           </div>
 
