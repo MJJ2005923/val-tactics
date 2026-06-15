@@ -79,7 +79,7 @@ export default function AdminReview({ onClose }: Props) {
     try {
       const resp = await fetch('/api/admin/distill', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ key: adminKey }),
+        body: JSON.stringify({ key: adminKey, conversationContent: conv.content }),
       })
       const d = await resp.json()
       alert(d.ok ? '蒸馏完成' : '失败')

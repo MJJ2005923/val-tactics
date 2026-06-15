@@ -461,8 +461,8 @@ CREATE TABLE IF NOT EXISTS public.knowledge_insights (
 );
 ALTER TABLE public.knowledge_insights ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "ki_read" ON public.knowledge_insights FOR SELECT USING (true);
-CREATE POLICY "ki_insert" ON public.knowledge_insights FOR INSERT WITH CHECK (true);
-CREATE POLICY "ki_update" ON public.knowledge_insights FOR UPDATE USING (true);
+CREATE POLICY "ki_insert" ON public.knowledge_insights FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
+CREATE POLICY "ki_update" ON public.knowledge_insights FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
 
 -- 知识贡献（用户提交）
 CREATE TABLE IF NOT EXISTS public.knowledge_contributions (
@@ -477,7 +477,7 @@ CREATE TABLE IF NOT EXISTS public.knowledge_contributions (
 ALTER TABLE public.knowledge_contributions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "kc_read" ON public.knowledge_contributions FOR SELECT USING (true);
 CREATE POLICY "kc_insert" ON public.knowledge_contributions FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "kc_update" ON public.knowledge_contributions FOR UPDATE USING (true);
+CREATE POLICY "kc_update" ON public.knowledge_contributions FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
 
 -- 匿名对话日志（用于提升服务质量）
 CREATE TABLE IF NOT EXISTS public.conversation_logs (
