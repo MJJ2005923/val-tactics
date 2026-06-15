@@ -102,8 +102,8 @@ const TIER_TOTAL_LIMITS: Record<string, number> = { free: 5, standard: 60 }
 const MODEL_LIMITS: Record<string, number> = {
   'deepseek-v4-flash': 20,
   'deepseek-chat': 10,
-  'deepseek-reasoner': 3,
-  'deepseek-v4-pro': 2,
+  'deepseek-reasoner': 5,
+  'deepseek-v4-pro': 3,
 }
 
 async function activateCode(code: string): Promise<{ ok: boolean; tier?: string; error?: string; expiresAt?: number }> {
@@ -561,8 +561,8 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
                         {[
                           { name: '快速模式', limit: '20次/天' },
                           { name: '均衡模式', limit: '10次/天' },
-                          { name: '推理模式', limit: '3次/天' },
-                          { name: '深度模式', limit: '2次/天' },
+                          { name: '推理模式', limit: '5次/天' },
+                          { name: '深度模式', limit: '3次/天' },
                         ].map(m => (
                           <div key={m.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontSize: 11 }}>
                             <span style={{ color: 'rgba(255,255,255,.35)' }}>{m.name}</span>
