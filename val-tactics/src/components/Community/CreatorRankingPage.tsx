@@ -54,38 +54,59 @@ export default function CreatorRankingPage({ onViewProfile }: Props) {
       ) : creators.length === 0 ? (
         <div className={styles.empty}>虚位以待</div>
       ) : (
-        <div className={styles.list}>
-          {/* Top 3 — 大卡片 */}
-          {creators.slice(0, 3).map((c, i) => (
-            <div key={c.user_id} className={`${styles.cardTop} ${styles['rank' + (i + 1)]}`} onClick={() => onViewProfile?.(c.user_id)} style={{ cursor: 'pointer' }}>
-              <div className={styles.rankBadge}>{i + 1}</div>
-              <div className={styles.avatar}>
-                {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.username || '?')[0]}
-              </div>
-              <div className={styles.info}>
-                <div className={styles.name}>{c.username?.split('@')[0] || '用户'}</div>
-                <div className={styles.statsRow}>
-                  <span>{c.creation_count} 作品</span>
-                  <span>{c.total_likes} 赞</span>
-                  <span>{c.follower_count} 粉丝</span>
+        <>
+        <div className={styles.podium}>
+          {creators.slice(0, 3).map((c, i) => {
+              const rankConf = [
+                { emoji: '👑', label: '冠军', cls: styles.first },
+                { emoji: '🥈', label: '亚军', cls: styles.second },
+                { emoji: '🥉', label: '季军', cls: styles.third },
+              ][i]
+              return (
+                <div key={c.user_id} className={`${styles.podiumCard} ${rankConf.cls}`} onClick={() => onViewProfile?.(c.user_id)}>
+                  <div className={styles.podiumGlow} />
+                  <div className={styles.podiumRank}>
+                    <span className={styles.rankEmoji}>{rankConf.emoji}</span>
+                    <span className={styles.rankLabel}>{rankConf.label}</span>
+                  </div>
+                  <div className={styles.podiumAvatar}>
+                    {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.username || '?')[0]}
+                  </div>
+                  <div className={styles.podiumName}>{c.username?.split('@')[0] || '用户'}</div>
+                  <div className={styles.podiumScore}>{activeTab.fmt(activeTab.sort(c))}</div>
+                  <div className={styles.podiumStats}>
+                    <div className={styles.statItem}>
+                      <span className={styles.statNum}>{c.creation_count}</span>
+                      <span className={styles.statLabel}>作品</span>
+                    </div>
+                    <div className={styles.statDivider} />
+                    <div className={styles.statItem}>
+                      <span className={styles.statNum}>{c.total_likes}</span>
+                      <span className={styles.statLabel}>获赞</span>
+                    </div>
+                    <div className={styles.statDivider} />
+                    <div className={styles.statItem}>
+                      <span className={styles.statNum}>{c.follower_count}</span>
+                      <span className={styles.statLabel}>粉丝</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className={styles.score}>{activeTab.fmt(activeTab.sort(c))}</div>
-            </div>
-          ))}
-
-          {/* 4-30 — 列表 */}
-          {creators.slice(3).map((c, i) => (
-            <div key={c.user_id} className={styles.card} style={{ animationDelay: `${i * .03}s`, cursor: 'pointer' }} onClick={() => onViewProfile?.(c.user_id)}>
-              <span className={styles.rankNum}>{i + 4}</span>
-              <span className={styles.avatarSm}>
-                {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.username || '?')[0]}
-              </span>
-              <span className={styles.name}>{c.username?.split('@')[0] || '用户'}</span>
-              <span className={styles.score}>{activeTab.fmt(activeTab.sort(c))}</span>
-            </div>
-          ))}
+              )
+            })}
         </div>
+
+        {creators.length > 3 && <div className={styles.rankDivider}>其他创作者</div>}
+        {creators.slice(3).map((c, i) => (
+          <div key={c.user_id} className={styles.card} style={{ animationDelay: `${i * .03}s`, cursor: 'pointer' }} onClick={() => onViewProfile?.(c.user_id)}>
+            <span className={styles.rankNum}>{i + 4}</span>
+            <span className={styles.avatarSm}>
+              {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.username || '?')[0]}
+            </span>
+            <span className={styles.name}>{c.username?.split('@')[0] || '用户'}</span>
+            <span className={styles.score}>{activeTab.fmt(activeTab.sort(c))}</span>
+          </div>
+        ))}
+        </>
       )}
     </div>
   )
