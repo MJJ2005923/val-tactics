@@ -22,6 +22,9 @@ export default function ImageUploader({ hint, onImage, value, userId, lineupId, 
     if (!file) return
 
     setError('')
+    // 文件类型白名单
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+    if (!allowedTypes.includes(file.type)) { setError('仅支持 PNG/JPEG/WebP/GIF 格式'); return }
     // 预览秒出：blob URL，不等 FileReader
     const blobUrl = URL.createObjectURL(file)
     setPreview(blobUrl)

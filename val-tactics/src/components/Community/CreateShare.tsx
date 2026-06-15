@@ -30,6 +30,14 @@ export default function CreateShare({ mapId, onClose, onSuccess }: Props) {
     setSending(true)
     setError('')
     try {
+      // 内容审核
+      const check = await fetch('/api/content-filter', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text: title.trim() + '\n' + desc.trim() }),
+      })
+      const checkResult = await check.json()
+      if (!checkResult.pass) { setError(checkResult.reason || '内容不符合社区规范'); setSending(false); return }
+
       const tactic = await createTactic({
         userId: user.id,
         title: title.trim(),
