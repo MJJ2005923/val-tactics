@@ -71,8 +71,8 @@ export default function ProfilePage({ userId, onBack, onViewTactic, onViewPost, 
 
       // 套餐信息（本地计算）
       const tier = localStorage.getItem('val-tactics-tier') || 'free'
-      const ts = parseInt(localStorage.getItem('val-tactics-tier-at') || '0')
-      const leftDays = ts ? Math.max(0, Math.ceil((ts + 30 * 86400000 - Date.now()) / 86400000)) : 0
+      const expires = parseInt(localStorage.getItem('val-tactics-expires') || '0')
+      const leftDays = expires ? Math.max(0, Math.ceil((expires - Date.now()) / 86400000)) : 0
       setSubInfo({ tier, leftDays })
 
       // 内容列表

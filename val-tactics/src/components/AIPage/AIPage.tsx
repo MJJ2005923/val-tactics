@@ -230,13 +230,14 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
     if (!user) return
     ;(async () => {
       try {
-        const { data } = await supabase.from('user_tiers').select('tier, activated_at').eq('user_id', user.id).single()
+        const { data } = await supabase.from('user_tiers').select('tier, activated_at, expires_at').eq('user_id', user.id).single()
         if (data && data.tier && data.tier !== 'free') {
-          const ts = data.activated_at ? data.activated_at * 1000 : 0
-          if (Date.now() - ts < 30 * 86400000) {
+          const expiresAt = data.expires_at ? data.expires_at * 1000 : 0
+          if (expiresAt > Date.now()) {
             setTier(data.tier)
             localStorage.setItem('val-tactics-tier', data.tier)
-            localStorage.setItem('val-tactics-tier-at', String(ts))
+            localStorage.setItem('val-tactics-tier-at', String(expiresAt))
+            localStorage.setItem('val-tactics-expires', String(expiresAt))
           }
         }
       } catch {}
@@ -629,12 +630,12 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
               <input className={styles.keyInput} value={actCode} placeholder="输入激活码升级套餐..."
                 onChange={e => { setActCode(e.target.value); setActStatus('') }}
-                onKeyDown={e => { if (e.key === 'Enter') { if (!requireUser()) return; const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free', r.expiresAt); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
+                onKeyDown={e => { if (e.key === 'Enter') { if (!requireUser()) return; const c = actCode; activateCode(c).then(r => { if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); localStorage.setItem('val-tactics-expires', String(r.expiresAt || 0)); syncTierToSupabase(r.tier || 'free', r.expiresAt); setActCode(''); setActStatus('✅ 激活成功！') } else setActStatus('❌ ' + (r.error || '失败')) }) } }}
                 style={{ flex: 1, fontSize: 11 }} />
               <button className={styles.keySaveBtn} onClick={async () => {
                 if (!requireUser()) return
                 const r = await activateCode(actCode)
-                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); syncTierToSupabase(r.tier || 'free', r.expiresAt); setActCode(''); setActStatus('✅ 激活成功！') }
+                if (r.ok) { setTier(r.tier || 'free'); localStorage.setItem('val-tactics-tier', r.tier || 'free'); localStorage.setItem('val-tactics-tier-at', String(Date.now())); localStorage.setItem('val-tactics-expires', String(r.expiresAt || 0)); syncTierToSupabase(r.tier || 'free', r.expiresAt); setActCode(''); setActStatus('✅ 激活成功！') }
                 else setActStatus('❌ ' + (r.error || '激活失败'))
               }}>激活</button>
             </div>
