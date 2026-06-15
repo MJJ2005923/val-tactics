@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useTactics } from '../../store/TacticsContext'
-import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, extractNegatedKeywords, buildTruncationSummary, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, extractNegatedKeywords, buildTruncationSummary, getDynamicQuickPrompts, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import MatchContextSelector, { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import RosterPicker from '../AIPanel/RosterPicker'
@@ -558,7 +558,7 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
     } finally { setLoading(false) }
   }
 
-  const quickPrompts = ['分析我现在的战术布局有什么问题', '推荐一个适合这张地图的进攻阵容', '怎么防守 B 点？给三个方案', '当前版本最强的双烟组合是什么']
+  const quickPrompts = getDynamicQuickPrompts(mapName, side)
 
   return (
     <div className={styles.page}>

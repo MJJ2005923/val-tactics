@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { getAIConfig, getUserId } from './AISettings'
 import { useTactics } from '../../store/TacticsContext'
-import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, extractNegatedKeywords, buildTruncationSummary, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
+import { buildKnowledgeBase, getAgentNames, formatBoardStateForAI, formatMatchStateForAI, extractNegatedKeywords, buildTruncationSummary, getDynamicQuickPrompts, getInjectedInsightIds, markInsightsInjected, clearInjectedInsights } from '../../data/knowledgeBase'
 import { loadMatches, formatMatchHistoryForAI, formatSingleMatchForAI } from '../../data/matchHistory'
 import { loadMatchContext } from '../MatchHistory/MatchContextSelector'
 import maps from '../../data/maps'
@@ -318,7 +318,7 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
             </div>
             <p>你好尊敬的选手，我是T教练，我能解答你所有关于无畏契约的疑问</p>
             <div className={styles.quickPrompts}>
-              {['这张地图怎么打 B 点？', '推荐一个进攻阵容', '分析我现在的战术布局', '怎么破解双烟防守？'].map((p, i) => (
+              {getDynamicQuickPrompts(mapName, side).map((p, i) => (
                 <button key={i} className={styles.quickBtn} onClick={() => { setInput(p) }}>{p}</button>
               ))}
             </div>

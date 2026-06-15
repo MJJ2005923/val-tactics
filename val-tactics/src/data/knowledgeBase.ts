@@ -321,6 +321,28 @@ export function formatBoardStateForAI(
 }
 
 /**
+ * 根据当前地图 + 攻防方生成动态 Quick Prompts
+ * 替代硬编码的快捷提问，让推荐更贴合上下文
+ */
+export function getDynamicQuickPrompts(mapName: string, side: string): string[] {
+  const atk = side === 'attack'
+  const prompts: string[] = []
+
+  // 每个场景一个 prompt，覆盖不同角度
+  if (atk) {
+    prompts.push(`${mapName} 进攻${mapName === '隐世修所' ? 'C' : 'B'}点怎么打？`)
+    prompts.push(`推荐一个 ${mapName} 进攻阵容`)
+  } else {
+    prompts.push(`${mapName} 怎么防守${mapName === '隐世修所' ? 'A' : 'B'}点？`)
+    prompts.push(`推荐一个 ${mapName} 防守阵容`)
+  }
+  prompts.push('分析我现在的战术布局有什么问题')
+  prompts.push(atk ? '怎么破解双烟防守？' : '怎么破解对面的 Rush 打法？')
+
+  return prompts
+}
+
+/**
  * 构建「AI 生成战术」专用提示词
  * 包含完整板状态 + 结构化输出要求
  */
