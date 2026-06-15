@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { setAdminKey, clearAdminKey, getAdminKey } from '../../lib/adminAuth'
+import { setAdminKey, clearAdminKey, getAdminKey, approveInsight, approveContribution, editInsight } from '../../lib/adminAuth'
 import { supabase } from '../../lib/supabase'
 import styles from './AdminPage.module.css'
 
@@ -131,7 +131,7 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
   }
   const saveEdit = async () => {
     if (!editingId) return
-    await supabase.from('knowledge_insights').update({ content: editContent }).eq('id', editingId)
+    await editInsight(editingId, editContent)
     setInsights(prev => prev.map(i => i.id === editingId ? { ...i, content: editContent } : i))
     setEditingId(null)
     setEditContent('')
@@ -177,16 +177,12 @@ function ReviewCenter({ adminKey }: { adminKey: string }) {
   useEffect(() => { loadAll() }, [loadAll])
 
   const handleInsight = async (id: string, status: string) => {
-    await supabase.from('knowledge_insights').update({ status }).eq('id', id)
+    await approveInsight(id, status as 'approved' | 'rejected')
     setInsights(prev => prev.filter(i => i.id !== id))
   }
 
   const handleContribution = async (id: string, status: string) => {
-    await supabase.from('knowledge_contributions').update({ status }).eq('id', id)
-    if (status === 'approved') {
-      const item = contributions.find(i => i.id === id)
-      if (item) await supabase.from('knowledge_insights').insert({ source: 'user', category: item.category, content: item.content, status: 'approved' })
-    }
+    await approveContribution(id, status as 'approved' | 'rejected')
     setContributions(prev => prev.filter(i => i.id !== id))
   }
 

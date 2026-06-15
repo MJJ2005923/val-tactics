@@ -503,6 +503,44 @@ KAY/O：碎片溢出(C)、闪存过载(Q)、零点嗅探(E)、无效指令(X)
     return new Response(JSON.stringify({ allKeys, target, sbKey: !!SB_KEY, sbKeyLen: SB_KEY.length, adminKey: !!env.ADMIN_KEY, deepseekKey: !!env.DEEPSEEK_KEY }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }
 
+  // === POST /api/admin/insights-action (审核知识洞察/贡献) ===
+  if (url.pathname === '/api/admin/insights-action' && request.method === 'POST') {
+    try {
+      const { key, action, id, status, content } = await request.json()
+      if (key !== env.ADMIN_KEY || !env.ADMIN_KEY) {
+        return new Response(JSON.stringify({ error: '无权限' }), { status: 403, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+      const svcKey = env.SUPABASE_SERVICE_KEY || ''
+      const baseHeaders = { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}`, 'Content-Type': 'application/json' }
+      const apiBase = 'https://zwtpeyvqbllrpregjpyd.supabase.co/rest/v1'
+
+      if (action === 'approve-insight' || action === 'reject-insight') {
+        await fetch(`${apiBase}/knowledge_insights?id=eq.${encodeURIComponent(id)}`, { method: 'PATCH', headers: { ...baseHeaders, 'Prefer': 'return=minimal' }, body: JSON.stringify({ status }) })
+        return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+
+      if (action === 'approve-contribution' || action === 'reject-contribution') {
+        await fetch(`${apiBase}/knowledge_contributions?id=eq.${encodeURIComponent(id)}`, { method: 'PATCH', headers: { ...baseHeaders, 'Prefer': 'return=minimal' }, body: JSON.stringify({ status }) })
+        if (status === 'approved') {
+          const { data: item } = await (await fetch(`${apiBase}/knowledge_contributions?id=eq.${encodeURIComponent(id)}&select=category,content`, { headers: baseHeaders })).json()
+          if (item?.length) {
+            await fetch(`${apiBase}/knowledge_insights`, { method: 'POST', headers: { ...baseHeaders, 'Prefer': 'return=minimal' }, body: JSON.stringify({ source: 'user', category: item[0].category, content: item[0].content, status: 'approved' }) })
+          }
+        }
+        return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+
+      if (action === 'edit-insight') {
+        await fetch(`${apiBase}/knowledge_insights?id=eq.${encodeURIComponent(id)}`, { method: 'PATCH', headers: { ...baseHeaders, 'Prefer': 'return=minimal' }, body: JSON.stringify({ content }) })
+        return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      }
+
+      return new Response(JSON.stringify({ error: '未知操作' }), { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    }
+  }
+
   // === POST /api/admin/check-version (检测新版本拉取patch notes) ===
   if (url.pathname === '/api/admin/check-version' && request.method === 'POST') {
     const key = new URL(request.url).searchParams.get('key') || ''

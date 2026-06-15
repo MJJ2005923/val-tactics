@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { setAdminKey, clearAdminKey, getAdminKey } from '../../lib/adminAuth'
+import { setAdminKey, clearAdminKey, getAdminKey, approveInsight, approveContribution } from '../../lib/adminAuth'
 import { supabase } from '../../lib/supabase'
 import styles from './AdminPanel.module.css'
 
@@ -31,7 +31,7 @@ function KnowledgeInsights({ adminKey, refreshTrigger }: { adminKey: string; ref
   }
 
   const handleReview = async (id: string, status: string) => {
-    await supabase.from('knowledge_insights').update({ status }).eq('id', id)
+    await approveInsight(id, status as 'approved' | 'rejected')
     loadInsights()
   }
 
@@ -158,11 +158,7 @@ function KnowledgeContributions({ refreshTrigger }: { refreshTrigger?: number })
   useEffect(() => { load() }, [refreshTrigger])
 
   const handleReview = async (id: string, status: string) => {
-    await supabase.from('knowledge_contributions').update({ status }).eq('id', id)
-    if (status === 'approved') {
-      const item = items.find(i => i.id === id)
-      if (item) await supabase.from('knowledge_insights').insert({ source: 'user', category: item.category, content: item.content, status: 'approved' })
-    }
+    await approveContribution(id, status as 'approved' | 'rejected')
     load()
   }
 

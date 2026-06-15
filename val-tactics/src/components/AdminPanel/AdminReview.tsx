@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { setAdminKey, clearAdminKey, getAdminKey } from '../../lib/adminAuth'
+import { setAdminKey, clearAdminKey, getAdminKey, approveInsight, approveContribution } from '../../lib/adminAuth'
 import styles from './AdminPanel.module.css'
 
 interface Props { onClose: () => void }
@@ -60,16 +60,12 @@ export default function AdminReview({ onClose }: Props) {
   }, [convPage, authed])
 
   const handleInsight = async (id: string, status: string) => {
-    await supabase.from('knowledge_insights').update({ status }).eq('id', id)
+    await approveInsight(id, status as 'approved' | 'rejected')
     setInsights(prev => prev.filter(i => i.id !== id))
   }
 
   const handleContribution = async (id: string, status: string) => {
-    await supabase.from('knowledge_contributions').update({ status }).eq('id', id)
-    if (status === 'approved') {
-      const item = contributions.find(i => i.id === id)
-      if (item) await supabase.from('knowledge_insights').insert({ source: 'user', category: item.category, content: item.content, status: 'approved' })
-    }
+    await approveContribution(id, status as 'approved' | 'rejected')
     setContributions(prev => prev.filter(i => i.id !== id))
   }
 
