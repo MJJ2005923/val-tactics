@@ -106,7 +106,7 @@ const MODEL_LIMITS: Record<string, number> = {
   'deepseek-v4-pro': 2,
 }
 
-async function activateCode(code: string): Promise<{ ok: boolean; tier?: string; error?: string }> {
+async function activateCode(code: string): Promise<{ ok: boolean; tier?: string; error?: string; expiresAt?: number }> {
   try {
     const resp = await fetch('/api/activate', {
       method: 'POST', headers: { 'content-type': 'application/json' },
