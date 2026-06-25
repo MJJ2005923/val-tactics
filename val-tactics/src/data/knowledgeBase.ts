@@ -29,7 +29,8 @@ const MAPS: { name: string; nameEn: string; desc: string }[] = [
   { name: '莲华古城', nameEn: 'Lotus', desc: '三点地图，旋转门+可破坏墙体，A/C点通过转门连接' },
   { name: '盐海矿镇', nameEn: 'Salt Chuck Mine Town', desc: '双点地图，矿场主题，窄通道与开阔矿区交替' },
   { name: '日落之城', nameEn: 'Sunset', desc: '双点地图，洛杉矶风格街区，中路宽阔直通B点' },
-  { name: '幽邃地窖', nameEn: 'ABYSS', desc: '双点地图，地底洞穴主题，多层结构，跌落区域多' },
+  { name: '幽邃地窖', nameEn: 'Abyss', desc: '双点地图，地底洞穴主题，多层结构，跌落区域多' },
+  { name: '天枢云阙', nameEn: 'Summit', desc: '双点地图，中国张家界主题峰林场景，可降落墙体改变路线' },
 ]
 
 /** 去除 Markdown 格式符号，返回纯文本 */

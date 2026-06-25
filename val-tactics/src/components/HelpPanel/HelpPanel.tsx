@@ -32,7 +32,7 @@ export default function HelpPanel({ onClose }: Props) {
           <div className={styles.section}>
             <h3>🗺️ 地图操作</h3>
             <ul>
-              <li><strong>换地图</strong>：顶部工具栏选择器切换，12 张地图全覆盖</li>
+              <li><strong>换地图</strong>：顶部工具栏选择器切换，13 张地图全覆盖</li>
               <li><strong>滚轮缩放</strong>：放大地图细节，右下角 +/− 按钮也行</li>
               <li><strong>拖拽平移</strong>：按住鼠标拖拽，或右下角方向键</li>
               <li><strong>切换攻防视角</strong>：顶部选择进攻方/防守方，地图自动旋转</li>

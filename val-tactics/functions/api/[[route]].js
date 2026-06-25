@@ -492,7 +492,7 @@ KAY/O：碎片溢出(C)、闪存过载(Q)、零点嗅探(E)、无效指令(X)
 禁灭(Veto)：涡流折跃(C)、裂变残片(Q)、噬源体(E)、完全进化(X)
 
 【无畏契约全部地图（必须使用以下中文名称）】
-亚海悬城(Ascent)、源工重镇(Bind)、森寒冬港(Icebox)、霓虹町(Split)、微风岛屿(Breeze)、隐世修所(Haven)、裂变峡谷(Fracture)、深海明珠(Pearl)、日落之城(Sunset)、莲华古城(Lotus)、幽邃地窖(Abyss)、盐海矿镇(Salt Chuck Mine Town)
+亚海悬城(Ascent)、源工重镇(Bind)、森寒冬港(Icebox)、霓虹町(Split)、微风岛屿(Breeze)、隐世修所(Haven)、裂变峡谷(Fracture)、深海明珠(Pearl)、日落之城(Sunset)、莲华古城(Lotus)、幽邃地窖(Abyss)、盐海矿镇(Salt Chuck Mine Town)、天枢云阙(Summit)
 
 注意：所有特工名、技能名、地图名必须严格使用上面列出的中文名称，禁止自创译名或使用英文名。禁止使用"某个特工""某个英雄""一个技能"等模糊表述。`
 

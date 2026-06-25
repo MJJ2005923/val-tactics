@@ -17,6 +17,7 @@ const maps: MapData[] = [
   { id: 'breeze',    name: '微风岛屿', nameEn: 'Breeze' },
   { id: 'abyss',     name: '幽邃地窖', nameEn: 'Abyss' },
   { id: 'saltmine',  name: '盐海矿镇', nameEn: 'Salt Chuck Mine Town' },
+  { id: 'summit',    name: '天枢云阙', nameEn: 'Summit' },
 ]
 
 export default maps
