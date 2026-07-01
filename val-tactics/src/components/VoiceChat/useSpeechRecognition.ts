@@ -61,16 +61,14 @@ export function useSpeechRecognition(opts: UseSpeechRecognitionOptions = {}) {
         if (event.error === 'not-allowed') {
           setError('麦克风权限被拒绝')
           setListening(false)
-        } else if (event.error === 'no-speech') {
-          // 静音，不报错，继续等
-        } else {
-          setError(`识别错误: ${event.error}`)
+          restartRef.current = false
         }
+        // aborted / no-speech / network 等错误静默处理，onend 会自动重启
       }
 
       rec.onend = () => {
         if (restartRef.current) {
-          try { rec.start() } catch {}
+          setTimeout(() => { try { rec.start() } catch {} }, 200)
         } else {
           setListening(false)
         }
