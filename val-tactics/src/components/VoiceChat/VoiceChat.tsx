@@ -28,6 +28,8 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
   const [ttsOn, setTtsOn] = useState(() => localStorage.getItem('val-tactics-voice-tts') === '1')
   const [autoMin, setAutoMin] = useState(() => localStorage.getItem('val-tactics-voice-automin') || 'never')
   const [transLang, setTransLang] = useState(() => localStorage.getItem('val-tactics-voice-translang') || 'ko-KR')
+  const [apiKey, setApiKey] = useState(() => (getConfig().apiKey || ''))
+  const [showKey, setShowKey] = useState(false)
 
   // 读取用户 API 配置
   const getConfig = () => { try { return JSON.parse(localStorage.getItem('val-tactics-ai-config') || '{}') } catch { return {} } }
@@ -309,6 +311,27 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
               <option value="5s">5秒</option>
               <option value="10s">10秒</option>
             </select>
+          </div>
+          <div className={styles.setRow}>
+            <label>API Key</label>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <input
+                type={showKey ? 'text' : 'password'}
+                value={apiKey}
+                placeholder="sk-..."
+                onChange={e => setApiKey(e.target.value)}
+                onBlur={() => {
+                  const cfg = getConfig()
+                  cfg.apiKey = apiKey
+                  localStorage.setItem('val-tactics-ai-config', JSON.stringify(cfg))
+                }}
+                style={{ width: 160, textAlign: 'left' }}
+              />
+              <button className={styles.iconBtn} onClick={() => setShowKey(!showKey)}
+                style={{ fontSize: 10 }} title={showKey ? '隐藏' : '显示'}>
+                {showKey ? '🙈' : '👁'}
+              </button>
+            </div>
           </div>
           <button className={styles.clearBtn} onClick={() => setMessages([])}>清屏</button>
           {error && <div className={styles.error}>{error}</div>}
