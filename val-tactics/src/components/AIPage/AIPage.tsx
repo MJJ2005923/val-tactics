@@ -852,6 +852,12 @@ export default function AIPage({ mapId, mapName, onBack, initialPrompt }: { mapI
                   <div className={styles.msgContent}>{m.content}</div>
                   {m.role === 'assistant' && m.convId && (
                     <div style={{ display: 'flex', gap: 6, marginTop: 4, paddingLeft: 4, opacity: .6 }}>
+                      <span onClick={() => {
+                        speechSynthesis.cancel()
+                        const u = new SpeechSynthesisUtterance(m.content.slice(0, 300))
+                        u.lang = 'zh-CN'; u.rate = 1.1
+                        speechSynthesis.speak(u)
+                      }} style={{ cursor: 'pointer', fontSize: 15, opacity: .5 }} title="朗读">🔊</span>
                       <span
                         onClick={async () => {
                           const nr = m.rating === 1 ? 0 : 1

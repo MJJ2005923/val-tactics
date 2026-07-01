@@ -329,6 +329,12 @@ export default function AIChat({ mapId, mapName }: { mapId: string; mapName: str
             </div>
             {m.role === 'assistant' && m.convId && (
               <div style={{ display: 'flex', gap: 4, marginTop: 2, paddingLeft: 4 }}>
+                <span onClick={() => {
+                  speechSynthesis.cancel()
+                  const u = new SpeechSynthesisUtterance(m.content.slice(0, 300))
+                  u.lang = 'zh-CN'; u.rate = 1.1
+                  speechSynthesis.speak(u)
+                }} style={{ cursor: 'pointer', fontSize: 14, opacity: .3 }} title="朗读">🔊</span>
                 <span onClick={async () => {
                   const nr = m.rating === 1 ? 0 : 1
                   setMessages(prev => prev.map(msg => msg.convId === m.convId ? { ...msg, rating: nr } : msg))
