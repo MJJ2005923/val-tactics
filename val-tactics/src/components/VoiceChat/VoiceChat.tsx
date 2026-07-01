@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSpeechRecognition, type VoiceResult } from './useSpeechRecognition'
+import { useSpeechSynthesis } from './useSpeechSynthesis'
 import { parse, type VoiceMode, LANG_MAP, LANG_LABELS, CSS_LANG } from './commandParser'
 import { decryptKey } from '../../utils/crypto'
 import styles from './VoiceChat.module.css'
@@ -25,10 +26,9 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
 
   // 设置
   const [wakeWord, setWakeWord] = useState(() => localStorage.getItem('val-tactics-voice-wake') || 'T教练')
-  const [confirmMode, setConfirmMode] = useState(() => localStorage.getItem('val-tactics-voice-confirm') || 'brief')
-  const [ttsOn, setTtsOn] = useState(() => localStorage.getItem('val-tactics-voice-tts') === '1')
   const [autoMin, setAutoMin] = useState(() => localStorage.getItem('val-tactics-voice-automin') || 'never')
   const [transLang, setTransLang] = useState(() => localStorage.getItem('val-tactics-voice-translang') || 'ko-KR')
+  const tts = useSpeechSynthesis()
   const uid = () => { let id = localStorage.getItem('val-tactics-uid'); if (!id) { id = 'u' + Date.now().toString(36); localStorage.setItem('val-tactics-uid', id) }; return id }
   const getConfig = () => { try { const cfg = JSON.parse(localStorage.getItem('val-tactics-ai-config') || '{}'); if (cfg.apiKey) cfg.apiKey = decryptKey(cfg.apiKey, uid()); return cfg } catch { return {} } }
   const [apiKey, setApiKey] = useState(() => (getConfig().apiKey || ''))
@@ -44,31 +44,8 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
     setMessages(prev => [...prev.slice(-80), { ...m, id: mid + 1 }])
   }, [mid])
 
-  const speakTTS = useCallback((text: string) => {
-    if (!ttsOn || !window.speechSynthesis) return
-    const u = new SpeechSynthesisUtterance(text.slice(0,100))
-    u.lang = 'zh-CN'; u.rate = 1.1
-    speechSynthesis.cancel()
-    speechSynthesis.speak(u)
-  }, [ttsOn])
-
-  const playBeep = useCallback(() => {
-    try {
-      const ctx = new AudioContext()
-      const o = ctx.createOscillator()
-      const g = ctx.createGain()
-      o.connect(g); g.connect(ctx.destination)
-      o.frequency.value = 880; o.type = 'sine'
-      g.gain.value = 0.08
-      o.start(); o.stop(ctx.currentTime + 0.12)
-      setTimeout(() => ctx.close(), 200)
-    } catch {}
-  }, [])
-
-  const confirmAction = useCallback((text: string) => {
-    if (confirmMode === 'full') speakTTS(text)
-    else playBeep()
-  }, [confirmMode, speakTTS, playBeep])
+  const speakTTS = useCallback((text: string) => tts.speak(text, true), [tts])
+  const confirmAction = useCallback((text: string) => tts.confirmAction(text), [tts])
 
   // 发送到 T教练 / 翻译
   const callAI = useCallback(async (prompt: string, target: 'coach' | 'translate' | 'speak', langKey?: string) => {
@@ -117,8 +94,8 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
       case 'ctrl': {
         if (parsed.ctrl === 'pause') useSpeechRecognition.prototype?.stop?.()
         else if (parsed.ctrl === 'clear') setMessages([])
-        else if (parsed.ctrl === 'tts-on') { setTtsOn(true); localStorage.setItem('val-tactics-voice-tts', '1') }
-        else if (parsed.ctrl === 'tts-off') { setTtsOn(false); localStorage.setItem('val-tactics-voice-tts', '0') }
+        else if (parsed.ctrl === 'tts-on') tts.updateSetting('ttsMode', 'auto')
+        else if (parsed.ctrl === 'tts-off') tts.updateSetting('ttsMode', 'off')
         else if (parsed.ctrl === 'close') onClose()
         return
       }
@@ -174,7 +151,6 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
   }, [listening, autoMin])
 
   const saveWake = (v: string) => { setWakeWord(v); localStorage.setItem('val-tactics-voice-wake', v) }
-  const saveConfirm = (v: string) => { setConfirmMode(v); localStorage.setItem('val-tactics-voice-confirm', v) }
   const saveAutoMin = (v: string) => { setAutoMin(v); localStorage.setItem('val-tactics-voice-automin', v) }
 
   if (minimized) return (
@@ -293,16 +269,18 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
           </div>
           <div className={styles.setRow}>
             <label>确认语</label>
-            <select value={confirmMode} onChange={e => saveConfirm(e.target.value)}>
+            <select value={tts.settings.confirmMode} onChange={e => tts.updateSetting('confirmMode', e.target.value as 'brief'|'full')}>
               <option value="brief">简洁（音效）</option>
               <option value="full">详细（语音）</option>
             </select>
           </div>
           <div className={styles.setRow}>
-            <label>TTS 语音播报</label>
-            <button className={ttsOn ? styles.toggleOn : styles.toggleOff} onClick={() => {
-              setTtsOn(!ttsOn); localStorage.setItem('val-tactics-voice-tts', ttsOn ? '0' : '1')
-            }}>{ttsOn ? '开' : '关'}</button>
+            <label>朗读模式</label>
+            <select value={tts.settings.ttsMode} onChange={e => tts.updateSetting('ttsMode', e.target.value as 'click'|'auto'|'off')}>
+              <option value="click">🔘 点击朗读</option>
+              <option value="auto">🤖 自动朗读</option>
+              <option value="off">🔇 关闭</option>
+            </select>
           </div>
           <div className={styles.setRow}>
             <label>自动最小化</label>
