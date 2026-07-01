@@ -28,11 +28,9 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
   const [ttsOn, setTtsOn] = useState(() => localStorage.getItem('val-tactics-voice-tts') === '1')
   const [autoMin, setAutoMin] = useState(() => localStorage.getItem('val-tactics-voice-automin') || 'never')
   const [transLang, setTransLang] = useState(() => localStorage.getItem('val-tactics-voice-translang') || 'ko-KR')
+  const getConfig = () => { try { return JSON.parse(localStorage.getItem('val-tactics-ai-config') || '{}') } catch { return {} } }
   const [apiKey, setApiKey] = useState(() => (getConfig().apiKey || ''))
   const [showKey, setShowKey] = useState(false)
-
-  // 读取用户 API 配置
-  const getConfig = () => { try { return JSON.parse(localStorage.getItem('val-tactics-ai-config') || '{}') } catch { return {} } }
   const hasApiKey = !!(getConfig().apiKey)
 
   const scrollRef = useRef<HTMLDivElement>(null)
