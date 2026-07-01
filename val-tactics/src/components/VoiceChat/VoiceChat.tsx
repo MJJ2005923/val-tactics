@@ -165,6 +165,23 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
   const saveWake = (v: string) => { setWakeWord(v); localStorage.setItem('val-tactics-voice-wake', v) }
   const saveAutoMin = (v: string) => { setAutoMin(v); localStorage.setItem('val-tactics-voice-automin', v) }
 
+  // 打开独立 PiP 窗口
+  const openPiP = useCallback(async () => {
+    const pipUrl = `${window.location.origin}${window.location.pathname}?pip=1`
+    try {
+      // @ts-ignore — Chrome 116+ Document Picture-in-Picture API
+      if (window.documentPictureInPicture) {
+        // @ts-ignore
+        const pipWindow = await documentPictureInPicture.requestWindow({ width: 340, height: 200 })
+        pipWindow.location.href = pipUrl
+      } else {
+        window.open(pipUrl, 'voice-pip', 'width=340,height=200')
+      }
+    } catch {
+      window.open(pipUrl, 'voice-pip', 'width=340,height=200')
+    }
+  }, [])
+
   if (minimized) return (
     <div className={styles.ball} onClick={() => setMinimized(false)} title="展开语音助手">
       {listening ? '🎤' : '⏸'}
@@ -178,6 +195,7 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
         <span>🎤 T教练语音助手</span>
         <div className={styles.headerBtns}>
           <button className={styles.iconBtn} onClick={() => setShowSettings(!showSettings)} title="设置">⚙</button>
+          <button className={styles.iconBtn} onClick={openPiP} title="独立窗口">📌</button>
           <button className={styles.iconBtn} onClick={() => setMinimized(true)} title="最小化">—</button>
           <button className={styles.iconBtn} onClick={onClose} title="关闭">✕</button>
         </div>

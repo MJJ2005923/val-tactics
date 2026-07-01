@@ -271,9 +271,6 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault(); setShowTemplates(true)
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 't' || e.key === 'T')) {
-        e.preventDefault(); setShowVoiceChat(v => !v)
-      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -388,6 +385,12 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
                   <button className="navbar__aiDropdownItem" onClick={() => { setShowVoiceChat(true); setShowAIDropdown(false) }}
                     style={{ color: '#05F8F8' }}>
                     <span>🎤 语音对话</span>
+                  </button>
+                  <button className="navbar__aiDropdownItem" onClick={() => {
+                    setShowAIDropdown(false)
+                    window.open(`${location.origin}${location.pathname}?pip=1`, 'T教练-画中画', 'width=400,height=600,top=50,left=50')
+                  }}>
+                    <span>📌 画中画</span>
                   </button>
                   <div className="navbar__aiDropdownDivider" style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 8px' }} />
                   <button className="navbar__aiDropdownItem" onClick={() => { setShowMatchAnalysis(true); setShowAIDropdown(false) }}>

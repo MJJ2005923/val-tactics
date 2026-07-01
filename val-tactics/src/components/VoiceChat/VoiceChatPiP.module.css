@@ -1,0 +1,131 @@
+/* ====== PiP 游戏叠加层 — 透明极简 ====== */
+
+/* 覆盖全局样式，确保 PiP 窗口透明 */
+html, body, #root {
+  background: transparent !important;
+  margin: 0; padding: 0; overflow: hidden;
+}
+
+:root {
+  --pip-bg: transparent;
+  --pip-text: rgba(255,255,255,.88);
+  --pip-shadow: 0 0 6px rgba(0,0,0,.8), 0 0 3px rgba(0,0,0,.6);
+  --pip-accent: #05F8F8;
+}
+
+/* 重置 — PiP 窗口独立作用域 */
+.pipShell {
+  width: 100vw; height: 100vh;
+  margin: 0; padding: 0;
+  background: transparent;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 12px;
+  color: var(--pip-text);
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: background .3s;
+}
+
+/* 拖拽句柄区 */
+.dragHandle {
+  height: 22px;
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 0 6px; gap: 6px;
+  -webkit-app-region: drag;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.pipShell:hover .dragHandle { opacity: 1 }
+.dragHandleBtn {
+  -webkit-app-region: no-drag;
+  background: none; border: none;
+  color: rgba(255,255,255,.3); cursor: pointer;
+  font-size: 12px; padding: 2px 4px; border-radius: 3px;
+  line-height: 1;
+}
+.dragHandleBtn:hover { color: #fff; background: rgba(255,255,255,.08) }
+
+/* 状态行 */
+.statusBar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 2px 8px; min-height: 20px;
+}
+.statusDot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  box-shadow: 0 0 4px currentColor;
+}
+.statusMode {
+  font-size: 14px; line-height: 1;
+}
+.statusLabel {
+  font-size: 10px; opacity: .5; margin-left: auto;
+}
+
+/* 消息区 */
+.msgArea {
+  flex: 1; overflow-y: auto;
+  padding: 4px 8px 8px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.msgRow {
+  font-size: 11px; line-height: 1.4;
+  padding: 2px 6px; border-radius: 4px;
+  text-shadow: var(--pip-shadow);
+  animation: pipFadeIn .3s ease both;
+}
+@keyframes pipFadeIn { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
+
+.msgCoachQ { color: rgba(5,248,248,.85); border-left: 2px solid rgba(5,248,248,.35); padding-left: 8px }
+.msgCoachA { color: rgba(255,255,255,.8); border-left: 2px solid rgba(227,73,237,.35); padding-left: 8px }
+.msgListen { color: rgba(80,180,240,.85); border-left: 2px solid rgba(80,180,240,.35); padding-left: 8px }
+.msgSpeak { color: rgba(240,200,80,.85); border-left: 2px solid rgba(240,200,80,.35); padding-left: 8px }
+
+.msgTag {
+  font-size: 9px; font-weight: 700; margin-bottom: 1px;
+  opacity: .7; letter-spacing: .3px;
+}
+.msgText { }
+.msgTrans {
+  margin-top: 2px; padding-top: 2px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  opacity: .7; font-size: 10px;
+}
+
+/* 底部栏 */
+.bottomBar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 2px 8px 6px; min-height: 22px;
+}
+.copyHint {
+  font-size: 9px; color: rgba(5,248,248,.8);
+  text-shadow: var(--pip-shadow);
+  animation: pipCopyFlash .6s ease;
+}
+@keyframes pipCopyFlash {
+  0%,100% { opacity: 0 }
+  30%,70% { opacity: 1 }
+}
+.emptyHint {
+  text-align: center; padding: 16px 8px;
+  font-size: 10px; opacity: .25; text-shadow: var(--pip-shadow);
+}
+
+/* 固定模式 — 点击穿透 */
+.pipShellFixed {
+  pointer-events: none;
+}
+.pipShellFixed .dragHandle,
+.pipShellFixed .bottomBar,
+.pipShellFixed .dragHandleBtn {
+  pointer-events: none;
+}
+
+/* 错误/加载 */
+.pipError {
+  padding: 8px; font-size: 10px; color: #ff5555;
+  text-shadow: var(--pip-shadow);
+  text-align: center;
+}
