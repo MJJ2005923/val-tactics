@@ -14,7 +14,7 @@ type Message = {
   copied?: boolean
 }
 
-const QUICK_PHRASES = ['来支援', 'A点有敌', 'B点空的', '撤退', '进攻', '等一下', '下包', '拆包']
+const QUICK_PHRASES = ['来支援', 'A点有敌', 'B点空的', '撤退', '进攻', '等一下', '下包', '拆包', '买枪', 'ECO局', 'Nice', '抱歉']
 
 export default function VoiceChat({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<VoiceMode>('coach')
@@ -49,7 +49,7 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
 
   // 发送到 T教练 / 翻译
   const callAI = useCallback(async (prompt: string, target: 'coach' | 'translate' | 'speak', langKey?: string) => {
-    const config = (() => { try { return JSON.parse(localStorage.getItem('val-tactics-ai-config') || '{}') } catch { return {} } })()
+    const config = getConfig()
     const model = config.model || 'deepseek-v4-flash'
     const apiKey = config.apiKey || ''
 
@@ -59,7 +59,8 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
     } else if (target === 'speak' && langKey) {
       systemPrompt = `将以下中文翻译成${LANG_LABELS[langKey] || langKey}。只输出翻译结果，不要解释。`
     } else {
-      systemPrompt = `将以下文本翻译成中文。只输出翻译结果，不要解释。`
+      const srcLabel = LANG_LABELS[transLang] || ''
+      systemPrompt = `将以下${srcLabel}文本翻译成中文。只输出翻译结果，不要解释。`
     }
 
     try {
@@ -92,7 +93,8 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
         return
       }
       case 'ctrl': {
-        if (parsed.ctrl === 'pause') useSpeechRecognition.prototype?.stop?.()
+        if (parsed.ctrl === 'pause') stop()
+        else if (parsed.ctrl === 'resume') start()
         else if (parsed.ctrl === 'clear') setMessages([])
         else if (parsed.ctrl === 'tts-on') tts.updateSetting('ttsMode', 'auto')
         else if (parsed.ctrl === 'tts-off') tts.updateSetting('ttsMode', 'off')
@@ -127,10 +129,13 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
           }
         } else if (mode === 'listen') {
           const answer = await callAI(txt, 'translate')
-          if (answer) addMsg({ type: 'listen', text: txt, translated: answer, langKey: parsed.langKey })
+          if (answer) addMsg({ type: 'listen', text: txt, translated: answer, langKey: parsed.langKey || transLang })
         } else if (mode === 'speak') {
           const answer = await callAI(txt, 'speak', transLang)
-          if (answer) addMsg({ type: 'speak', text: answer, translated: txt, langKey: transLang })
+          if (answer) {
+            addMsg({ type: 'speak', text: answer, translated: txt, langKey: transLang })
+            navigator.clipboard.writeText(answer).catch(() => {})
+          }
         }
         return
       }
@@ -138,7 +143,7 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
   }, [mode, wakeWord, confirmAction, addMsg, callAI, speakTTS, transLang, onClose])
 
   const { listening, error, start, stop, setLang } = useSpeechRecognition({
-    lang: mode === 'coach' ? 'zh-CN' : transLang,
+    lang: mode === 'listen' ? transLang : 'zh-CN',
     onResult: (r) => { setPendingText(r.text) },
     onFinal: handleFinal,
   })
