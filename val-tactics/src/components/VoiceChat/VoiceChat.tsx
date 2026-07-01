@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSpeechRecognition, type VoiceResult } from './useSpeechRecognition'
 import { parse, type VoiceMode, LANG_MAP, LANG_LABELS, CSS_LANG } from './commandParser'
+import { decryptKey } from '../../utils/crypto'
 import styles from './VoiceChat.module.css'
 
 type Message = {
@@ -28,7 +29,8 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
   const [ttsOn, setTtsOn] = useState(() => localStorage.getItem('val-tactics-voice-tts') === '1')
   const [autoMin, setAutoMin] = useState(() => localStorage.getItem('val-tactics-voice-automin') || 'never')
   const [transLang, setTransLang] = useState(() => localStorage.getItem('val-tactics-voice-translang') || 'ko-KR')
-  const getConfig = () => { try { return JSON.parse(localStorage.getItem('val-tactics-ai-config') || '{}') } catch { return {} } }
+  const uid = () => { let id = localStorage.getItem('val-tactics-uid'); if (!id) { id = 'u' + Date.now().toString(36); localStorage.setItem('val-tactics-uid', id) }; return id }
+  const getConfig = () => { try { const cfg = JSON.parse(localStorage.getItem('val-tactics-ai-config') || '{}'); if (cfg.apiKey) cfg.apiKey = decryptKey(cfg.apiKey, uid()); return cfg } catch { return {} } }
   const [apiKey, setApiKey] = useState(() => (getConfig().apiKey || ''))
   const [showKey, setShowKey] = useState(false)
   const hasApiKey = !!(getConfig().apiKey)
