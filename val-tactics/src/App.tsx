@@ -385,6 +385,11 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
                     <span>AI 生成战术</span>
                   </button>
                   <div className="navbar__aiDropdownDivider" style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 8px' }} />
+                  <button className="navbar__aiDropdownItem" onClick={() => { setShowVoiceChat(true); setShowAIDropdown(false) }}
+                    style={{ color: '#05F8F8' }}>
+                    <span>🎤 语音对话</span>
+                  </button>
+                  <div className="navbar__aiDropdownDivider" style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 8px' }} />
                   <button className="navbar__aiDropdownItem" onClick={() => { setShowMatchAnalysis(true); setShowAIDropdown(false) }}>
                     <span>数据分析</span>
                   </button>
