@@ -36,8 +36,13 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
   const hasApiKey = !!(getConfig().apiKey)
 
   const scrollRef = useRef<HTMLDivElement>(null)
-  const msgRef = useRef(messages)
-  msgRef.current = messages
+  // 用 ref 持有最新状态，避免自动重连时闭包过期
+  const modeRef = useRef(mode)
+  const wakeWordRef = useRef(wakeWord)
+  const transLangRef = useRef(transLang)
+  modeRef.current = mode
+  wakeWordRef.current = wakeWord
+  transLangRef.current = transLang
 
   const addMsg = useCallback((m: Omit<Message, 'id'>) => {
     setMid(p => p + 1)
@@ -81,7 +86,7 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
 
   // 处理最终结果
   const handleFinal = useCallback(async (result: VoiceResult) => {
-    const parsed = parse(result.text, wakeWord, mode)
+    const parsed = parse(result.text, wakeWordRef.current, modeRef.current)
     if (!parsed.cmd) return
 
     switch (parsed.cmd) {
@@ -118,7 +123,9 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
       case 'ask': {
         const txt = parsed.text || result.text
         if (!txt) return
-        if (mode === 'coach') {
+        const currentMode = modeRef.current
+        const currentTransLang = transLangRef.current
+        if (currentMode === 'coach') {
           addMsg({ type: 'coach-q', text: txt })
           setPendingText('T教练思考中...')
           const answer = await callAI(txt, 'coach')
@@ -127,13 +134,13 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
             addMsg({ type: 'coach-a', text: answer })
             speakTTS(answer)
           }
-        } else if (mode === 'listen') {
+        } else if (currentMode === 'listen') {
           const answer = await callAI(txt, 'translate')
-          if (answer) addMsg({ type: 'listen', text: txt, translated: answer, langKey: parsed.langKey || transLang })
-        } else if (mode === 'speak') {
-          const answer = await callAI(txt, 'speak', transLang)
+          if (answer) addMsg({ type: 'listen', text: txt, translated: answer, langKey: parsed.langKey || currentTransLang })
+        } else if (currentMode === 'speak') {
+          const answer = await callAI(txt, 'speak', currentTransLang)
           if (answer) {
-            addMsg({ type: 'speak', text: answer, translated: txt, langKey: transLang })
+            addMsg({ type: 'speak', text: answer, translated: txt, langKey: currentTransLang })
             navigator.clipboard.writeText(answer).catch(() => {})
           }
         }

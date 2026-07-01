@@ -27,6 +27,11 @@ export function useSpeechRecognition(opts: UseSpeechRecognitionOptions = {}) {
   const restartRef = useRef(false)
   const silenceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastTextRef = useRef('')
+  // 用 ref 持有最新回调，避免自动重连时闭包过期
+  const onResultRef = useRef(onResult)
+  const onFinalRef = useRef(onFinal)
+  onResultRef.current = onResult
+  onFinalRef.current = onFinal
 
   // 停顿 2 秒没新结果 → 当作说完
   const resetSilence = useCallback(() => {
@@ -35,11 +40,11 @@ export function useSpeechRecognition(opts: UseSpeechRecognitionOptions = {}) {
       if (lastTextRef.current) {
         const r: VoiceResult = { text: lastTextRef.current, timestamp: Date.now(), confidence: 0.5 }
         console.debug('[Voice] silence trigger → final:', r.text.slice(0, 60))
-        onFinal?.(r)
+        onFinalRef.current?.(r)
         lastTextRef.current = ''
       }
     }, 2500)
-  }, [onFinal])
+  }, [])
 
   useEffect(() => () => { if (silenceRef.current) clearTimeout(silenceRef.current) }, [])
 
@@ -67,12 +72,12 @@ export function useSpeechRecognition(opts: UseSpeechRecognitionOptions = {}) {
             timestamp: Date.now(),
             confidence: r[0].confidence || 0,
           }
-          onResult?.(result)
+          onResultRef.current?.(result)
           lastTextRef.current = result.text
           if (r.isFinal) {
             if (silenceRef.current) clearTimeout(silenceRef.current)
             console.debug('[Voice] STT final:', result.text.slice(0, 60))
-            onFinal?.(result)
+            onFinalRef.current?.(result)
             lastTextRef.current = ''
           } else {
             resetSilence()
