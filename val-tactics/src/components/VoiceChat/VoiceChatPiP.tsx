@@ -22,12 +22,15 @@ export default function VoiceChatPiP() {
   const [listening, setListening] = useState(false)
   const [copyHint, setCopyHint] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [initialized, setInitialized] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const transLang = useRef(localStorage.getItem('val-tactics-voice-translang') || 'ko-KR')
   const wakeWord = useRef(localStorage.getItem('val-tactics-voice-wake') || 'T教练')
   const modeRef = useRef(mode)
   modeRef.current = mode
+  const stopRef = useRef<() => void>(() => {})
+  const startRef = useRef<() => void>(() => {})
 
   // localStorage 配置同步
   useEffect(() => {
@@ -39,18 +42,13 @@ export default function VoiceChatPiP() {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  // 持久化当前模式
-  useEffect(() => {
-    localStorage.setItem('val-tactics-voice-pip-mode', mode)
-  }, [mode])
-
-  useEffect(() => {
-    localStorage.setItem('val-tactics-voice-pip-pinned', String(pinned))
-  }, [pinned])
+  // 持久化
+  useEffect(() => { localStorage.setItem('val-tactics-voice-pip-mode', mode) }, [mode])
+  useEffect(() => { localStorage.setItem('val-tactics-voice-pip-pinned', String(pinned)) }, [pinned])
 
   // 自动滚动
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'auto' })
   }, [messages])
 
   const uid = () => { let id = localStorage.getItem('val-tactics-uid'); if (!id) { id = 'u' + Date.now().toString(36); localStorage.setItem('val-tactics-uid', id) }; return id }
@@ -59,7 +57,6 @@ export default function VoiceChatPiP() {
   const addMsg = useCallback((m: Omit<PiPMessage, 'id'>) => {
     setMid(p => p + 1)
     setMessages(prev => [...prev.slice(-20), { ...m, id: mid + 1 }])
-    // 同步到浏览器面板
     try { localStorage.setItem('val-tactics-voice-pip-msg', JSON.stringify({ ...m, id: mid + 1 })) } catch {}
   }, [mid])
 
@@ -154,9 +151,6 @@ export default function VoiceChatPiP() {
     }
   }, [addMsg, callAI])
 
-  const stopRef = useRef<() => void>(() => {})
-  const startRef = useRef<() => void>(() => {})
-
   const { start, stop, error: srError } = useSpeechRecognition({
     lang: mode === 'listen' ? transLang.current : 'zh-CN',
     onFinal: handleFinal,
@@ -165,14 +159,18 @@ export default function VoiceChatPiP() {
   useEffect(() => { stopRef.current = stop; startRef.current = start }, [stop, start])
   useEffect(() => { if (srError) setError(srError) }, [srError])
 
-  // 自动启动录音
+  // 仅首次自动启动录音
   useEffect(() => {
-    start()
-    setListening(true)
-  }, [start])
+    if (!initialized) {
+      start()
+      setListening(true)
+      setInitialized(true)
+    }
+  }, [start, initialized])
 
   const statusColor = listening ? '#05F8F8' : '#ff5555'
   const modeEmoji = mode === 'coach' ? '🎓' : mode === 'listen' ? '👂' : '🗣️'
+  const tl = transLang.current
 
   return (
     <div className={`${styles.pipShell} ${pinned ? styles.pipShellFixed : ''}`}>
@@ -194,7 +192,7 @@ export default function VoiceChatPiP() {
         <span className={styles.statusMode}>{modeEmoji}</span>
         {mode !== 'coach' && (
           <span className={styles.statusLabel}>
-            {CSS_LANG[transLang.current] || '韩'}
+            {CSS_LANG[tl] || '韩'}
           </span>
         )}
       </div>
@@ -204,7 +202,7 @@ export default function VoiceChatPiP() {
         {messages.length === 0 && !copyHint && (
           <div className={styles.emptyHint}>
             {mode === 'coach' ? '直接说话问战术' :
-             mode === 'listen' ? `正在听${LANG_LABELS[transLang.current] || ''}...` :
+             mode === 'listen' ? `正在听${LANG_LABELS[tl] || ''}...` :
              '说中文 → 翻译'}
           </div>
         )}
