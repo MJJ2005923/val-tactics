@@ -25,6 +25,23 @@ export function useSpeechRecognition(opts: UseSpeechRecognitionOptions = {}) {
   const [currentLang, setCurrentLang] = useState(lang)
   const recognitionRef = useRef<any>(null)
   const restartRef = useRef(false)
+  const silenceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastTextRef = useRef('')
+
+  // 停顿 2 秒没新结果 → 当作说完
+  const resetSilence = useCallback(() => {
+    if (silenceRef.current) clearTimeout(silenceRef.current)
+    silenceRef.current = setTimeout(() => {
+      if (lastTextRef.current) {
+        const r: VoiceResult = { text: lastTextRef.current, timestamp: Date.now(), confidence: 0.5 }
+        console.debug('[Voice] silence trigger → final:', r.text.slice(0, 60))
+        onFinal?.(r)
+        lastTextRef.current = ''
+      }
+    }, 2500)
+  }, [onFinal])
+
+  useEffect(() => () => { if (silenceRef.current) clearTimeout(silenceRef.current) }, [])
 
   const start = useCallback((langOverride?: string) => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -51,8 +68,14 @@ export function useSpeechRecognition(opts: UseSpeechRecognitionOptions = {}) {
             confidence: r[0].confidence || 0,
           }
           onResult?.(result)
+          lastTextRef.current = result.text
           if (r.isFinal) {
+            if (silenceRef.current) clearTimeout(silenceRef.current)
+            console.debug('[Voice] STT final:', result.text.slice(0, 60))
             onFinal?.(result)
+            lastTextRef.current = ''
+          } else {
+            resetSilence()
           }
         }
       }

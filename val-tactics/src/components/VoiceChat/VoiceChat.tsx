@@ -139,7 +139,7 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
 
   const { listening, error, start, stop, setLang } = useSpeechRecognition({
     lang: mode === 'coach' ? 'zh-CN' : transLang,
-    onResult: (r) => { if (r.confidence > 0.3) setPendingText(r.text) },
+    onResult: (r) => { setPendingText(r.text) },
     onFinal: handleFinal,
   })
 
