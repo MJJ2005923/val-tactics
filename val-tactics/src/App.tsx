@@ -11,6 +11,7 @@ import ToolPalette from './components/ToolPalette/ToolPalette'
 import SplashScreen from './components/SplashScreen/SplashScreen'
 import HelpPanel from './components/HelpPanel/HelpPanel'
 import AIPanel from './components/AIPanel/AIPanel'
+import VoiceChat from './components/VoiceChat/VoiceChat'
 import PrivacyPanel from './components/PrivacyPanel/PrivacyPanel'
 import SponsorPanel from './components/SponsorPanel/SponsorPanel'
 import MobileLayout from './components/MobileLayout/MobileLayout'
@@ -52,6 +53,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
   const [mobileTimelineOpen, setMobileTimelineOpen] = useState(false)
   const [tacticPrompt, setTacticPrompt] = useState<string | undefined>(undefined)
   const [showCommunity, setShowCommunity] = useState(false)
+  const [showVoiceChat, setShowVoiceChat] = useState(false)
   const { user } = useAuth()
   const [showMapDropdown, setShowMapDropdown] = useState(false)
 
@@ -269,6 +271,9 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault(); setShowTemplates(true)
       }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 't' || e.key === 'T')) {
+        e.preventDefault(); setShowVoiceChat(v => !v)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -305,6 +310,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
         {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
         {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
         {showAdminPage && <Suspense fallback={<LazyFallback />}><AdminPage onClose={() => setShowAdminPage(false)} /></Suspense>}
+        {showVoiceChat && <VoiceChat onClose={() => setShowVoiceChat(false)} />}
       </div>
     )
   }
@@ -451,6 +457,7 @@ function AppInner({ navbarAnimate, panelAnimate, canvasAnimate, timelineAnimate 
       {showPrivacy && <PrivacyPanel onClose={() => setShowPrivacy(false)} />}
       {showSponsor && <SponsorPanel onClose={() => setShowSponsor(false)} />}
       {showAdminPage && <Suspense fallback={<LazyFallback />}><AdminPage onClose={() => setShowAdminPage(false)} /></Suspense>}
+      {showVoiceChat && <VoiceChat onClose={() => setShowVoiceChat(false)} />}
       {showCommunity && (
         <Suspense fallback={<LazyFallback />}><CommunityShell selectedMap={selectedMap.id} onClose={() => setShowCommunity(false)} onLoadTactic={handleLoadCommunityTactic} /></Suspense>
       )}
