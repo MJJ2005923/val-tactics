@@ -77,7 +77,7 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
     } catch {
       return null
     }
-  }, [])
+  }, [transLang])
 
   // 处理最终结果
   const handleFinal = useCallback(async (result: VoiceResult) => {
