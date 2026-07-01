@@ -15,9 +15,9 @@ export const LANG_LABELS: Record<string, string> = {
 export const CSS_LANG: Record<string, string> = { 'ko-KR': '韩', 'ja-JP': '日', 'en-US': '英', 'ru-RU': '俄', 'pt-BR': '葡', 'es-ES': '西', 'tr-TR': '土', 'fr-FR': '法', 'de-DE': '德' }
 
 const MODE_PATTERNS: [RegExp, VoiceMode][] = [
-  [/T教练|战术|问战术|教练模式/, 'coach'],
-  [/听队友|翻译模式|翻译.*(?:韩|日|英|俄|葡|西|土|法|德)/, 'listen'],
-  [/我说话|聊天|打字|(?:说|打|翻译成)(?:韩|日|英|俄|葡|西|土|法|德)/, 'speak'],
+  [/T教练|战术|问战术|教练模式|切换.*(?:教练|战术|T教练)/, 'coach'],
+  [/听队友|翻译模式|翻译功能|帮我翻译|切换.*翻译/, 'listen'],
+  [/我说话|聊天|打字|说话模式|切换.*说话|(?:说|打|翻译成)(?:韩|日|英|俄|葡|西|土|法|德)/, 'speak'],
 ]
 
 const CTRL_PATTERNS: [RegExp, string][] = [
@@ -45,6 +45,8 @@ export interface ParseResult {
 export function parse(input: string, wakeWord: string, currentMode: VoiceMode): ParseResult {
   let text = input.trim()
   if (!text) return { cmd: null }
+
+  console.debug('[Voice] 识别:', text, '| 当前模式:', currentMode)
 
   // 1. 剥离唤醒词
   if (wakeWord && text.startsWith(wakeWord)) {
@@ -81,5 +83,6 @@ export function parse(input: string, wakeWord: string, currentMode: VoiceMode): 
   }
 
   // 4. 未命中 → 按当前模式路由问题
+  console.debug('[Voice] 解析结果: ask →', text.slice(0, 50))
   return { cmd: 'ask', text, mode: currentMode }
 }
