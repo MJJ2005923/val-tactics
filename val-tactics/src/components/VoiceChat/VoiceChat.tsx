@@ -29,6 +29,10 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
   const [autoMin, setAutoMin] = useState(() => localStorage.getItem('val-tactics-voice-automin') || 'never')
   const [transLang, setTransLang] = useState(() => localStorage.getItem('val-tactics-voice-translang') || 'ko-KR')
 
+  // 读取用户 API 配置
+  const getConfig = () => { try { return JSON.parse(localStorage.getItem('val-tactics-ai-config') || '{}') } catch { return {} } }
+  const hasApiKey = !!(getConfig().apiKey)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const msgRef = useRef(messages)
   msgRef.current = messages
@@ -226,6 +230,13 @@ export default function VoiceChat({ onClose }: { onClose: () => void }) {
           </select>
           {mode === 'speak' && <span className={styles.hint}>（中文→{LANG_LABELS[transLang]}）</span>}
           {mode === 'listen' && <span className={styles.hint}>（{LANG_LABELS[transLang]}→中文）</span>}
+        </div>
+      )}
+
+      {/* API Key 未设置提示 */}
+      {!hasApiKey && (
+        <div className={styles.apiNotice}>
+          ⚠️ 未设置 API Key。语音对话需要消耗 AI 调用，请先在 <b>T教练 → 自备 API</b> 中输入你的 DeepSeek API Key。
         </div>
       )}
 
